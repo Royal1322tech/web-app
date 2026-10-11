@@ -1,0 +1,77 @@
+
+name: Frontend Auto Deploy
+
+on:
+  workflow_run:
+    workflows: ["Frontend Docker Build"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: frontend-staging-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      ${{
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'workflow_run' &&
+        github.event.workflow_run.head_repository.full_name == github.repository
+      }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Verify release and image
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+
+          [[ "$SHA" =~ ^[a-f0-9]{40}$ ]] || exit 1
+
+          LATEST=$(gh api "repos/$REPO/commits/main" --jq '.sha')
+          [[ "$SHA" == "$LATEST" ]] || {
+            echo "ERROR: Release is not latest main"
+            exit 1
+          }
+
+          echo "PASS: Latest main commit verified"
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ vars.STAGING_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+
+          test -n "$SSH_PRIVATE_KEY"
+          test -n "$SSH_KNOWN_HOSTS"
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/staging_deploy
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+          chmod 600 ~/.ssh/staging_deploy
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy frontend to Staging
+        env:
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+
+          ssh -i ~/.ssh/staging_deploy \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o BatchMode=yes \
+            deploy@179.198.220.175 \
+            "/opt/royal-travel/staging-frontend/scripts/deploy.sh '$SHA'"
