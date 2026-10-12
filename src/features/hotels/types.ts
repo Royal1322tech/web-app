@@ -1,0 +1,60 @@
+export interface LocalizedText {
+  en: string;
+  ar: string;
+}
+export interface HotelPhoto {
+  src: string;
+  width: number;
+  height: number;
+  label: LocalizedText;
+}
+export type Amenity =
+  | "pool"
+  | "food"
+  | "spa"
+  | "roomService"
+  | "nonSmoking"
+  | "airConditioning"
+  | "bathroom"
+  | "gym"
+  | "heating"
+  | "accessible";
+export interface Coordinates {
+  latitude: number;
+  longitude: number;
+  source: string;
+}
+export interface HotelSummary {
+  id: string;
+  name: LocalizedText;
+  address: LocalizedText;
+  photos: readonly HotelPhoto[];
+  nightlyRate: number;
+  reviewScore: number;
+  amenities: readonly Amenity[];
+  stars?: number;
+  breakfast?: boolean;
+  detailsHref?: string;
+}
+export interface HotelListing extends HotelSummary {
+  city: LocalizedText;
+  stars: number;
+  luxury: boolean;
+  business: boolean;
+  breakfast: boolean;
+  package: boolean;
+  coordinates?: Coordinates;
+}
+export interface HotelFilters {
+  name: string;
+  luxury: boolean;
+  board: string[];
+  stars: number[];
+  minimumReview: number;
+  profiles: string[];
+  amenities: Amenity[];
+  minPrice: string;
+  maxPrice: string;
+  packaging: string;
+}
+export type HotelSort = "recommended" | "priceLow" | "priceHigh" | "rating";

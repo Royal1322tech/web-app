@@ -1,0 +1,93 @@
+import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useFormContext } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
+import type { RegistrationValues } from "../schemas/registration.schema";
+import { countries } from "../data/countries";
+import { RegistrationField } from "./registration-field";
+import { RegistrationProgress } from "./registration-progress";
+import { RegistrationSection } from "./registration-section";
+
+export function CompanyInformationForm() {
+  const navigate = useNavigate();
+  const {
+    trigger,
+    formState: { isValidating },
+  } = useFormContext<RegistrationValues>();
+
+  async function advance() {
+    if (await trigger("company", { shouldFocus: true }))
+      navigate("/register/agency/contact");
+  }
+
+  return (
+    <>
+      <Link
+        to="/welcome"
+        className="back-link registration-back"
+        aria-label="Back to welcome"
+      >
+        <Icon name="back" />
+      </Link>
+      <RegistrationProgress currentStep={1} />
+      <form
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          void advance();
+        }}
+      >
+        <RegistrationSection
+          title="Company Information"
+          icon="buildingFilled"
+          description="Please provide your company details to get started."
+        >
+          <RegistrationField
+            name="company.name"
+            label="Name of Company"
+            placeholder="Enter company name"
+            icon="building"
+            autoComplete="organization"
+          />
+          <RegistrationField
+            name="company.employeeCount"
+            label="Number of Employees"
+            placeholder="Enter number"
+            icon="people"
+            type="number"
+            min="0"
+            step="1"
+            inputMode="numeric"
+          />
+          <RegistrationField
+            name="company.country"
+            label="Country"
+            placeholder="Select country"
+            icon="globe"
+            options={countries}
+            autoComplete="country"
+          />
+          <RegistrationField
+            name="company.registrationNumber"
+            label="Company Registration Number"
+            placeholder="Enter registration number"
+            icon="id"
+          />
+          <RegistrationField
+            name="company.address"
+            label="Address of Company"
+            placeholder="Enter company address"
+            icon="pin"
+            autoComplete="street-address"
+          />
+        </RegistrationSection>
+        <div className="registration-actions registration-actions--next">
+          <Button type="submit" disabled={isValidating}>
+            Next
+          </Button>
+        </div>
+      </form>
+    </>
+  );
+}

@@ -44,6 +44,18 @@ jobs:
         if: steps.readiness.outputs.ready == 'true'
         run: npm run lint --if-present
 
+      - name: Typecheck
+        if: steps.readiness.outputs.ready == 'true'
+        run: npx tsc --noEmit
+
       - name: Build
         if: steps.readiness.outputs.ready == 'true'
         run: npm run build
+
+      - name: Install browser for regression checks
+        if: steps.readiness.outputs.ready == 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser regression checks
+        if: steps.readiness.outputs.ready == 'true'
+        run: npm run test:e2e

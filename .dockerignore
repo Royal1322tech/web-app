@@ -4,3 +4,8 @@ dist
 .github
 .env
 .env.*
+
+!.env.production
+public/optimized
+playwright-report
+test-results

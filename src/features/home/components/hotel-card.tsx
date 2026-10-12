@@ -1,0 +1,137 @@
+import { ResponsiveImage as Image } from "@/components/ui/responsive-image";
+import { Icon } from "@/components/ui/icon";
+import { useHotelPreferences } from "@/features/preferences/use-hotel-preferences";
+import type { IconName } from "@/components/ui/icon";
+import type { Hotel } from "../types";
+import { UnavailableButton } from "./unavailable-button";
+import { useLocale } from "@/features/localization/locale-provider";
+import styles from "../home.module.css";
+
+export function HotelCard({
+  hotel,
+  compact = false,
+}: {
+  hotel: Hotel;
+  compact?: boolean;
+}) {
+  const { t, locale } = useLocale();
+  const favourites = useHotelPreferences("favourites");
+  const amenityIcons: Record<string, IconName> = {
+    Pool: "pool",
+    Gym: "gym",
+    Food: "food",
+    Spa: "spa",
+  };
+  return (
+    <article
+      className={`${styles.hotelCard} ${compact ? styles.compactCard : ""}`}
+    >
+      <div className={styles.cardImage}>
+        <Image
+          src={hotel.image}
+          alt={t(
+            `${hotel.name} — sample property photograph`,
+            `${t(hotel.name)} — صورة فندق تجريبية`,
+          )}
+          width={compact ? 286 : 386}
+          height={compact ? (hotel.image.includes("lobby") ? 185 : 190) : 258}
+          sizes={
+            compact
+              ? "(max-width: 600px) 90vw, (max-width: 1000px) 44vw, 300px"
+              : "(max-width: 700px) 85vw, (max-width: 1000px) 44vw, 400px"
+          }
+        />
+        {!compact && (
+          <button
+            type="button"
+            className={styles.favouriteButton}
+            aria-label={t(
+              `Favourite: ${hotel.name} — ${hotel.city}`,
+              `المفضلة: ${t(hotel.name)} — ${t(hotel.city)}`,
+            )}
+            aria-pressed={favourites.ids.includes(hotel.id)}
+            onClick={() => favourites.toggle(hotel.id)}
+          >
+            <Icon
+              name="heart"
+              fill={favourites.ids.includes(hotel.id) ? "currentColor" : "none"}
+            />
+          </button>
+        )}
+      </div>
+      <div className={styles.hotelTitle}>
+        <h3>{t(hotel.name)}</h3>
+        {!compact && (
+          <span
+            aria-label={t(
+              `Sample rating ${hotel.rating} out of 5`,
+              `تقييم تجريبي ${hotel.rating} من ٥`,
+            )}
+          >
+            <Icon name="star" />
+            {hotel.rating}
+          </span>
+        )}
+      </div>
+      <p className={styles.address}>
+        <Icon name="pin" />
+        {locale === "ar" ? `${t(hotel.city)}، مصر` : hotel.address}
+      </p>
+      {compact ? (
+        <>
+          <span className={styles.offer}>{t("Sample offer")}</span>
+          <p className={styles.rate}>
+            <strong>${hotel.nightlyRate}</strong>{" "}
+            {t("USD / night", "دولار / ليلة")}
+          </p>
+          <p className={styles.smallCopy}>
+            {t("Dates and availability pending")}
+          </p>
+        </>
+      ) : (
+        <>
+          <p className={styles.hotelDescription}>{t(hotel.description)}</p>
+          {hotel.duration && (
+            <p className={styles.duration}>
+              <Icon name="calendar" />
+              {t(
+                `${hotel.duration.nights} Nights, ${hotel.duration.days} Days`,
+                `${hotel.duration.nights} ليالٍ، ${hotel.duration.days} أيام`,
+              )}
+            </p>
+          )}
+          <p className={styles.featuresLabel}>{t("Features:")}</p>
+          <ul className={styles.amenities}>
+            {hotel.amenities.map((amenity) => (
+              <li key={amenity}>
+                <Icon name={amenityIcons[amenity] ?? "check"} />
+                {t(amenity)}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      <div className={styles.cardBottom}>
+        <UnavailableButton
+          className={compact ? styles.arrowButton : styles.primaryButton}
+          label={
+            compact
+              ? t(
+                  `View ${hotel.name} sample deal`,
+                  `عرض العرض التجريبي لـ ${t(hotel.name)}`,
+                )
+              : undefined
+          }
+          message="Booking and live availability are not available yet."
+        >
+          {compact ? <span aria-hidden="true">›</span> : t("Book Now")}
+        </UnavailableButton>
+        {!compact && (
+          <p className={styles.rate}>
+            <strong>${hotel.nightlyRate}</strong> {t("/ night", "/ ليلة")}
+          </p>
+        )}
+      </div>
+    </article>
+  );
+}
