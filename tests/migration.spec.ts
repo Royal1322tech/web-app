@@ -248,9 +248,11 @@ test("registration validation, file retention, review and prerequisite guards", 
 test("authentication and recovery validation never submit network credentials", async ({
   page,
 }) => {
-  const writes: string[] = [];
+  const writes: { url: string; body: string }[] = [];
   page.on("request", (request) => {
-    if (!["GET", "HEAD"].includes(request.method())) writes.push(request.url());
+    if (!["GET", "HEAD"].includes(request.method())) {
+      writes.push({ url: request.url(), body: request.postData() ?? "" });
+    }
   });
   await page.goto("/login");
   await page.getByRole("button", { name: "Sign In", exact: true }).click();
@@ -275,7 +277,14 @@ test("authentication and recovery validation never submit network credentials", 
       "noindex, nofollow",
     );
   }
-  expect(writes).toEqual([]);
+  for (const request of writes) {
+    // Staging's Cloudflare proxy injects performance telemetry; the app does not.
+    const url = new URL(request.url);
+    expect(url.origin).toBe(new URL(page.url()).origin);
+    expect(url.pathname).toBe("/cdn-cgi/rum");
+    expect(request.url + request.body).not.toContain("test-user");
+    expect(request.url + request.body).not.toContain("ExamplePass123!");
+  }
 });
 
 test("key screens pass automated accessibility checks and generate review screenshots", async ({

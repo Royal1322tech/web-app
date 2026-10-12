@@ -24,7 +24,7 @@ Room/rate dialogs retain their existing entry point under **View Rooms** on sear
 - Automated axe WCAG A/AA checks pass on homepage, hotel, search, login and company screens; not a complete accessibility certification.
 - Production dependency audit reports zero vulnerabilities at verification time.
 
-Tests use Chromium. Other engines, physical devices and measured Core Web Vitals remain unverified. OpenStreetMap is an external dependency. Screenshots/traces live in ignored `test-results`.
+Tests use Chromium. Other engines, physical devices and measured Core Web Vitals remain unverified. OpenStreetMap is an external dependency. Screenshots/traces live in ignored `test-results`. Staging injects Cloudflare performance telemetry; credential tests permit only that known telemetry path and check its payload contains neither the test username nor password.
 
 ## Deployment and account boundaries
 
@@ -37,3 +37,7 @@ SSH identifies Royal1322tech. Repository-local author and committer: `Royal1322t
 Backend contracts, sessions, uploads, real inventory/rates/bookings and payment are not implemented. Agency welcome/login/registration retain English UI. Sample data, provisional constraints, browser-local favourites and in-memory registration remain intentional limitations. No secrets, supplier costs or markup were introduced.
 
 Retirement requires a verified push and staging deployment. Deleting the old directory always requires explicit final owner confirmation. See the delivery report for final Git and deployment status.
+
+## Live staging evidence
+
+The migrated application is served at https://staging.royalis.tech, where all 13 browser regression checks pass. Its index and entry JavaScript/CSS match the verified Docker image byte-for-byte (entry JS `index-I_yGCO6_.js`, SHA-256 `eb4abbefc1313e2e9931e46ca0cbd4ec2a404e019b4b40af98f2f3c49aa918bf`). Direct search, hotel, registration and recovery URLs return the SPA successfully. External map URL/fallback checks pass; external map zoom could not be confirmed in the local browser session.
