@@ -1,3 +1,4 @@
+import { TravelTrail } from "@/components/motion/travel-trail";
 import { Text } from "@/features/localization/locale-provider";
 import { ResponsiveImage as Image } from "@/components/ui/responsive-image";
 import styles from "../home.module.css";
@@ -11,9 +12,9 @@ const benefits = [
     height: 103,
   },
   {
-    title: "Easy Car Rental",
+    title: "Car Rental for Agencies",
     description:
-      "Choose from a variety of reliable vehicles and book your rental car quickly and conveniently.",
+      "Car Rental belongs in your agency workspace. Vehicle search and reservations are coming in a future implementation.",
     image: "car-rental",
     height: 112,
   },
@@ -25,9 +26,9 @@ const benefits = [
     height: 114,
   },
   {
-    title: "Fast & Secure Booking",
+    title: "A Clear Booking Journey",
     description:
-      "Book with confidence through a simple, secure, and hassle-free booking experience from start to confirmation.",
+      "Explore every step from room selection to a printable demo voucher, with clear status updates.",
     image: "secure-booking",
     height: 94,
   },
@@ -36,6 +37,7 @@ const benefits = [
 export function PartnerBenefits() {
   return (
     <section className={styles.partnerSection} aria-labelledby="benefits-title">
+      <TravelTrail />
       <div className={styles.partnerHeading}>
         <h2 id="benefits-title">
           <Text en="Why Partner with us" />
@@ -45,7 +47,7 @@ export function PartnerBenefits() {
         </p>
       </div>
       <div className={styles.benefitsGrid}>
-        <div className={styles.benefitList}>
+        <div className={`${styles.benefitList} motion-stagger`}>
           {benefits.map((benefit) => (
             <article key={benefit.title} className={styles.benefit}>
               <Image
@@ -68,7 +70,7 @@ export function PartnerBenefits() {
           ))}
         </div>
         <Image
-          className={styles.partnerVisual}
+          className={`${styles.partnerVisual} motion-image-reveal`}
           src="/images/home/partner-travel.png"
           alt="Suitcase, sun hat, and travel essentials overlooking the blue sea and white coastal villas."
           width={642}

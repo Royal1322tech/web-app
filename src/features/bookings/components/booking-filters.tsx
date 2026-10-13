@@ -23,7 +23,9 @@ export function BookingFilters({
       ? t("Confirmed — sample", "مؤكد — تجريبي")
       : status === "cancelled"
         ? t("Cancelled — sample", "ملغى — تجريبي")
-        : t("Pending — sample", "معلق — تجريبي");
+        : status === "failed"
+          ? t("Failed — sample", "فشل — تجريبي")
+          : t("Pending — sample", "معلق — تجريبي");
   return (
     <form
       id="booking-filters"
@@ -112,17 +114,19 @@ export function BookingFilters({
           <legend className="sr-only">
             {t("Booking status", "حالة الحجز")}
           </legend>
-          {["all", "confirmed", "cancelled", "pending"].map((status) => (
-            <label key={status} className={styles.check}>
-              <input
-                type="radio"
-                name="booking-status"
-                checked={value.status === status}
-                onChange={() => onChange({ ...value, status })}
-              />
-              {status === "all" ? t("All", "الكل") : statusLabel(status)}
-            </label>
-          ))}
+          {["all", "confirmed", "cancelled", "pending", "failed"].map(
+            (status) => (
+              <label key={status} className={styles.check}>
+                <input
+                  type="radio"
+                  name="booking-status"
+                  checked={value.status === status}
+                  onChange={() => onChange({ ...value, status })}
+                />
+                {status === "all" ? t("All", "الكل") : statusLabel(status)}
+              </label>
+            ),
+          )}
         </fieldset>
       </details>
       <details open>

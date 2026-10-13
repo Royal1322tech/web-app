@@ -1,3 +1,4 @@
+import type { HotelSearchCriteria } from "@/features/home/schemas/hotel-search.schema";
 import { ResponsiveImage as Image } from "@/components/ui/responsive-image";
 import { Link } from "react-router-dom";
 import { useId, useState, type ReactNode } from "react";
@@ -8,7 +9,7 @@ import type { HotelSummary } from "../types";
 import type { StayDates } from "../lib/sample-stay";
 import { amenityLabels } from "../data/hotels.fixture";
 import { RoomOptions } from "./room-options";
-import { CartPreviewButton } from "./cart-preview-button";
+
 import styles from "../hotels.module.css";
 
 export function FavouriteButton({
@@ -48,7 +49,7 @@ export function HotelResultCard({
   hotel: HotelSummary;
   booking?: ReactNode;
   favourite?: boolean;
-  dates?: StayDates;
+  dates?: StayDates & Partial<Pick<HotelSearchCriteria, "rooms">>;
 }) {
   const { locale, t } = useLocale();
   const compare = useHotelPreferences("comparison");
@@ -88,7 +89,14 @@ export function HotelResultCard({
           </div>
           <div className={styles.cardInfo}>
             {href ? (
-              <Link to={href} className={styles.hotelName}>
+              <Link
+                to={
+                  dates
+                    ? `${href}?${new URLSearchParams({ checkIn: dates.checkIn, checkOut: dates.checkOut, rooms: JSON.stringify(dates.rooms ?? [{ adults: 2, childAges: [] }]) })}`
+                    : href
+                }
+                className={styles.hotelName}
+              >
                 {hotel.name[locale]}
               </Link>
             ) : (
@@ -126,7 +134,11 @@ export function HotelResultCard({
               <bdi>${hotel.nightlyRate}</bdi>
             </strong>
             <div className={styles.cardActionButtons}>
-              {favourite && <CartPreviewButton />}
+              {favourite && (
+                <Link to={href ?? "/search"} className={styles.primary}>
+                  {t("View Rooms", "عرض الغرف")}
+                </Link>
+              )}
               <button
                 type="button"
                 className={styles.secondary}

@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useDemo } from "@/features/demo/demo-provider";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +10,8 @@ import { Icon } from "@/components/ui/icon";
 import { loginSchema, type LoginValues } from "../schemas/login.schema";
 
 export function LoginForm() {
+  const { enterDemoSession } = useDemo();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [notice, setNotice] = useState("");
   const {
@@ -80,6 +83,20 @@ export function LoginForm() {
       <Button type="submit" disabled={isSubmitting}>
         Sign In
       </Button>
+      <button
+        type="button"
+        className="button button--outline"
+        onClick={() => {
+          enterDemoSession();
+          navigate("/agency");
+        }}
+      >
+        Explore demo agency workspace
+      </button>
+      <p className="fine-print">
+        Frontend preview. Sign-in is not connected; use fictional credentials
+        only.
+      </p>
       <div role="status" aria-live="polite">
         {notice && <p className="availability-notice">{notice}</p>}
       </div>

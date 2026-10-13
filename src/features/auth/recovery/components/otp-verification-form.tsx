@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useRecoveryText } from "../messages";
@@ -146,6 +147,11 @@ export function OtpVerificationForm() {
               : "Recovery service unavailable",
           )}
         </p>
+        {pending && (
+          <Link to="/reset-password" className="button button--outline">
+            {text("Continue to reset demo")}
+          </Link>
+        )}
       </form>
     </RecoveryShell>
   );

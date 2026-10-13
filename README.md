@@ -27,23 +27,35 @@ Browser tests use the production preview on port 4173. Set `PLAYWRIGHT_BASE_URL`
 
 ## Routes
 
-| URL | Screen |
-| --- | --- |
-| `/` | Homepage, hotel search, deals, partner benefits, collections, footer |
-| `/search` | Sample results, filters, sorting, comparison, rooms and rate details |
-| `/hotels/:hotelId` | Gallery, facts, stay form, date prices and interactive map |
-| `/bookings` | Sample bookings, filters and sorting |
-| `/favourites` | Browser-local saved hotels |
-| `/welcome` | Agency account entry |
-| `/login` | Sign in |
-| `/forgot-password` | Recovery request |
-| `/verify-otp` | Four-digit verification form |
-| `/reset-password` | New password form |
-| `/register/agency` | Redirect to company information |
-| `/register/agency/company` | Company Information |
-| `/register/agency/contact` | Contact Information |
-| `/register/agency/documents` | Documents Upload |
-| `/register/agency/review` | Review & Submit |
+| URL                          | Screen                                                                       |
+| ---------------------------- | ---------------------------------------------------------------------------- |
+| `/`                          | Homepage, hotel search, deals, partner benefits, collections, footer         |
+| `/car-rental`                | Branded B2B service overview; vehicle search and booking not yet implemented |
+| `/search`                    | Sample results, filters, sorting, comparison, rooms and rate details         |
+| `/hotels/:hotelId`           | Gallery, facts, stay form, date prices and interactive map                   |
+| `/bookings`                  | Demo bookings, filters, sorting and management links                         |
+| `/bookings/:id`              | Demo booking details, timeline, modify/cancel previews                       |
+| `/bookings/:id/voucher`      | Print-ready voucher for confirmed demo records                               |
+| `/booking/summary`           | Selected room, dates, occupancy and conditions                               |
+| `/booking/guests`            | Validated fictional guest/contact information                                |
+| `/booking/payment`           | Credit/test payment UI and explicit outcome previews                         |
+| `/booking/result/:id`        | Confirmed, pending or failed simulation                                      |
+| `/agency`, `/agency/edit`    | Demo agency profile and validated local edits                                |
+| `/notifications`             | Session notification list and read/unread controls                           |
+| `/verify-email`              | Explicit email verification state preview                                    |
+| `/wallet`                    | Illustrative credit overview and insufficient-balance state                  |
+| `/transactions`              | Searchable/filterable/paginated transaction examples                         |
+| `/favourites`                | Browser-local saved hotels                                                   |
+| `/welcome`                   | Agency account entry                                                         |
+| `/login`                     | Sign in                                                                      |
+| `/forgot-password`           | Recovery request                                                             |
+| `/verify-otp`                | Four-digit verification form                                                 |
+| `/reset-password`            | New password form                                                            |
+| `/register/agency`           | Redirect to company information                                              |
+| `/register/agency/company`   | Company Information                                                          |
+| `/register/agency/contact`   | Contact Information                                                          |
+| `/register/agency/documents` | Documents Upload                                                             |
+| `/register/agency/review`    | Review & Submit                                                              |
 
 Unknown hotels/routes show a not-found screen. Later registration steps redirect to the first incomplete prerequisite. Direct URLs and refreshes work through Vite locally and the nginx SPA fallback in Docker.
 
@@ -69,9 +81,13 @@ Use ignored `.env.local` or `.env.production.local` for local overrides. Vite em
 
 `requestJson` in `src/lib/api/client.ts` accepts an endpoint, a parser from `unknown` to the confirmed response type, and fetch options including an abort signal. It rejects other origins and does not send cookies or log response bodies. Fixture screens do not call it until backend contracts are supplied.
 
-Live search, inventory, rates, bookings, cart/payment, login, recovery and registration submission remain unavailable. No fake success or endpoints were added. Favourites and locale persist in browser storage. Registration values/files stay in memory and reset on refresh or leaving registration. File validation checks metadata, not authenticity.
+Live search, inventory, rates, bookings, payments, login, recovery and registration submission remain unavailable. An explicitly labeled frontend demonstration now connects room selection, booking summary, guest entry, simulated payment outcomes, booking management and printable demo vouchers. No requests, card credentials, supplier changes or money movement occur. The processing preview advances manually; no fake loading delay is used.
 
-Public/catalog and recovery screens preserve English/Arabic and RTL/LTR support. Welcome, sign-in and registration retain their supplied English presentation. Full Arabic agency translation is not implemented. Source-resolution limits and provisional validation rules are documented in `docs/history`.
+`src/features/demo` owns typed fixtures and the React context demo-state layer. Guests open `/welcome` from the header account icon. The existing `DemoProvider` also owns an explicit, memory-only demo session: enter it using “Explore demo agency workspace” on Login or the partner-access screen. Profile, profile editing, notifications, wallet, transactions and email-verification preview withhold their contents until that explicit action. This is a frontend preview boundary, not backend authentication. Sign Out returns to Welcome and clears session edits/selections; refresh also resets access. Guest details, selections, bookings, agency edits and notification state exist only in memory and reset on refresh. Favourites and locale retain their existing browser storage. Registration values/files remain in memory and reset on refresh or leaving registration; file validation checks metadata, not authenticity. Real submission remains disabled, with a separately labeled demo receipt preview.
+
+Review the implementation checklist, boundaries and validation in [frontend upgrade](docs/frontend-upgrade.md). Brand originals and SVG interpretations are in `public/brand`; runtime layered animation is in `src/components/brand-logo.tsx`. No runtime dependencies were added.
+
+Public/catalog and recovery screens preserve English/Arabic and RTL/LTR support. Welcome supports English/Arabic using its original account-selection composition. Sign-in and registration retain their supplied English presentation. Full Arabic agency translation is not implemented. Source-resolution limits and provisional validation rules are documented in `docs/history`.
 
 ## Git and deployment
 
@@ -95,3 +111,5 @@ Exclude credentials, generated output and unrelated files before committing. Nev
 Actions inspection requires Royal1322tech API authentication; SSH alone does not authorize CLI API calls. Never use another project's credentials here.
 
 See [migration verification](docs/migration.md). The old directory must not be deleted without final owner confirmation.
+
+See [Welcome, account navigation and logo verification](docs/welcome-account-logo.md) for the focused restoration and animation changes.

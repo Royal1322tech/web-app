@@ -1,4 +1,57 @@
 export const arabicMessages: Record<string, string> = {
+  "Car Rental for Agencies": "تأجير السيارات للوكالات",
+  "Car Rental belongs in your agency workspace. Vehicle search and reservations are coming in a future implementation.":
+    "تأجير السيارات جزء من مساحة عمل وكالتك. البحث عن السيارات والحجوزات ضمن التطوير القادم.",
+  "Enter the lead guest name.": "أدخل اسم الضيف الرئيسي.",
+  "Enter a valid contact phone.": "أدخل رقم هاتف صحيحاً.",
+  "Enter this guest\u2019s name.": "أدخل اسم هذا الضيف.",
+  "Use 500 characters or fewer.": "استخدم ٥٠٠ حرف أو أقل.",
+  "Use 60 characters or fewer.": "استخدم ٦٠ حرفاً أو أقل.",
+  "Enter your agency name.": "أدخل اسم وكالتك.",
+  "Enter a contact name.": "أدخل اسم مسؤول التواصل.",
+  "Enter your agency address.": "أدخل عنوان وكالتك.",
+  "Enter a country.": "أدخل الدولة.",
+  "Made for Agencies": "مصمم للوكالات",
+  "Keep hotel selections, guest details and booking demonstrations in one connected workspace.":
+    "اجمع اختيارات الفنادق وبيانات الضيوف ومحاكاة الحجوزات في مساحة عمل واحدة.",
+  "A Clear Booking Journey": "رحلة حجز واضحة",
+  "Explore every step from room selection to a printable demo voucher, with clear status updates.":
+    "استكشف كل خطوة من اختيار الغرفة إلى قسيمة تجريبية قابلة للطباعة مع تحديثات واضحة للحالة.",
+  "Your agency workspace is ready": "مساحة عمل وكالتك جاهزة",
+  "Explore sample hotels, booking simulations and your credit overview.":
+    "استكشف الفنادق والحجوزات التجريبية وملخص رصيدك.",
+  "A sample booking needs review": "حجز تجريبي يحتاج مراجعة",
+  "DEMO-1002 is pending. Open the timeline to review its demonstration status.":
+    "الحجز DEMO-1002 معلق. افتح سجل الحجز لمراجعة حالته التجريبية.",
+  "Explore your credit statement": "استكشف كشف الائتمان",
+  "View illustrative transactions. No funds have moved.":
+    "اعرض المعاملات التوضيحية. لم يتم تحريك أموال.",
+  credit: "ائتمان",
+  reservation: "حجز",
+  adjustment: "تسوية",
+  all: "الكل",
+  completed: "مكتمل",
+  pending: "معلق",
+  failed: "فشل",
+  "Opening demo credit": "رصيد افتتاحي تجريبي",
+  "Sample hotel reservation": "حجز فندقي تجريبي",
+  "Illustrative adjustment": "تسوية توضيحية",
+  "Pending reservation preview": "معاينة حجز معلق",
+  "Failed credit preview": "معاينة ائتمان فاشل",
+  "Sample stay": "إقامة تجريبية",
+  "Demo record created": "إنشاء سجل تجريبي",
+  "Demo request created": "إنشاء طلب تجريبي",
+  "Demo confirmed": "تأكيد تجريبي",
+  "Demo pending": "تعليق تجريبي",
+  "Demo failed": "فشل تجريبي",
+  "Demo cancelled": "إلغاء تجريبي",
+  "Cancellation simulated \u2014 supplier unchanged":
+    "محاكاة إلغاء — لم يتغير حجز المورد",
+  "Stay modification simulated \u2014 supplier unchanged":
+    "محاكاة تعديل الإقامة — لم يتغير حجز المورد",
+  "A local booking simulation was created. No supplier reservation or payment occurred.":
+    "تم إنشاء محاكاة حجز محلية. لم يحدث حجز لدى المورد أو دفع.",
+
   "Rooms & Guests": "الغرف والنزلاء",
   "Rooms & guests": "الغرف والنزلاء",
   "Close room selector": "إغلاق اختيار الغرف",

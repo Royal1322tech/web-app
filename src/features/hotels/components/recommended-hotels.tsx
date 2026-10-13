@@ -1,9 +1,15 @@
+import { stayQuery } from "../lib/stay-query";
+import type { HotelSearchCriteria } from "@/features/home/schemas/hotel-search.schema";
 import { ResponsiveImage as Image } from "@/components/ui/responsive-image";
 import { Link } from "react-router-dom";
 import { useLocale } from "@/features/localization/locale-provider";
 import { hotels } from "../data/hotels.fixture";
 import styles from "../hotels.module.css";
-export function RecommendedHotels() {
+export function RecommendedHotels({
+  criteria,
+}: {
+  criteria?: HotelSearchCriteria;
+}) {
   const { locale, t } = useLocale();
   return (
     <section className={styles.detailSection}>
@@ -23,7 +29,11 @@ export function RecommendedHotels() {
               sizes="(max-width: 599px) min(286px, calc(100vw - 62px)), 286px"
             />
             <h3>
-              <Link to={`/hotels/${hotel.id}`}>{hotel.name[locale]}</Link>
+              <Link
+                to={`/hotels/${hotel.id}${criteria ? `?${stayQuery({ ...criteria, destination: hotel.city.en })}` : ""}`}
+              >
+                {hotel.name[locale]}
+              </Link>
             </h3>
             <p className={styles.muted}>{hotel.city[locale]}</p>
             <strong className={styles.rate}>${hotel.nightlyRate}</strong>
@@ -33,7 +43,10 @@ export function RecommendedHotels() {
                 "سعر تجريبي لليلة · التوافر غير متاح",
               )}
             </p>
-            <Link to={`/hotels/${hotel.id}`} className={styles.secondary}>
+            <Link
+              to={`/hotels/${hotel.id}${criteria ? `?${stayQuery({ ...criteria, destination: hotel.city.en })}` : ""}`}
+              className={styles.secondary}
+            >
               {t("View hotel", "عرض الفندق")}
             </Link>
           </article>

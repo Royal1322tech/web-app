@@ -1,3 +1,4 @@
+import { roomIsUnavailable } from "@/features/demo/room-policy";
 import { ResponsiveImage as Image } from "@/components/ui/responsive-image";
 import { useEffect, useId, useRef, useState } from "react";
 import { Icon } from "@/components/ui/icon";
@@ -9,7 +10,8 @@ import {
 } from "../data/rooms.fixture";
 import { samplePriceBreakdown, type StayDates } from "../lib/sample-stay";
 import type { HotelSummary } from "../types";
-import { CartPreviewButton } from "./cart-preview-button";
+import { SelectRoomButton } from "@/features/demo/select-room";
+import type { HotelSearchCriteria } from "@/features/home/schemas/hotel-search.schema";
 import { PriceChart } from "./price-chart";
 import styles from "../hotels.module.css";
 
@@ -22,7 +24,7 @@ export function RoomOptions({
   dates,
 }: {
   hotel: HotelSummary;
-  dates?: StayDates;
+  dates?: StayDates & Partial<Pick<HotelSearchCriteria, "rooms">>;
 }) {
   const { locale, t } = useLocale();
   const id = useId();
@@ -168,7 +170,9 @@ export function RoomOptions({
                         )}
                       </div>
                       <span className={styles.samplePlaces}>
-                        {t("1 place left (sample)", "مكان واحد متبقٍ (نموذج)")}
+                        {roomIsUnavailable(room.id)
+                          ? t("Unavailable — demo", "غير متاح — تجريبي")
+                          : t("Available — demo", "متاح — تجريبي")}
                       </span>
                       <div className={styles.rateDetails}>
                         <bdi>
@@ -189,7 +193,12 @@ export function RoomOptions({
                           {t("Price Details", "تفاصيل السعر")}
                         </button>
                       </div>
-                      <CartPreviewButton />
+                      <SelectRoomButton
+                        hotel={hotel}
+                        room={room}
+                        rate={rate}
+                        dates={dates}
+                      />
                     </div>
                   ))}
                 </div>
@@ -360,7 +369,7 @@ export function RoomOptions({
                 </dd>
               </div>
               <div>
-                <dt>{t("Total net price", "السعر الإجمالي الصافي")}</dt>
+                <dt>{t("Total room price", "إجمالي سعر الغرفة")}</dt>
                 <dd>
                   <bdi>{money(breakdown.total)}</bdi>
                 </dd>

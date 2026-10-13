@@ -1,0 +1,88 @@
+.overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 200px;
+  gap: 40px;
+  align-items: center;
+  padding: 40px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--navy);
+}
+.eyebrow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  color: var(--royal);
+}
+.eyebrow svg {
+  width: 24px;
+  height: 24px;
+}
+.overview h2 {
+  font-size: clamp(24px, 3vw, 36px);
+  font-weight: 800;
+  margin: 18px 0;
+}
+.overview p {
+  max-width: 680px;
+  line-height: 1.8;
+  color: var(--muted);
+  font-size: 15px;
+}
+.overview .note {
+  margin-top: 14px;
+  font-size: 13px;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+.actions a {
+  text-decoration: none;
+}
+.actions a:global(.button--primary) {
+  color: white;
+}
+.illustration {
+  width: 168px;
+  height: 112px;
+  object-fit: contain;
+  border-radius: 16px;
+  justify-self: center;
+  transition: transform 0.3s var(--ease);
+}
+.overview:hover .illustration {
+  transform: translateY(-4px);
+}
+.compact {
+  border-start-start-radius: 0;
+}
+@media (max-width: 599px) {
+  .overview {
+    grid-template-columns: 1fr;
+    padding: 24px;
+    gap: 24px;
+  }
+  .illustration {
+    justify-self: start;
+  }
+  .eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.7px;
+  }
+  .actions .button {
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .overview:hover .illustration {
+    transform: none;
+  }
+}

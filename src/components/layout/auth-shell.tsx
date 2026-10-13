@@ -37,7 +37,11 @@ export function AuthShell({
           }
           width={isLogin ? 667 : 565}
           height={isLogin ? 855 : 966}
-          sizes="(max-width: 640px) 1px, (max-width: 1100px) 45vw, 560px"
+          sizes={
+            isLogin
+              ? "(max-width: 640px) 1px, (max-width: 1100px) 45vw, 560px"
+              : "(max-width: 800px) 100vw, (max-width: 1264px) 40vw, 470px"
+          }
           eager
           className="travel-image"
         />

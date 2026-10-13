@@ -1,3 +1,4 @@
+import { CarRentalOverview } from "@/features/car-rental/car-rental-overview";
 import { useNavigate } from "react-router-dom";
 import { useLocale } from "@/features/localization/locale-provider";
 import { Suspense, useState } from "react";
@@ -17,11 +18,13 @@ import styles from "../home.module.css";
 export function HotelSearchForm({
   compact = false,
   onSearch,
+  onEdit,
   initialValues,
   fixedDestination = false,
 }: {
   compact?: boolean;
   fixedDestination?: boolean;
+  onEdit?: () => void;
   onSearch?: (criteria: HotelSearchCriteria) => void;
   initialValues?: Partial<HotelSearchFormValues>;
 }) {
@@ -59,21 +62,19 @@ export function HotelSearchForm({
           tabIndex={-1}
           aria-label={t("Travel service", "خدمات السفر")}
           onKeyDown={(event) => {
-            if (
-              ["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)
-            ) {
-              event.preventDefault();
-              const next =
-                event.key === "Home"
-                  ? "hotels"
-                  : event.key === "End"
+            if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key))
+              return;
+            event.preventDefault();
+            const next =
+              event.key === "Home"
+                ? "hotels"
+                : event.key === "End"
+                  ? "cars"
+                  : tab === "hotels"
                     ? "cars"
-                    : tab === "hotels"
-                      ? "cars"
-                      : "hotels";
-              setTab(next);
-              document.getElementById(`${next}-tab`)?.focus();
-            }
+                    : "hotels";
+            setTab(next);
+            document.getElementById(`${next}-tab`)?.focus();
           }}
         >
           <button
@@ -103,16 +104,17 @@ export function HotelSearchForm({
         </div>
       )}
       <div
-        role="tabpanel"
+        role={compact ? undefined : "tabpanel"}
         id="hotels-panel"
         aria-label={compact ? t("Hotel search", "بحث الفنادق") : undefined}
         aria-labelledby={compact ? undefined : "hotels-tab"}
-        hidden={tab !== "hotels"}
+        hidden={!compact && tab !== "hotels"}
       >
         <FormProvider {...form}>
           <form
             className={styles.searchForm}
             noValidate
+            onChange={onEdit}
             onSubmit={handleSubmit(
               (criteria) => {
                 if (onSearch) onSearch(criteria);
@@ -244,22 +246,16 @@ export function HotelSearchForm({
             )}
         </div>
       </div>
-      <div
-        role="tabpanel"
-        id="cars-panel"
-        aria-labelledby="cars-tab"
-        hidden={tab !== "cars"}
-        className={styles.pendingPanel}
-      >
-        <Icon name="car" />
-        <h2>{t("Car rental is coming soon", "تأجير السيارات قريباً")} </h2>
-        <p>
-          {t(
-            "The car rental search is awaiting its design and booking service.",
-            "خدمة البحث عن السيارات في انتظار التصميم وخدمة الحجز.",
-          )}{" "}
-        </p>
-      </div>
+      {!compact && (
+        <div
+          role="tabpanel"
+          id="cars-panel"
+          aria-labelledby="cars-tab"
+          hidden={tab !== "cars"}
+        >
+          <CarRentalOverview compact />
+        </div>
+      )}
     </section>
   );
 }

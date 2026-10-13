@@ -214,22 +214,18 @@ test("registration validation, file retention, review and prerequisite guards", 
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await expect(page).toHaveURL(/\/documents$/);
   const inputs = page.locator("input[type=file]");
-  await inputs
-    .first()
-    .setInputFiles({
-      name: "invalid.txt",
-      mimeType: "text/plain",
-      buffer: Buffer.from("test"),
-    });
+  await inputs.first().setInputFiles({
+    name: "invalid.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("test"),
+  });
   await expect(page.locator("[role=alert]").first()).toBeVisible();
   for (let i = 0; i < 3; i++)
-    await inputs
-      .nth(i)
-      .setInputFiles({
-        name: `sample-${i}.pdf`,
-        mimeType: "application/pdf",
-        buffer: Buffer.from("%PDF-1.4\n test"),
-      });
+    await inputs.nth(i).setInputFiles({
+      name: `sample-${i}.pdf`,
+      mimeType: "application/pdf",
+      buffer: Buffer.from("%PDF-1.4\n test"),
+    });
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await expect(page).toHaveURL(/\/review$/);
   await expect(
@@ -239,6 +235,10 @@ test("registration validation, file retention, review and prerequisite guards", 
   await expect(
     page.getByRole("button", { name: "Submit", exact: true }),
   ).toBeDisabled();
+  await page.getByRole("button", { name: "Preview demo submission" }).click();
+  await expect(page.getByRole("status")).toContainText(
+    "No account was created",
+  );
   await page.goBack();
   await expect(page.getByText("sample-0.pdf", { exact: true })).toBeVisible();
   await page.reload();

@@ -1,4 +1,10 @@
-import { useEffect } from "react";
+import { DemoSessionGate } from "@/features/demo/session-gate";
+import { DemoProvider } from "@/features/demo/demo-provider";
+import {
+  PageLoadingState,
+  InlineLoadingState,
+} from "@/components/ui/system-state";
+import { useEffect, useRef } from "react";
 import {
   createBrowserRouter,
   Link,
@@ -6,11 +12,22 @@ import {
   Outlet,
   ScrollRestoration,
   useLocation,
+  useNavigation,
 } from "react-router-dom";
 import { LocaleProvider } from "@/features/localization/locale-provider";
 
 function Root() {
   const { pathname } = useLocation();
+  const navigation = useNavigation();
+  const content = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const animation = content.current?.animate(
+      [{ transform: "translateY(6px)" }, { transform: "translateY(0)" }],
+      { duration: 260, easing: "ease-out" },
+    );
+    return () => animation?.cancel();
+  }, [pathname]);
   useEffect(() => {
     const privatePage = [
       "/forgot-password",
@@ -26,7 +43,16 @@ function Root() {
   }, [pathname]);
   return (
     <LocaleProvider>
-      <Outlet />
+      <DemoProvider>
+        {navigation.state !== "idle" && (
+          <div className="route-loading">
+            <InlineLoadingState />
+          </div>
+        )}
+        <div ref={content} className="route-entrance">
+          <Outlet />
+        </div>
+      </DemoProvider>
       <ScrollRestoration />
     </LocaleProvider>
   );
@@ -73,10 +99,11 @@ export const router = createBrowserRouter([
   {
     Component: Root,
     ErrorBoundary: RouteError,
+    HydrateFallback: PageLoadingState,
     children: [
       {
         index: true,
-        lazy: page(() => import("@/pages/home"), "Hotels & Travel"),
+        lazy: page(() => import("@/pages/home"), "Travel Agency Workspace"),
       },
       {
         path: "welcome",
@@ -137,6 +164,95 @@ export const router = createBrowserRouter([
             lazy: page(() => import("@/pages/review"), "Review & Submit"),
           },
         ],
+      },
+      {
+        path: "booking/summary",
+        lazy: async () => ({
+          Component: (await import("@/features/demo/checkout"))
+            .BookingSummaryPage,
+        }),
+      },
+      {
+        path: "booking/guests",
+        lazy: async () => ({
+          Component: (await import("@/features/demo/checkout"))
+            .GuestInformationPage,
+        }),
+      },
+      {
+        path: "booking/payment",
+        lazy: async () => ({
+          Component: (await import("@/features/demo/checkout")).PaymentPage,
+        }),
+      },
+      {
+        path: "booking/result/:id",
+        lazy: async () => ({
+          Component: (await import("@/features/demo/checkout"))
+            .BookingResultPage,
+        }),
+      },
+      {
+        path: "bookings/:id",
+        lazy: async () => ({
+          Component: (await import("@/features/demo/booking-detail"))
+            .BookingDetailPage,
+        }),
+      },
+      {
+        path: "bookings/:id/voucher",
+        lazy: async () => ({
+          Component: (await import("@/features/demo/checkout")).VoucherPage,
+        }),
+      },
+      {
+        Component: DemoSessionGate,
+        children: [
+          {
+            path: "agency",
+            lazy: async () => ({
+              Component: (await import("@/features/demo/account")).AgencyPage,
+            }),
+          },
+          {
+            path: "agency/edit",
+            lazy: async () => ({
+              Component: (await import("@/features/demo/account"))
+                .EditAgencyPage,
+            }),
+          },
+          {
+            path: "notifications",
+            lazy: async () => ({
+              Component: (await import("@/features/demo/account"))
+                .NotificationsPage,
+            }),
+          },
+          {
+            path: "verify-email",
+            lazy: async () => ({
+              Component: (await import("@/features/demo/account"))
+                .EmailVerificationPage,
+            }),
+          },
+          {
+            path: "wallet",
+            lazy: async () => ({
+              Component: (await import("@/features/demo/finance")).WalletPage,
+            }),
+          },
+          {
+            path: "transactions",
+            lazy: async () => ({
+              Component: (await import("@/features/demo/finance"))
+                .TransactionsPage,
+            }),
+          },
+        ],
+      },
+      {
+        path: "car-rental",
+        lazy: page(() => import("@/pages/car-rental"), "Car Rental"),
       },
       { path: "*", Component: NotFound },
     ],

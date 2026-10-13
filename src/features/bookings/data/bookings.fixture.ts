@@ -1,7 +1,7 @@
 export interface SampleBooking {
   id: string;
   hotelId: string;
-  status: "confirmed" | "cancelled" | "pending";
+  status: "confirmed" | "cancelled" | "pending" | "failed";
   bookedAt: string;
   checkIn: string;
   checkOut: string;

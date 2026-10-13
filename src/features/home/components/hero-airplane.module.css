@@ -1,0 +1,73 @@
+.sky {
+  direction: ltr;
+  position: absolute;
+  z-index: -2;
+  top: 108px;
+  left: 0;
+  width: 100%;
+  height: 108px;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  /* The plane emerges from behind the resort roof into the open sky. */
+  clip-path: polygon(30% 0, 100% 0, 100% 100%, 40% 100%);
+  --plane-width: 260px;
+}
+.airplane {
+  display: block;
+  width: var(--plane-width);
+  height: auto;
+  opacity: 0;
+  transform: translate3d(calc(73vw - 50%), 8px, 0) scale(0.94);
+  transform-origin: center;
+}
+.ready {
+  opacity: 1;
+  animation: sky-flight 4.8s 150ms cubic-bezier(0.24, 0.35, 0.68, 0.8) both;
+}
+/* Curved ascent using compositor transforms only; one pass, then off-screen. */
+@keyframes sky-flight {
+  0% {
+    opacity: 0;
+    transform: translate3d(calc(-100% - 24px), 34px, 0) scale(0.78)
+      rotate(-2deg);
+  }
+  12% {
+    opacity: 0.92;
+  }
+  35% {
+    transform: translate3d(calc(40vw - 50%), 16px, 0) scale(0.86) rotate(-1deg);
+  }
+  70% {
+    opacity: 1;
+    transform: translate3d(calc(76vw - 50%), 5px, 0) scale(0.95) rotate(1deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(calc(100vw + 24px), -10px, 0) scale(1) rotate(-1deg);
+  }
+}
+@media (min-width: 600px) and (max-width: 1199px) {
+  .sky {
+    --plane-width: 180px;
+    top: 112px;
+    height: 95px;
+    clip-path: none;
+  }
+}
+@media (max-width: 599px) {
+  .sky {
+    --plane-width: 120px;
+    top: 146px;
+    height: 70px;
+    clip-path: none;
+  }
+  .ready {
+    animation-duration: 4.2s;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ready {
+    animation: none;
+  }
+}

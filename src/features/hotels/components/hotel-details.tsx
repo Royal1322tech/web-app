@@ -1,3 +1,9 @@
+import { readStayQuery } from "../lib/stay-query";
+import { useSearchParams } from "react-router-dom";
+import { RoomOptions } from "./room-options";
+import { StatePreview } from "@/components/ui/system-state";
+import { type HotelSearchCriteria } from "@/features/home/schemas/hotel-search.schema";
+import { defaultCriteria } from "@/features/demo/demo-provider";
 import { useState } from "react";
 import { HotelSearchForm } from "@/features/home/components/hotel-search-form";
 import { useLocale } from "@/features/localization/locale-provider";
@@ -15,7 +21,10 @@ import styles from "../hotels.module.css";
 export function HotelDetails({ hotel }: { hotel: HotelListing }) {
   const { locale, t } = useLocale();
   const [board, setBoard] = useState("any");
-  const [searched, setSearched] = useState(false);
+  const [query] = useSearchParams();
+  const [criteria, setCriteria] = useState<HotelSearchCriteria>(
+    () => readStayQuery(query, hotel.city.en) ?? defaultCriteria(hotel.city.en),
+  );
   return (
     <CatalogShell title={hotel.name[locale]} detail>
       <HotelGallery hotel={hotel} />
@@ -100,8 +109,8 @@ export function HotelDetails({ hotel }: { hotel: HotelListing }) {
           <HotelSearchForm
             compact
             fixedDestination
-            initialValues={{ destination: hotel.city.en }}
-            onSearch={() => setSearched(true)}
+            initialValues={criteria}
+            onSearch={setCriteria}
           />
         </div>
         <details>
@@ -113,7 +122,6 @@ export function HotelDetails({ hotel }: { hotel: HotelListing }) {
               value={board}
               onChange={(event) => {
                 setBoard(event.target.value);
-                setSearched(false);
               }}
             >
               <option value="any">{t("Any board", "كل الخيارات")}</option>
@@ -124,18 +132,24 @@ export function HotelDetails({ hotel }: { hotel: HotelListing }) {
             </select>
           </label>
         </details>
-        {searched && (
-          <p role="status">
-            {t(
-              "No live room service is available. No booking has been created.",
-              "خدمة الغرف المباشرة غير متاحة. لم يتم إنشاء حجز.",
-            )}
-          </p>
-        )}
+        <StatePreview
+          emptyTitle={t("No available demo rooms", "لا توجد غرف تجريبية متاحة")}
+        >
+          {board === "room" ? (
+            <p className={styles.empty}>
+              {t(
+                "No room-only rates are supplied. Choose Any board or Breakfast included.",
+                "لا تتوفر أسعار لغرف دون وجبات. اختر كل الخيارات أو تشمل الإفطار.",
+              )}
+            </p>
+          ) : (
+            <RoomOptions hotel={hotel} dates={criteria} />
+          )}
+        </StatePreview>
       </section>
       <PriceChart />
       <HotelMap hotel={hotel} />
-      <RecommendedHotels />
+      <RecommendedHotels criteria={criteria} />
       <Comparison />
     </CatalogShell>
   );

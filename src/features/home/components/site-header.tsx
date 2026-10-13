@@ -1,15 +1,16 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useLocale } from "@/features/localization/locale-provider";
-import { BrandLogo } from "@/components/brand-logo";
+import { BrandLogo, HomepageBrandLogo } from "@/components/brand-logo";
+import { useDemo } from "@/features/demo/demo-provider";
 import { Icon } from "@/components/ui/icon";
-import { UnavailableButton } from "./unavailable-button";
+
 import styles from "../home.module.css";
 
 export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
   const { t, locale, setLocale } = useLocale();
   const { pathname } = useLocation();
+  const { demoSessionActive } = useDemo();
   const [menuOpen, setMenuOpen] = useState(false);
   return (
     <header
@@ -20,7 +21,7 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
         aria-label={t("Royal Vacation home", "رويال فاكيشن الرئيسية")}
         className={styles.brand}
       >
-        <BrandLogo withName />
+        {pathname === "/" ? <HomepageBrandLogo /> : <BrandLogo withName />}
       </Link>
       <button
         type="button"
@@ -55,6 +56,7 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
         {[
           ["/", t("Home", "الرئيسية")],
           ["/search", t("Search", "بحث")],
+          ["/car-rental", t("Car Rental", "تأجير السيارات")],
           ["/bookings", t("Booking", "الحجوزات")],
         ].map(([href, label]) => (
           <Link
@@ -66,7 +68,13 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
             {label}
           </Link>
         ))}
-        <UnavailableButton>{t("Quotes", "عروض الأسعار")}</UnavailableButton>
+        <Link
+          to="/wallet"
+          onClick={() => setMenuOpen(false)}
+          aria-current={pathname === "/wallet" ? "page" : undefined}
+        >
+          {t("Wallet", "المحفظة")}
+        </Link>
         <Link
           to="/favourites"
           aria-current={pathname === "/favourites" ? "page" : undefined}
@@ -90,13 +98,25 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
           </select>
         </label>
         <div className={styles.accountActions}>
-          <UnavailableButton label={t("Notifications", "الإشعارات")}>
+          <Link
+            to="/notifications"
+            aria-label={t("Notifications", "الإشعارات")}
+            title={t("Notifications", "الإشعارات")}
+          >
             <Icon name="bell" />
-          </UnavailableButton>
-          <UnavailableButton label={t("Shopping cart", "سلة التسوق")}>
+          </Link>
+          <Link
+            to="/booking/summary"
+            aria-label={t("Booking summary", "ملخص الحجز")}
+            title={t("Booking summary", "ملخص الحجز")}
+          >
             <Icon name="cart" />
-          </UnavailableButton>
-          <Link to="/welcome" aria-label={t("Agency account", "حساب الوكالة")}>
+          </Link>
+          <Link
+            to={demoSessionActive ? "/agency" : "/welcome"}
+            aria-label={t("Agency account", "حساب الوكالة")}
+            title={t("Agency account", "حساب الوكالة")}
+          >
             <Icon name="personFilled" />
           </Link>
         </div>

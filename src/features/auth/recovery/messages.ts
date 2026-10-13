@@ -1,5 +1,8 @@
 import { useLocale } from "@/features/localization/locale-provider";
 const arabic: Record<string, string> = {
+  "Continue to verification demo": "المتابعة لمعاينة التحقق",
+  "Continue to reset demo": "المتابعة لمعاينة إعادة التعيين",
+  "Return to sign in": "العودة لتسجيل الدخول",
   "Forgot Your Password?": "نسيت كلمة المرور؟",
   "Enter the 4-digit verification code": "أدخل رمز التحقق المكوّن من ٤ أرقام",
   "Enter Your New Password": "أدخل كلمة المرور الجديدة",

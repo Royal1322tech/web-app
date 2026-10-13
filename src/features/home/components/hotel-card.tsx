@@ -3,7 +3,7 @@ import { Icon } from "@/components/ui/icon";
 import { useHotelPreferences } from "@/features/preferences/use-hotel-preferences";
 import type { IconName } from "@/components/ui/icon";
 import type { Hotel } from "../types";
-import { UnavailableButton } from "./unavailable-button";
+import { Link } from "react-router-dom";
 import { useLocale } from "@/features/localization/locale-provider";
 import styles from "../home.module.css";
 
@@ -112,9 +112,14 @@ export function HotelCard({
         </>
       )}
       <div className={styles.cardBottom}>
-        <UnavailableButton
+        <Link
+          to={
+            compact
+              ? "/hotels/eastern-al-montazah"
+              : `/search?destination=${encodeURIComponent(hotel.city)}`
+          }
           className={compact ? styles.arrowButton : styles.primaryButton}
-          label={
+          aria-label={
             compact
               ? t(
                   `View ${hotel.name} sample deal`,
@@ -122,10 +127,13 @@ export function HotelCard({
                 )
               : undefined
           }
-          message="Booking and live availability are not available yet."
         >
-          {compact ? <span aria-hidden="true">›</span> : t("Book Now")}
-        </UnavailableButton>
+          {compact ? (
+            <span aria-hidden="true">›</span>
+          ) : (
+            t("Explore hotels", "استكشف الفنادق")
+          )}
+        </Link>
         {!compact && (
           <p className={styles.rate}>
             <strong>${hotel.nightlyRate}</strong> {t("/ night", "/ ليلة")}

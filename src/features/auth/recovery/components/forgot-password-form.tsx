@@ -99,6 +99,11 @@ export function ForgotPasswordForm() {
               )
             : text("Recovery service unavailable")}
         </p>
+        {pending && (
+          <Link to="/verify-otp" className="button button--outline">
+            {text("Continue to verification demo")}
+          </Link>
+        )}
       </form>
     </RecoveryShell>
   );

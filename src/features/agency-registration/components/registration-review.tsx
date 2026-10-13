@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useFormContext, useWatch } from "react-hook-form";
 import { Button, buttonClass } from "@/components/ui/button";
@@ -44,7 +45,8 @@ function InformationCard({
 
 export function RegistrationReview() {
   const canAccess = useRegistrationStepGuard(4);
-  const { control } = useFormContext<RegistrationValues>();
+  const [previewed, setPreviewed] = useState(false);
+  const { control, trigger } = useFormContext<RegistrationValues>();
   const [company, contact, documents] = useWatch({
     control,
     name: ["company", "contact", "documents"],
@@ -126,6 +128,27 @@ export function RegistrationReview() {
           Submit
         </Button>
       </div>
+      <div className="registration-actions">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={async () => {
+            if (await trigger()) setPreviewed(true);
+          }}
+        >
+          Preview demo submission
+        </Button>
+      </div>
+      {previewed && (
+        <div role="status" className="availability-notice">
+          <strong>Demonstration received — preview only.</strong>
+          <p>
+            No account was created and no information or documents were sent.
+            Actual partner approval is not connected.
+          </p>
+          <Link to="/verify-email">Explore email verification preview</Link>
+        </div>
+      )}
       <p
         id="submission-unavailable"
         className="availability-notice submission-notice"

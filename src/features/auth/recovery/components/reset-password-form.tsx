@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useForm, type UseFormRegisterReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -106,6 +107,11 @@ export function ResetPasswordForm() {
               : "Recovery service unavailable",
           )}
         </p>
+        {pending && (
+          <Link to="/login" className="button button--outline">
+            {text("Return to sign in")}
+          </Link>
+        )}
       </form>
     </RecoveryShell>
   );
