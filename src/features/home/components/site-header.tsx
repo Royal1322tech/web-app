@@ -14,7 +14,7 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   return (
     <header
-      className={`${styles.header} ${standalone ? styles.standaloneHeader : ""}`}
+      className={`${styles.header} ${standalone ? styles.standaloneHeader : ""} ${menuOpen ? styles.headerExpanded : ""}`}
     >
       <Link
         to="/"
@@ -32,7 +32,7 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
             : t("Open navigation", "فتح القائمة")
         }
         aria-expanded={menuOpen}
-        aria-controls="home-navigation"
+        aria-controls="home-navigation header-tools"
         onClick={() => setMenuOpen(!menuOpen)}
       >
         <Icon name={menuOpen ? "close" : "menu"} />
@@ -47,7 +47,7 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
             setMenuOpen(false);
             document
               .querySelector<HTMLButtonElement>(
-                `[aria-controls="home-navigation"]`,
+                `[aria-controls~="home-navigation"]`,
               )
               ?.focus();
           }
@@ -83,7 +83,21 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
           {t("Favourites", "المفضلة")}
         </Link>
       </nav>
-      <div className={styles.headerActions}>
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- Escape from tool controls closes the mobile navigation. */}
+      <div
+        id="header-tools"
+        className={styles.headerActions}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            setMenuOpen(false);
+            document
+              .querySelector<HTMLButtonElement>(
+                '[aria-controls~="home-navigation"]',
+              )
+              ?.focus();
+          }
+        }}
+      >
         <label className={styles.currency}>
           <span className="sr-only">{t("Language", "اللغة")}</span>
           <select
@@ -100,6 +114,7 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
         <div className={styles.accountActions}>
           <Link
             to="/notifications"
+            onClick={() => setMenuOpen(false)}
             aria-label={t("Notifications", "الإشعارات")}
             title={t("Notifications", "الإشعارات")}
           >
@@ -107,6 +122,7 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
           </Link>
           <Link
             to="/booking/summary"
+            onClick={() => setMenuOpen(false)}
             aria-label={t("Booking summary", "ملخص الحجز")}
             title={t("Booking summary", "ملخص الحجز")}
           >
@@ -114,6 +130,7 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
           </Link>
           <Link
             to={demoSessionActive ? "/agency" : "/welcome"}
+            onClick={() => setMenuOpen(false)}
             aria-label={t("Agency account", "حساب الوكالة")}
             title={t("Agency account", "حساب الوكالة")}
           >

@@ -1,3 +1,4 @@
+import { openHeaderTools } from "./helpers/header";
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
@@ -62,6 +63,7 @@ for (const width of [320, 375, 768, 1440]) {
       ).toBeTruthy();
     }
     await page.goto("/");
+    await openHeaderTools(page);
     await page.getByRole("combobox", { name: "Language" }).selectOption("ar");
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     await page.reload();

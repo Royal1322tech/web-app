@@ -44,6 +44,9 @@ export function Workspace({
           aria-label={t("Workspace navigation", "التنقل في مساحة العمل")}
         >
           <NavLink to="/bookings">{t("Bookings", "الحجوزات")}</NavLink>
+          <NavLink to="/car-rental/bookings">
+            {t("Rentals", "التأجيرات")}
+          </NavLink>
           <NavLink to="/agency">{t("Agency profile", "ملف الوكالة")}</NavLink>
           <NavLink to="/wallet">
             {t("Credit balance", "الرصيد الائتماني")}

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { Icon } from "@/components/ui/icon";
 import { useLocale } from "@/features/localization/locale-provider";
 import { StatePreview, SystemState } from "@/components/ui/system-state";
 import { useDemo } from "./demo-provider";
@@ -65,7 +66,11 @@ export function AgencyPage() {
               </div>
             </dl>
             <Link to="/wallet">
-              {t("Open credit overview →", "افتح ملخص الائتمان ←")}
+              {t("Open credit overview", "افتح ملخص الائتمان")}
+              <Icon
+                name="arrowRight"
+                style={{ display: "inline-block", verticalAlign: "middle" }}
+              />
             </Link>
             <hr />
             <p className="fine-print">

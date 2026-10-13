@@ -30,7 +30,11 @@ Browser tests use the production preview on port 4173. Set `PLAYWRIGHT_BASE_URL`
 | URL                          | Screen                                                                       |
 | ---------------------------- | ---------------------------------------------------------------------------- |
 | `/`                          | Homepage, hotel search, deals, partner benefits, collections, footer         |
-| `/car-rental`                | Branded B2B service overview; vehicle search and booking not yet implemented |
+| `/car-rental`                | Branded B2B service overview and explicit rental demonstration |
+| `/car-rental/search` | Fictional vehicle search, criteria, filters and sorting |
+| `/car-rental/vehicles/:id` | Vehicle specifications, sample conditions and selection |
+| `/car-rental/summary`, `/car-rental/driver`, `/car-rental/payment` | Rental summary, validated fictional driver information and payment outcome previews |
+| `/car-rental/bookings`, `/car-rental/bookings/:id` | In-memory rentals, confirmation/pending/failure details, modification/cancellation |
 | `/search`                    | Sample results, filters, sorting, comparison, rooms and rate details         |
 | `/hotels/:hotelId`           | Gallery, facts, stay form, date prices and interactive map                   |
 | `/bookings`                  | Demo bookings, filters, sorting and management links                         |
@@ -113,3 +117,5 @@ Actions inspection requires Royal1322tech API authentication; SSH alone does not
 See [migration verification](docs/migration.md). The old directory must not be deleted without final owner confirmation.
 
 See [Welcome, account navigation and logo verification](docs/welcome-account-logo.md) for the focused restoration and animation changes.
+
+The compact mobile header exposes language/account/notification/cart tools through the navigation toggle. Hero CTA arrows use SVG rather than emoji-capable characters. Rental demo state is part of the existing `DemoProvider`, with three typed fictional vehicles and no supplier connections; refresh or Sign Out clears rental selections, driver details and records. See [polish and rental handoff](docs/frontend-polish.md).

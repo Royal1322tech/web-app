@@ -48,4 +48,4 @@ Use case: background-extraction. Correct this transparent airplane cutout for ac
 
 ## Verification
 
-Results recorded after the final test run. No commits, pushes or deployment.
+The standalone airplane implementation passed lint, TypeScript, production build and 46 browser tests (48.4s) before the subsequent polish scope. Desktop/tablet/mobile screenshots and Arabic static fallback were inspected. Subsequent regression results are in `frontend-polish.md`. No commits, pushes or deployment.

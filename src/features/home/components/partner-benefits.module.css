@@ -1,0 +1,141 @@
+/* Scoped to this editorial section; shared booking and homepage styles stay intact. */
+.section {
+  background: linear-gradient(135deg, #f1f5fa, #eaf1f7);
+  border: 1px solid #dce5ee;
+}
+.heading { margin-bottom: 32px; }
+.cards { grid-auto-rows: 1fr; gap: 16px; }
+.section .card {
+  position: relative;
+  background: #ffffffeb;
+  border: 1px solid #dce5ee;
+  border-radius: 18px;
+  box-shadow: 0 5px 18px #0b254506;
+  padding: 16px;
+  gap: 16px;
+  transition: transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease;
+}
+.thumbnail {
+  position: relative;
+  flex: 0 0 140px;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #dde7ef;
+}
+.thumbnail img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 600ms var(--ease);
+}
+.copy { min-width: 0; }
+.section .card h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: clamp(16px, 1.4vw, 20px);
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+.section .card p { font-size: 14px; line-height: 1.65; margin: 0; color: #46576b; }
+.price, .check {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  color: #966022;
+}
+.price { stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
+.check { display: inline-flex; align-items: center; border-radius: 50%; background: #fff3e3; }
+.check svg { stroke-dasharray: 30; stroke-dashoffset: 0; }
+.route { position: absolute; inset-inline: 8px; bottom: 4px; width: calc(100% - 16px); height: 20px; }
+.route path { fill: none; stroke: #ffd59e; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 1; }
+.visual {
+  position: relative;
+  align-self: center;
+  justify-self: center;
+  width: 100%;
+  max-width: 642px;
+  aspect-ratio: 642 / 611;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 20px;
+  box-shadow: 0 16px 40px #0b254514;
+  background: #cee4f4;
+}
+.imageReveal { width: 100%; height: 100%; }
+.photograph {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: translateY(var(--partner-drift, 0px)) scale(1.04);
+}
+.badge {
+  position: absolute;
+  inset-block-start: 24px;
+  inset-inline-end: 24px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 16px;
+  max-width: calc(100% - 32px);
+  border: 1px solid #ffffffd9;
+  border-radius: 12px;
+  background: #ffffffdf;
+  backdrop-filter: blur(10px);
+  color: #0b2545;
+  box-shadow: 0 5px 20px #0b254510;
+  font-size: 13px;
+  font-weight: 700;
+}
+.badge svg { flex-shrink: 0; color: #805319; }
+.section :global(.travel-trail-accent) { animation: none; }
+.section :global(.travel-trail-draw) { stroke-dasharray: 1; stroke-dashoffset: 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+  :global(.reveal-enter) .heading h2 { animation: partner-rise 650ms 180ms var(--ease) backwards; }
+  :global(.reveal-enter) .heading p { animation: partner-rise 650ms 300ms var(--ease) backwards; }
+  :global(.reveal-enter) .card { animation: partner-rise 650ms 380ms var(--ease) backwards; }
+  :global(.reveal-enter) .card:nth-child(2) { animation-delay: 470ms; }
+  :global(.reveal-enter) .card:nth-child(3) { animation-delay: 560ms; }
+  :global(.reveal-enter) .card:nth-child(4) { animation-delay: 650ms; }
+  :global(.reveal-enter) .imageReveal { animation: partner-image 1100ms 280ms var(--ease) backwards; }
+  :global(.reveal-enter) .badge { animation: partner-rise 600ms 800ms var(--ease) backwards; }
+  :global(.reveal-enter) .section :global(.travel-trail-draw) { animation: partner-draw 2800ms var(--ease) backwards; }
+  :global(.reveal-enter) .route path { animation: partner-draw 1100ms 700ms ease backwards; }
+  :global(.reveal-enter) .check svg { animation: partner-check 650ms 1000ms ease backwards; }
+  :global(.reveal-enter) .price { animation: partner-price 850ms 800ms ease; }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .section .card:hover { transform: translateY(-3px); border-color: #dab58b; box-shadow: 0 12px 28px #0b25450e; }
+  .card:hover .thumbnail img { transform: scale(1.045); }
+}
+@keyframes partner-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes partner-image {
+  from { opacity: 0; transform: scale(1.045); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes partner-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes partner-check { from { stroke-dashoffset: 30; } to { stroke-dashoffset: 0; } }
+@keyframes partner-price {
+  0%, 100% { transform: rotate(0); }
+  40% { transform: rotate(-8deg); }
+  70% { transform: rotate(4deg); }
+}
+@media (max-width: 1199px) { .thumbnail { flex-basis: 120px; } }
+@media (max-width: 599px) {
+  .heading { margin-bottom: 24px; }
+  .section .card { padding: 12px; gap: 12px; border-radius: 14px; }
+  .thumbnail { flex-basis: 84px; }
+  .section .card h3 { font-size: 16px; gap: 5px; }
+  .section .card p { font-size: 13px; line-height: 1.6; }
+  .badge { inset-block-start: 16px; inset-inline-end: 16px; font-size: 12px; padding: 10px 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .section .card:hover, .photograph { transform: none; }
+}

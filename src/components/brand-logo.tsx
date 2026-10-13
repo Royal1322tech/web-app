@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, type CSSProperties } from "react";
 
 /** Hand-drawn, layered interpretation; the original raster is preserved separately. */
 export function BrandEmblem() {
@@ -71,6 +71,8 @@ export function BrandEmblem() {
         pathLength="1"
       />
       <path
+        className="brand-flight-trail"
+        pathLength="1"
         d="M13 85Q35 40 100 24"
         stroke="#FFD59E"
         strokeWidth="5"
@@ -90,21 +92,31 @@ export function BrandLogo({
   withName = false,
   animated = false,
   homepageIntro = false,
+  variant = "static",
 }: {
   withName?: boolean;
   animated?: boolean;
   homepageIntro?: boolean;
+  variant?: "static" | "auth" | "footer";
 }) {
   return (
     <div
-      className={`brand-logo ${withName ? "brand-logo--with-name" : "brand-logo--full"} ${animated ? "brand-logo--animated" : ""} ${homepageIntro ? "brand-logo--homepage-intro" : ""}`}
+      className={`brand-logo ${withName ? "brand-logo--with-name" : "brand-logo--full"} ${animated ? "brand-logo--animated" : ""} ${homepageIntro ? "brand-logo--homepage-intro" : ""} brand-logo--${variant}`}
       role="img"
       aria-label="Royal Vacation"
     >
       <BrandEmblem />
       <span className="brand-wordmark" aria-hidden="true">
         <strong>
-          ROY<span>A</span>L
+          {["R", "O", "Y", "A", "L"].map((letter, index) => (
+            <span
+              key={index}
+              className={`brand-letter ${letter === "A" ? "brand-letter--gold" : ""}`}
+              style={{ "--letter-index": index } as CSSProperties}
+            >
+              {letter}
+            </span>
+          ))}
         </strong>
         <small>VACATION</small>
       </span>

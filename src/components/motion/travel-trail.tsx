@@ -1,5 +1,8 @@
+import { useId } from "react";
+
 /** Decorative travel motif; it conveys no product service or interactive action. */
-export function TravelTrail() {
+export function TravelTrail({ draw = false }: { draw?: boolean }) {
+  const maskId = useId().replace(/:/g, "");
   return (
     <svg
       className="travel-trail"
@@ -8,7 +11,16 @@ export function TravelTrail() {
       aria-hidden="true"
       focusable="false"
     >
+      {draw && (
+        <defs>
+          <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="460" height="90">
+            <path className="travel-trail-draw" d="M10 70C80 90 95 5 185 34S315 90 438 16"
+              fill="none" stroke="white" strokeWidth="6" pathLength="1" />
+          </mask>
+        </defs>
+      )}
       <path
+        mask={draw ? `url(#${maskId})` : undefined}
         className="travel-trail-line"
         d="M10 70C80 90 95 5 185 34S315 90 438 16"
         stroke="currentColor"

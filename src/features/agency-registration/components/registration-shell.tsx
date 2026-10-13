@@ -7,7 +7,7 @@ export function RegistrationShell({ children }: { children: ReactNode }) {
       <div className="registration-frame">
         <div className="registration-content">
           <header className="registration-header">
-            <BrandLogo withName />
+            <BrandLogo withName variant="auth" />
             <h1>New Travel Agency Registration</h1>
             <p>Tell us about your company to become a partner.</p>
           </header>

@@ -58,7 +58,7 @@
 @media (max-width: 599px) {
   .sky {
     --plane-width: 120px;
-    top: 146px;
+    top: 100px;
     height: 70px;
     clip-path: none;
   }

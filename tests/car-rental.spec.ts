@@ -1,3 +1,4 @@
+import { openHeaderTools } from "./helpers/header";
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 for (const width of [375, 1440])
@@ -12,7 +13,7 @@ for (const width of [375, 1440])
     await expect(carTab).toHaveAttribute("aria-selected", "true");
     await expect(
       page.getByRole("heading", {
-        name: "Car rental is coming soon",
+        name: "Explore the car rental demo",
         exact: true,
       }),
     ).toBeVisible();
@@ -54,6 +55,7 @@ for (const width of [375, 1440])
     ).toHaveAttribute("aria-current", "page");
     if (width < 1000)
       await page.getByRole("button", { name: "Close navigation" }).click();
+    await openHeaderTools(page);
     await page.getByRole("combobox", { name: "Language" }).selectOption("ar");
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(

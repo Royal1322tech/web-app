@@ -1,3 +1,4 @@
+import { openHeaderTools, closeHeaderMenu } from "./helpers/header";
 import { test, expect } from "@playwright/test";
 import sharp from "sharp";
 import { readFile } from "node:fs/promises";
@@ -56,6 +57,7 @@ for (const width of [375, 768, 1440, 1920]) {
     await page.mouse.move(width * 0.8, 300);
     await expect(background).toHaveCSS("transform", "none");
     await expect(background).toHaveCSS("animation-name", "none");
+    await openHeaderTools(page);
     await page.locator('header a[href="/welcome"]').click();
     await expect(page).toHaveURL(/\/welcome$/);
   });
@@ -69,7 +71,9 @@ test("reduced motion shows one static airplane in English and Arabic", async ({
     await page.setViewportSize({ width, height: 1000 });
     await page.goto("/");
     for (const locale of ["en", "ar"]) {
+      await openHeaderTools(page);
       await page.locator("header select").selectOption(locale);
+      await closeHeaderMenu(page);
       const plane = page.locator("[data-hero-flight] img");
       await expect(plane).toHaveCSS("animation-name", "none");
       await expect(plane).toHaveCSS("opacity", "1");

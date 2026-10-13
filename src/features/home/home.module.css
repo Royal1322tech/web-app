@@ -1320,45 +1320,80 @@
   position: absolute;
   bottom: 0;
   width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center bottom;
   pointer-events: none;
 }
+
 .footerContent {
   position: relative;
   z-index: 1;
   max-width: 1232px;
   margin: auto;
-  padding: 50px 24px;
-  display: flex;
-  justify-content: space-between;
-  gap: 36px;
-  flex-wrap: wrap;
-}
-.footerContent :global(.brand-logo) {
-  color: white;
-}
-.footerContent :global(.brand-wordmark small) {
-  color: var(--light-gold);
-}
-.footerContent p {
-  margin-top: 20px;
-  font-size: 13px;
-  color: #d2dceb;
-}
-.footerContent nav {
-  display: flex;
-  gap: 24px;
+  padding: 48px 24px 24px;
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) auto;
   align-items: center;
-  flex-wrap: wrap;
+  gap: 32px 48px;
+}
+.footerContent :global(.brand-logo) { color: white; }
+.footerContent :global(.brand-wordmark small),
+.footerContent :global(.brand-letter--gold) { color: var(--light-gold); }
+.footerBrand { min-width: 0; }
+.footerLogo { display: inline-flex; border-radius: 8px; text-decoration: none; }
+.footerContent p { font-size: 13px; color: #d2dceb; }
+.footerBrand p { margin: 16px 0 0; }
+.footerContent nav {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 32px;
 }
 .footerContent nav a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  gap: 12px;
+  color: #edf2f8;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 4px;
+  transition: color 200ms ease;
 }
-.footerContent > p {
-  flex-basis: 100%;
+.footerContent nav a svg {
+  flex: 0 0 20px;
+  transition: transform 240ms ease, color 240ms ease;
+}
+.footerContent nav a span { position: relative; padding-block: 4px; }
+.footerContent nav a span::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--light-gold);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 240ms ease;
+}
+:global([dir="rtl"]) .footerContent nav a span::after { transform-origin: right; }
+.footerContent nav a:is(:hover, :focus-visible) { color: var(--light-gold); }
+.footerContent nav a:is(:hover, :focus-visible) svg { transform: translateY(-2px); }
+.footerContent nav a:is(:hover, :focus-visible) span::after { transform: scaleX(1); }
+.footerContent a:focus-visible { outline: 2px solid var(--light-gold); outline-offset: 5px; }
+.footerContent .footerNotice {
+  grid-column: 1 / -1;
   border-top: 1px solid #ffffff26;
-  padding-top: 24px;
-  margin-top: 0;
+  padding-top: 20px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.7;
+}
+@media (max-width: 767px) {
+  .footerContent { grid-template-columns: minmax(0, 1fr); padding: 32px 24px 20px; gap: 24px; }
+  .footerContent nav { gap: 8px 20px; }
+  .footerContent nav a { font-size: 14px; gap: 8px; }
 }
 .standaloneHeader {
   position: relative;
@@ -1520,4 +1555,71 @@
 .tabs button:hover:not([aria-selected="true"]) {
   background: var(--subtle);
   color: var(--royal);
+}
+
+.heroActions > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.heroActions svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+:global([dir="rtl"]) .directionalArrow {
+  transform: scaleX(-1);
+}
+@media (max-width: 599px) {
+  .header:not(.headerExpanded) .headerActions {
+    display: none;
+  }
+  .headerExpanded {
+    max-height: calc(100svh - 24px);
+    overflow-y: auto;
+  }
+  .headerExpanded .headerActions {
+    order: 2;
+    justify-content: space-between;
+    padding-top: 10px;
+  }
+  .headerExpanded .navigation {
+    order: 3;
+    gap: 2px;
+  }
+  .headerExpanded .navigation a {
+    min-height: 44px;
+  }
+  .heroCopy {
+    padding: 185px 24px 100px;
+  }
+  .heroCopy h1 {
+    font-size: clamp(34px, 9.2vw, 42px);
+    line-height: 1.12;
+    letter-spacing: -1.3px;
+  }
+  .heroCopy > p:not(.eyebrow) {
+    font-size: 16px;
+    line-height: 1.7;
+  }
+  .heroActions {
+    gap: 16px 24px;
+  }
+  .heroActions > a {
+    min-height: 48px;
+    font-size: 15px;
+  }
+  .heroActions > a:first-child {
+    gap: 24px;
+  }
+  .heroProof {
+    font-size: 9px;
+    letter-spacing: 0.8px;
+  }
+  .hero {
+    min-height: 650px;
+  }
+  .tabs button {
+    min-height: 56px;
+  }
 }

@@ -254,6 +254,55 @@ export const router = createBrowserRouter([
         path: "car-rental",
         lazy: page(() => import("@/pages/car-rental"), "Car Rental"),
       },
+      {
+        path: "car-rental/search",
+        lazy: async () => ({
+          Component: (await import("@/features/car-rental/rental-flow"))
+            .RentalSearchPage,
+        }),
+      },
+      {
+        path: "car-rental/vehicles/:id",
+        lazy: async () => ({
+          Component: (await import("@/features/car-rental/rental-flow"))
+            .VehicleDetailsPage,
+        }),
+      },
+      {
+        path: "car-rental/summary",
+        lazy: async () => ({
+          Component: (await import("@/features/car-rental/rental-flow"))
+            .RentalSummaryPage,
+        }),
+      },
+      {
+        path: "car-rental/driver",
+        lazy: async () => ({
+          Component: (await import("@/features/car-rental/rental-flow"))
+            .RentalDriverPage,
+        }),
+      },
+      {
+        path: "car-rental/payment",
+        lazy: async () => ({
+          Component: (await import("@/features/car-rental/rental-flow"))
+            .RentalPaymentPage,
+        }),
+      },
+      {
+        path: "car-rental/bookings",
+        lazy: async () => ({
+          Component: (await import("@/features/car-rental/rental-flow"))
+            .RentalBookingsPage,
+        }),
+      },
+      {
+        path: "car-rental/bookings/:id",
+        lazy: async () => ({
+          Component: (await import("@/features/car-rental/rental-flow"))
+            .RentalBookingDetailsPage,
+        }),
+      },
       { path: "*", Component: NotFound },
     ],
   },

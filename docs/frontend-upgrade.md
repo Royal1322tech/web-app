@@ -1,3 +1,5 @@
+> Initial upgrade handoff. Later owner-approved work adds compact mobile navigation and the rental demonstration; see [frontend polish](frontend-polish.md) for current status.
+
 # B2B frontend upgrade checklist
 
 All work local. No backend, commits, pushes, deployment, real reservations or money movement.

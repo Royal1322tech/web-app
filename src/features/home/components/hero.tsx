@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Text } from "@/features/localization/locale-provider";
+import { Icon } from "@/components/ui/icon";
 import { ResponsiveImage as Image } from "@/components/ui/responsive-image";
 import type { HeroContent } from "../types";
 import { SiteHeader } from "./site-header";
@@ -47,11 +48,11 @@ export function Hero({ content }: { content: HeroContent }) {
         <div className={styles.heroActions}>
           <a href="#hotel-search" className="button button--gold">
             <Text en="Find a hotel" ar="ابحث عن فندق" />
-            <span aria-hidden="true">↗</span>
+            <Icon name="arrowUpRight" />
           </a>
           <Link to="/register/agency/company">
             <Text en="Become a partner" ar="انضم كشريك" />{" "}
-            <span aria-hidden="true">→</span>
+            <Icon name="arrowRight" className={styles.directionalArrow} />
           </Link>
         </div>
         <div className={styles.heroProof}>

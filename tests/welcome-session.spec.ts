@@ -1,3 +1,4 @@
+import { openHeaderTools } from "./helpers/header";
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
@@ -9,6 +10,7 @@ for (const width of [375, 1440]) {
       await page.setViewportSize({ width, height: 1000 });
       await page.emulateMedia({ reducedMotion: "reduce" });
       await page.goto("/");
+      await openHeaderTools(page);
       await page.locator("header select").selectOption(locale);
       const account = () =>
         page.getByRole("link", {
@@ -16,6 +18,7 @@ for (const width of [375, 1440]) {
           exact: true,
         });
       await expect(account()).toHaveAttribute("href", "/welcome");
+      await openHeaderTools(page);
       await account().click();
       await expect(page).toHaveURL(/\/welcome$/);
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(
@@ -71,6 +74,7 @@ for (const width of [375, 1440]) {
       await expect(
         page.getByRole("heading", { name: "Horizon Travel — Demo Agency" }),
       ).toBeVisible();
+      await openHeaderTools(page);
       await expect(account()).toHaveAttribute("href", "/agency");
       for (const path of [
         "/wallet",
@@ -82,6 +86,7 @@ for (const width of [375, 1440]) {
         await expect(page).toHaveURL(new RegExp(`${path}$`));
         await expect(page.locator(".demo-session-gate")).toHaveCount(0);
       }
+      await openHeaderTools(page);
       await account().click();
       await expect(page).toHaveURL(/\/agency$/);
       await page
@@ -96,6 +101,7 @@ for (const width of [375, 1440]) {
       await expect(page.getByText("Horizon Travel — Demo Agency")).toHaveCount(
         0,
       );
+      await openHeaderTools(page);
       await expect(account()).toHaveAttribute("href", "/welcome");
       await account().click();
       await expect(page).toHaveURL(/\/welcome$/);
@@ -155,6 +161,7 @@ test("homepage SVG introduction settles without layout shift and does not replay
   );
   const finalPlane = await page.locator("header .brand-plane").boundingBox();
   const header = await page.locator("header").boundingBox();
+  await openHeaderTools(page);
   await page.locator('header a[href="/welcome"]').click();
   await expect(page).toHaveURL(/\/welcome$/);
   await expect(

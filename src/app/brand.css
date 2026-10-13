@@ -91,7 +91,7 @@ textarea {
   letter-spacing: -1.5px;
   font-weight: 900;
 }
-.brand-wordmark strong span {
+.brand-wordmark strong .brand-letter--gold {
   color: #ae681d;
 }
 .brand-wordmark small {
@@ -484,8 +484,26 @@ details[open] > :not(summary) {
 .brand-logo--homepage-intro .brand-waves {
   animation: homepage-wave 1800ms ease-in-out;
 }
-.brand-logo--homepage-intro .brand-wordmark {
-  animation: homepage-wordmark-in 600ms 400ms var(--ease) both;
+.brand-letter {
+  display: inline-block;
+}
+.brand-logo--homepage-intro .brand-letter {
+  animation: homepage-wordmark-in 500ms calc(400ms + var(--letter-index) * 85ms)
+    var(--ease) both;
+}
+.brand-logo--homepage-intro .brand-wordmark small {
+  animation: homepage-wordmark-in 650ms 950ms var(--ease) both;
+}
+.brand-logo--homepage-intro .brand-flight-trail {
+  animation: arc-draw 1300ms 150ms var(--ease) both;
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  a .brand-logo {
+    transition: transform 240ms var(--ease);
+  }
+  a:hover .brand-logo {
+    transform: translateY(-1px);
+  }
 }
 @keyframes homepage-emblem-in {
   from {
@@ -533,4 +551,99 @@ details[open] > :not(summary) {
   .brand-logo--homepage-intro .brand-plane {
     offset-path: none;
   }
+}
+
+/* Finite gold feedback, with no reflow or animation over form fields. */
+.button--gold {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.button--gold::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    #ffffff55 50%,
+    transparent 80%
+  );
+  transform: translateX(-110%);
+  pointer-events: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .button--gold:hover::after {
+    animation: gold-sweep 650ms var(--ease);
+  }
+}
+@keyframes gold-sweep {
+  to {
+    transform: translateX(110%);
+  }
+}
+@supports (transition-behavior: allow-discrete) {
+  dialog {
+    opacity: 0;
+    transform: translateY(8px);
+    transition:
+      opacity 180ms,
+      transform 180ms,
+      display 180ms allow-discrete,
+      overlay 180ms allow-discrete;
+  }
+  dialog[open] {
+    opacity: 1;
+    transform: translateY(0);
+    animation: none;
+  }
+  @starting-style {
+    dialog[open] {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+}
+
+/* Short entrance shared by auth pages; registration owns one persistent logo. */
+.brand-logo--auth .brand-globe {
+  transform-origin: 60px 63px;
+  animation: homepage-emblem-in 550ms var(--ease) both;
+}
+.brand-logo--auth .brand-plane {
+  offset-path: path("M 55 52 C 66 31 78 22 96 26");
+  offset-anchor: 96px 26px;
+  offset-rotate: 0deg;
+  offset-distance: 100%;
+  animation: homepage-plane-flight 1200ms 100ms var(--ease) both;
+}
+.brand-logo--auth .brand-letter {
+  animation: homepage-wordmark-in 400ms calc(350ms + var(--letter-index) * 65ms) var(--ease) both;
+}
+.brand-logo--auth .brand-wordmark small {
+  animation: homepage-wordmark-in 450ms 1000ms var(--ease) both;
+}
+
+/* A brief local gesture, never the full entrance sequence. */
+@media (prefers-reduced-motion: no-preference) {
+  a:is(:hover, :focus-visible) .brand-logo--footer { transform: none; }
+  a:is(:hover, :focus-visible) .brand-logo--footer .brand-plane {
+    animation: footer-plane-flight 700ms ease-in-out;
+  }
+  a:is(:hover, :focus-visible) .brand-logo--footer .brand-flight-trail {
+    animation: footer-gold-accent 900ms ease-in-out;
+  }
+}
+@keyframes footer-plane-flight {
+  0%, 100% { transform: translate(0, 0); }
+  45% { transform: translate(-3px, 1px); }
+  70% { transform: translate(2px, -2px); }
+}
+@keyframes footer-gold-accent {
+  0%, 100% { opacity: 1; }
+  45% { opacity: 0.45; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-logo--auth .brand-plane { offset-path: none; }
 }

@@ -1,3 +1,12 @@
+import {
+  rentalTotal,
+  rentalSchema,
+  demoVehicles,
+  type RentalSelection,
+  type RentalDriver,
+  type RentalRecord,
+  type RentalStatus,
+} from "@/features/car-rental/rental-model";
 import { createContext, useContext, useState, type ReactNode } from "react";
 import type { HotelSearchCriteria } from "@/features/home/schemas/hotel-search.schema";
 import { localToday } from "@/features/home/schemas/hotel-search.schema";
@@ -12,6 +21,14 @@ import type {
   DemoNotification,
 } from "./types";
 interface DemoContextValue {
+  rentalSelection: RentalSelection | null;
+  rentalDriver: RentalDriver | null;
+  rentals: RentalRecord[];
+  selectRental: (selection: RentalSelection) => void;
+  saveRentalDriver: (driver: RentalDriver) => void;
+  createRental: (status: Exclude<RentalStatus, "cancelled">) => string | null;
+  cancelRental: (id: string) => void;
+  modifyRental: (id: string, selection: RentalSelection) => void;
   demoSessionActive: boolean;
   enterDemoSession: () => void;
   signOut: () => void;
@@ -54,16 +71,89 @@ export function defaultCriteria(destination: string): HotelSearchCriteria {
 }
 export function DemoProvider({ children }: { children: ReactNode }) {
   const [demoSessionActive, setDemoSessionActive] = useState(false);
+  const [rentalSelection, setRentalSelection] =
+    useState<RentalSelection | null>(null);
+  const [rentalDriver, setRentalDriver] = useState<RentalDriver | null>(null);
+  const [rentals, setRentals] = useState<RentalRecord[]>([]);
   const [selection, setSelection] = useState<DemoSelection | null>(null);
   const [guests, setGuests] = useState<GuestValues | null>(null);
   const [records, setRecords] = useState(initialBookings);
   const [profile, setProfile] = useState(demoProfile);
   const [notifications, setNotifications] = useState(demoNotifications);
   const value: DemoContextValue = {
+    rentalSelection,
+    rentalDriver,
+    rentals,
+    selectRental: (next) => {
+      if (
+        !rentalSchema.safeParse(next.criteria).success ||
+        !demoVehicles.some((v) => v.id === next.vehicleId && v.available)
+      )
+        return;
+      setRentalSelection(next);
+      setRentalDriver(null);
+    },
+    saveRentalDriver: setRentalDriver,
+    createRental: (status) => {
+      if (!rentalSelection || !rentalDriver) return null;
+      const id = `RENTAL-DEMO-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+      setRentals((current) => [
+        {
+          ...rentalSelection,
+          id,
+          driver: rentalDriver,
+          status,
+          total: rentalTotal(rentalSelection),
+          timeline: [`Demo ${status}`],
+        },
+        ...current,
+      ]);
+      setRentalSelection(null);
+      setRentalDriver(null);
+      return id;
+    },
+    cancelRental: (id) =>
+      setRentals((current) =>
+        current.map((r) =>
+          r.id === id && ["confirmed", "pending"].includes(r.status)
+            ? {
+                ...r,
+                status: "cancelled",
+                timeline: [
+                  ...r.timeline,
+                  "Cancellation simulated — no supplier change",
+                ],
+              }
+            : r,
+        ),
+      ),
+    modifyRental: (id, selection) => {
+      if (!rentalSchema.safeParse(selection.criteria).success) return;
+      setRentals((current) =>
+        current.map((r) =>
+          r.id === id &&
+          r.vehicleId === selection.vehicleId &&
+          ["confirmed", "pending"].includes(r.status)
+            ? {
+                ...r,
+                ...selection,
+                total: rentalTotal(selection),
+                timeline: [
+                  ...r.timeline,
+                  "Modification simulated — no supplier change",
+                ],
+              }
+            : r,
+        ),
+      );
+    },
     demoSessionActive,
     enterDemoSession: () => setDemoSessionActive(true),
     signOut: () => {
       setDemoSessionActive(false);
+      setRentalSelection(null);
+      setRentalDriver(null);
+      setRentals([]);
       setSelection(null);
       setGuests(null);
       setRecords(initialBookings());

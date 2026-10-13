@@ -11,7 +11,7 @@ export function WelcomeScreen() {
   return (
     <AuthShell variant="welcome" language={locale}>
       <div className="welcome-content">
-        <BrandLogo />
+        <BrandLogo variant="auth" />
         <h1>{t("Welcome!", "مرحبًا!")}</h1>
         <p className="intro-copy">
           {t(

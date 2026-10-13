@@ -1,3 +1,5 @@
+> Historical recovery audit. The owner subsequently authorized a complete fictional rental workflow; current implementation and limitations are documented in [frontend polish](frontend-polish.md). The findings below describe the pre-redesign baseline and first restoration.
+
 # Car Rental preservation check
 
 Baseline inspected: local Git `HEAD` (`8dd0403`) and the feature's history (`6445b49`). No changes were made to Git history, remotes, authentication, or deployment.

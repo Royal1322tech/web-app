@@ -1,3 +1,4 @@
+import { openHeaderTools } from "./helpers/header";
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 const protectedDemoRoutes = [
@@ -304,6 +305,7 @@ test("new routes load directly, refresh, and preserve RTL and reduced motion", a
     }
   }
   await visit(page, "/wallet");
+  await openHeaderTools(page);
   await page.getByRole("combobox", { name: "Language" }).selectOption("ar");
   for (const route of [
     "/agency",
@@ -453,6 +455,7 @@ test("Arabic mobile checkout preserves guest names, contact and totals through t
 }) => {
   await page.setViewportSize({ width: 375, height: 950 });
   await selectRoom(page);
+  await openHeaderTools(page);
   await page.getByRole("combobox", { name: "Language" }).selectOption("ar");
   await page.getByRole("checkbox").check();
   await page
