@@ -1,81 +1,42 @@
-import { Link } from "react-router-dom";
-import { Text } from "@/features/localization/locale-provider";
-import { Icon } from "@/components/ui/icon";
-import { ResponsiveImage as Image } from "@/components/ui/responsive-image";
+import { useEffect, useRef, useState } from "react";
+import { useMediaEnvironment } from "@/components/motion/use-media-environment";
+import { Text, useLocale } from "@/features/localization/locale-provider";
+import { ResponsiveImage } from "@/components/ui/responsive-image";
 import type { HeroContent } from "../types";
 import { SiteHeader } from "./site-header";
 import { HeroAirplane } from "./hero-airplane";
-import styles from "../home.module.css";
+import styles from "./hero.module.css";
+
 export function Hero({ content }: { content: HeroContent }) {
+  const { t } = useLocale();
+  const root = useRef<HTMLElement>(null);
+  const { canAnimate } = useMediaEnvironment(root);
+  const [active, setActive] = useState(0);
+  const slides = [
+    content,
+    { image: "/images/home/cinematic/coastal-resort.png", alt: "", width: 1672, height: 941 },
+    { image: "/images/home/cinematic/airport-transfers.png", alt: "", width: 1672, height: 941 },
+  ];
+  useEffect(() => {
+    if (!canAnimate) return;
+    const timer = window.setInterval(() => setActive(index => (index + 1) % 3), 4000);
+    return () => clearInterval(timer);
+  }, [canAnimate]);
   return (
-    <section
-      className={styles.hero}
-      aria-label="Royal Vacation agency platform"
-    >
-      <Image
-        src={content.image}
-        alt={content.alt}
-        width={content.width}
-        height={content.height}
-        sizes="(max-width: 1199px) 2048px, (max-width: 1875px) 1875px, 100vw"
-        eager
-        className={styles.heroImage}
-      />
-      <HeroAirplane />
-      <div className={styles.heroOverlay} />
-      <SiteHeader />
-      <div className={styles.heroCopy}>
-        <p className={styles.eyebrow}>
-          <span />{" "}
-          <Text
-            en="THE WORLD, THROUGH YOUR AGENCY"
-            ar="العالم من خلال وكالتك"
-          />
-        </p>
-        <h1>
-          <Text en="Exceptional stays." ar="إقامات استثنائية." />
-          <br />
-          <span>
-            <Text en="Stronger partnerships." ar="شراكات أقوى." />
-          </span>
-        </h1>
-        <p>
-          <Text
-            en="A considered workspace for travel professionals. Discover hotels, compare room options, and plan every guest’s next chapter."
-            ar="مساحة عمل مصممة لمحترفي السفر. اكتشف الفنادق وقارن الغرف وخطط للرحلة القادمة لكل ضيف."
-          />
-        </p>
-        <div className={styles.heroActions}>
-          <a href="#hotel-search" className="button button--gold">
-            <Text en="Find a hotel" ar="ابحث عن فندق" />
-            <Icon name="arrowUpRight" />
-          </a>
-          <Link to="/register/agency/company">
-            <Text en="Become a partner" ar="انضم كشريك" />{" "}
-            <Icon name="arrowRight" className={styles.directionalArrow} />
-          </Link>
-        </div>
-        <div className={styles.heroProof}>
-          <span>
-            <Text en="AGENCY WORKSPACE" ar="مساحة الوكالة" />
-          </span>
-          <span>
-            <Text en="HOTELS, SIMPLIFIED" ar="الفنادق ببساطة" />
-          </span>
-          <span>
-            <Text en="DEMO EXPERIENCE" ar="تجربة توضيحية" />
-          </span>
-        </div>
+    <section ref={root} className={styles.hero} aria-label={t("Royal Vacation agency platform", "منصة رويال فاكيشن للوكالات")}>
+      <div className={styles.slides} aria-hidden="true">
+        {slides.map((slide, index) => <div key={slide.image} className={styles.slide} data-active={active === index} data-motion={canAnimate}>
+          <ResponsiveImage src={slide.image} alt="" width={slide.width} height={slide.height} sizes={index === 0 ? "(max-width:599px) 1280px, 100vw" : "(max-width:599px) 800px, 100vw"} eager={index === 0} />
+        </div>)}
       </div>
-      <div className={styles.heroCaption}>
-        <span>
-          <Text en="CURATED FOR YOUR CLIENTS" ar="مختارة لعملائك" />
-        </span>
-        <Text
-          en="Your next great stay starts here"
-          ar="إقامتك القادمة تبدأ هنا"
-        />
-        <i />
+      <HeroAirplane />
+      <div className={styles.overlay} />
+      <div className={styles.headerWrap}><SiteHeader /></div>
+      <div className={styles.copy}>
+        <p className={styles.eyebrow}><Text en="THE WORLD, THROUGH YOUR AGENCY" ar="العالم من خلال وكالتك" /></p>
+        <h1><Text en="Exceptional stays." ar="إقامات استثنائية." /><span><Text en="Stronger partnerships." ar="شراكات أقوى." /></span></h1>
+        <p className={styles.description}><Text en="A considered workspace for travel professionals. Discover hotels, compare room options, and plan every guest’s next chapter." ar="مساحة عمل مصممة لمحترفي السفر. اكتشف الفنادق وقارن الغرف وخطط للرحلة القادمة لكل ضيف." /></p>
+        <p className={styles.proof}><Text en="AGENCY WORKSPACE · DEMO EXPERIENCE" ar="مساحة الوكالة · تجربة توضيحية" /></p>
       </div>
     </section>
   );

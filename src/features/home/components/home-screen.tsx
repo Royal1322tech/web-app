@@ -3,6 +3,7 @@ import { Text } from "@/features/localization/locale-provider";
 import { SiteFooter } from "./site-footer";
 import { homeHero } from "../data/home-content";
 import { collectionHotels } from "../data/hotels.fixture";
+import { ProductsServices, PlatformStrengths } from "./platform-sections";
 import { Hero } from "./hero";
 import { HotelSearchForm } from "./hotel-search-form";
 import { FeaturedDeals } from "./featured-deals";
@@ -25,6 +26,8 @@ export function HomeScreen() {
         <Reveal>
           <PartnerBenefits />
         </Reveal>
+        <Reveal><ProductsServices /></Reveal>
+        <Reveal><PlatformStrengths /></Reveal>
         <Reveal>
           <HotelCollection hotels={collectionHotels} />
         </Reveal>

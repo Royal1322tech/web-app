@@ -37,7 +37,7 @@ for (const width of [375, 768, 1440]) {
   }
 }
 
-test("partner motion settles, parallax stays bounded, and reduced motion is static", async ({ page }) => {
+test("partner video pauses, resumes and respects reduced motion", async ({ page }) => {
   await page.goto("/");
   const section = page.locator('section[aria-labelledby="benefits-title"]');
   await section.scrollIntoViewIfNeeded();
@@ -49,17 +49,20 @@ test("partner motion settles, parallax stays bounded, and reduced motion is stat
   const cards = section.locator("article");
   await cards.first().hover();
   await expect(cards.first()).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, -3)");
-  const photo = section.locator('img[src="/images/home/partner-travel.png"]');
-  await photo.scrollIntoViewIfNeeded();
-  await page.evaluate(() => window.scrollBy(0, 120));
-  const visual = photo.locator("../..");
-  await expect.poll(async () => visual.evaluate(el => el.style.getPropertyValue("--partner-drift"))).not.toBe("");
-  expect(Math.abs(await visual.evaluate(el => parseFloat(el.style.getPropertyValue("--partner-drift"))))).toBeLessThanOrEqual(8);
+  const video = section.locator("video");
+  await video.scrollIntoViewIfNeeded();
+  await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.readyState)).toBeGreaterThanOrEqual(2);
+  await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.paused)).toBe(false);
+  await section.getByRole("button", { name: "Pause video", exact: true }).focus();
+  await page.keyboard.press("Enter");
+  await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.paused)).toBe(true);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await expect(photo).toHaveCSS("transform", "none");
   await expect(drawing).toHaveCSS("animation-name", "none");
   await expect(cards.first()).toHaveCSS("animation-name", "none");
-  await expect.poll(async () => visual.evaluate(el => el.style.getPropertyValue("--partner-drift"))).toBe("");
+  await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.paused)).toBe(true);
+  await section.getByRole("button", { name: "Play video", exact: true }).focus();
+  await page.keyboard.press("Enter");
+  await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.paused)).toBe(false);
   await section.screenshot({ path: "test-results/partners-reduced-motion.png" });
 });
 

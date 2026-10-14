@@ -1,25 +1,7 @@
+import { hotels } from "@/features/hotels/data/hotels.fixture";
 import type { Hotel } from "../types";
 
 // Design-preview fixtures only. These are not live rates, ratings, or availability.
-export const featuredHotels: readonly Hotel[] = Array.from(
-  { length: 4 },
-  (_, index) => ({
-    id: `featured-${index + 1}`,
-    name: "Eastern Al Montazah Hotel",
-    city: "Alexandria",
-    address: "Alexandria, Egypt",
-    image:
-      index % 2
-        ? "/images/home/hotel-pool.png"
-        : "/images/home/hotel-lobby.png",
-    nightlyRate: 116,
-    currency: "USD",
-    rating: 4.5,
-    description: "A comfortable stay by the Mediterranean.",
-    amenities: ["Pool", "Gym", "Food", "Spa"],
-  }),
-);
-
 export const collectionHotels: readonly Hotel[] = [
   "Alexandria",
   "Cairo",
@@ -40,3 +22,17 @@ export const collectionHotels: readonly Hotel[] = [
 }));
 
 export const sampleDestinations = ["Alexandria", "Cairo", "Hurghada"] as const;
+
+
+// Reuse existing distinct catalogue fixtures, plus one existing collection sample.
+export const featuredHotels: readonly Hotel[] = [
+  ...hotels.map((hotel, index) => ({
+    id: hotel.id, name: hotel.name.en, nameAr: hotel.name.ar,
+    city: hotel.city.en, address: hotel.address.en,
+    image: hotel.photos[[0, 4, 3, 6][index] ?? 0]?.src ?? hotel.photos[0].src,
+    nightlyRate: hotel.nightlyRate, currency: "USD" as const,
+    rating: hotel.reviewScore, description: "Sample property — no live availability.",
+    amenities: ["Pool", "Food"], detailsHref: `/hotels/${hotel.id}`,
+  })),
+  collectionHotels[0],
+];

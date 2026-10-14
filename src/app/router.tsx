@@ -105,6 +105,8 @@ export const router = createBrowserRouter([
         index: true,
         lazy: page(() => import("@/pages/home"), "Travel Agency Workspace"),
       },
+      { path: "contact", lazy: async () => ({ Component: (await import("@/features/enquiries/enquiry-page")).EnquiryPage }) },
+      { path: "group-quotation", lazy: async () => { const { EnquiryPage } = await import("@/features/enquiries/enquiry-page"); return { Component: () => <EnquiryPage group /> }; } },
       {
         path: "welcome",
         lazy: page(() => import("@/pages/welcome"), "Welcome"),
@@ -208,6 +210,8 @@ export const router = createBrowserRouter([
       {
         Component: DemoSessionGate,
         children: [
+          { path: "profile", lazy: async () => ({ Component: (await import("@/features/demo/profile-settings")).ProfilePage }) },
+          { path: "account/settings", lazy: async () => ({ Component: (await import("@/features/demo/profile-settings")).AccountSettingsPage }) },
           {
             path: "agency",
             lazy: async () => ({

@@ -12,8 +12,8 @@ for (const width of [375, 768, 1440, 1920]) {
     const plane = page.locator("[data-hero-flight] img");
     const sky = page.locator("[data-hero-flight]");
     const background = page.locator(
-      'img[src="/images/home/flight/hero-clean.png"]',
-    );
+      'section[aria-label] img[src="/images/home/flight/hero-clean.png"]',
+    ).first();
     await expect(plane).toHaveCount(1);
     await expect(
       page.locator('img[src="/images/home/daytime-hero.png"]'),
@@ -29,6 +29,10 @@ for (const width of [375, 768, 1440, 1920]) {
     });
     const header = await page.locator("header").boundingBox();
     const heading = await page.getByRole("heading", { level: 1 }).boundingBox();
+    await background.evaluate(async el => {
+      el.getAnimations().forEach(a => a.pause());
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    });
     const bg = await background.boundingBox();
     let previousX = -Infinity;
     for (const progress of [0, 0.25, 0.5, 0.75, 1]) {
@@ -55,6 +59,7 @@ for (const width of [375, 768, 1440, 1920]) {
     }
     await expect(plane).toHaveCSS("opacity", "0");
     await page.mouse.move(width * 0.8, 300);
+    await page.emulateMedia({ reducedMotion: "reduce" });
     await expect(background).toHaveCSS("transform", "none");
     await expect(background).toHaveCSS("animation-name", "none");
     await openHeaderTools(page);

@@ -4,6 +4,7 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
 import { Text, useLocale } from "@/features/localization/locale-provider";
 import styles from "../home.module.css";
+import badges from "./app-store-badges.module.css";
 
 const links: { to: string; icon: IconName; en: string; ar: string }[] = [
   { to: "/car-rental", icon: "car", en: "Car Rental", ar: "تأجير السيارات" },
@@ -22,6 +23,14 @@ export function SiteFooter() {
             <BrandLogo withName variant="footer" />
           </Link>
           <p><Text en="Thoughtful travel. Lasting partnerships." ar="سفر مدروس. شراكات دائمة." /></p>
+          <div className={badges.apps}>
+            <h3>{t("Our mobile apps", "تطبيقاتنا للهواتف")}</h3>
+            <p>{t("Downloads unavailable — pending verified official app links.", "التنزيل غير متاح — بانتظار روابط التطبيقات الرسمية الموثقة.")}</p>
+            <div className={badges.row} aria-label={t("App store previews — downloads unavailable", "معاينة متاجر التطبيقات — التنزيل غير متاح")}>
+              <img className={badges.google} src="/images/app-badges/google-play.png" alt="GET IT ON Google Play — unavailable" width="646" height="250" loading="lazy" />
+              <img className={badges.apple} src="/images/app-badges/app-store.svg" alt="Download on the App Store — unavailable" width="135" height="40" loading="lazy" />
+            </div>
+          </div>
         </div>
         <nav aria-label={t("Footer", "روابط التذييل")}>
           {links.map(({ to, icon, en, ar }) => (

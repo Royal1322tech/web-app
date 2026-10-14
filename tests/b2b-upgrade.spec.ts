@@ -545,7 +545,7 @@ test("email states, shared loading/empty/error states, and motion fallback remai
   await visit(page, "/");
   await page.mouse.move(700, 300);
   await expect(
-    page.locator('img[src="/images/home/flight/hero-clean.png"]'),
+    page.locator('section[aria-label] img[src="/images/home/flight/hero-clean.png"]').first(),
   ).toHaveCSS("transform", "none");
   await page.locator(".travel-trail").scrollIntoViewIfNeeded();
   expect(

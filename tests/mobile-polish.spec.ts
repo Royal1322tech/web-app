@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { openHeaderTools, closeHeaderMenu } from "./helpers/header";
 for (const width of [320, 375, 390, 430, 768, 1440])
-  test(`compact header, SVG CTA and homepage ${width}px`, async ({ page }) => {
+  test(`compact header, CTA-free hero and homepage ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 950 });
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
@@ -16,15 +16,13 @@ for (const width of [320, 375, 390, 430, 768, 1440])
           () => document.documentElement.scrollWidth <= innerWidth + 1,
         ),
       ).toBe(true);
-      const cta = page
-        .locator('a[href="#hotel-search"]')
-        .filter({ has: page.locator("svg") });
-      await expect(cta).toHaveCount(1);
-      await expect(cta.locator("svg path")).toHaveAttribute(
-        "d",
-        "M6 18 18 6M6 6h12v12",
-      );
-      expect(await cta.textContent()).not.toMatch(/[↗↘]/);
+      const hero = page.locator('section[aria-label]').first();
+      await expect(hero.locator('a[href="#hotel-search"]')).toHaveCount(0);
+      await expect(hero.getByRole("link", { name: /Find a hotel|Become a partner/ })).toHaveCount(0);
+      if (width < 600) {
+        const search = (await page.locator("#hotel-search").boundingBox())!;
+        expect(search.y).toBeLessThan(570);
+      }
       if (width < 1200) {
         const toggle = page.locator(
           'header button[aria-controls~="home-navigation"]',
@@ -39,7 +37,7 @@ for (const width of [320, 375, 390, 430, 768, 1440])
         await expect(toggle).toBeFocused();
         await expect(toggle).toHaveAttribute("aria-expanded", "false");
       }
-      await cta.click();
+      await page.locator("#hotel-search").scrollIntoViewIfNeeded();
       await expect(page.locator("#hotel-search")).toBeInViewport();
       await page.evaluate(() => scrollTo(0, 0));
       await expect(page.locator("header")).toBeInViewport({ ratio: 1 });

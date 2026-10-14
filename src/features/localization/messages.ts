@@ -1,4 +1,5 @@
 export const arabicMessages: Record<string, string> = {
+  "Explore vehicle search and rental booking previews for your agency. Demonstration only — no live availability or reservations.": "استكشف البحث عن المركبات ومعاينة حجزها لوكالتك. تجربة فقط دون توفر أو حجوزات فعلية.",
   "Car Rental for Agencies": "تأجير السيارات للوكالات",
   "Car Rental belongs in your agency workspace. Vehicle search and reservations are coming in a future implementation.":
     "تأجير السيارات جزء من مساحة عمل وكالتك. البحث عن السيارات والحجوزات ضمن التطوير القادم.",

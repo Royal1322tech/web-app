@@ -1,0 +1,1 @@
+Flag assets from https://github.com/lipis/flag-icons (1x1 SVG collection), used under the included MIT license. Downloaded 2026-10-14. Currency flags are visual identifiers only; no currency conversion is performed.

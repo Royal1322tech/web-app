@@ -1,0 +1,14 @@
+.rv-popover { position:relative; }
+.rv-popover-trigger { min-height:44px; display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 10px; border:1px solid var(--border); border-radius:10px; background:white; color:var(--navy); font-weight:700; font-size:14px; }
+.rv-popover-panel { position:absolute; inset-inline-end:0; top:calc(100% + 8px); z-index:100; width:300px; max-width:calc(100vw - 32px); max-height:min(540px,calc(100dvh - 120px)); overflow:auto; overscroll-behavior:contain; padding:18px; background:white; color:var(--navy); border:1px solid var(--border); border-radius:16px; box-shadow:0 20px 60px #0b254530; animation:popover-in 160ms ease-out; }
+.rv-popover-panel fieldset { border:0; padding:0; margin:0 0 16px; display:grid; gap:4px; }
+.rv-popover-panel legend { font-weight:800; margin-bottom:8px; }
+.rv-popover-panel label { display:flex; align-items:center; gap:8px; min-height:44px; padding:8px; border-radius:8px; cursor:pointer; }
+.rv-popover-panel label:has(input:checked) { background:var(--subtle); }
+.rv-popover-panel label svg { margin-inline-start:auto; }
+.rv-popover-panel input { accent-color:var(--royal); }
+.rv-popover-panel a, .rv-popover-panel > button { display:flex; width:100%; align-items:center; min-height:44px; padding:10px; text-decoration:none; font-weight:700; border:0; background:transparent; color:var(--navy); border-radius:8px; }
+.rv-popover-panel a:hover, .rv-popover-panel > button:hover { background:var(--subtle); }
+.rv-popover-panel p { font-size:12px; line-height:1.7; margin:0 0 8px; color:var(--muted); }
+@keyframes popover-in { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
+@media(max-width:599px) { .rv-popover-panel { position:fixed; inset-inline:16px; top:98px; width:auto; max-width:none; } }

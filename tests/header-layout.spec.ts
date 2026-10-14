@@ -40,13 +40,9 @@ for (const width of [375, 1024, 1440, 1869, 1920]) {
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth),
       ).toBeLessThanOrEqual(width + 1);
-      if (width >= 600 && width < 1200)
-        await header
-          .locator('button[aria-controls~="home-navigation"]')
-          .click();
       const carLink = header.locator('nav a[href="/car-rental"]');
       await expect(carLink).toBeVisible();
-      await expect(carLink).toHaveCSS("font-size", "17px");
+      await expect(carLink).toHaveCSS("font-size", "15px");
       await expect(carLink).toHaveCSS("font-weight", "700");
       await closeHeaderMenu(page);
       if (width === 1869 || width === 375)

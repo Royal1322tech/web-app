@@ -1,0 +1,42 @@
+import {test,expect} from '@playwright/test';
+for(const width of [375,1440]) {
+ test(`correct collection is compact and continuously moves left at ${width}`,async({page})=>{
+  await page.setViewportSize({width,height:1000});
+  await page.goto('/');
+  const section=page.locator('section[aria-labelledby="collection-title"]');
+  await section.scrollIntoViewIfNeeded();
+  const viewport=section.locator('[data-collection-marquee]');
+  await page.mouse.move(0,0);
+  const track=viewport.locator(':scope > div');
+  await expect(viewport).toHaveAttribute('data-running','true');
+  const card=section.locator('article').first();
+  expect((await card.boundingBox())!.width).toBe(280);
+  expect((await card.locator('img').boundingBox())!.height).toBe(135);
+  const x=()=>track.evaluate(el=>new DOMMatrixReadOnly(getComputedStyle(el).transform).m41);
+  const first=await x(); await page.waitForTimeout(1000); const second=await x();
+  expect(first-second).toBeGreaterThan(30); expect(first-second).toBeLessThan(50);
+  await viewport.hover(); const stopped=await x();await page.waitForTimeout(300);expect(Math.abs((await x())-stopped)).toBeLessThan(2);
+  await page.mouse.move(0,0);
+  await expect(track).toHaveCSS('animation-play-state','running');
+  const groups=track.locator(':scope > div');
+  expect((await groups.nth(0).boundingBox())!.width).toBeCloseTo((await groups.nth(1).boundingBox())!.width, 1);
+  await expect(groups.nth(1)).toHaveAttribute('aria-hidden','true');
+  for(const link of await groups.nth(1).locator('a,button').all()) await expect(link).toHaveAttribute('tabindex','-1');
+  await expect(section.getByRole('button',{name:/Next hotels|Previous hotels|Pause|Play/})).toHaveCount(0);
+  await card.locator('img').evaluate((el:HTMLImageElement)=>el.decode());
+  await section.screenshot({path:`test-results/compact-collection-${width}.png`});
+  await viewport.dispatchEvent('touchstart');
+  await expect(track).toHaveCSS('animation-play-state','paused');
+  const beforeSwipe=await x();
+  await viewport.evaluate(el=>{el.scrollLeft=100;});
+  await page.waitForTimeout(100);
+  expect(Math.abs((await x())-beforeSwipe)).toBeGreaterThan(80);
+  await viewport.dispatchEvent('touchend');
+  await expect(track).toHaveCSS('animation-play-state','running');
+  await viewport.focus();await expect(track).toHaveCSS('animation-name','none');
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await expect(track).toHaveCSS('animation-name','none');
+  await expect(section.getByRole('link',{name:'Explore hotels',exact:true})).toHaveCount(3);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
+ });
+}

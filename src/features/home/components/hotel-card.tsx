@@ -10,9 +10,11 @@ import styles from "../home.module.css";
 export function HotelCard({
   hotel,
   compact = false,
+  duplicate = false,
 }: {
   hotel: Hotel;
   compact?: boolean;
+  duplicate?: boolean;
 }) {
   const { t, locale } = useLocale();
   const favourites = useHotelPreferences("favourites");
@@ -31,7 +33,7 @@ export function HotelCard({
           src={hotel.image}
           alt={t(
             `${hotel.name} — sample property photograph`,
-            `${t(hotel.name)} — صورة فندق تجريبية`,
+            `${hotel.nameAr ?? t(hotel.name)} — صورة فندق تجريبية`,
           )}
           width={compact ? 286 : 386}
           height={compact ? (hotel.image.includes("lobby") ? 185 : 190) : 258}
@@ -45,6 +47,7 @@ export function HotelCard({
           <button
             type="button"
             className={styles.favouriteButton}
+            tabIndex={duplicate ? -1 : undefined}
             aria-label={t(
               `Favourite: ${hotel.name} — ${hotel.city}`,
               `المفضلة: ${t(hotel.name)} — ${t(hotel.city)}`,
@@ -60,7 +63,7 @@ export function HotelCard({
         )}
       </div>
       <div className={styles.hotelTitle}>
-        <h3>{t(hotel.name)}</h3>
+        <h3>{t(hotel.name, hotel.nameAr)}</h3>
         {!compact && (
           <span
             aria-label={t(
@@ -113,17 +116,16 @@ export function HotelCard({
       )}
       <div className={styles.cardBottom}>
         <Link
-          to={
-            compact
-              ? "/hotels/eastern-al-montazah"
-              : `/search?destination=${encodeURIComponent(hotel.city)}`
-          }
+          tabIndex={duplicate ? -1 : undefined}
+          to={hotel.detailsHref ?? (
+            `/search?destination=${encodeURIComponent(hotel.city)}`
+          )}
           className={compact ? styles.arrowButton : styles.primaryButton}
           aria-label={
             compact
               ? t(
                   `View ${hotel.name} sample deal`,
-                  `عرض العرض التجريبي لـ ${t(hotel.name)}`,
+                  `عرض العرض التجريبي لـ ${hotel.nameAr ?? t(hotel.name)}`,
                 )
               : undefined
           }

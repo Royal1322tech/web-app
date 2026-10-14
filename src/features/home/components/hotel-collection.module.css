@@ -1,0 +1,27 @@
+.viewport { direction:ltr; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; padding:6px 0 18px; overscroll-behavior-x:contain; }
+.viewport::-webkit-scrollbar { display:none; }
+.viewport:focus-visible { outline:2px solid var(--royal); outline-offset:3px; }
+.track { display:flex; width:max-content; animation:hotel-strip var(--travel-duration) linear infinite; }
+.group { display:flex; gap:16px; padding-right:16px; }
+.card { width:280px; flex:0 0 280px; }
+.card article { height:100%; padding:10px; box-shadow:none; }
+.card article > div:first-child img { height:135px; aspect-ratio:auto; }
+.card article h3 { font-size:16px; }
+.card article > div:nth-child(2) { margin:8px 0 4px; }
+.card article > p { font-size:12px; }
+.card article > p:nth-of-type(2) { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; margin:7px 0; line-height:1.5; }
+.card article > p:nth-of-type(3) { padding:0; border:0; margin:7px 0; gap:6px; }
+.card article > p:nth-of-type(3) svg { width:22px; height:22px; padding:4px; }
+.card article > p:nth-of-type(4) { display:none; }
+.card article ul { margin:5px 0 0; gap:4px; }
+.card article li { padding:3px 5px; font-size:10px; }
+.card article > div:last-child { margin-top:9px; padding-top:9px; }
+.card article > div:last-child a { min-height:44px; padding:8px 10px; font-size:12px; }
+.card article > div:last-child strong { font-size:20px; }
+.viewport[data-running="false"] .track,.viewport:hover .track,.viewport:focus-within .track { animation-play-state:paused; }
+/* Focus brings the original, accessible cards into native scroll coordinates. */
+.viewport:focus-within .track,.viewport[data-reduced="true"] .track { animation:none; transform:none; }
+.viewport:focus-within .group[aria-hidden],.viewport[data-reduced="true"] .group[aria-hidden],.viewport:focus-within .card[aria-hidden],.viewport[data-reduced="true"] .card[aria-hidden] { display:none; }
+@keyframes hotel-strip { to { transform:translateX(-50%); } }
+@media(max-width:340px) { .card { width:260px; flex-basis:260px; } .group { gap:16px; } }
+@media(prefers-reduced-motion:reduce) { .track { animation:none; } .group[aria-hidden],.card[aria-hidden] { display:none; } .viewport { scrollbar-width:thin; } }

@@ -1,51 +1,27 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { Hotel } from "../types";
 import { HotelCard } from "./hotel-card";
 import { useLocale } from "@/features/localization/locale-provider";
 import styles from "../home.module.css";
+import marquee from "./hotel-collection.module.css";
+import { useMediaEnvironment } from "@/components/motion/use-media-environment";
+import type { CSSProperties } from "react";
+
+const SCROLL_SPEED_PX_PER_SECOND = 40;
 
 export function HotelCollection({ hotels }: { hotels: readonly Hotel[] }) {
   const { t, locale } = useLocale();
   const [city, setCity] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [filtered, setFiltered] = useState(false);
-  const track = useRef<HTMLDivElement>(null);
+  const root = useRef<HTMLElement>(null);
+  const { canAnimate, reduced } = useMediaEnvironment(root);
+  const [touching, setTouching] = useState(false);
   const visibleHotels = hotels.filter(
     (hotel) => !selectedCity || hotel.city === selectedCity,
   );
-  const [canScroll, setCanScroll] = useState({ previous: false, next: false });
-  useEffect(() => {
-    const element = track.current;
-    if (!element) return;
-    function updateArrows() {
-      if (!element) return;
-      const position = Math.abs(element.scrollLeft);
-      setCanScroll({
-        previous: position > 2,
-        next: position < element.scrollWidth - element.clientWidth - 2,
-      });
-    }
-    const observer = new ResizeObserver(updateArrows);
-    observer.observe(element);
-    element.addEventListener("scroll", updateArrows, { passive: true });
-    const frame = requestAnimationFrame(updateArrows);
-    return () => {
-      observer.disconnect();
-      element.removeEventListener("scroll", updateArrows);
-      cancelAnimationFrame(frame);
-    };
-  }, [selectedCity, locale]);
-  function scroll(direction: number) {
-    track.current?.scrollBy({
-      left:
-        (locale === "ar" ? -direction : direction) * track.current.clientWidth,
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "instant"
-        : "smooth",
-    });
-  }
   return (
-    <section className={styles.section} aria-labelledby="collection-title">
+    <section ref={root} className={styles.section} aria-labelledby="collection-title">
       <div className={styles.sectionHeading}>
         <h2 id="collection-title">{t("Stay At Best Hotels")}</h2>
         <p>
@@ -81,24 +57,6 @@ export function HotelCollection({ hotels }: { hotels: readonly Hotel[] }) {
             {t("Search")}
           </button>
         </form>
-        <div className={styles.collectionArrows}>
-          <button
-            type="button"
-            aria-label={t("Previous hotels")}
-            disabled={!canScroll.previous}
-            onClick={() => scroll(-1)}
-          >
-            ‹
-          </button>
-          <button
-            type="button"
-            aria-label={t("Next hotels")}
-            disabled={!canScroll.next}
-            onClick={() => scroll(1)}
-          >
-            ›
-          </button>
-        </div>
       </div>
       <p className={styles.sampleNote} role="status">
         {filtered
@@ -108,16 +66,31 @@ export function HotelCollection({ hotels }: { hotels: readonly Hotel[] }) {
             )
           : t("Sample collection — not live listings or availability.")}
       </p>
-      <div
-        ref={track}
-        className={styles.hotelTrack}
-        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- Focus enables keyboard scrolling of the horizontal collection.
-        tabIndex={0}
-        aria-label={t("Sample hotel collection")}
-      >
-        {visibleHotels.map((hotel) => (
-          <HotelCard key={hotel.id} hotel={hotel} />
-        ))}
+      <div key={selectedCity} className={marquee.viewport} data-collection-marquee data-running={canAnimate && !touching} data-reduced={reduced}
+        onScroll={event => {
+          const viewport = event.currentTarget;
+          const offset = viewport.scrollLeft;
+          const animation = viewport.firstElementChild?.getAnimations()[0];
+          if (!offset || !animation || reduced) return;
+          const duration = Number(animation.effect?.getTiming().duration);
+          const distance = (viewport.firstElementChild?.scrollWidth ?? 0) / 2;
+          if (!duration || !distance) return;
+          animation.currentTime = (Number(animation.currentTime) + offset / distance * duration + duration) % duration;
+          viewport.scrollLeft = 0;
+        }}
+        onTouchStart={() => setTouching(true)} onTouchEnd={() => setTouching(false)} onTouchCancel={() => setTouching(false)}
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- Native keyboard scrolling pauses decorative motion.
+        role="region" aria-label={t("Sample hotel collection")} tabIndex={0}>
+        <div className={marquee.track} style={{ "--travel-duration": `${Math.max(6, visibleHotels.length * 2) * 296 / SCROLL_SPEED_PX_PER_SECOND}s` } as CSSProperties}>
+          {[0, 1].map(group => <div className={marquee.group} key={group} aria-hidden={group === 1 ? true : undefined}>
+            {Array.from({ length: Math.max(6, visibleHotels.length * 2) }, (_, index) => {
+              const hotel = visibleHotels[index % visibleHotels.length];
+              return hotel && <div className={marquee.card} dir={locale === "ar" ? "rtl" : "ltr"} key={`${hotel.id}-${index}`} aria-hidden={group === 1 || index >= visibleHotels.length ? true : undefined}>
+                <HotelCard hotel={hotel} duplicate={group === 1 || index >= visibleHotels.length} />
+              </div>;
+            })}
+          </div>)}
+        </div>
       </div>
     </section>
   );
