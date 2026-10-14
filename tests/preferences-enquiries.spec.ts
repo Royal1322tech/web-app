@@ -33,6 +33,24 @@ for (const width of [320,375,390,430,768,1024,1440]) {
     await page.keyboard.press('ArrowDown');
     await expect(panel.getByRole('radio',{name:'EUR',exact:true})).toBeChecked();
     await expect(page.locator('html')).toHaveAttribute('dir','rtl');
+    const rtlBox = await panel.boundingBox();
+    expect(rtlBox!.x).toBeGreaterThanOrEqual(0);
+    expect(rtlBox!.x + rtlBox!.width).toBeLessThanOrEqual(width);
+    if (width === 768) {
+      // Keep the popup open across breakpoints and direction changes.
+      for (const direction of ['ltr', 'rtl']) {
+        await page.evaluate(value => { document.documentElement.dir = value; }, direction);
+        for (const resizedWidth of [320, 375, 390, 430, 768, 1024, 1440]) {
+          await page.setViewportSize({ width: resizedWidth, height: 900 });
+          await expect.poll(async () => {
+            const bounds = await panel.boundingBox();
+            return !!bounds && bounds.x >= 0 && bounds.x + bounds.width <= resizedWidth;
+          }).toBe(true);
+        }
+      }
+      await page.setViewportSize({ width, height: 900 });
+    }
+
     expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
     await page.keyboard.press('Escape');
     await expect(page.locator('header a[href="/contact"]')).toBeVisible();

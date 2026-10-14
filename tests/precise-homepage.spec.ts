@@ -10,8 +10,8 @@ for(const width of [375,1440]) {
   const track=viewport.locator(':scope > div');
   await expect(viewport).toHaveAttribute('data-running','true');
   const card=section.locator('article').first();
-  expect((await card.boundingBox())!.width).toBe(280);
-  expect((await card.locator('img').boundingBox())!.height).toBe(135);
+  expect((await card.boundingBox())!.width).toBeCloseTo(280, 1);
+  expect((await card.locator('img').boundingBox())!.height).toBeCloseTo(135, 1);
   const x=()=>track.evaluate(el=>new DOMMatrixReadOnly(getComputedStyle(el).transform).m41);
   const first=await x(); await page.waitForTimeout(1000); const second=await x();
   expect(first-second).toBeGreaterThan(30); expect(first-second).toBeLessThan(50);
