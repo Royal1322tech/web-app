@@ -1,3 +1,4 @@
+import { visit } from "./helpers/demo-login";
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
@@ -6,7 +7,7 @@ for (const width of [375, 768, 1440]) {
     test(`footer links, focus and layout ${width} ${locale}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 1000 });
       await page.addInitScript((value) => localStorage.setItem("royal-vacation.locale", value), locale);
-      await page.goto("/");
+      await visit(page, "/");
       const footer = page.locator("footer");
       await footer.scrollIntoViewIfNeeded();
       const links = footer.locator("nav a");
@@ -41,14 +42,14 @@ for (const width of [375, 768, 1440]) {
       expect((await new AxeBuilder({ page }).include("footer").analyze()).violations).toEqual([]);
       await footer.screenshot({ path: `test-results/footer-${locale}-${width}.png` });
       await links.last().click();
-      await expect(page).toHaveURL(/\/welcome$/);
+      await expect(page).toHaveURL(/\/$/);
     });
   }
 }
 
 for (const path of ["/login", "/welcome", "/register/agency/company"]) {
   test(`auth logo entrance and static fallback ${path}`, async ({ page }) => {
-    await page.goto(path);
+    await visit(page, path);
     const logo = page.locator(".brand-logo--auth");
     await expect(logo).toBeVisible();
     await page.locator(".route-entrance").evaluate(async el => {
@@ -71,7 +72,7 @@ for (const path of ["/login", "/welcome", "/register/agency/company"]) {
 }
 
 test("registration keeps its settled logo and company data between steps", async ({ page }) => {
-  await page.goto("/register/agency/company");
+  await visit(page, "/register/agency/company");
   const logo = page.locator(".brand-logo--auth");
   await logo.evaluate(async el => {
     await Promise.all(el.getAnimations({ subtree: true }).map(a => a.finished));
@@ -93,7 +94,7 @@ test("registration keeps its settled logo and company data between steps", async
 
 test("footer reduced motion stays static on hover and keyboard focus", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await visit(page, "/");
   const footer = page.locator("footer");
   const logo = footer.locator('a[href="/"]');
   await logo.hover();

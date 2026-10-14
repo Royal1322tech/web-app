@@ -50,7 +50,7 @@ function Root() {
           </div>
         )}
         <div ref={content} className="route-entrance">
-          <Outlet />
+          <DemoSessionGate />
         </div>
       </DemoProvider>
       <ScrollRestoration />
@@ -208,7 +208,7 @@ export const router = createBrowserRouter([
         }),
       },
       {
-        Component: DemoSessionGate,
+        Component: Outlet,
         children: [
           { path: "profile", lazy: async () => ({ Component: (await import("@/features/demo/profile-settings")).ProfilePage }) },
           { path: "account/settings", lazy: async () => ({ Component: (await import("@/features/demo/profile-settings")).AccountSettingsPage }) },

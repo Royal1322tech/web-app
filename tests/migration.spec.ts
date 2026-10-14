@@ -1,3 +1,4 @@
+import { visit } from "./helpers/demo-login";
 import { openHeaderTools } from "./helpers/header";
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
@@ -28,7 +29,7 @@ test("every route loads directly and refreshes without runtime errors", async ({
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   for (const route of routes) {
-    await page.goto(route);
+    await visit(page, route);
     await expect(page.locator("h1")).toBeVisible();
     await page.reload();
     await expect(page.locator("h1")).toBeVisible();
@@ -53,7 +54,7 @@ for (const width of [320, 375, 768, 1440]) {
       "/bookings",
       "/favourites",
     ]) {
-      await page.goto(route);
+      await visit(page, route);
       await expect(page.locator("h1")).toBeVisible();
       expect(
         await page.evaluate(
@@ -62,7 +63,7 @@ for (const width of [320, 375, 768, 1440]) {
         route,
       ).toBeTruthy();
     }
-    await page.goto("/");
+    await visit(page, "/");
     await openHeaderTools(page);
     await page.getByRole("combobox", { name: "Language" }).selectOption("ar");
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
@@ -83,7 +84,7 @@ for (const width of [320, 375, 768, 1440]) {
 test("search validation, rooms, child ages, query navigation and browser history", async ({
   page,
 }) => {
-  await page.goto("/");
+  await visit(page, "/");
   await page
     .getByRole("button", { name: "Search", exact: true })
     .first()
@@ -122,7 +123,7 @@ test("search validation, rooms, child ages, query navigation and browser history
 test("filters, sorting, comparison and persisted favourites", async ({
   page,
 }) => {
-  await page.goto("/search");
+  await visit(page, "/search");
   const favourites = page.getByRole("button", { name: /^Favourite:/ });
   await expect(favourites.first()).toBeVisible();
   await favourites.first().click();
@@ -149,7 +150,7 @@ test("filters, sorting, comparison and persisted favourites", async ({
 });
 
 test("gallery, room and rate dialogs, chart, map", async ({ page }) => {
-  await page.goto("/hotels/eastern-al-montazah");
+  await visit(page, "/hotels/eastern-al-montazah");
   await page.getByRole("button", { name: "Open photo gallery" }).click();
   const gallery = page.getByRole("dialog");
   await gallery.getByRole("button", { name: "Next photo" }).click();
@@ -165,7 +166,7 @@ test("gallery, room and rate dialogs, chart, map", async ({ page }) => {
   await expect(
     page.getByRole("link", { name: "Open in Google Maps" }),
   ).toHaveAttribute("href", /maps/);
-  await page.goto("/search");
+  await visit(page, "/search");
   await page
     .getByRole("button", { name: "View Rooms", exact: true })
     .first()
@@ -202,7 +203,7 @@ async function company(page: Page) {
 test("registration validation, file retention, review and prerequisite guards", async ({
   page,
 }) => {
-  await page.goto("/register/agency/review");
+  await visit(page, "/register/agency/review");
   await expect(page).toHaveURL(/\/company$/);
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await expect(page.getByText("Enter your company name.")).toBeVisible();
@@ -256,22 +257,22 @@ test("authentication and recovery validation never submit network credentials", 
       writes.push({ url: request.url(), body: request.postData() ?? "" });
     }
   });
-  await page.goto("/login");
+  await visit(page, "/login");
   await page.getByRole("button", { name: "Sign In", exact: true }).click();
   await expect(page.locator("#username")).toHaveAttribute(
     "aria-invalid",
     "true",
   );
-  await page.getByLabel("User Name", { exact: true }).fill("test-user");
+  await page.getByLabel("Email", { exact: true }).fill("test-user@example.test");
   await page.getByLabel("Password", { exact: true }).fill("ExamplePass123!");
   await page.getByRole("button", { name: "Show password" }).click();
   await expect(page.locator("#password")).toHaveAttribute("type", "text");
   await page.getByRole("button", { name: "Sign In", exact: true }).click();
   await expect(
-    page.getByText("Your credentials have not been sent.", { exact: false }),
+    page.getByText("Incorrect demo email or password.", { exact: false }),
   ).toBeVisible();
   for (const route of ["/forgot-password", "/verify-otp", "/reset-password"]) {
-    await page.goto(route);
+    await visit(page, route);
     await page.locator("button[type=submit]").click();
     await expect(page.locator("[role=alert]").first()).toBeVisible();
     await expect(page.locator("meta[name=robots]")).toHaveAttribute(
@@ -299,7 +300,7 @@ test("key screens pass automated accessibility checks and generate review screen
     ["login", "/login"],
     ["company", "/register/agency/company"],
   ]) {
-    await page.goto(route);
+    await visit(page, route);
     await expect(page.locator("h1")).toBeVisible();
     const result = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
@@ -313,7 +314,7 @@ test("key screens pass automated accessibility checks and generate review screen
 });
 
 test("booking filters, date validation and result limits", async ({ page }) => {
-  await page.goto("/bookings");
+  await visit(page, "/bookings");
   await page
     .getByRole("combobox", { name: "Results", exact: true })
     .selectOption("2");
@@ -336,14 +337,14 @@ test("booking filters, date validation and result limits", async ({ page }) => {
 test("OTP multi-digit entry and reset mismatch validation remain frontend-only", async ({
   page,
 }) => {
-  await page.goto("/verify-otp");
+  await visit(page, "/verify-otp");
   await page.getByRole("textbox", { name: "Digit 1 of 4" }).fill("1234");
   await expect(page.getByRole("textbox", { name: "Digit 4 of 4" })).toHaveValue(
     "4",
   );
   await page.getByRole("button", { name: "Confirm", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("not");
-  await page.goto("/reset-password");
+  await visit(page, "/reset-password");
   await page.getByLabel("Password", { exact: true }).fill("ExamplePass123!");
   await page
     .getByLabel("Confirm Password", { exact: true })

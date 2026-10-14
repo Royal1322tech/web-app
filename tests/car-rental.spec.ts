@@ -1,3 +1,4 @@
+import { visit } from "./helpers/demo-login";
 import { openHeaderTools } from "./helpers/header";
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
@@ -6,7 +7,7 @@ for (const width of [375, 1440])
     page,
   }) => {
     await page.setViewportSize({ width, height: 950 });
-    await page.goto("/");
+    await visit(page, "/");
     await page.locator("#destination").selectOption("Alexandria");
     const carTab = page.getByRole("tab", { name: "Car Rental", exact: true });
     await carTab.click();

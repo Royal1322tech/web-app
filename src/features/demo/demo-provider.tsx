@@ -1,3 +1,4 @@
+import { demoAuth } from "@/features/auth/demo-auth";
 import {
   rentalTotal,
   rentalSchema,
@@ -30,7 +31,7 @@ interface DemoContextValue {
   cancelRental: (id: string) => void;
   modifyRental: (id: string, selection: RentalSelection) => void;
   demoSessionActive: boolean;
-  enterDemoSession: () => void;
+  signIn: (email: string, password: string) => boolean;
   signOut: () => void;
   selection: DemoSelection | null;
   guests: GuestValues | null;
@@ -70,7 +71,7 @@ export function defaultCriteria(destination: string): HotelSearchCriteria {
   };
 }
 export function DemoProvider({ children }: { children: ReactNode }) {
-  const [demoSessionActive, setDemoSessionActive] = useState(false);
+  const [demoSessionActive, setDemoSessionActive] = useState(demoAuth.isActive);
   const [rentalSelection, setRentalSelection] =
     useState<RentalSelection | null>(null);
   const [rentalDriver, setRentalDriver] = useState<RentalDriver | null>(null);
@@ -148,8 +149,13 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       );
     },
     demoSessionActive,
-    enterDemoSession: () => setDemoSessionActive(true),
+    signIn: (email, password) => {
+      const accepted = demoAuth.signIn(email, password);
+      if (accepted) setDemoSessionActive(true);
+      return accepted;
+    },
     signOut: () => {
+      demoAuth.signOut();
       setDemoSessionActive(false);
       setRentalSelection(null);
       setRentalDriver(null);

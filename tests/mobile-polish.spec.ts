@@ -1,10 +1,11 @@
+import { visit } from "./helpers/demo-login";
 import { test, expect } from "@playwright/test";
 import { openHeaderTools, closeHeaderMenu } from "./helpers/header";
 for (const width of [320, 375, 390, 430, 768, 1440])
   test(`compact header, CTA-free hero and homepage ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 950 });
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/");
+    await visit(page, "/");
     for (const locale of ["en", "ar"]) {
       await openHeaderTools(page);
       await page.locator("header select").selectOption(locale);
@@ -32,7 +33,7 @@ for (const width of [320, 375, 390, 430, 768, 1440])
         await expect(
           page.locator('header a[href="/car-rental"]'),
         ).toBeVisible();
-        await page.locator('header a[href="/welcome"]').focus();
+        await page.locator('header a[href="/agency"]').focus();
         await page.keyboard.press("Escape");
         await expect(toggle).toBeFocused();
         await expect(toggle).toHaveAttribute("aria-expanded", "false");

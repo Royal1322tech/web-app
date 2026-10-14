@@ -1,27 +1,7 @@
+import { visit } from "./helpers/demo-login";
 import { openHeaderTools } from "./helpers/header";
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-const protectedDemoRoutes = [
-  "/agency",
-  "/agency/edit",
-  "/notifications",
-  "/verify-email",
-  "/wallet",
-  "/transactions",
-];
-async function enterDemoIfNeeded(page: Page, route: string) {
-  if (protectedDemoRoutes.includes(route)) {
-    await page
-      .getByRole("button", {
-        name: /Explore demo agency workspace|استكشاف مساحة الوكالة التجريبية/,
-      })
-      .click();
-  }
-}
-async function visit(page: Page, route: string) {
-  await page.goto(route);
-  await enterDemoIfNeeded(page, route);
-}
 const routes = [
   "/agency",
   "/agency/edit",
@@ -294,7 +274,6 @@ test("new routes load directly, refresh, and preserve RTL and reduced motion", a
       await visit(page, route);
       await expect(page.locator("h1")).toBeVisible();
       await page.reload();
-      await enterDemoIfNeeded(page, route);
       await expect(page.locator("h1")).toBeVisible();
       expect(
         await page.evaluate(

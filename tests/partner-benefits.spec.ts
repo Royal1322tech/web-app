@@ -1,3 +1,4 @@
+import { visit } from "./helpers/demo-login";
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
@@ -6,7 +7,7 @@ for (const width of [375, 768, 1440]) {
     test(`partner section layout and assets ${width}px ${locale}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 1000 });
       await page.addInitScript(value => localStorage.setItem("royal-vacation.locale", value), locale);
-      await page.goto("/");
+      await visit(page, "/");
       const section = page.locator('section[aria-labelledby="benefits-title"]');
       await section.scrollIntoViewIfNeeded();
       await section.evaluate(async el => {
@@ -38,7 +39,7 @@ for (const width of [375, 768, 1440]) {
 }
 
 test("partner video pauses, resumes and respects reduced motion", async ({ page }) => {
-  await page.goto("/");
+  await visit(page, "/");
   const section = page.locator('section[aria-labelledby="benefits-title"]');
   await section.scrollIntoViewIfNeeded();
   const drawing = section.locator(".travel-trail-draw");
@@ -68,7 +69,7 @@ test("partner video pauses, resumes and respects reduced motion", async ({ page 
 
 test("partner content remains visible without IntersectionObserver", async ({ page }) => {
   await page.addInitScript(() => { Reflect.deleteProperty(window, "IntersectionObserver"); });
-  await page.goto("/");
+  await visit(page, "/");
   const section = page.locator('section[aria-labelledby="benefits-title"]');
   await section.scrollIntoViewIfNeeded();
   await expect(section.locator("h2")).toHaveCSS("opacity", "1");

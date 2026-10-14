@@ -1,4 +1,5 @@
-import { Link, useNavigate } from "react-router-dom";
+import { demoCredentials, safeDemoReturnTo } from "../demo-auth";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDemo } from "@/features/demo/demo-provider";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -10,7 +11,8 @@ import { Icon } from "@/components/ui/icon";
 import { loginSchema, type LoginValues } from "../schemas/login.schema";
 
 export function LoginForm() {
-  const { enterDemoSession } = useDemo();
+  const { signIn } = useDemo();
+  const location = useLocation();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [notice, setNotice] = useState("");
@@ -28,22 +30,27 @@ export function LoginForm() {
       className="login-form"
       noValidate
       onSubmit={handleSubmit(
-        () =>
-          setNotice(
-            "Sign-in is not available yet. Your credentials have not been sent.",
-          ),
+        ({ username, password }) => {
+          try {
+            if (signIn(username, password)) navigate(safeDemoReturnTo(location.state), { replace: true });
+            else setNotice("Incorrect demo email or password. Use the demo account below.");
+          } catch {
+            setNotice("Session storage is unavailable. Allow browser storage and try again.");
+          }
+        },
         () => setNotice(""),
       )}
     >
       <FormField
         id="username"
-        label="User Name"
+        label="Email"
         error={errors.username?.message}
       >
         <Input
           id="username"
           autoComplete="username"
-          placeholder="Enter your username"
+          placeholder="Enter your demo email"
+          type="email"
           required
           aria-invalid={!!errors.username}
           aria-describedby={errors.username ? "username-error" : undefined}
@@ -83,20 +90,13 @@ export function LoginForm() {
       <Button type="submit" disabled={isSubmitting}>
         Sign In
       </Button>
-      <button
-        type="button"
-        className="button button--outline"
-        onClick={() => {
-          enterDemoSession();
-          navigate("/agency");
-        }}
-      >
-        Explore demo agency workspace
-      </button>
       <p className="fine-print">
-        Frontend preview. Sign-in is not connected; use fictional credentials
-        only.
+        Demo account: <bdi>{demoCredentials.email}</bdi><br />
+        Password: <bdi>{demoCredentials.password}</bdi><br />
+        Frontend demo only, not production security or backend-verified authentication.
+        Access persists in this browser tab until Sign Out. Use fictional data only.
       </p>
+      <Link to="/register/agency" className="text-button">Register your agency</Link>
       <div role="status" aria-live="polite">
         {notice && <p className="availability-notice">{notice}</p>}
       </div>

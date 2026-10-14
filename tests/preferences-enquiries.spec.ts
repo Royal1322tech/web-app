@@ -1,3 +1,4 @@
+import { visit } from "./helpers/demo-login";
 import { expect, test } from '@playwright/test';
 import { openHeaderTools } from './helpers/header';
 
@@ -5,7 +6,7 @@ for (const width of [320,375,390,430,768,1024,1440]) {
   test(`travel preferences remain independent and fit ${width}px`, async ({page}) => {
     await page.setViewportSize({width,height:900});
     await page.emulateMedia({reducedMotion:'reduce'});
-    await page.goto('/');
+    await visit(page, '/');
     await openHeaderTools(page);
     const trigger = page.getByRole('button',{name:'Nationality and currency',exact:true});
     await trigger.click();
@@ -61,7 +62,7 @@ test('contact and group quotation validate locally without sending requests', as
   const mutations:string[]=[];
   page.on('request',req=>{if(req.method()==='POST') mutations.push(req.url());});
   for(const route of ['/contact','/group-quotation']) {
-    await page.goto(route);
+    await visit(page, route);
     await page.getByRole('button',{name:route === '/contact' ? 'Send Message' : 'Preview request',exact:true}).click();
     await expect(page.getByText('Enter your name.',{exact:true})).toBeVisible();
     for(const [key,value] of Object.entries({name:'Demo Traveller',email:'demo@example.com',agency:'Sample Agency',subject:'Sample group request',message:'Fictional travel requirements for a preview.'})) await page.locator('#enquiry-'+key).fill(value);
@@ -82,7 +83,7 @@ test('contact and group quotation validate locally without sending requests', as
 
 test('automatic hero and hotel carousel interaction', async ({page}) => {
   await page.setViewportSize({width:390,height:844});
-  await page.goto('/');
+  await visit(page, '/');
   const hero=page.getByRole('region',{name:'Royal Vacation agency platform',exact:true});
   const slides=hero.locator('[data-active]');
   await expect(hero.getByRole('group',{name:'Hero slideshow',exact:true})).toHaveCount(0);

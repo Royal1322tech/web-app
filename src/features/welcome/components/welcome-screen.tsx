@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { BrandLogo } from "@/components/brand-logo";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { buttonClass } from "@/components/ui/button";
@@ -7,11 +7,13 @@ import { useLocale } from "@/features/localization/locale-provider";
 import "../welcome.css";
 
 export function WelcomeScreen() {
-  const { locale, t } = useLocale();
+  const { locale, t, setLocale } = useLocale();
+  const location = useLocation();
   return (
     <AuthShell variant="welcome" language={locale}>
       <div className="welcome-content">
         <BrandLogo variant="auth" />
+        <button type="button" className="text-button" onClick={() => setLocale(locale === "en" ? "ar" : "en")} aria-label={t("Switch to Arabic", "التبديل إلى الإنجليزية")}>{locale === "en" ? "العربية" : "English"}</button>
         <h1>{t("Welcome!", "مرحبًا!")}</h1>
         <p className="intro-copy">
           {t(
@@ -31,7 +33,7 @@ export function WelcomeScreen() {
                 "سجّل الدخول باسم المستخدم وكلمة المرور",
               )}
             </p>
-            <Link to="/login" className={buttonClass()}>
+            <Link state={location.state} to="/login" className={buttonClass()}>
               {t("Sign In", "تسجيل الدخول")}
             </Link>
           </section>

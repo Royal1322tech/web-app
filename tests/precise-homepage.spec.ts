@@ -1,8 +1,9 @@
+import { visit } from "./helpers/demo-login";
 import {test,expect} from '@playwright/test';
 for(const width of [375,1440]) {
  test(`correct collection is compact and continuously moves left at ${width}`,async({page})=>{
   await page.setViewportSize({width,height:1000});
-  await page.goto('/');
+  await visit(page, '/');
   const section=page.locator('section[aria-labelledby="collection-title"]');
   await section.scrollIntoViewIfNeeded();
   const viewport=section.locator('[data-collection-marquee]');

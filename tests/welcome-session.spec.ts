@@ -1,3 +1,4 @@
+import { visit, submitDemoLogin } from "./helpers/demo-login";
 import { openHeaderTools } from "./helpers/header";
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
@@ -10,17 +11,9 @@ for (const width of [375, 1440]) {
       await page.setViewportSize({ width, height: 1000 });
       await page.emulateMedia({ reducedMotion: "reduce" });
       await page.goto("/");
-      await openHeaderTools(page);
-      await page.locator("header select").selectOption(locale);
-      const account = () =>
-        page.getByRole("link", {
-          name: locale === "en" ? "Agency account" : "حساب الوكالة",
-          exact: true,
-        });
-      await expect(account()).toHaveAttribute("href", "/welcome");
-      await openHeaderTools(page);
-      await account().click();
-      await expect(page).toHaveURL(/\/welcome$/);
+      if (locale === "ar") await page.getByRole("button", { name: "Switch to Arabic" }).click();
+      await expect(page.locator("header, footer")).toHaveCount(0);
+      const account = () => page.getByRole("link", { name: locale === "en" ? "Agency account" : "حساب الوكالة", exact: true });
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(
         locale === "en" ? "Welcome!" : "مرحبًا!",
       );
@@ -66,11 +59,9 @@ for (const width of [375, 1440]) {
       await page.goBack();
       await page.locator('a[href="/login"]').click();
       await expect(page).toHaveURL(/\/login$/);
-      // Real sign-in is still disconnected; explicit demo entry needs no credentials.
-      await page
-        .getByRole("button", { name: "Explore demo agency workspace" })
-        .click();
-      await expect(page).toHaveURL(/\/agency$/);
+      await submitDemoLogin(page);
+      await expect(page).toHaveURL(/\/$/);
+      await visit(page, "/agency");
       await expect(
         page.getByRole("heading", { name: "Horizon Travel — Demo Agency" }),
       ).toBeVisible();
@@ -97,47 +88,31 @@ for (const width of [375, 1440]) {
         .click();
       await expect(page).toHaveURL(/\/welcome$/);
       await page.goBack();
-      await expect(page.locator(".demo-session-gate")).toBeVisible();
-      await expect(page.getByText("Horizon Travel — Demo Agency")).toHaveCount(
-        0,
-      );
-      await openHeaderTools(page);
-      await expect(account()).toHaveAttribute("href", "/welcome");
-      await account().click();
-      await expect(page).toHaveURL(/\/welcome$/);
+      await expect(page.locator(".welcome-content")).toBeVisible();
+      await expect(page.locator("header, footer, .workspace")).toHaveCount(0);
     });
   }
 }
 
-test("private demo screens require explicit entry and refresh clears the session", async ({
-  page,
-}) => {
-  for (const path of [
-    "/agency",
-    "/agency/edit",
-    "/wallet",
-    "/notifications",
-    "/transactions",
-    "/verify-email",
-  ]) {
+test("private demo screens require login and refresh preserves access", async ({ page }) => {
+  for (const path of ["/agency", "/agency/edit", "/wallet", "/notifications", "/transactions", "/verify-email"]) {
     await page.goto(path);
-    await expect(page.locator(".demo-session-gate")).toBeVisible();
-    await expect(
-      page.getByText("partner@example.com", { exact: true }),
-    ).toHaveCount(0);
-    await page
-      .getByRole("button", { name: "Explore demo agency workspace" })
-      .click();
-    await expect(page.locator(".workspace").first()).toBeVisible();
+    await expect(page.locator(".welcome-content")).toBeVisible();
+    await expect(page.locator("header, footer, .workspace")).toHaveCount(0);
+    await page.locator('a[href="/login"]').click();
+    await submitDemoLogin(page);
+    await expect(page).toHaveURL(new RegExp(`${path}$`));
     await page.reload();
-    await expect(page.locator(".demo-session-gate")).toBeVisible();
+    await expect(page.locator(".workspace").first()).toBeVisible();
+    await page.locator(".workspace-nav").getByRole("button", { name: "Sign Out", exact: true }).click();
+    await expect(page.locator(".welcome-content")).toBeVisible();
   }
 });
 
 test("homepage SVG introduction settles without layout shift and does not replay", async ({
   page,
 }) => {
-  await page.goto("/");
+  await visit(page, "/");
   const logo = page.locator("header .brand-logo");
   await expect(logo).toHaveClass(/brand-logo--homepage-intro/);
   // Let the existing page entrance settle before measuring logo-only movement.
@@ -162,10 +137,10 @@ test("homepage SVG introduction settles without layout shift and does not replay
   const finalPlane = await page.locator("header .brand-plane").boundingBox();
   const header = await page.locator("header").boundingBox();
   await openHeaderTools(page);
-  await page.locator('header a[href="/welcome"]').click();
-  await expect(page).toHaveURL(/\/welcome$/);
+  await page.locator('header a[href="/agency"]').click();
+  await expect(page).toHaveURL(/\/agency$/);
   await expect(
-    page.getByRole("heading", { name: "Welcome!", exact: true }),
+    page.getByRole("heading", { name: "Horizon Travel — Demo Agency", exact: true }),
   ).toBeVisible();
   await page.goBack();
   await expect(logo).toBeVisible();
@@ -181,7 +156,7 @@ test("homepage SVG introduction settles without layout shift and does not replay
 
 test("homepage logo has a static reduced-motion fallback", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await visit(page, "/");
   for (const selector of [
     ".brand-emblem",
     ".brand-plane",

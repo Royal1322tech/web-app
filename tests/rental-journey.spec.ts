@@ -1,8 +1,9 @@
+import { visit } from "./helpers/demo-login";
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { openHeaderTools, closeHeaderMenu } from "./helpers/header";
 async function chooseVehicle(page: Page) {
-  await page.goto("/car-rental/search");
+  await visit(page, "/car-rental/search");
   await page.getByLabel("Pickup date", { exact: true }).fill("2027-03-10");
   await page.getByLabel("Return date", { exact: true }).fill("2027-03-13");
   await page
@@ -129,7 +130,7 @@ test("rental results filters, unavailable selection, direct URLs and accessibili
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto(
+  await visit(page, 
     "/car-rental/search?pickup=Cairo&dropoff=Alexandria&start=2027-03-10&end=2027-03-13",
   );
   await page.getByLabel("Vehicle category").selectOption("economy");
@@ -156,7 +157,7 @@ test("rental results filters, unavailable selection, direct URLs and accessibili
     "/car-rental/bookings/missing",
   ];
   for (const route of routes) {
-    await page.goto(route);
+    await visit(page, route);
     await page.reload();
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     expect(

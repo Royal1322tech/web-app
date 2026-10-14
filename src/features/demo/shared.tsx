@@ -79,8 +79,8 @@ export function DemoNotice() {
   return (
     <p className="demo-notice">
       {t(
-        "DEMO ONLY · No reservation, payment or supplier change. Use fictional guest details. This session resets on refresh.",
-        "عرض تجريبي فقط · لا يوجد حجز أو دفع أو تغيير لدى المورد. استخدم بيانات ضيوف وهمية. تُمسح الجلسة عند إعادة التحميل.",
+        "DEMO ONLY · No reservation, payment or supplier change. Use fictional guest details. Booking data resets on refresh; demo access persists until Sign Out.",
+        "عرض تجريبي فقط · لا يوجد حجز أو دفع أو تغيير لدى المورد. استخدم بيانات ضيوف وهمية. تُمسح بيانات الحجز عند التحديث؛ يستمر الدخول التجريبي حتى تسجيل الخروج.",
       )}
     </p>
   );

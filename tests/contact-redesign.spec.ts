@@ -1,3 +1,4 @@
+import { visit } from "./helpers/demo-login";
 import {test,expect} from '@playwright/test';
 import {openHeaderTools} from './helpers/header';
 import AxeBuilder from '@axe-core/playwright';
@@ -5,7 +6,7 @@ for(const width of [320,375,390,430,768,1440]) {
  test(`contact and store previews fit ${width}px in English and Arabic`,async({page})=>{
   await page.setViewportSize({width,height:1000});
   await page.emulateMedia({reducedMotion:'reduce'});
-  await page.goto('/contact');
+  await visit(page, '/contact');
   for(const locale of ['en','ar']) {
    await openHeaderTools(page);
    await page.locator('header select').selectOption(locale);
@@ -33,7 +34,7 @@ for(const width of [320,375,390,430,768,1440]) {
 }
 test('contact required fields and optional agency/subject produce only a local preview',async({page})=>{
  const posts:string[]=[];page.on('request',r=>{if(r.method()==='POST') posts.push(r.url());});
- await page.goto('/contact');
+ await visit(page, '/contact');
  await page.getByRole('button',{name:'Send Message',exact:true}).click();
  await expect(page.getByText('Enter your name.',{exact:true})).toBeVisible();
  await page.locator('#enquiry-name').fill('Demo Traveller');
@@ -43,7 +44,7 @@ test('contact required fields and optional agency/subject produce only a local p
  await expect(page.getByRole('status')).toContainText('not sent');
  expect(posts).toEqual([]);
  expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
- await page.goto('/group-quotation');
+ await visit(page, '/group-quotation');
  await page.getByRole('button',{name:'Preview request',exact:true}).click();
  await expect(page.getByText('Enter your agency name.',{exact:true})).toBeVisible();
 });

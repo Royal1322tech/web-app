@@ -1,3 +1,4 @@
+import { visit } from "./helpers/demo-login";
 import { openHeaderTools, closeHeaderMenu } from "./helpers/header";
 import { test, expect } from "@playwright/test";
 
@@ -7,13 +8,13 @@ for (const width of [375, 1024, 1440, 1869, 1920]) {
   }) => {
     await page.setViewportSize({ width, height: 1000 });
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/");
+    await visit(page, "/");
     for (const locale of ["en", "ar"]) {
       const header = page.locator("header");
       await openHeaderTools(page);
       await header.locator("select").selectOption(locale);
       const controls = header.locator(
-        'select, a[href="/notifications"], a[href="/booking/summary"], a[href="/welcome"]',
+        'select, a[href="/notifications"], a[href="/booking/summary"], a[href="/agency"]',
       );
       await expect(controls).toHaveCount(4);
       for (const control of await controls.all()) {
@@ -50,7 +51,7 @@ for (const width of [375, 1024, 1440, 1869, 1920]) {
           path: `test-results/header-${locale}-${width}.png`,
         });
     }
-    for (const route of ["/notifications", "/booking/summary", "/welcome"]) {
+    for (const route of ["/notifications", "/booking/summary", "/agency"]) {
       await openHeaderTools(page);
       await page.locator(`header a[href="${route}"]`).click();
       await expect(page).toHaveURL(new RegExp(`${route}$`));

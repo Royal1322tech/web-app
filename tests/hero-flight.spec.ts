@@ -1,3 +1,4 @@
+import { visit } from "./helpers/demo-login";
 import { openHeaderTools, closeHeaderMenu } from "./helpers/header";
 import { test, expect } from "@playwright/test";
 import sharp from "sharp";
@@ -8,7 +9,7 @@ for (const width of [375, 768, 1440, 1920]) {
     page,
   }) => {
     await page.setViewportSize({ width, height: 1000 });
-    await page.goto("/");
+    await visit(page, "/");
     const plane = page.locator("[data-hero-flight] img");
     const sky = page.locator("[data-hero-flight]");
     const background = page.locator(
@@ -63,8 +64,8 @@ for (const width of [375, 768, 1440, 1920]) {
     await expect(background).toHaveCSS("transform", "none");
     await expect(background).toHaveCSS("animation-name", "none");
     await openHeaderTools(page);
-    await page.locator('header a[href="/welcome"]').click();
-    await expect(page).toHaveURL(/\/welcome$/);
+    await page.locator('header a[href="/agency"]').click();
+    await expect(page).toHaveURL(/\/agency$/);
   });
 }
 
@@ -74,7 +75,7 @@ test("reduced motion shows one static airplane in English and Arabic", async ({
   await page.emulateMedia({ reducedMotion: "reduce" });
   for (const width of [375, 768, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
-    await page.goto("/");
+    await visit(page, "/");
     for (const locale of ["en", "ar"]) {
       await openHeaderTools(page);
       await page.locator("header select").selectOption(locale);

@@ -45,7 +45,7 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
           <Link to={demoSessionActive ? "/agency" : "/welcome"} onClick={close} aria-label={t("Agency account", "حساب الوكالة")} title={t("Agency account", "حساب الوكالة")}><Icon name="personFilled" /></Link>
         </div>
         {demoSessionActive ? <Popover label={t("Account menu", "قائمة الحساب")} trigger={<>{t("Demo account", "حساب تجريبي")}<Icon name="chevron" /></>}>
-          <p>{t("Demo session · Resets on refresh", "جلسة تجريبية · تُمسح عند التحديث")}</p>
+          <p>{t("Demo access · Frontend only", "دخول تجريبي · واجهة فقط")}</p>
           {[
             ["/profile", t("My Profile", "ملفي الشخصي")], ["/agency", t("My Agency", "وكالتي")],
             ["/bookings", t("My Bookings", "حجوزاتي")], ["/car-rental/bookings", t("My Rentals", "تأجيراتي")],

@@ -146,7 +146,7 @@ export function RegistrationReview() {
             No account was created and no information or documents were sent.
             Actual partner approval is not connected.
           </p>
-          <Link to="/verify-email">Explore email verification preview</Link>
+          <Link to="/login">Return to Sign In</Link>
         </div>
       )}
       <p

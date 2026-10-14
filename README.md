@@ -20,7 +20,7 @@ npm run lint
 npx tsc --noEmit
 npm run build
 npx playwright install chromium
-npm run test:e2e
+npm run test
 ```
 
 Browser tests use the production preview on port 4173. Set `PLAYWRIGHT_BASE_URL` to test a running Docker container or staging. Tests use disposable browser contexts and fixture data; no account or registration information is submitted.
@@ -29,7 +29,7 @@ Browser tests use the production preview on port 4173. Set `PLAYWRIGHT_BASE_URL`
 
 | URL                          | Screen                                                                       |
 | ---------------------------- | ---------------------------------------------------------------------------- |
-| `/`                          | Homepage, hotel search, deals, partner benefits, collections, footer         |
+| `/`                          | Welcome when signed out; homepage, hotel search, deals, partner benefits, collections, footer after demo sign-in         |
 | `/car-rental`                | Branded B2B service overview and explicit rental demonstration |
 | `/car-rental/search` | Fictional vehicle search, criteria, filters and sorting |
 | `/car-rental/vehicles/:id` | Vehicle specifications, sample conditions and selection |
@@ -87,7 +87,13 @@ Use ignored `.env.local` or `.env.production.local` for local overrides. Vite em
 
 Live search, inventory, rates, bookings, payments, login, recovery and registration submission remain unavailable. An explicitly labeled frontend demonstration now connects room selection, booking summary, guest entry, simulated payment outcomes, booking management and printable demo vouchers. No requests, card credentials, supplier changes or money movement occur. The processing preview advances manually; no fake loading delay is used.
 
-`src/features/demo` owns typed fixtures and the React context demo-state layer. Guests open `/welcome` from the header account icon. The existing `DemoProvider` also owns an explicit, memory-only demo session: enter it using “Explore demo agency workspace” on Login or the partner-access screen. Profile, profile editing, notifications, wallet, transactions and email-verification preview withhold their contents until that explicit action. This is a frontend preview boundary, not backend authentication. Sign Out returns to Welcome and clears session edits/selections; refresh also resets access. Guest details, selections, bookings, agency edits and notification state exist only in memory and reset on refresh. Favourites and locale retain their existing browser storage. Registration values/files remain in memory and reset on refresh or leaving registration; file validation checks metadata, not authenticity. Real submission remains disabled, with a separately labeled demo receipt preview.
+`src/features/demo` owns typed fixtures and the React context demo-state layer. The temporary `src/features/auth/demo-auth.ts` service validates the public demo account **demo@royalvacation.test / Demo@12345** locally. It never calls an authentication API or creates a token. Only a non-sensitive marker is stored in `sessionStorage`; the password and personal data are never stored. Demo access survives reloads in the same tab. This client-side gate is not production security or backend-verified authentication.
+
+Signed-out `/` shows the existing Welcome page. All routes default to protected, including unknown routes. Public exceptions are `/welcome`, `/login`, `/forgot-password`, `/verify-otp`, `/reset-password`, and the existing four `/register/agency` steps. Internal deep links first show Welcome, then return to the requested local path (including query/hash) after sign-in. External return URLs are rejected. Signed-in visits to Welcome or Login return home. Sign Out removes demo access, resets in-memory data, and returns to Welcome; history navigation cannot render protected content. Locale, currency, nationality and favourites are preserved.
+
+Guest details, selections, bookings, agency edits and notification state remain in memory and reset on refresh. Registration values/files remain in memory and reset on refresh or leaving registration; file validation checks metadata, not authenticity. Real submission remains disabled, with a separately labeled demo receipt preview that never signs users in or creates an account. Laravel must supply real authentication, authorization, session expiry/revocation, account approval and recovery before real user data is supported.
+
+Playwright uses the actual login form through `tests/helpers/demo-login.ts`, without injecting auth storage or bypassing the gate. `npm run test` runs the existing complete `test:e2e` suite.
 
 Review the implementation checklist, boundaries and validation in [frontend upgrade](docs/frontend-upgrade.md). Brand originals and SVG interpretations are in `public/brand`; runtime layered animation is in `src/components/brand-logo.tsx`. No runtime dependencies were added.
 
