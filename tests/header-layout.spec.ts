@@ -14,7 +14,7 @@ for (const width of [375, 1024, 1440, 1869, 1920]) {
       await openHeaderTools(page);
       await header.locator("select").selectOption(locale);
       const controls = header.locator(
-        'select, a[href="/notifications"], a[href="/booking/summary"], a[href="/agency"]',
+        'select, a[href="/notifications"], a[href="/booking/summary"], button[aria-label="Account menu"], button[aria-label="قائمة الحساب"]',
       );
       await expect(controls).toHaveCount(4);
       for (const control of await controls.all()) {
@@ -53,6 +53,7 @@ for (const width of [375, 1024, 1440, 1869, 1920]) {
     }
     for (const route of ["/notifications", "/booking/summary", "/agency"]) {
       await openHeaderTools(page);
+      if (route === "/agency") await page.getByRole("button", { name: /Account menu|قائمة الحساب/ }).click();
       await page.locator(`header a[href="${route}"]`).click();
       await expect(page).toHaveURL(new RegExp(`${route}$`));
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();

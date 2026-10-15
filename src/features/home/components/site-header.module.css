@@ -6,7 +6,7 @@
 .tools { display:flex; align-items:center; justify-content:flex-end; gap:10px; grid-column:2; grid-row:1; min-width:0; }
 .language select { min-height:44px; max-width:64px; font-size:14px; font-weight:700; border:0; background:transparent; color:var(--navy); }
 .icons { display:flex; align-items:center; background:var(--subtle); border:1px solid var(--border); border-radius:12px; }
-.icons a { display:grid; place-items:center; width:44px; height:44px; }
+.icons > a { display:grid; place-items:center; width:44px; height:44px; }
 .guest { display:flex; gap:8px; }
 .guest a { display:flex; justify-content:center; align-items:center; min-height:44px; padding:8px 16px; border:1px solid var(--border); border-radius:10px; text-decoration:none; font-size:14px; font-weight:700; white-space:nowrap; }
 .guest a:last-child { background:var(--navy); border-color:var(--navy); color:white; }
@@ -29,3 +29,10 @@
  .tools .guest { width:100%; }
  .guest a { flex:1; }
 }
+
+.icons .profileTrigger { width:44px; height:44px; padding:0; border:0; background:transparent; color:var(--navy); border-radius:10px; transition:background-color 160ms ease, color 160ms ease; }
+.icons .profileTrigger:hover,
+.icons .profileTrigger[aria-expanded="true"] { background:#d9f2ee; color:#00697a; }
+.icons .profileTrigger:focus-visible { outline:2px solid #007f93; outline-offset:2px; }
+.icons .accountPanel a { width:100%; height:auto; }
+@media (prefers-reduced-motion: reduce) { .icons .profileTrigger { transition:none; } }

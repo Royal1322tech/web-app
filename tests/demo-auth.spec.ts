@@ -53,7 +53,7 @@ for (const width of [375, 768, 1440]) {
     await visit(page, "/agency");
     await openHeaderTools(page);
     await expect(page.locator('header a[href="/login"], header a[href^="/register"]')).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Agency account", exact: true })).toHaveAttribute("href", "/agency");
+    await expect(page.getByRole("button", { name: "Account menu", exact: true })).toHaveAttribute("aria-expanded", "false");
     await page.getByRole("combobox", { name: "Language" }).selectOption("ar");
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     const preferences = await page.evaluate(() => JSON.stringify(localStorage));

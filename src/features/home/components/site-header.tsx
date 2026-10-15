@@ -10,7 +10,7 @@ import styles from "./site-header.module.css";
 
 export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
   const { t, locale, setLocale } = useLocale();
-  const { pathname } = useLocation();
+  const { pathname, key: navigationKey } = useLocation();
   const navigate = useNavigate();
   const { demoSessionActive, signOut } = useDemo();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -42,9 +42,7 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
         <div className={styles.icons}>
           <Link to="/notifications" onClick={close} aria-label={t("Notifications", "الإشعارات")} title={t("Notifications", "الإشعارات")}><Icon name="bell" /></Link>
           <Link to="/booking/summary" onClick={close} aria-label={t("Booking summary", "ملخص الحجز")} title={t("Booking summary", "ملخص الحجز")}><Icon name="cart" /></Link>
-          <Link to={demoSessionActive ? "/agency" : "/welcome"} onClick={close} aria-label={t("Agency account", "حساب الوكالة")} title={t("Agency account", "حساب الوكالة")}><Icon name="personFilled" /></Link>
-        </div>
-        {demoSessionActive ? <Popover label={t("Account menu", "قائمة الحساب")} trigger={<>{t("Demo account", "حساب تجريبي")}<Icon name="chevron" /></>}>
+          {demoSessionActive ? <Popover key={navigationKey} triggerClassName={styles.profileTrigger} panelClassName={styles.accountPanel} label={t("Account menu", "قائمة الحساب")} trigger={<Icon name="personFilled" />}>
           <p>{t("Demo access · Frontend only", "دخول تجريبي · واجهة فقط")}</p>
           {[
             ["/profile", t("My Profile", "ملفي الشخصي")], ["/agency", t("My Agency", "وكالتي")],
@@ -53,7 +51,9 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
             ["/account/settings", t("Account Settings", "إعدادات الحساب")],
           ].map(([href, label]) => <Link key={href} to={href} onClick={close}>{label}</Link>)}
           <button type="button" onClick={() => { signOut(); close(); navigate("/welcome", { replace: true }); }}>{t("Sign Out", "تسجيل الخروج")}</button>
-        </Popover> : <div className={styles.guest}>
+        </Popover> : <Link to="/welcome" onClick={close} aria-label={t("Agency account", "حساب الوكالة")}><Icon name="personFilled" /></Link>}
+        </div>
+        {!demoSessionActive && <div className={styles.guest}>
           <Link to="/register/agency/company" onClick={close}>{t("Register", "تسجيل وكالة")}</Link>
           <Link to="/login" onClick={close}>{t("Sign In", "تسجيل الدخول")}</Link>
         </div>}

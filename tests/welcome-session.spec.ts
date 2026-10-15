@@ -13,7 +13,7 @@ for (const width of [375, 1440]) {
       await page.goto("/");
       if (locale === "ar") await page.getByRole("button", { name: "Switch to Arabic" }).click();
       await expect(page.locator("header, footer")).toHaveCount(0);
-      const account = () => page.getByRole("link", { name: locale === "en" ? "Agency account" : "حساب الوكالة", exact: true });
+      const account = () => page.getByRole("button", { name: locale === "en" ? "Account menu" : "قائمة الحساب", exact: true, includeHidden: true });
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(
         locale === "en" ? "Welcome!" : "مرحبًا!",
       );
@@ -66,7 +66,7 @@ for (const width of [375, 1440]) {
         page.getByRole("heading", { name: "Horizon Travel — Demo Agency" }),
       ).toBeVisible();
       await openHeaderTools(page);
-      await expect(account()).toHaveAttribute("href", "/agency");
+      await expect(account()).toHaveAttribute("aria-expanded", "false");
       for (const path of [
         "/wallet",
         "/transactions",
@@ -79,6 +79,8 @@ for (const width of [375, 1440]) {
       }
       await openHeaderTools(page);
       await account().click();
+      await page.locator('header a[href="/agency"]').click();
+      await expect(account()).toHaveAttribute("aria-expanded", "false");
       await expect(page).toHaveURL(/\/agency$/);
       await page
         .getByRole("button", {
@@ -137,6 +139,7 @@ test("homepage SVG introduction settles without layout shift and does not replay
   const finalPlane = await page.locator("header .brand-plane").boundingBox();
   const header = await page.locator("header").boundingBox();
   await openHeaderTools(page);
+  await page.getByRole("button", { name: /Account menu|قائمة الحساب/ }).click();
   await page.locator('header a[href="/agency"]').click();
   await expect(page).toHaveURL(/\/agency$/);
   await expect(
@@ -144,6 +147,8 @@ test("homepage SVG introduction settles without layout shift and does not replay
   ).toBeVisible();
   await page.goBack();
   await expect(logo).toBeVisible();
+  // Dropdown navigation can restore a scrolled position; compare the same viewport.
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.locator(".route-entrance").evaluate(async (el) => {
     await Promise.all(el.getAnimations().map((a) => a.finished));
   });

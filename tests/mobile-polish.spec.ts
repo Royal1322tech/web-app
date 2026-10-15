@@ -33,7 +33,7 @@ for (const width of [320, 375, 390, 430, 768, 1440])
         await expect(
           page.locator('header a[href="/car-rental"]'),
         ).toBeVisible();
-        await page.locator('header a[href="/agency"]').focus();
+        await page.getByRole("button", { name: /Account menu|قائمة الحساب/ }).focus();
         await page.keyboard.press("Escape");
         await expect(toggle).toBeFocused();
         await expect(toggle).toHaveAttribute("aria-expanded", "false");

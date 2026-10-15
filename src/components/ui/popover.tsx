@@ -2,7 +2,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } f
 import "./popover.css";
 
 /** Native buttons/links retain Tab and radio Arrow-key behavior; Escape restores focus. */
-export function Popover({ label, trigger, children, panelClassName = "" }: { label: string; trigger: ReactNode; children: ReactNode; panelClassName?: string }) {
+export function Popover({ label, trigger, children, panelClassName = "", triggerClassName = "" }: { label: string; trigger: ReactNode; children: ReactNode; panelClassName?: string; triggerClassName?: string }) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
@@ -54,7 +54,7 @@ export function Popover({ label, trigger, children, panelClassName = "" }: { lab
   }, [open, label]);
 
   return <div className="rv-popover" ref={root} onBlur={event => { const container = event.currentTarget; requestAnimationFrame(() => { if (!container.contains(document.activeElement)) setOpen(false); }); }}>
-    <button ref={button} className="rv-popover-trigger" type="button" aria-label={label} aria-expanded={open} aria-controls={id} onClick={() => setOpen(!open)}>{trigger}</button>
+    <button ref={button} className={`rv-popover-trigger ${triggerClassName}`} type="button" aria-label={label} aria-expanded={open} aria-controls={id} onClick={() => setOpen(!open)}>{trigger}</button>
     {open && <div id={id} role="region" aria-label={label} className={`rv-popover-panel ${panelClassName}`} ref={panel}>{children}</div>}
   </div>;
 }
