@@ -1,3 +1,5 @@
+import { countries } from "@/features/agency-registration/data/countries";
+import { useTravelPreferences } from "@/features/preferences/travel-preferences";
 import { CarRentalOverview } from "@/features/car-rental/car-rental-overview";
 import { useNavigate } from "react-router-dom";
 import { useLocale } from "@/features/localization/locale-provider";
@@ -28,7 +30,9 @@ export function HotelSearchForm({
   onSearch?: (criteria: HotelSearchCriteria) => void;
   initialValues?: Partial<HotelSearchFormValues>;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const preferences = useTravelPreferences();
+  const countryNames = new Intl.DisplayNames([locale], { type: "region" });
   const navigate = useNavigate();
   const [tab, setTab] = useState<"hotels" | "cars">("hotels");
   const [notice, setNotice] = useState(false);
@@ -40,6 +44,7 @@ export function HotelSearchForm({
       checkOut: "",
       rooms: [createRoom()],
       ...initialValues,
+      nationality: initialValues?.nationality ?? (preferences.nationality === "Egypt" ? "EG" : preferences.nationality === "Saudi Arabia" ? "SA" : "Global"),
     },
     shouldUnregister: false,
   });
@@ -121,6 +126,7 @@ export function HotelSearchForm({
                 else {
                   const query = new URLSearchParams({
                     destination: criteria.destination,
+                    nationality: criteria.nationality ?? "Global",
                     checkIn: criteria.checkIn,
                     checkOut: criteria.checkOut,
                     rooms: JSON.stringify(criteria.rooms),
@@ -213,6 +219,14 @@ export function HotelSearchForm({
                   {t(errors.checkOut.message || "Check this field.")}
                 </p>
               )}
+            </div>
+            <div className={styles.searchField}>
+              <label htmlFor="search-nationality"><Icon name="globe" />{t("Nationality", "الجنسية")}</label>
+              <select id="search-nationality" {...register("nationality")} aria-invalid={!!errors.nationality} aria-describedby={errors.nationality ? "nationality-error" : undefined}>
+                <option value="Global">{t("Global", "عالمي")}</option>
+                {countries.map(country => <option key={country.value} value={country.value}>{countryNames.of(country.value) ?? country.label}</option>)}
+              </select>
+              {errors.nationality && <p id="nationality-error" role="alert" className={styles.error}>{t("Select a nationality.", "اختر الجنسية.")}</p>}
             </div>
             <Suspense
               fallback={

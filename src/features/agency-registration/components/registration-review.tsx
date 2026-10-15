@@ -78,7 +78,6 @@ export function RegistrationReview() {
           title="Contact Information"
           icon="personFilled"
           rows={[
-            { label: "Role", value: contact.role },
             { label: "Full Name", value: contact.fullName },
             { label: "Nationality", value: countryLabel(contact.nationality) },
             { label: "ID Number", value: contact.idNumber },

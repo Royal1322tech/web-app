@@ -208,7 +208,7 @@ test("registration validation, file retention, review and prerequisite guards", 
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await expect(page.getByText("Enter your company name.")).toBeVisible();
   await company(page);
-  await page.getByLabel("Role", { exact: false }).fill("Manager");
+  await expect(page.getByLabel("Role", { exact: true })).toHaveCount(0);
   await page.getByLabel("Full Name").fill("Test User");
   await page.getByLabel("Nationality").selectOption("EG");
   await page.getByLabel("ID Number").fill("TEST-002");
@@ -269,7 +269,7 @@ test("authentication and recovery validation never submit network credentials", 
   await expect(page.locator("#password")).toHaveAttribute("type", "text");
   await page.getByRole("button", { name: "Sign In", exact: true }).click();
   await expect(
-    page.getByText("Incorrect demo email or password.", { exact: false }),
+    page.getByText("Incorrect email or password.", { exact: false }),
   ).toBeVisible();
   for (const route of ["/forgot-password", "/verify-otp", "/reset-password"]) {
     await visit(page, route);

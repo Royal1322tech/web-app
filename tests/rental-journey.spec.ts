@@ -130,7 +130,7 @@ test("rental results filters, unavailable selection, direct URLs and accessibili
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await visit(page, 
+  await visit(page,
     "/car-rental/search?pickup=Cairo&dropoff=Alexandria&start=2027-03-10&end=2027-03-13",
   );
   await page.getByLabel("Vehicle category").selectOption("economy");

@@ -27,10 +27,12 @@ test("invalid credentials fail, valid login returns to the complete deep link an
   page.on("request", r => { if (!["GET", "HEAD"].includes(r.method())) writes.push(r.url()); });
   await page.goto("/search?destination=Alexandria#results");
   await page.locator('a[href="/login"]').click();
+  await expect(page.locator("body")).not.toContainText("demo@royalvacation.test");
+  await expect(page.locator("body")).not.toContainText("Demo@12345");
   await page.getByLabel("Email", { exact: true }).fill("demo@royalvacation.test");
   await page.getByLabel("Password", { exact: true }).fill("wrong-password");
   await page.getByRole("button", { name: "Sign In", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("Incorrect demo email or password");
+  await expect(page.getByRole("status")).toContainText("Incorrect email or password");
   await expect(page).toHaveURL(/\/login$/);
   expect(await page.evaluate(() => sessionStorage.getItem("royal-vacation.demo-auth.v1"))).toBeNull();
   await submitDemoLogin(page);
@@ -84,9 +86,22 @@ test("unsafe return locations cannot navigate away from the application", async 
 test("storage failure is explained without creating a session", async ({ page }) => {
   await page.addInitScript(() => { Storage.prototype.setItem = () => { throw new DOMException("Blocked", "SecurityError"); }; });
   await page.goto("/login");
+  await expect(page.locator("body")).not.toContainText("demo@royalvacation.test");
+  await expect(page.locator("body")).not.toContainText("Demo@12345");
   await page.getByLabel("Email", { exact: true }).fill("demo@royalvacation.test");
   await page.getByLabel("Password", { exact: true }).fill("Demo@12345");
   await page.getByRole("button", { name: "Sign In", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("Session storage is unavailable");
   await expect(page).toHaveURL(/\/login$/);
+});
+
+
+test("restored documents recheck demo access before exposing internal routes", async ({ page }) => {
+  await visit(page, "/agency");
+  await page.evaluate(() => {
+    sessionStorage.removeItem("royal-vacation.demo-auth.v1");
+    window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true }));
+  });
+  await expect(page.locator(".welcome-content")).toBeVisible();
+  await expect(page.locator(".workspace, #home-navigation")).toHaveCount(0);
 });

@@ -16,7 +16,6 @@ export const companySchema = z.object({
 });
 
 export const contactSchema = z.object({
-  role: requiredText("your role"),
   fullName: requiredText("your full name"),
   nationality: requiredText("your nationality"),
   idNumber: requiredText("your ID number"),
@@ -54,7 +53,6 @@ export const registrationDefaults: RegistrationValues = {
     address: "",
   },
   contact: {
-    role: "",
     fullName: "",
     nationality: "",
     idNumber: "",

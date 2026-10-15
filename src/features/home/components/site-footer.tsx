@@ -23,6 +23,10 @@ export function SiteFooter() {
             <BrandLogo withName variant="footer" />
           </Link>
           <p><Text en="Thoughtful travel. Lasting partnerships." ar="سفر مدروس. شراكات دائمة." /></p>
+          <div className={styles.footerContacts}>
+            <a href="https://wa.me/201070724143" target="_blank" rel="noopener noreferrer" aria-label={t("WhatsApp: +20 01070724143", "واتساب: +20 01070724143")}><Icon name="whatsapp" /><bdi>+20 01070724143</bdi></a>
+            <a href="mailto:royal.travel@royalvacation.online"><Icon name="mail" /><bdi>royal.travel@royalvacation.online</bdi></a>
+          </div>
           <div className={badges.apps}>
             <h3>{t("Our mobile apps", "تطبيقاتنا للهواتف")}</h3>
             <p>{t("Downloads unavailable — pending verified official app links.", "التنزيل غير متاح — بانتظار روابط التطبيقات الرسمية الموثقة.")}</p>

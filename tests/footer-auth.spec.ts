@@ -18,6 +18,8 @@ for (const width of [375, 768, 1440]) {
         await expect(link).toHaveAttribute("href", paths[i]);
         await expect(link.locator("svg")).toHaveAttribute("aria-hidden", "true");
         expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+        // Login uses pointer input; enter keyboard modality for focus-visible checks.
+        await page.keyboard.press("Tab");
         await link.focus();
         await expect(link).toHaveCSS("outline-style", "solid");
         await expect(link).toHaveCSS("color", "rgb(255, 213, 158)");
@@ -98,6 +100,7 @@ test("footer reduced motion stays static on hover and keyboard focus", async ({ 
   const footer = page.locator("footer");
   const logo = footer.locator('a[href="/"]');
   await logo.hover();
+  await page.keyboard.press("Tab");
   await logo.focus();
   await expect(logo.locator(".brand-plane")).toHaveCSS("animation-name", "none");
   await expect(logo.locator(".brand-flight-trail")).toHaveCSS("animation-name", "none");

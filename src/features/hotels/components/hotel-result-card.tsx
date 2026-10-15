@@ -1,3 +1,4 @@
+import { stayQuery } from "../lib/stay-query";
 import type { HotelSearchCriteria } from "@/features/home/schemas/hotel-search.schema";
 import { ResponsiveImage as Image } from "@/components/ui/responsive-image";
 import { Link } from "react-router-dom";
@@ -49,7 +50,7 @@ export function HotelResultCard({
   hotel: HotelSummary;
   booking?: ReactNode;
   favourite?: boolean;
-  dates?: StayDates & Partial<Pick<HotelSearchCriteria, "rooms">>;
+  dates?: StayDates & Partial<Pick<HotelSearchCriteria, "rooms" | "nationality">>;
 }) {
   const { locale, t } = useLocale();
   const compare = useHotelPreferences("comparison");
@@ -92,7 +93,7 @@ export function HotelResultCard({
               <Link
                 to={
                   dates
-                    ? `${href}?${new URLSearchParams({ checkIn: dates.checkIn, checkOut: dates.checkOut, rooms: JSON.stringify(dates.rooms ?? [{ adults: 2, childAges: [] }]) })}`
+                    ? `${href}?${stayQuery(dates)}`
                     : href
                 }
                 className={styles.hotelName}

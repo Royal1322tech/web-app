@@ -1,4 +1,4 @@
-import { demoAuth } from "@/features/auth/demo-auth";
+import { demoAuth, subscribeDemoSession } from "@/features/auth/demo-auth";
 import {
   rentalTotal,
   rentalSchema,
@@ -8,7 +8,7 @@ import {
   type RentalRecord,
   type RentalStatus,
 } from "@/features/car-rental/rental-model";
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { HotelSearchCriteria } from "@/features/home/schemas/hotel-search.schema";
 import { localToday } from "@/features/home/schemas/hotel-search.schema";
 import { samplePriceBreakdown } from "@/features/hotels/lib/sample-stay";
@@ -71,7 +71,7 @@ export function defaultCriteria(destination: string): HotelSearchCriteria {
   };
 }
 export function DemoProvider({ children }: { children: ReactNode }) {
-  const [demoSessionActive, setDemoSessionActive] = useState(demoAuth.isActive);
+  const demoSessionActive = useSyncExternalStore(subscribeDemoSession, demoAuth.isActive, () => false);
   const [rentalSelection, setRentalSelection] =
     useState<RentalSelection | null>(null);
   const [rentalDriver, setRentalDriver] = useState<RentalDriver | null>(null);
@@ -149,14 +149,9 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       );
     },
     demoSessionActive,
-    signIn: (email, password) => {
-      const accepted = demoAuth.signIn(email, password);
-      if (accepted) setDemoSessionActive(true);
-      return accepted;
-    },
+    signIn: demoAuth.signIn,
     signOut: () => {
       demoAuth.signOut();
-      setDemoSessionActive(false);
       setRentalSelection(null);
       setRentalDriver(null);
       setRentals([]);

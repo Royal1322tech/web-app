@@ -12,8 +12,9 @@ for (const width of [375, 768, 1440]) {
       await section.scrollIntoViewIfNeeded();
       await section.evaluate(async el => {
         await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-        await Promise.all(el.getAnimations({ subtree: true }).map(a => a.finished));
+        await Promise.allSettled(el.getAnimations({ subtree: true }).map(a => a.finished));
       });
+      await expect.poll(() => section.evaluate(el => el.getAnimations({ subtree: true }).every(animation => animation.playState === "finished"))).toBe(true);
       const cards = section.locator("article");
       await expect(cards).toHaveCount(4);
       const boxes = await cards.evaluateAll(elements => elements.map(el => {
@@ -45,7 +46,7 @@ test("partner video pauses, resumes and respects reduced motion", async ({ page 
   const drawing = section.locator(".travel-trail-draw");
   await expect(drawing).toHaveCSS("animation-duration", "2.8s");
   await section.evaluate(async el => {
-    await Promise.all(el.getAnimations({ subtree: true }).map(a => a.finished));
+    await Promise.allSettled(el.getAnimations({ subtree: true }).map(a => a.finished));
   });
   const cards = section.locator("article");
   await cards.first().hover();

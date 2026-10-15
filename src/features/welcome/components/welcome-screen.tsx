@@ -12,6 +12,10 @@ export function WelcomeScreen() {
   return (
     <AuthShell variant="welcome" language={locale}>
       <div className="welcome-content">
+        <svg className="welcome-flight" viewBox="0 0 160 32" aria-hidden="true" focusable="false">
+          <path className="welcome-flight-path" d="M8 24 C45 24 60 4 92 8 S130 28 150 8" />
+          <g className="welcome-flight-plane"><path transform="scale(.5) rotate(45) translate(-91 -28)" d="m85 28-14-9 5-3 17 6 13-9q6-3 6 1l-13 13-1 17-5 3-3-16-9 5-5-3Z" /></g>
+        </svg>
         <BrandLogo variant="auth" />
         <button type="button" className="text-button" onClick={() => setLocale(locale === "en" ? "ar" : "en")} aria-label={t("Switch to Arabic", "التبديل إلى الإنجليزية")}>{locale === "en" ? "العربية" : "English"}</button>
         <h1>{t("Welcome!", "مرحبًا!")}</h1>

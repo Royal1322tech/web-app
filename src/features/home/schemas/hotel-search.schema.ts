@@ -1,3 +1,4 @@
+import { countries } from "@/features/agency-registration/data/countries";
 import { z } from "zod";
 import { searchLimits } from "../data/search-limits";
 
@@ -35,6 +36,7 @@ export function localToday() {
 
 export const hotelSearchSchema = z
   .object({
+    nationality: z.string().refine(value => value === "Global" || countries.some(country => country.value === value), "Select a nationality.").optional(),
     destination: z.string().trim().min(1, "Select a destination."),
     checkIn: dateSchema,
     checkOut: dateSchema,

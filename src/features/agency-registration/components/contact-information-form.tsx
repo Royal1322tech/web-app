@@ -40,13 +40,6 @@ export function ContactInformationForm() {
           description="Provide the details of the owner or the employee responsible for this account."
         >
           <RegistrationField
-            name="contact.role"
-            label="Role"
-            placeholder="Enter your role"
-            icon="document"
-            autoComplete="organization-title"
-          />
-          <RegistrationField
             name="contact.fullName"
             label="Full Name"
             placeholder="Enter full name"

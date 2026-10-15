@@ -1,6 +1,7 @@
 import type { SVGProps } from "react";
 
 const paths = {
+  whatsapp: "M21 11.5a9 9 0 0 1-13.4 7.8L3 21l1.7-4.6A9 9 0 1 1 21 11.5ZM8 7l2 3-1 1q1.5 3 4 3l1-1 3 1c0 3-3 3-5 2-4-2-6-6-4-9Z",
   arrowUpRight: "M6 18 18 6M6 6h12v12",
   arrowRight: "M4 12h16m-6-6 6 6-6 6",
   calendar: "M4 5h16v16H4ZM8 3v4m8-4v4M4 10h16",

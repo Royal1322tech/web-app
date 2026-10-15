@@ -125,3 +125,12 @@ See [migration verification](docs/migration.md). The old directory must not be d
 See [Welcome, account navigation and logo verification](docs/welcome-account-logo.md) for the focused restoration and animation changes.
 
 The compact mobile header exposes language/account/notification/cart tools through the navigation toggle. Hero CTA arrows use SVG rather than emoji-capable characters. Rental demo state is part of the existing `DemoProvider`, with three typed fictional vehicles and no supplier connections; refresh or Sign Out clears rental selections, driver details and records. See [polish and rental handoff](docs/frontend-polish.md).
+
+
+## Final demo presentation update
+
+Sign-in credentials are intentionally absent from the rendered website; login fields start empty. The route guard owns the successful-login redirect so session activation cannot race a second redirect to the homepage. Tests authenticate through the real form and scope header logout separately from workspace logout.
+
+The existing Welcome composition now includes a decorative CSS/SVG flight path with a reduced-motion fallback. Registration keeps all four steps but no longer asks for Role. Hotel search carries optional `nationality` in its criteria and query string: country codes reuse the registration country list; `Global` preserves the existing unrestricted preference. The form initializes from the navbar preference when no search nationality is supplied. Editing search nationality does not write global preferences, alter currency/language, or change fixture pricing.
+
+Contact Us and the shared footer use the owner-approved email `royal.travel@royalvacation.online` and WhatsApp `https://wa.me/201070724143` (display `+20 01070724143`). No address or app-download URL is invented. Contact Us omits the footer; its form still creates a local preview only. Existing transaction history, booking behavior, hero slideshow, hotel carousels, video and assets are unchanged.

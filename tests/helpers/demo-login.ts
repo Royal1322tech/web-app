@@ -5,7 +5,8 @@ export async function submitDemoLogin(page: Page) {
   await page.getByLabel("Email", { exact: true }).fill("demo@royalvacation.test");
   await page.getByLabel("Password", { exact: true }).fill("Demo@12345");
   await page.getByRole("button", { name: "Sign In", exact: true }).click();
-  await expect(page.locator("header")).toBeVisible();
+  await expect(page.locator(".login-form, .welcome-content")).toHaveCount(0);
+  await expect(page.locator("h1")).toBeVisible();
 }
 
 /** Exercise the real login UI; never inject a session or change app behavior. */
@@ -30,6 +31,6 @@ export async function visit(page: Page, path: string) {
 export async function logout(page: Page) {
   await openHeaderTools(page);
   await page.getByRole("button", { name: /Account menu|قائمة الحساب/ }).click();
-  await page.getByRole("button", { name: /Sign Out|تسجيل الخروج/, exact: true }).click();
+  await page.locator("header").getByRole("button", { name: /Sign Out|تسجيل الخروج/, exact: true }).click();
   await expect(page).toHaveURL(/\/welcome$/);
 }

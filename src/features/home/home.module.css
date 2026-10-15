@@ -1626,3 +1626,17 @@
 
 /* Compact hero hands off to search without an overlapping negative margin. */
 .home > main > .searchSection { margin-top: 0; padding-top: 18px; }
+
+/* Six search controls retain the existing field styling and mobile grid. */
+@media (min-width: 1100px) {
+  .searchForm { grid-template-columns: 1.05fr 1fr 1fr 1fr 1.15fr auto; gap: 12px; }
+}
+@media (min-width: 801px) and (max-width: 1099px) {
+  .searchForm { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .searchForm > .primaryButton { grid-column: auto; }
+}
+.footerContacts { display: grid; gap: 4px; margin-top: 16px; }
+.footerContacts a { display: flex; align-items: center; gap: 10px; min-height: 44px; color: #d2dceb; font-size: 13px; text-decoration: none; }
+.footerContacts a:hover { color: var(--light-gold); }
+.footerContacts svg { flex: 0 0 20px; }
+.footerContacts bdi { overflow-wrap: anywhere; min-width: 0; }

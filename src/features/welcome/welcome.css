@@ -113,3 +113,10 @@
     height: 240px;
   }
 }
+
+.auth-page--welcome .welcome-content { position: relative; }
+.welcome-flight { position: absolute; inset-block-start: 4px; inset-inline-end: 24px; width: 120px; height: 28px; pointer-events: none; overflow: visible; }
+.welcome-flight-path { fill: none; stroke: var(--gold); stroke-width: 1; stroke-dasharray: 2 5; }
+.welcome-flight-plane { fill: var(--brand); stroke: var(--navy); stroke-width: .5; offset-path: path("M8 24 C45 24 60 4 92 8 S130 28 150 8"); offset-distance: 100%; animation: welcome-flight 4s ease-in-out both; }
+@keyframes welcome-flight { from { offset-distance: 0%; opacity: 0; } 15% { opacity: 1; } to { offset-distance: 100%; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .welcome-flight-plane { animation: none; } }

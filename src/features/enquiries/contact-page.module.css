@@ -45,3 +45,7 @@
 /* Override the catalog input shorthand so icons never overlap typed text in either direction. */
 .page form .inputWrap input:global(.input) { padding-inline:40px; }
 .page form > div:first-of-type { align-items:end; }
+
+.information dd a { color: inherit; overflow-wrap: anywhere; }
+.information dd a:hover { color: var(--light-gold); }
+.information dd a:focus-visible { outline: 2px solid var(--light-gold); outline-offset: 4px; }

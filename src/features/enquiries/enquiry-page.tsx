@@ -10,7 +10,6 @@ import styles from "./enquiry.module.css";
 import contact from "./contact-page.module.css";
 import { Icon } from "@/components/ui/icon";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
-import { SiteFooter } from "@/features/home/components/site-footer";
 
 export function EnquiryPage({ group = false }: { group?: boolean }) {
   const { t, locale } = useLocale();
@@ -74,12 +73,10 @@ export function EnquiryPage({ group = false }: { group?: boolean }) {
           <ResponsiveImage className={contact.photo} src="/images/home/cinematic/coastal-resort.png" alt="" width={1672} height={941} sizes="(max-width:799px) 90vw, 480px" />
           <h2>{t("Contact Information", "معلومات التواصل")}</h2>
           <p>{t("Connect with Royal Vacation for your agency’s next journey.", "تواصل مع رويال فاكيشن من أجل رحلة وكالتك القادمة.")}</p>
-          <dl>{([
-            ["phone", t("Phone Number", "رقم الهاتف")],
-            ["mail", t("Email Address", "البريد الإلكتروني")],
-            ["pin", t("Our Location", "موقعنا")],
-          ] as const).map(([icon, label]) => <div key={icon}><dt><span className={contact.icon}><Icon name={icon} /></span>{label}</dt><dd>{t("Official details pending", "البيانات الرسمية قيد الإضافة")}</dd></div>)}</dl>
-          <p className={contact.pending}>{t("Verified contact channels are not available in this preview. The form prepares a local enquiry only; messages are not delivered.", "قنوات التواصل الموثقة غير متاحة في هذه المعاينة. النموذج يجهز استفسارًا محليًا فقط؛ لا يتم إرسال الرسائل.")}</p>
+          <dl>
+            <div><dt><span className={contact.icon}><Icon name="whatsapp" /></span>{t("WhatsApp", "واتساب")}</dt><dd><a href="https://wa.me/201070724143" target="_blank" rel="noopener noreferrer"><bdi>+20 01070724143</bdi></a></dd></div>
+            <div><dt><span className={contact.icon}><Icon name="mail" /></span>{t("Email Address", "البريد الإلكتروني")}</dt><dd><a href="mailto:royal.travel@royalvacation.online"><bdi>royal.travel@royalvacation.online</bdi></a></dd></div>
+          </dl>
           <Link to="/group-quotation">{t("Planning a group journey?", "تخطط لرحلة جماعية؟")} <Icon name="arrowRight" /></Link>
         </aside>}
 
@@ -109,6 +106,5 @@ export function EnquiryPage({ group = false }: { group?: boolean }) {
         </aside>}
       </div>
     </section>
-    {!group && <SiteFooter />}
   </CatalogShell>;
 }

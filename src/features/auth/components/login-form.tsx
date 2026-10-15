@@ -1,5 +1,4 @@
-import { demoCredentials, safeDemoReturnTo } from "../demo-auth";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useDemo } from "@/features/demo/demo-provider";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -12,8 +11,6 @@ import { loginSchema, type LoginValues } from "../schemas/login.schema";
 
 export function LoginForm() {
   const { signIn } = useDemo();
-  const location = useLocation();
-  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [notice, setNotice] = useState("");
   const {
@@ -32,8 +29,7 @@ export function LoginForm() {
       onSubmit={handleSubmit(
         ({ username, password }) => {
           try {
-            if (signIn(username, password)) navigate(safeDemoReturnTo(location.state), { replace: true });
-            else setNotice("Incorrect demo email or password. Use the demo account below.");
+            if (!signIn(username, password)) setNotice("Incorrect email or password. Please try again.");
           } catch {
             setNotice("Session storage is unavailable. Allow browser storage and try again.");
           }
@@ -49,7 +45,7 @@ export function LoginForm() {
         <Input
           id="username"
           autoComplete="username"
-          placeholder="Enter your demo email"
+          placeholder="Enter your email"
           type="email"
           required
           aria-invalid={!!errors.username}
@@ -91,8 +87,6 @@ export function LoginForm() {
         Sign In
       </Button>
       <p className="fine-print">
-        Demo account: <bdi>{demoCredentials.email}</bdi><br />
-        Password: <bdi>{demoCredentials.password}</bdi><br />
         Frontend demo only, not production security or backend-verified authentication.
         Access persists in this browser tab until Sign Out. Use fictional data only.
       </p>
