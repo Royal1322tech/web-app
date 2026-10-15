@@ -1,3 +1,4 @@
+import { selectLanguage } from "./helpers/header";
 import { test, expect } from "@playwright/test";
 import { submitDemoLogin, logout, visit } from "./helpers/demo-login";
 import { openHeaderTools } from "./helpers/header";
@@ -54,7 +55,7 @@ for (const width of [375, 768, 1440]) {
     await openHeaderTools(page);
     await expect(page.locator('header a[href="/login"], header a[href^="/register"]')).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Account menu", exact: true })).toHaveAttribute("aria-expanded", "false");
-    await page.getByRole("combobox", { name: "Language" }).selectOption("ar");
+    await selectLanguage(page, "ar");
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     const preferences = await page.evaluate(() => JSON.stringify(localStorage));
     await logout(page);

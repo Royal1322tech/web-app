@@ -4,7 +4,6 @@
 .brand :global(.brand-emblem) { width:48px; height:48px; }
 .brand :global(.brand-wordmark strong) { font-size:25px; }
 .tools { display:flex; align-items:center; justify-content:flex-end; gap:10px; grid-column:2; grid-row:1; min-width:0; }
-.language select { min-height:44px; max-width:64px; font-size:14px; font-weight:700; border:0; background:transparent; color:var(--navy); }
 .icons { display:flex; align-items:center; background:var(--subtle); border:1px solid var(--border); border-radius:12px; }
 .icons > a { display:grid; place-items:center; width:44px; height:44px; }
 .guest { display:flex; gap:8px; }

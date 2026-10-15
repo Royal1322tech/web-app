@@ -1,3 +1,4 @@
+import { selectLanguage } from "./helpers/header";
 import { visit } from "./helpers/demo-login";
 import { expect, test } from '@playwright/test';
 import { openHeaderTools } from './helpers/header';
@@ -26,7 +27,7 @@ for (const width of [320,375,390,430,768,1024,1440]) {
     await page.reload();
     await openHeaderTools(page);
     await expect(trigger).toContainText('EGP');
-    await page.locator('header select').selectOption('ar');
+    await selectLanguage(page, 'ar');
     await page.getByRole('button',{name:'الجنسية والعملة',exact:true}).click();
     panel=page.getByRole('region',{name:'الجنسية والعملة',exact:true});
     await expect(panel.getByRole('radio',{name:'مصر',exact:true})).toBeChecked();

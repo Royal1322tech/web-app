@@ -1,3 +1,4 @@
+import { selectLanguage } from "./helpers/header";
 import { visit } from "./helpers/demo-login";
 import { openHeaderTools } from "./helpers/header";
 import { test, expect } from "@playwright/test";
@@ -57,7 +58,7 @@ for (const width of [375, 1440])
     if (width < 1000)
       await page.getByRole("button", { name: "Close navigation" }).click();
     await openHeaderTools(page);
-    await page.getByRole("combobox", { name: "Language" }).selectOption("ar");
+    await selectLanguage(page, "ar");
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
       "تأجير السيارات لعملائك",

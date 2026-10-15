@@ -23,20 +23,23 @@ export function SiteFooter() {
             <BrandLogo withName variant="footer" />
           </Link>
           <p><Text en="Thoughtful travel. Lasting partnerships." ar="سفر مدروس. شراكات دائمة." /></p>
-          <div className={styles.footerContacts}>
+        </div>
+        <section className={styles.footerContacts}>
+          <h3>{t("Contact us", "تواصل معنا")}</h3>
+
             <a href="https://wa.me/201070724143" target="_blank" rel="noopener noreferrer" aria-label={t("WhatsApp: +20 01070724143", "واتساب: +20 01070724143")}><Icon name="whatsapp" /><bdi>+20 01070724143</bdi></a>
             <a href="mailto:royal.travel@royalvacation.online"><Icon name="mail" /><bdi>royal.travel@royalvacation.online</bdi></a>
-          </div>
+        </section>
           <div className={badges.apps}>
             <h3>{t("Our mobile apps", "تطبيقاتنا للهواتف")}</h3>
-            <p>{t("Downloads unavailable — pending verified official app links.", "التنزيل غير متاح — بانتظار روابط التطبيقات الرسمية الموثقة.")}</p>
+            <p>{t("Coming Soon — downloads unavailable.", "قريبًا — التنزيل غير متاح.")}</p>
             <div className={badges.row} aria-label={t("App store previews — downloads unavailable", "معاينة متاجر التطبيقات — التنزيل غير متاح")}>
               <img className={badges.google} src="/images/app-badges/google-play.png" alt="GET IT ON Google Play — unavailable" width="646" height="250" loading="lazy" />
               <img className={badges.apple} src="/images/app-badges/app-store.svg" alt="Download on the App Store — unavailable" width="135" height="40" loading="lazy" />
             </div>
           </div>
-        </div>
         <nav aria-label={t("Footer", "روابط التذييل")}>
+          <h3>{t("Quick links", "روابط سريعة")}</h3>
           {links.map(({ to, icon, en, ar }) => (
             <Link key={to} to={to}>
               <Icon name={icon} />

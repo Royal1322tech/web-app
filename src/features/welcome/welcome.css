@@ -115,8 +115,15 @@
 }
 
 .auth-page--welcome .welcome-content { position: relative; }
-.welcome-flight { position: absolute; inset-block-start: 4px; inset-inline-end: 24px; width: 120px; height: 28px; pointer-events: none; overflow: visible; }
-.welcome-flight-path { fill: none; stroke: var(--gold); stroke-width: 1; stroke-dasharray: 2 5; }
-.welcome-flight-plane { fill: var(--brand); stroke: var(--navy); stroke-width: .5; offset-path: path("M8 24 C45 24 60 4 92 8 S130 28 150 8"); offset-distance: 100%; animation: welcome-flight 4s ease-in-out both; }
-@keyframes welcome-flight { from { offset-distance: 0%; opacity: 0; } 15% { opacity: 1; } to { offset-distance: 100%; opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .welcome-flight-plane { animation: none; } }
+.welcome-flight { display: flex; width: max-content; margin-inline: auto; padding: 8px; pointer-events: none; }
+.auth-page--welcome .welcome-flight .brand-plane {
+  offset-path: path("M114 60 A54 48 0 1 1 6 60 A54 48 0 1 1 114 60");
+  offset-anchor: 96px 26px;
+  offset-rotate: auto 45deg;
+  offset-distance: 0%;
+  animation: welcome-flight 7s linear infinite;
+}
+@keyframes welcome-flight { to { offset-distance: 100%; } }
+@media (prefers-reduced-motion: reduce) {
+  .auth-page--welcome .welcome-flight .brand-plane { animation: none; offset-path: none; }
+}

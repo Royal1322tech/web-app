@@ -1,3 +1,4 @@
+import { contactPhone, validPhoneCountry } from "../lib/phone";
 import { z } from "zod";
 import { documentsSchema } from "./documents.schema";
 
@@ -19,17 +20,17 @@ export const contactSchema = z.object({
   fullName: requiredText("your full name"),
   nationality: requiredText("your nationality"),
   idNumber: requiredText("your ID number"),
+  phoneCountry: z.string().refine((value): boolean => validPhoneCountry(value), "Select a phone country."),
   callingCode: z
     .string()
     .trim()
     .regex(/^\+\d+$/, "Enter a country calling code starting with +."),
-  phone: requiredText("your phone number").regex(
-    /^\+?[\d\s().-]*\d[\d\s().-]*$/,
-    "Enter a phone number using digits and an optional country code.",
-  ),
+  phone: requiredText("your phone number"),
   email: requiredText("your email address").pipe(
     z.email("Enter a valid email address."),
   ),
+}).superRefine((contact, context) => {
+  if (!contactPhone(contact)) context.addIssue({ code: "custom", path: ["phone"], message: "Enter a valid phone number for the selected country." });
 });
 
 export const registrationSchema = z.object({
@@ -56,6 +57,7 @@ export const registrationDefaults: RegistrationValues = {
     fullName: "",
     nationality: "",
     idNumber: "",
+    phoneCountry: "EG",
     callingCode: "+20",
     phone: "",
     email: "",

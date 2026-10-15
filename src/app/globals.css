@@ -966,3 +966,7 @@ button.submission-disabled:disabled {
 .contact-phone:has([aria-invalid="true"]) {
   border-color: var(--error);
 }
+
+/* Registration helper/review text only; preserve the approved homepage scale. */
+.registration-page :is(.document-help, .review-row, .review-documents li, .fine-print) { font-size: 14px; line-height: 1.6; }
+.registration-page :is(.document-help, .review-row dt, .fine-print) { color: #536579; }

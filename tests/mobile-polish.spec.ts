@@ -1,3 +1,4 @@
+import { selectLanguage } from "./helpers/header";
 import { visit } from "./helpers/demo-login";
 import { test, expect } from "@playwright/test";
 import { openHeaderTools, closeHeaderMenu } from "./helpers/header";
@@ -8,7 +9,7 @@ for (const width of [320, 375, 390, 430, 768, 1440])
     await visit(page, "/");
     for (const locale of ["en", "ar"]) {
       await openHeaderTools(page);
-      await page.locator("header select").selectOption(locale);
+      await selectLanguage(page, locale);
       await closeHeaderMenu(page);
       const header = await page.locator("header").boundingBox();
       if (width < 600) expect(header!.height).toBeLessThan(85);

@@ -5,3 +5,5 @@
 .row img { object-fit:contain; flex-shrink:0; max-width:100%; }
 .apps .row .apple { width:148.5px; height:44px; }
 .apps .row .google { width:170.5px; height:66px; }
+.apps { margin-top: 0; min-width: 0; }
+.apps p { font-size: 14px; color: #dce8f3; }

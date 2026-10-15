@@ -1,3 +1,4 @@
+import { selectLanguage } from "./helpers/header";
 import { visit } from "./helpers/demo-login";
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
@@ -112,7 +113,7 @@ test("rental failure retry, pending status and Arabic navigation", async ({
   await page.getByRole("button", { name: "Show rental outcome" }).click();
   await expect(page.locator(".status-badge")).toContainText("Pending");
   await openHeaderTools(page);
-  await page.locator("header select").selectOption("ar");
+  await selectLanguage(page, "ar");
   await closeHeaderMenu(page);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "تفاصيل حجز التأجير · تجريبي",

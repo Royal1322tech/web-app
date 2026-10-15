@@ -37,6 +37,7 @@ function SearchResultsContent({
   const [open, setOpen] = useState(false);
   const drawer = useRef<HTMLDialogElement>(null);
   const filterTrigger = useRef<HTMLButtonElement>(null);
+  const activeCount = Object.entries(filters).reduce((count, [key, value]) => count + (Array.isArray(value) ? value.length : key === "packaging" ? Number(value !== "all") : Number(Boolean(value))), 0);
   const result = filterHotels(
     hotels,
     filters,
@@ -57,7 +58,7 @@ function SearchResultsContent({
           drawer.current?.showModal();
         }}
       >
-        {t("Filters", "التصفية")}
+        {t("Filters", "التصفية")}{activeCount > 0 && ` (${activeCount})`}
       </button>
       <dialog
         ref={drawer}

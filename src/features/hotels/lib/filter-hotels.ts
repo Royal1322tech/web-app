@@ -1,8 +1,10 @@
+import { hotelBoardPlans } from "./board-plans";
 import type { HotelFilters, HotelListing, HotelSort } from "../types";
 export const defaultFilters: HotelFilters = {
   name: "",
   luxury: false,
   board: [],
+  cities: [],
   stars: [],
   minimumReview: 0,
   profiles: [],
@@ -18,15 +20,17 @@ export function filterHotels(
   sort: HotelSort,
 ) {
   const name = filters.name.trim().toLocaleLowerCase();
+  if ((filters.minPrice && Number(filters.minPrice) < 0) || (filters.maxPrice && Number(filters.maxPrice) < 0) || (filters.minPrice && filters.maxPrice && Number(filters.minPrice) > Number(filters.maxPrice))) return [];
   return hotels
     .filter(
       (h) =>
         (!destination || h.city.en === destination) &&
+        (!filters.cities.length || filters.cities.includes(h.city.en)) &&
         (!name ||
           `${h.name.en} ${h.name.ar}`.toLocaleLowerCase().includes(name)) &&
         (!filters.luxury || h.luxury) &&
         (!filters.board.length ||
-          filters.board.includes(h.breakfast ? "breakfast" : "room")) &&
+          hotelBoardPlans(h).some(plan => filters.board.includes(plan))) &&
         (!filters.stars.length || filters.stars.includes(h.stars)) &&
         h.reviewScore >= filters.minimumReview &&
         (!filters.profiles.length ||

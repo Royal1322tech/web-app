@@ -1,3 +1,4 @@
+import { selectLanguage } from "./helpers/header";
 import { test, expect } from "@playwright/test";
 import { visit } from "./helpers/demo-login";
 import { openHeaderTools } from "./helpers/header";
@@ -8,7 +9,7 @@ for (const width of [320, 375, 768, 1440]) {
       await page.setViewportSize({ width, height: 1000 });
       await visit(page, "/");
       await openHeaderTools(page);
-      await page.locator("header select").selectOption(locale);
+      await selectLanguage(page, locale);
       const name = locale === "en" ? "Account menu" : "قائمة الحساب";
       const trigger = page.getByRole("button", { name, exact: true });
       const panel = page.getByRole("region", { name, exact: true });

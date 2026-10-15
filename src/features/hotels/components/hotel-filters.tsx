@@ -1,7 +1,8 @@
+import { boardPlans, hotelBoardPlans } from "../lib/board-plans";
 import { useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { hotels } from "../data/hotels.fixture";
-import type { HotelFilters, Amenity } from "../types";
+import type { HotelFilters } from "../types";
 import { amenityLabels } from "../data/hotels.fixture";
 import { defaultFilters } from "../lib/filter-hotels";
 import { useLocale } from "@/features/localization/locale-provider";
@@ -15,15 +16,9 @@ export function HotelFiltersPanel({
 }) {
   const { locale, t } = useLocale();
   const [showAmenities, setShowAmenities] = useState(false);
-  const amenities: Amenity[] = [
-    "accessible",
-    "airConditioning",
-    "bathroom",
-    "gym",
-    "heating",
-    "roomService",
-    "nonSmoking",
-  ];
+  const amenities = [...new Set(hotels.flatMap(hotel => hotel.amenities))];
+  const availableBoards = new Set(hotels.flatMap(hotel => hotelBoardPlans(hotel)));
+  const cities = [...new Map(hotels.map(hotel => [hotel.city.en, hotel.city])).values()];
   const priceCeiling = Math.max(
     ...hotels.map((hotel) => hotel.nightlyRate),
     Number(value.minPrice) || 0,
@@ -43,6 +38,7 @@ export function HotelFiltersPanel({
       className={styles.sidebar}
       aria-label={t("Hotel filters", "تصفية الفنادق")}
     >
+      <h2>{t("Hotel filters", "تصفية الفنادق")}</h2>
       <form
         className={styles.filterSearch}
         onSubmit={(event) => {
@@ -66,6 +62,13 @@ export function HotelFiltersPanel({
           <Icon name="search" />
         </button>
       </form>
+      {value.name && <button type="button" className={styles.textAction} onClick={() => update("name", "")}>{t("Clear hotel name", "مسح اسم الفندق")}</button>}
+      <details open>
+        <summary>{t("Area / Location", "المنطقة / الموقع")}</summary>
+        {cities.map(city => <label className={styles.check} key={city.en}>
+          <input type="checkbox" checked={value.cities.includes(city.en)} onChange={() => update("cities", toggle(value.cities, city.en))} />{city[locale]}
+        </label>)}
+      </details>
       <details open>
         <summary>{t("Top product", "أفضل الخيارات")}</summary>
         <label className={styles.check}>
@@ -79,17 +82,11 @@ export function HotelFiltersPanel({
       </details>
       <details open>
         <summary>{t("Board", "الوجبات")}</summary>
-        {[
-          ["breakfast", t("Incl. breakfast", "تشمل الإفطار")],
-          ["room", t("Rooms Only", "غرف فقط")],
-        ].map(([id, label]) => (
-          <label className={styles.check} key={id}>
-            <input
-              type="checkbox"
-              checked={value.board.includes(id)}
-              onChange={() => update("board", toggle(value.board, id))}
-            />
-            {label}
+        {boardPlans.map(plan => (
+          <label className={styles.check} key={plan.value}>
+            <input type="checkbox" checked={value.board.includes(plan.value)} disabled={!availableBoards.has(plan.value)}
+              onChange={() => update("board", toggle(value.board, plan.value))} />
+            <span>{plan[locale]}{!availableBoards.has(plan.value) && <small className={styles.unsupported}>{t("Not in sample data", "غير متاح في البيانات التجريبية")}</small>}</span>
           </label>
         ))}
       </details>
@@ -238,6 +235,7 @@ export function HotelFiltersPanel({
             }
           />
         </div>
+        {(Number(value.minPrice) < 0 || Number(value.maxPrice) < 0) && <p role="alert">{t("Prices must be zero or greater.", "يجب ألا يقل السعر عن صفر.")}</p>}
         {value.minPrice &&
           value.maxPrice &&
           Number(value.minPrice) > Number(value.maxPrice) && (

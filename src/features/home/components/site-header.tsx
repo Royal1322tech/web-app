@@ -5,11 +5,12 @@ import { BrandLogo, HomepageBrandLogo } from "@/components/brand-logo";
 import { useDemo } from "@/features/demo/demo-provider";
 import { TravelPreferences } from "@/features/preferences/travel-preferences";
 import { Popover } from "@/components/ui/popover";
+import { LanguageSelector } from "@/features/localization/language-selector";
 import { Icon } from "@/components/ui/icon";
 import styles from "./site-header.module.css";
 
 export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
-  const { t, locale, setLocale } = useLocale();
+  const { t } = useLocale();
   const { pathname, key: navigationKey } = useLocation();
   const navigate = useNavigate();
   const { demoSessionActive, signOut } = useDemo();
@@ -35,9 +36,7 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- Escape bubbles from native controls; the wrapper is not itself interactive. */}
       <div id="header-tools" className={styles.tools}
         onKeyDown={event => { if (event.key === "Escape") { close(); toggle.current?.focus(); } }}>
-        <label className={styles.language}><span className="sr-only">{t("Language", "اللغة")}</span>
-          <select aria-label={t("Language", "اللغة")} value={locale} onChange={event => setLocale(event.target.value === "ar" ? "ar" : "en")}><option value="en">EN</option><option value="ar">AR</option></select>
-        </label>
+        <LanguageSelector />
         <TravelPreferences />
         <div className={styles.icons}>
           <Link to="/notifications" onClick={close} aria-label={t("Notifications", "الإشعارات")} title={t("Notifications", "الإشعارات")}><Icon name="bell" /></Link>

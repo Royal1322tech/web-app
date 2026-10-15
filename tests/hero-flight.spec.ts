@@ -1,3 +1,4 @@
+import { selectLanguage } from "./helpers/header";
 import { visit } from "./helpers/demo-login";
 import { openHeaderTools, closeHeaderMenu } from "./helpers/header";
 import { test, expect } from "@playwright/test";
@@ -79,7 +80,7 @@ test("reduced motion shows one static airplane in English and Arabic", async ({
     await visit(page, "/");
     for (const locale of ["en", "ar"]) {
       await openHeaderTools(page);
-      await page.locator("header select").selectOption(locale);
+      await selectLanguage(page, locale);
       await closeHeaderMenu(page);
       const plane = page.locator("[data-hero-flight] img");
       await expect(plane).toHaveCSS("animation-name", "none");

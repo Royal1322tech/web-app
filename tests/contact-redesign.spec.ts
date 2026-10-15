@@ -1,3 +1,4 @@
+import { selectLanguage } from "./helpers/header";
 import { visit } from "./helpers/demo-login";
 import {test,expect} from '@playwright/test';
 import {openHeaderTools} from './helpers/header';
@@ -9,7 +10,7 @@ for(const width of [320,375,390,430,768,1024,1440]) {
   await visit(page, '/contact');
   for(const locale of ['en','ar']) {
    await openHeaderTools(page);
-   await page.locator('header select').selectOption(locale);
+   await selectLanguage(page, locale);
    await expect(page.getByRole('heading',{level:1})).toHaveText(locale==='en'?'Get in Touch With Us':'تواصل معنا');
    expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
    await expect(page.locator('#enquiry-name')).toHaveCSS('padding-left','40px');

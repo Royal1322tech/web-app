@@ -1,3 +1,4 @@
+import { selectLanguage } from "./helpers/header";
 import { test, expect } from "@playwright/test";
 import { visit } from "./helpers/demo-login";
 import { openHeaderTools, closeHeaderMenu } from "./helpers/header";
@@ -7,16 +8,16 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
     await page.goto("/");
     const flight = page.locator(".welcome-flight");
-    await expect(flight).toHaveAttribute("aria-hidden", "true");
-    await expect(page.locator(".welcome-flight-plane")).toHaveCSS("animation-name", "welcome-flight");
-    await page.locator(".route-entrance").evaluate(async el => { await Promise.all(el.getAnimations({ subtree: true }).map(animation => animation.finished)); });
+    await expect(flight.locator("svg.brand-emblem")).toHaveAttribute("aria-hidden", "true");
+    await expect(page.locator(".welcome-flight .brand-plane")).toHaveCSS("animation-name", "welcome-flight");
+    await page.locator(".route-entrance").evaluate(async el => { await Promise.all(el.getAnimations({ subtree: true }).filter(animation => animation.effect?.getTiming().iterations !== Infinity).map(animation => animation.finished)); });
     const bounds = (await flight.boundingBox())!;
-    for (const selector of [".welcome-content .brand-logo", ".welcome-content h1", ".account-options"]) {
+    for (const selector of [".welcome-content h1", ".account-options"]) {
       const other = (await page.locator(selector).boundingBox())!;
       expect(bounds.y + bounds.height <= other.y || bounds.x + bounds.width <= other.x || bounds.x >= other.x + other.width).toBe(true);
     }
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await expect(page.locator(".welcome-flight-plane")).toHaveCSS("animation-name", "none");
+    await expect(page.locator(".welcome-flight .brand-plane")).toHaveCSS("animation-name", "none");
     await visit(page, "/");
     await openHeaderTools(page);
     await page.getByRole("button", { name: "Nationality and currency", exact: true }).click();
@@ -28,7 +29,7 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
     const preferences = await page.evaluate(() => localStorage.getItem("royal-vacation.travel-preferences"));
     for (const locale of ["en", "ar"]) {
       await openHeaderTools(page);
-      await page.locator("header select").selectOption(locale);
+      await selectLanguage(page, locale);
       await closeHeaderMenu(page);
       await page.locator("#search-nationality").selectOption("SA");
       await expect(page.locator("html")).toHaveAttribute("lang", locale);

@@ -30,7 +30,7 @@ for (const width of [375, 768, 1440]) {
       await logo.hover();
       await expect(plane).toHaveCSS("animation-name", "footer-plane-flight");
       await logo.evaluate(async (el) => {
-        await Promise.all(el.getAnimations({ subtree: true }).map(a => a.finished));
+        await Promise.all(el.getAnimations({ subtree: true }).filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished));
       });
       await expect(plane).toHaveCSS("transform", "none");
       const brandBox = (await logo.boundingBox())!;
@@ -58,9 +58,9 @@ for (const path of ["/login", "/welcome", "/register/agency/company"]) {
       await Promise.all(el.getAnimations().map(a => a.finished));
     });
     const before = await logo.boundingBox();
-    await expect(logo.locator(".brand-plane")).toHaveCSS("animation-name", "homepage-plane-flight");
+    await expect(logo.locator(".brand-plane")).toHaveCSS("animation-name", path === "/welcome" ? "welcome-flight" : "homepage-plane-flight");
     await logo.evaluate(async el => {
-      await Promise.all(el.getAnimations({ subtree: true }).map(a => a.finished));
+      await Promise.all(el.getAnimations({ subtree: true }).filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished));
     });
     expect(await logo.boundingBox()).toEqual(before);
     const planeBox = await logo.locator(".brand-plane").boundingBox();
@@ -68,8 +68,13 @@ for (const path of ["/login", "/welcome", "/register/agency/company"]) {
     await expect(logo.locator(".brand-plane")).toHaveCSS("animation-name", "none");
     await expect(logo.locator(".brand-plane")).toHaveCSS("offset-path", "none");
     const staticBox = (await logo.locator(".brand-plane").boundingBox())!;
-    expect(staticBox.x).toBeCloseTo(planeBox!.x, 0);
-    expect(staticBox.y).toBeCloseTo(planeBox!.y, 0);
+    if (path !== "/welcome") {
+      expect(staticBox.x).toBeCloseTo(planeBox!.x, 0);
+      expect(staticBox.y).toBeCloseTo(planeBox!.y, 0);
+    } else {
+      await expect(logo.locator(".brand-plane")).toHaveCSS("animation-iteration-count", "1");
+      expect(staticBox.width).toBeGreaterThan(0);
+    }
   });
 }
 
@@ -77,7 +82,7 @@ test("registration keeps its settled logo and company data between steps", async
   await visit(page, "/register/agency/company");
   const logo = page.locator(".brand-logo--auth");
   await logo.evaluate(async el => {
-    await Promise.all(el.getAnimations({ subtree: true }).map(a => a.finished));
+    await Promise.all(el.getAnimations({ subtree: true }).filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished));
     el.setAttribute("data-original-entry", "true");
   });
   await page.getByLabel("Name of Company").fill("Footer Test Agency");

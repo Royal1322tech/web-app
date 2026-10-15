@@ -1,3 +1,4 @@
+import { selectLanguage } from "./helpers/header";
 import { visit } from "./helpers/demo-login";
 import { openHeaderTools } from "./helpers/header";
 import { test, expect, type Page } from "@playwright/test";
@@ -259,7 +260,7 @@ test("mobile filters behave as a keyboard accessible drawer", async ({
     page.getByText("No sample hotels match", { exact: false }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Filters", exact: true }),
+    page.getByRole("button", { name: "Filters (1)", exact: true }),
   ).toBeFocused();
 });
 test("new routes load directly, refresh, and preserve RTL and reduced motion", async ({
@@ -285,7 +286,7 @@ test("new routes load directly, refresh, and preserve RTL and reduced motion", a
   }
   await visit(page, "/wallet");
   await openHeaderTools(page);
-  await page.getByRole("combobox", { name: "Language" }).selectOption("ar");
+  await selectLanguage(page, "ar");
   for (const route of [
     "/agency",
     "/agency/edit",
@@ -435,7 +436,7 @@ test("Arabic mobile checkout preserves guest names, contact and totals through t
   await page.setViewportSize({ width: 375, height: 950 });
   await selectRoom(page);
   await openHeaderTools(page);
-  await page.getByRole("combobox", { name: "Language" }).selectOption("ar");
+  await selectLanguage(page, "ar");
   await page.getByRole("checkbox").check();
   await page
     .getByRole("link", { name: "المتابعة لبيانات الضيوف", exact: true })

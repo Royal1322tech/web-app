@@ -1,3 +1,4 @@
+import { contactPhone } from "../lib/phone";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useFormContext, useWatch } from "react-hook-form";
@@ -83,9 +84,7 @@ export function RegistrationReview() {
             { label: "ID Number", value: contact.idNumber },
             {
               label: "Phone Number",
-              value: contact.phone.trim().startsWith("+")
-                ? contact.phone
-                : `${contact.callingCode} ${contact.phone}`,
+              value: contactPhone(contact)?.number ?? `${contact.callingCode} ${contact.phone}`,
             },
             { label: "Email", value: contact.email },
           ]}

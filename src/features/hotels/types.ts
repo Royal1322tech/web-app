@@ -1,3 +1,4 @@
+import type { BoardPlan } from "./lib/board-plans";
 export interface LocalizedText {
   en: string;
   ar: string;
@@ -38,6 +39,7 @@ export interface HotelSummary {
 }
 export interface HotelListing extends HotelSummary {
   city: LocalizedText;
+  boardPlans?: readonly BoardPlan[];
   stars: number;
   luxury: boolean;
   business: boolean;
@@ -48,7 +50,8 @@ export interface HotelListing extends HotelSummary {
 export interface HotelFilters {
   name: string;
   luxury: boolean;
-  board: string[];
+  board: BoardPlan[];
+  cities: string[];
   stars: number[];
   minimumReview: number;
   profiles: string[];

@@ -1,0 +1,15 @@
+.international-phone { display: flex; align-items: stretch; gap: 8px; min-width: 0; }
+.international-phone > input { min-width: 0; flex: 1; text-align: left; }
+.international-phone .rv-popover-trigger { height: 100%; min-height: 48px; font-size: 14px; }
+.international-phone img { width: 24px; height: 18px; object-fit: cover; flex-shrink: 0; }
+.phone-country-panel { width: 340px; max-height: min(440px, calc(100dvh - 120px)); }
+.phone-country-panel .phone-country-search { display: grid; gap: 8px; font-size: 14px; color: #142c49; }
+.phone-country-search input { width: 100%; min-height: 44px; border: 1px solid #94a3b8; border-radius: 8px; padding: 8px; }
+.phone-country-options { display: grid; gap: 4px; margin-top: 8px; }
+.phone-country-options button { display: flex; align-items: center; gap: 8px; padding: 10px 8px; min-height: 44px; width: 100%; border: 0; border-radius: 8px; background: white; color: #142c49; text-align: start; font-size: 14px; }
+.phone-country-options button span { flex: 1; }
+.phone-country-options button:hover, .phone-country-options button[aria-pressed="true"] { background: #e6f5f2; color: #00697a; }
+.international-phone :is(button, input):focus-visible { outline: 2px solid #007f93; outline-offset: 2px; }
+@media (max-width: 599px) {
+  .phone-country-panel { width: auto; max-width: calc(100vw - 32px); }
+}

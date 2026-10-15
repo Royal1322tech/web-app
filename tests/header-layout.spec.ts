@@ -1,3 +1,4 @@
+import { selectLanguage } from "./helpers/header";
 import { visit } from "./helpers/demo-login";
 import { openHeaderTools, closeHeaderMenu } from "./helpers/header";
 import { test, expect } from "@playwright/test";
@@ -12,9 +13,9 @@ for (const width of [375, 1024, 1440, 1869, 1920]) {
     for (const locale of ["en", "ar"]) {
       const header = page.locator("header");
       await openHeaderTools(page);
-      await header.locator("select").selectOption(locale);
+      await selectLanguage(page, locale);
       const controls = header.locator(
-        'select, a[href="/notifications"], a[href="/booking/summary"], button[aria-label="Account menu"], button[aria-label="قائمة الحساب"]',
+        'button[aria-label="Language"], button[aria-label="اللغة"], a[href="/notifications"], a[href="/booking/summary"], button[aria-label="Account menu"], button[aria-label="قائمة الحساب"]',
       );
       await expect(controls).toHaveCount(4);
       for (const control of await controls.all()) {

@@ -1,3 +1,4 @@
+import { selectLanguage } from "./helpers/header";
 import { visit } from "./helpers/demo-login";
 import { openHeaderTools } from "./helpers/header";
 import { test, expect, type Page } from "@playwright/test";
@@ -65,7 +66,7 @@ for (const width of [320, 375, 768, 1440]) {
     }
     await visit(page, "/");
     await openHeaderTools(page);
-    await page.getByRole("combobox", { name: "Language" }).selectOption("ar");
+    await selectLanguage(page, "ar");
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     await page.reload();
     await expect(page.locator("html")).toHaveAttribute("lang", "ar");

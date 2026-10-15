@@ -1391,3 +1391,14 @@
 .filterDrawer::backdrop {
   background: #0b254599;
 }
+
+/* Readability scoped to the internal catalog; no homepage carousel changes. */
+.shell { color: #142c49; }
+.shell label { font-size: 14px; }
+.shell :is(.muted, .preview, .cardAddress, .amenities, .cardFooter, .cardFooter small) { font-size: 14px; line-height: 1.6; color: #536579; }
+.sidebar h2 { font-size: 19px; color: var(--navy); }
+.sidebar summary { font-size: 15px; color: var(--navy); }
+.sidebar .check { min-height: 44px; }
+.sidebar .unsupported { display: block; font-size: 13px; color: #536579; line-height: 1.5; }
+.starFilters label { min-height: 44px; padding: 6px; border: 1px solid #dfe3e7; border-radius: 8px; }
+.starFilters label:has(:checked) { background: #e6f5f2; border-color: #007f93; color: #00697a; }

@@ -550,3 +550,13 @@
 .settings-preferences legend { font-weight:800; }
 .settings-preferences fieldset label { display:flex; align-items:center; gap:10px; min-height:44px; }
 .settings-preferences fieldset label svg { margin-inline-start:auto; }
+
+/* Readable internal account/finance details without changing homepage tokens. */
+.workspace :is(.metric span, .metric small, th, .status-badge) { font-size: 13px; line-height: 1.6; }
+.workspace :is(th, .metric span, .metric small) { color: #536579; }
+.workspace .metric:first-child :is(span, small) { color: #dce8f3; }
+.workspace table { font-size: 14px; }
+.workspace :is(.fine-print, .timeline time), .workspace-dialog .fine-print { font-size: 13px; color: #536579; }
+.workspace .workspace-nav a { font-size: 14px; }
+.workspace .booking-progress li { font-size: 13px; }
+.workspace .status-badge { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
