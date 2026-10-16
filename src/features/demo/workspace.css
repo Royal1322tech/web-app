@@ -560,3 +560,48 @@
 .workspace .workspace-nav a { font-size: 14px; }
 .workspace .booking-progress li { font-size: 13px; }
 .workspace .status-badge { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+
+/* Shared workspace and release-specific cards; no global typography overrides. */
+.workspace-nav { margin-block: 18px 24px; padding: 12px; background: #f4f8fa; border: 1px solid #dae4ea; border-radius: 14px; }
+.workspace-nav a { font-size: 14px; }
+.profile-overview { display: flex; align-items: center; gap: 24px; border-top: 3px solid #c6a65b; }
+.profile-overview > div:nth-child(2) { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.profile-avatar { display: grid; place-items: center; flex: 0 0 76px; height: 76px; border-radius: 24px; background: #e3f3f0; color: #087e8b; font-size: 28px; font-weight: 600; }
+.profile-information, .points-metrics { display: grid; gap: 20px; margin-block: 20px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.profile-fields { display: grid; gap: 18px; }
+.profile-fields dt { color: #536579; font-size: 14px; margin-bottom: 4px; }
+.profile-fields dd { margin: 0; color: #142c49; overflow-wrap: anywhere; }
+.profile-shortcuts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.profile-shortcuts a { padding: 18px; display: grid; gap: 8px; border-radius: 12px; background: #f3f8fa; text-decoration: none; color: #142c49; border: 1px solid #dae4ea; }
+.profile-shortcuts a:hover { background: #e3f3f0; border-color: #087e8b; }
+.profile-shortcuts span { color: #536579; font-size: 14px; }
+.points-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.points-metrics h2 { font-size: 16px; }
+.points-metrics strong { font-size: 34px; color: #142c49; }
+.points-metrics .workspace-card:first-child { border-top: 3px solid #087e8b; }
+.points-filters { display: flex; flex-wrap: wrap; gap: 16px; margin-block: 20px; }
+.points-filters label { display: grid; flex: 1 1 180px; gap: 8px; font-size: 14px; min-width: 0; }
+.points-list { list-style: none; padding: 0; }
+.points-list li { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto; align-items: center; gap: 16px; padding-block: 18px; border-top: 1px solid #dae4ea; }
+.points-list h3 { font-size: 16px; margin: 0; }
+.points-list p { color: #536579; font-size: 14px; margin-block: 6px 0; }
+.points-positive { color: #08705f; }
+.cancellation-policy { padding: 22px; border-inline-start: 3px solid #c6a65b; border-radius: 12px; background: #faf8f1; color: #142c49; margin-bottom: 22px; }
+.cancellation-policy p { color: #536579; line-height: 1.7; }
+@media (max-width: 800px) {
+  .profile-overview { flex-wrap: wrap; gap: 16px; }
+  .profile-overview > .button { width: 100%; }
+  .profile-shortcuts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .points-metrics { grid-template-columns: 1fr; gap: 12px; }
+}
+@media (max-width: 540px) {
+  .profile-information { grid-template-columns: 1fr; }
+  .points-list li { grid-template-columns: minmax(0, 1fr) auto; }
+  .points-list li > div:first-child { grid-column: 1 / -1; }
+  .workspace-nav { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; }
+  .workspace-nav > * { flex-shrink: 0; }
+  .profile-shortcuts { grid-template-columns: 1fr; }
+}
+.points-metrics > .workspace-card, .profile-information > .workspace-card { margin-top: 0; }
+.points-filter-field { display: grid; flex: 1 1 180px; gap: 8px; min-width: 0; }
+.points-filter-field label { display: block; }

@@ -1,5 +1,4 @@
 import { PartnerVideo } from "./partner-video";
-import { Icon } from "@/components/ui/icon";
 import { TravelTrail } from "@/components/motion/travel-trail";
 import { Text } from "@/features/localization/locale-provider";
 import { ResponsiveImage as Image } from "@/components/ui/responsive-image";
@@ -76,15 +75,6 @@ export function PartnerBenefits() {
               <div className={motion.copy}>
                 <h3>
                   <Text en={benefit.title} />
-                  {index === 2 && (
-                    <svg className={motion.price} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M3 4h9l9 9-8 8-10-10Z" />
-                      <circle cx="8" cy="9" r="1" />
-                    </svg>
-                  )}
-                  {index === 3 && (
-                    <span className={motion.check}><Icon name="check" /></span>
-                  )}
                 </h3>
                 <p>
                   <Text en={benefit.description} />

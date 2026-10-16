@@ -1,11 +1,10 @@
-import { NavLink, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
 import { CatalogShell } from "@/features/hotels/components/catalog-shell";
 import { useLocale } from "@/features/localization/locale-provider";
 import { hotels } from "@/features/hotels/data/hotels.fixture";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
 import { samplePriceBreakdown } from "@/features/hotels/lib/sample-stay";
-import { totalFor, useDemo } from "./demo-provider";
+import { totalFor } from "./demo-provider";
 import type { DemoSelection, DemoStatus } from "./types";
 import "./workspace.css";
 export function useMoney() {
@@ -26,10 +25,8 @@ export function Workspace({
   children: ReactNode;
 }) {
   const { t } = useLocale();
-  const { demoSessionActive, signOut } = useDemo();
-  const navigate = useNavigate();
   return (
-    <CatalogShell title={title}>
+    <CatalogShell title={title} workspace>
       <div className="workspace">
         <p className="workspace-eyebrow">
           {eyebrow ??
@@ -39,36 +36,6 @@ export function Workspace({
             )}
         </p>
         <h1>{title}</h1>
-        <nav
-          className="workspace-nav"
-          aria-label={t("Workspace navigation", "التنقل في مساحة العمل")}
-        >
-          <NavLink to="/group-quotation">{t("Group quotation", "عرض سعر للمجموعات")}</NavLink>
-          <NavLink to="/bookings">{t("Bookings", "الحجوزات")}</NavLink>
-          <NavLink to="/car-rental/bookings">
-            {t("Rentals", "التأجيرات")}
-          </NavLink>
-          <NavLink to="/agency">{t("Agency profile", "ملف الوكالة")}</NavLink>
-          <NavLink to="/wallet">
-            {t("Credit balance", "الرصيد الائتماني")}
-          </NavLink>
-          <NavLink to="/transactions">{t("Transactions", "المعاملات")}</NavLink>
-          <NavLink to="/notifications">
-            {t("Notifications", "الإشعارات")}
-          </NavLink>
-          {demoSessionActive && (
-            <button
-              className="text-button"
-              type="button"
-              onClick={() => {
-                signOut();
-                navigate("/welcome", { replace: true });
-              }}
-            >
-              {t("Sign Out", "تسجيل الخروج")}
-            </button>
-          )}
-        </nav>
         {children}
       </div>
     </CatalogShell>
@@ -169,8 +136,8 @@ export function SelectionSummary({ selection }: { selection: DemoSelection }) {
       </dl>
       <p className="fine-print">
         {t(
-          "Illustrative room subtotal. No taxes or fees have been supplied; this is not a payable quote. Non-refundable sample rate.",
-          "إجمالي الغرف التوضيحي. لم تُقدّم ضرائب أو رسوم؛ هذا ليس عرض سعر قابل للدفع. سعر تجريبي غير قابل للاسترداد.",
+          "Illustrative room subtotal. No taxes or fees have been supplied; this is not a payable quote. Cancellation terms depend on the selected offer.",
+          "إجمالي الغرف التوضيحي. لم تُقدّم ضرائب أو رسوم؛ هذا ليس عرض سعر قابل للدفع. تعتمد شروط الإلغاء على العرض المختار.",
         )}
       </p>
     </aside>

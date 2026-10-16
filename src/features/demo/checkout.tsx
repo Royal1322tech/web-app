@@ -1,3 +1,4 @@
+import { CancellationPolicyCard } from "./cancellation-policy-card";
 import { fitsDemoRoom } from "./room-policy";
 import { stayQuery } from "@/features/hotels/lib/stay-query";
 import { useState } from "react";
@@ -60,8 +61,7 @@ function EmptySelection() {
 }
 export function BookingSummaryPage() {
   const { t } = useLocale();
-  const { selection, updateCriteria } = useDemo();
-  const [accepted, setAccepted] = useState(false);
+  const { selection, updateCriteria, policyAcknowledged: accepted, acknowledgePolicy: setAccepted } = useDemo();
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState("");
   return (
@@ -132,14 +132,9 @@ export function BookingSummaryPage() {
               )}
             </section>
             <section className="workspace-card">
-              <h2>{t("Rate conditions", "شروط السعر")}</h2>
+              <CancellationPolicyCard policy={selection.rate.cancellationPolicy} />
+              <h3>{t("Rate conditions", "شروط السعر")}</h3>
               <ul>
-                <li>
-                  {t(
-                    "Sample non-refundable rate. No actual cancellation fee can be calculated.",
-                    "سعر تجريبي غير قابل للاسترداد. لا يمكن حساب رسوم إلغاء فعلية.",
-                  )}
-                </li>
                 <li>
                   {t(
                     "Room occupancy: up to 2 adults per room. No child inventory is supplied for this demo room.",
@@ -160,8 +155,8 @@ export function BookingSummaryPage() {
                   onChange={(e) => setAccepted(e.target.checked)}
                 />
                 {t(
-                  "I understand this is a demonstration and have reviewed the sample conditions.",
-                  "أفهم أن هذه تجربة توضيحية وراجعت الشروط التجريبية.",
+                  "I have reviewed the cancellation policy information. I understand this is a demonstration.",
+                  "راجعت معلومات سياسة الإلغاء وأفهم أن هذه تجربة توضيحية.",
                 )}
               </label>
               <div className="workspace-actions">
@@ -198,7 +193,8 @@ const guestSchema = z.object({
 });
 export function GuestInformationPage() {
   const { t } = useLocale();
-  const { selection } = useDemo();
+  const { selection, policyAcknowledged } = useDemo();
+  if (selection && !policyAcknowledged) return <Navigate to="/booking/summary" replace />;
   return (
     <Workspace title={t("Guest information", "بيانات الضيوف")}>
       <Progress step={1} />
@@ -346,7 +342,7 @@ function GuestForm({ selection }: { selection: DemoSelection }) {
 }
 export function PaymentPage() {
   const { t } = useLocale();
-  const { selection, guests, createBooking } = useDemo();
+  const { selection, guests, createBooking, policyAcknowledged } = useDemo();
   const navigate = useNavigate();
   const money = useMoney();
   const [method, setMethod] = useState("credit");
@@ -358,6 +354,7 @@ export function PaymentPage() {
         <EmptySelection />
       </Workspace>
     );
+  if (!policyAcknowledged) return <Navigate to="/booking/summary" replace />;
   if (!guests) return <Navigate to="/booking/guests" replace />;
   const insufficient =
     method === "credit" &&
@@ -485,7 +482,7 @@ export function PaymentPage() {
 }
 export function BookingResultPage() {
   const { id } = useParams();
-  const { records, selectRoom, saveGuests } = useDemo();
+  const { records, selectRoom, saveGuests, acknowledgePolicy } = useDemo();
   const { t } = useLocale();
   const navigate = useNavigate();
   const booking = records.find((b) => b.id === id);
@@ -548,7 +545,9 @@ export function BookingResultPage() {
                     onClick={() => {
                       selectRoom(booking.selection);
                       saveGuests(booking.guests);
-                      navigate("/booking/payment");
+                      // Retrying the unchanged offer retains its explicitly recorded review.
+                      acknowledgePolicy(booking.policyAcknowledged === true);
+                      navigate(booking.policyAcknowledged ? "/booking/payment" : "/booking/summary");
                     }}
                   >
                     {t("Retry simulation", "إعادة المحاكاة")}

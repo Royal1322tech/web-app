@@ -34,6 +34,8 @@ interface DemoContextValue {
   signIn: (email: string, password: string) => boolean;
   signOut: () => void;
   selection: DemoSelection | null;
+  policyAcknowledged: boolean;
+  acknowledgePolicy: (accepted: boolean) => void;
   guests: GuestValues | null;
   records: DemoBooking[];
   profile: AgencyProfile;
@@ -76,6 +78,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     useState<RentalSelection | null>(null);
   const [rentalDriver, setRentalDriver] = useState<RentalDriver | null>(null);
   const [rentals, setRentals] = useState<RentalRecord[]>([]);
+  const [policyAcknowledged, setPolicyAcknowledged] = useState(false);
   const [selection, setSelection] = useState<DemoSelection | null>(null);
   const [guests, setGuests] = useState<GuestValues | null>(null);
   const [records, setRecords] = useState(initialBookings);
@@ -156,27 +159,32 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       setRentalDriver(null);
       setRentals([]);
       setSelection(null);
+      setPolicyAcknowledged(false);
       setGuests(null);
       setRecords(initialBookings());
       setProfile(demoProfile);
       setNotifications(demoNotifications);
     },
     selection,
+    policyAcknowledged,
+    acknowledgePolicy: setPolicyAcknowledged,
     guests,
     records,
     profile,
     notifications,
     selectRoom: (next) => {
       setSelection(next);
+      setPolicyAcknowledged(false);
       setGuests(null);
     },
     updateCriteria: (criteria) => {
+      setPolicyAcknowledged(false);
       setSelection((s) => (s ? { ...s, criteria } : null));
       setGuests(null);
     },
     saveGuests: setGuests,
     createBooking: (status) => {
-      if (!selection || !guests) return null;
+      if (!selection || !guests || !policyAcknowledged) return null;
       const id = `DEMO-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
       const at = new Date().toISOString();
       const record: DemoBooking = {
@@ -191,6 +199,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         agencyReference: guests.reference || id,
         cancellationFee: false,
         selection,
+        policyAcknowledged,
         guests,
         total: totalFor(selection),
         timeline: [
@@ -211,6 +220,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         ...current,
       ]);
       setSelection(null);
+      setPolicyAcknowledged(false);
       setGuests(null);
       return id;
     },

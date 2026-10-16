@@ -66,8 +66,8 @@ for (const width of [375, 768, 1440, 1920]) {
     await expect(background).toHaveCSS("animation-name", "none");
     await openHeaderTools(page);
     await page.getByRole("button", { name: /Account menu|قائمة الحساب/ }).click();
-    await page.locator('header a[href="/agency"]').click();
-    await expect(page).toHaveURL(/\/agency$/);
+    await page.locator('header a[href="/profile"]').click();
+    await expect(page).toHaveURL(/\/profile$/);
   });
 }
 

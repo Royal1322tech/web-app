@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { WorkspaceNavigation } from "@/features/demo/workspace-navigation";
+import { Link, useMatches } from "react-router-dom";
 import type { ReactNode } from "react";
 import { SiteHeader } from "@/features/home/components/site-header";
 import { useLocale } from "@/features/localization/locale-provider";
@@ -6,13 +7,16 @@ import styles from "../hotels.module.css";
 export function CatalogShell({
   title,
   detail = false,
+  workspace = false,
   children,
 }: {
   title: string;
   detail?: boolean;
+  workspace?: boolean;
   children: ReactNode;
 }) {
   const { t } = useLocale();
+  const workspaceRoute = useMatches().some(match => (match.handle as { workspace?: boolean } | undefined)?.workspace);
   return (
     <div className={styles.shell}>
       <a href="#catalog-main" className={styles.skip}>
@@ -40,6 +44,7 @@ export function CatalogShell({
             "معاينة تصميم — فنادق وأسعار وحجوزات تجريبية. لا يوجد توافر مباشر أو معاملات فعلية.",
           )}
         </p>
+        {(workspace || workspaceRoute) && <WorkspaceNavigation />}
         {children}
       </main>
     </div>

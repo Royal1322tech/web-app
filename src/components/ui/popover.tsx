@@ -53,7 +53,9 @@ export function Popover({ label, trigger, children, panelClassName = "", trigger
     };
   }, [open, label]);
 
-  return <div className="rv-popover" ref={root} onBlur={event => { const container = event.currentTarget; requestAnimationFrame(() => { if (!container.contains(document.activeElement)) setOpen(false); }); }}>
+  return <div className="rv-popover" ref={root} onBlur={event => { // A label temporarily blurs to no target before activating its radio.
+    // Close only for an actual focus move outside; outside pointer events are handled above.
+    if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) setOpen(false); }}>
     <button ref={button} className={`rv-popover-trigger ${triggerClassName}`} type="button" aria-label={label} aria-expanded={open} aria-controls={id} onClick={() => setOpen(!open)}>{trigger}</button>
     {open && <div id={id} role="region" aria-label={label} className={`rv-popover-panel ${panelClassName}`} ref={panel}>{typeof children === "function" ? children(() => setOpen(false)) : children}</div>}
   </div>;

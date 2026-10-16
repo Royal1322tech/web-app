@@ -22,6 +22,7 @@ export interface GuestValues {
 export interface DemoBooking extends Omit<SampleBooking, "status"> {
   status: DemoStatus;
   selection: DemoSelection;
+  policyAcknowledged?: boolean;
   guests: GuestValues;
   total: number;
   timeline: { label: string; at: string }[];

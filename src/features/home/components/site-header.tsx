@@ -44,7 +44,7 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
           {demoSessionActive ? <Popover key={navigationKey} triggerClassName={styles.profileTrigger} panelClassName={styles.accountPanel} label={t("Account menu", "قائمة الحساب")} trigger={<Icon name="personFilled" />}>
           <p>{t("Demo access · Frontend only", "دخول تجريبي · واجهة فقط")}</p>
           {[
-            ["/profile", t("My Profile", "ملفي الشخصي")], ["/agency", t("My Agency", "وكالتي")],
+            ["/profile", t("My Profile", "ملفي الشخصي")],
             ["/bookings", t("My Bookings", "حجوزاتي")], ["/car-rental/bookings", t("My Rentals", "تأجيراتي")],
             ["/wallet", t("Wallet", "المحفظة")], ["/transactions", t("Transactions", "المعاملات")],
             ["/account/settings", t("Account Settings", "إعدادات الحساب")],

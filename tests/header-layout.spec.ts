@@ -52,9 +52,9 @@ for (const width of [375, 1024, 1440, 1869, 1920]) {
           path: `test-results/header-${locale}-${width}.png`,
         });
     }
-    for (const route of ["/notifications", "/booking/summary", "/agency"]) {
+    for (const route of ["/notifications", "/booking/summary", "/profile"]) {
       await openHeaderTools(page);
-      if (route === "/agency") await page.getByRole("button", { name: /Account menu|قائمة الحساب/ }).click();
+      if (route === "/profile") await page.getByRole("button", { name: /Account menu|قائمة الحساب/ }).click();
       await page.locator(`header a[href="${route}"]`).click();
       await expect(page).toHaveURL(new RegExp(`${route}$`));
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();

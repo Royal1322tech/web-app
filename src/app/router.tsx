@@ -106,7 +106,7 @@ export const router = createBrowserRouter([
         lazy: page(() => import("@/pages/home"), "Travel Agency Workspace"),
       },
       { path: "contact", lazy: async () => ({ Component: (await import("@/features/enquiries/enquiry-page")).EnquiryPage }) },
-      { path: "group-quotation", lazy: async () => { const { EnquiryPage } = await import("@/features/enquiries/enquiry-page"); return { Component: () => <EnquiryPage group /> }; } },
+      { path: "group-quotation", handle: { workspace: true }, lazy: async () => { const { EnquiryPage } = await import("@/features/enquiries/enquiry-page"); return { Component: () => <EnquiryPage group /> }; } },
       {
         path: "welcome",
         lazy: page(() => import("@/pages/welcome"), "Welcome"),
@@ -133,7 +133,7 @@ export const router = createBrowserRouter([
         lazy: page(() => import("@/pages/favourites"), "Favourites"),
       },
       {
-        path: "bookings",
+        path: "bookings", handle: { workspace: true },
         lazy: page(() => import("@/pages/bookings"), "My Bookings"),
       },
       {
@@ -209,7 +209,9 @@ export const router = createBrowserRouter([
       },
       {
         Component: Outlet,
+        handle: { workspace: true },
         children: [
+          { path: "points", lazy: async () => ({ Component: (await import("@/features/demo/points")).PointsPage }) },
           { path: "profile", lazy: async () => ({ Component: (await import("@/features/demo/profile-settings")).ProfilePage }) },
           { path: "account/settings", lazy: async () => ({ Component: (await import("@/features/demo/profile-settings")).AccountSettingsPage }) },
           {

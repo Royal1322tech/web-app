@@ -1,3 +1,4 @@
+import { cancellationPolicyLabels } from "../cancellation-policy";
 import { roomIsUnavailable } from "@/features/demo/room-policy";
 import { ResponsiveImage as Image } from "@/components/ui/responsive-image";
 import { useEffect, useId, useRef, useState } from "react";
@@ -157,10 +158,7 @@ export function RoomOptions({
                       <div className={styles.ratePolicy}>
                         <span>
                           <Icon name="info" />
-                          {t(
-                            "Non refundable (sample)",
-                            "غير قابل للاسترداد (نموذج)",
-                          )}
+                          {cancellationPolicyLabels[rate.cancellationPolicy?.kind ?? "unavailable"][locale]}
                         </span>
                         {rate.packaging && (
                           <span>

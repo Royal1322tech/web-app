@@ -40,7 +40,7 @@ Browser tests use the production preview on port 4173. Set `PLAYWRIGHT_BASE_URL`
 | `/bookings`                  | Demo bookings, filters, sorting and management links                         |
 | `/bookings/:id`              | Demo booking details, timeline, modify/cancel previews                       |
 | `/bookings/:id/voucher`      | Print-ready voucher for confirmed demo records                               |
-| `/booking/summary`           | Selected room, dates, occupancy and conditions                               |
+| `/booking/summary`           | Selected room, dates, occupancy and required cancellation-policy acknowledgment |
 | `/booking/guests`            | Validated fictional guest/contact information                                |
 | `/booking/payment`           | Credit/test payment UI and explicit outcome previews                         |
 | `/booking/result/:id`        | Confirmed, pending or failed simulation                                      |
@@ -49,6 +49,7 @@ Browser tests use the production preview on port 4173. Set `PLAYWRIGHT_BASE_URL`
 | `/verify-email`              | Explicit email verification state preview                                    |
 | `/wallet`                    | Illustrative credit overview and insufficient-balance state                  |
 | `/transactions`              | Searchable/filterable/paginated transaction examples                         |
+| `/points`                    | Demo points balance and separate searchable, filtered, paginated points history |
 | `/favourites`                | Browser-local saved hotels                                                   |
 | `/welcome`                   | Agency account entry                                                         |
 | `/login`                     | Sign in                                                                      |

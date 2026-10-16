@@ -79,9 +79,9 @@ for (const width of [375, 1440]) {
       }
       await openHeaderTools(page);
       await account().click();
-      await page.locator('header a[href="/agency"]').click();
+      await page.locator('header a[href="/profile"]').click();
       await expect(account()).toHaveAttribute("aria-expanded", "false");
-      await expect(page).toHaveURL(/\/agency$/);
+      await expect(page).toHaveURL(/\/profile$/);
       await page
         .getByRole("button", {
           name: locale === "en" ? "Sign Out" : "تسجيل الخروج",
@@ -140,10 +140,10 @@ test("homepage SVG introduction settles without layout shift and does not replay
   const header = await page.locator("header").boundingBox();
   await openHeaderTools(page);
   await page.getByRole("button", { name: /Account menu|قائمة الحساب/ }).click();
-  await page.locator('header a[href="/agency"]').click();
-  await expect(page).toHaveURL(/\/agency$/);
+  await page.locator('header a[href="/profile"]').click();
+  await expect(page).toHaveURL(/\/profile$/);
   await expect(
-    page.getByRole("heading", { name: "Horizon Travel — Demo Agency", exact: true }),
+    page.getByRole("heading", { name: "My Profile", exact: true }),
   ).toBeVisible();
   await page.goBack();
   await expect(logo).toBeVisible();

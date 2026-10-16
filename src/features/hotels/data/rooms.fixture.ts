@@ -1,7 +1,9 @@
+import type { CancellationPolicy } from "../cancellation-policy";
 import type { HotelPhoto, LocalizedText } from "../types";
 import { gallery } from "./hotels.fixture";
 
 export interface SampleRoomRate {
+  cancellationPolicy?: CancellationPolicy;
   id: string;
   board: LocalizedText;
   nightlyRate: number;
