@@ -1426,3 +1426,42 @@
   .comparisonGrid { grid-auto-flow: row; grid-template-columns: minmax(0, 1fr); }
   .comparisonCard { grid-template-rows: 160px auto 1fr auto; }
 }
+
+/* Shared compact filter surfaces for hotel and booking discovery. */
+.sidebar { padding: 20px; border: 1px solid #dce5ed; box-shadow: 0 8px 28px #06274708; }
+.sidebar h2 { margin: 0 0 18px; padding-bottom: 14px; border-bottom: 2px solid #d9ecec; font-weight: 650; }
+.sidebar details { margin: 0; padding: 12px 0; border-bottom: 1px solid #e5ebf0; }
+.sidebar summary { min-height: 32px; margin: 0 0 6px; gap: 12px; cursor: pointer; font-weight: 600; }
+.sidebar summary::after { content: ''; width: 8px; height: 8px; flex: 0 0 8px; border-right: 1.8px solid currentColor; border-bottom: 1.8px solid currentColor; transform: rotate(45deg); margin-inline-end: 4px; transition: transform .2s; }
+.sidebar details:not([open]) > summary::after { transform: rotate(-45deg); }
+.sidebar details:not([open]) > summary { margin-bottom: 0; }
+.sidebar .check { min-height: 40px; padding: 6px 8px; margin: 2px 0; border-radius: 8px; font-size: 14px; line-height: 1.45; transition: background .18s; }
+.sidebar .check:hover { background: #f2f7f8; }
+.sidebar .check:has(:checked) { background: #eaf5f4; color: #075f67; }
+.sidebar .check:has(:disabled) { color: #64748b; }
+.sidebar input:is([type=checkbox], [type=radio]) { accent-color: #007f83; width: 18px; height: 18px; flex: 0 0 18px; margin: 0; cursor: pointer; }
+.sidebar input:disabled { cursor: default; }
+.sidebar :is(input, button, summary):focus-visible { outline: 2px solid #007f83; outline-offset: 3px; }
+.sidebar > label { display: grid; gap: 6px; margin-block: 12px; }
+.shell .sidebar .filterSearch { gap: 8px; margin-bottom: 12px; align-items: flex-end; }
+.sidebar .filterSearch label { min-width: 0; margin: 0; }
+.sidebar .filterSearch :is(input, button) { height: 44px; min-height: 44px; }
+.sidebar .filterSearch button { width: 44px; flex: 0 0 44px; padding: 10px; }
+.sidebar .unsupported { font-size: 13px; line-height: 1.5; margin: 8px 0 0; }
+.sidebar .starFilters { flex-wrap: wrap; }
+.sidebar .starFilters label { flex: 1; justify-content: center; margin: 0; font-size: 13px; }
+.sidebar .filterChoices { padding: 0; margin: 0; border: 0; }
+@supports (interpolate-size: allow-keywords) {
+  .sidebar details { interpolate-size: allow-keywords; }
+  .sidebar details::details-content { height: 0; overflow: clip; transition: height .2s, content-visibility .2s allow-discrete; }
+  .sidebar details[open]::details-content { height: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .sidebar *, .sidebar details::details-content { transition: none; } }
+.sidebar .filterFeedback { font-size: 13px; line-height: 1.6; background: #eef6f7; color: #315a68; padding: 10px; border-radius: 8px; margin-bottom: 14px; }
+.sidebar input:is([type=checkbox], [type=radio]) { appearance: none; border: 1.5px solid #9bb1c2; border-radius: 5px; background-color: #fff; padding: 0; transition: background-color .15s, border-color .15s; }
+.sidebar input[type=radio] { border-radius: 50%; }
+.sidebar input[type=checkbox]:checked { border-color: #007f83; background: #007f83 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='m4 10 4 4 8-8' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/16px no-repeat; }
+.sidebar input[type=radio]:checked { border-color: #007f83; background: #007f83; box-shadow: inset 0 0 0 3px white; }
+.sidebar input:disabled { border-color: #cad5df; background-color: #edf1f5; }
+:global([dir=rtl]) .sidebar details:not([open]) > summary::after { transform: rotate(135deg); }
+@media (forced-colors: active) { .sidebar input:is([type=checkbox], [type=radio]) { appearance: auto; } }

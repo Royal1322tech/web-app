@@ -16,7 +16,7 @@ for (const width of [375, 768, 1440]) {
       for (let i = 0; i < paths.length; i++) {
         const link = links.nth(i);
         await expect(link).toHaveAttribute("href", paths[i]);
-        await expect(link.locator("svg")).toHaveAttribute("aria-hidden", "true");
+        for (const icon of await link.locator("svg").all()) await expect(icon).toHaveAttribute("aria-hidden", "true");
         expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
         // Login uses pointer input; enter keyboard modality for focus-visible checks.
         await page.keyboard.press("Tab");

@@ -8,11 +8,13 @@ export function CatalogShell({
   title,
   detail = false,
   workspace = false,
+  showPreview = true,
   children,
 }: {
   title: string;
   detail?: boolean;
   workspace?: boolean;
+  showPreview?: boolean;
   children: ReactNode;
 }) {
   const { t } = useLocale();
@@ -38,12 +40,12 @@ export function CatalogShell({
           )}
           <span aria-current="page">{title}</span>
         </nav>
-        <p className={styles.preview}>
+        {showPreview && <p className={styles.preview}>
           {t(
             "Design preview — sample hotels, prices and bookings. No live availability or transactions.",
             "معاينة تصميم — فنادق وأسعار وحجوزات تجريبية. لا يوجد توافر مباشر أو معاملات فعلية.",
           )}
-        </p>
+        </p>}
         {(workspace || workspaceRoute) && <WorkspaceNavigation />}
         {children}
       </main>

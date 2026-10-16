@@ -1,3 +1,4 @@
+import { HotelIllustration } from "./hotel-illustration";
 import { useRef, useState } from "react";
 import type { Hotel } from "../types";
 import { HotelCard } from "./hotel-card";
@@ -22,6 +23,7 @@ export function HotelCollection({ hotels }: { hotels: readonly Hotel[] }) {
   );
   return (
     <section ref={root} className={styles.section} aria-labelledby="collection-title">
+      <HotelIllustration />
       <div className={styles.sectionHeading}>
         <h2 id="collection-title">{t("Stay At Best Hotels")}</h2>
         <p>

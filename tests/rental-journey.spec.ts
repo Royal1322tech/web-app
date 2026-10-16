@@ -24,7 +24,7 @@ async function chooseVehicle(page: Page) {
     .getByRole("link", { name: "Continue to driver information" })
     .click();
   await page
-    .getByRole("button", { name: "Continue to rental payment preview" })
+    .getByRole("button", { name: "Continue to review booking" })
     .click();
   await expect(page.getByRole("alert").first()).toBeVisible();
   await page.getByLabel("Driver name", { exact: true }).fill("Sample Driver");
@@ -36,8 +36,12 @@ async function chooseVehicle(page: Page) {
     .fill("+20 100 000 0000");
   await page.getByRole("checkbox").check();
   await page
-    .getByRole("button", { name: "Continue to rental payment preview" })
+    .getByRole("button", { name: "Continue to review booking" })
     .click();
+  await expect(page).toHaveURL(/car-rental\/review$/);
+  await expect(page.getByRole("button", { name: "Continue to rental payment preview" })).toBeDisabled();
+  await page.getByRole("checkbox", { name: /I have reviewed the cancellation/ }).check();
+  await page.getByRole("link", { name: "Continue to rental payment preview" }).click();
 }
 for (const width of [375, 1440])
   test(`rental confirmation, modification and cancellation ${width}px`, async ({
@@ -108,6 +112,9 @@ test("rental failure retry, pending status and Arabic navigation", async ({
   await page.getByRole("button", { name: "Show rental outcome" }).click();
   await expect(page.locator(".status-badge")).toContainText("Failed");
   await page.getByRole("button", { name: "Retry rental simulation" }).click();
+  await expect(page).toHaveURL(/car-rental\/review$/);
+  await page.getByRole("checkbox", { name: /I have reviewed the cancellation/ }).check();
+  await page.getByRole("link", { name: "Continue to rental payment preview" }).click();
   await page.getByLabel("Rental demo outcome").selectOption("pending");
   await page.getByRole("button", { name: "Simulate rental payment" }).click();
   await page.getByRole("button", { name: "Show rental outcome" }).click();
@@ -116,7 +123,7 @@ test("rental failure retry, pending status and Arabic navigation", async ({
   await selectLanguage(page, "ar");
   await closeHeaderMenu(page);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "تفاصيل حجز التأجير · تجريبي",
+    "تفاصيل حجز التأجير",
   );
   await expect(
     page.getByRole("button", { name: "إلغاء التأجير التجريبي" }),

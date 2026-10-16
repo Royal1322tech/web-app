@@ -1,3 +1,4 @@
+import { cancellationPolicyLabels } from "@/features/hotels/cancellation-policy";
 import type { ReactNode } from "react";
 import { CatalogShell } from "@/features/hotels/components/catalog-shell";
 import { useLocale } from "@/features/localization/locale-provider";
@@ -18,24 +19,28 @@ export function useMoney() {
 export function Workspace({
   title,
   eyebrow,
+  hideHeading = false,
+  showPreview = true,
   children,
 }: {
   title: string;
   eyebrow?: string;
+  hideHeading?: boolean;
+  showPreview?: boolean;
   children: ReactNode;
 }) {
   const { t } = useLocale();
   return (
-    <CatalogShell title={title} workspace>
+    <CatalogShell title={title} workspace showPreview={showPreview}>
       <div className="workspace">
-        <p className="workspace-eyebrow">
+        {!hideHeading && <><p className="workspace-eyebrow">
           {eyebrow ??
             t(
               "ROYAL VACATION · PARTNER WORKSPACE",
               "رويال فاكيشن · مساحة الشركاء",
             )}
         </p>
-        <h1>{title}</h1>
+        <h1>{title}</h1></>}
         {children}
       </div>
     </CatalogShell>
@@ -134,6 +139,7 @@ export function SelectionSummary({ selection }: { selection: DemoSelection }) {
           </dd>
         </div>
       </dl>
+      <section className="summary-policy"><h3>{t("Cancellation Policy", "سياسة الإلغاء")}</h3><p>{cancellationPolicyLabels[selection.rate.cancellationPolicy?.kind ?? "unavailable"][locale]}</p><p className="fine-print">{t("Review the selected offer’s information in the Cancellation Policy step before payment preview.", "راجع معلومات العرض المحدد في خطوة سياسة الإلغاء قبل معاينة الدفع.")}</p></section>
       <p className="fine-print">
         {t(
           "Illustrative room subtotal. No taxes or fees have been supplied; this is not a payable quote. Cancellation terms depend on the selected offer.",

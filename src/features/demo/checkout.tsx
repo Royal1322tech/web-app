@@ -32,6 +32,7 @@ function Progress({ step }: { step: number }) {
       {[
         ["Summary", "الملخص"],
         ["Guest details", "بيانات الضيوف"],
+        ["Cancellation Policy", "سياسة الإلغاء"],
         ["Payment preview", "معاينة الدفع"],
         ["Result", "النتيجة"],
       ].map(([en, ar], i) => (
@@ -61,7 +62,7 @@ function EmptySelection() {
 }
 export function BookingSummaryPage() {
   const { t } = useLocale();
-  const { selection, updateCriteria, policyAcknowledged: accepted, acknowledgePolicy: setAccepted } = useDemo();
+  const { selection, updateCriteria, acknowledgePolicy: setAccepted } = useDemo();
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState("");
   return (
@@ -148,19 +149,8 @@ export function BookingSummaryPage() {
                   )}
                 </li>
               </ul>
-              <label className="choice-label">
-                <input
-                  type="checkbox"
-                  checked={accepted}
-                  onChange={(e) => setAccepted(e.target.checked)}
-                />
-                {t(
-                  "I have reviewed the cancellation policy information. I understand this is a demonstration.",
-                  "راجعت معلومات سياسة الإلغاء وأفهم أن هذه تجربة توضيحية.",
-                )}
-              </label>
               <div className="workspace-actions">
-                {accepted && !editing ? (
+                {!editing ? (
                   <Link className="button button--primary" to="/booking/guests">
                     {t("Continue to guest details", "المتابعة لبيانات الضيوف")}
                   </Link>
@@ -193,8 +183,7 @@ const guestSchema = z.object({
 });
 export function GuestInformationPage() {
   const { t } = useLocale();
-  const { selection, policyAcknowledged } = useDemo();
-  if (selection && !policyAcknowledged) return <Navigate to="/booking/summary" replace />;
+  const { selection } = useDemo();
   return (
     <Workspace title={t("Guest information", "بيانات الضيوف")}>
       <Progress step={1} />
@@ -230,11 +219,11 @@ function GuestForm({ selection }: { selection: DemoSelection }) {
   return (
     <div className="workspace-grid">
       <form
-        className="workspace-card workspace-form"
+        className="workspace-card workspace-form hotel-guest-form"
         noValidate
         onSubmit={handleSubmit((v) => {
           saveGuests(v);
-          navigate("/booking/payment");
+          navigate("/booking/policy");
         })}
       >
         <h2>{t("Who’s travelling?", "من المسافر؟")}</h2>
@@ -244,7 +233,7 @@ function GuestForm({ selection }: { selection: DemoSelection }) {
             "أدخل أسماء وهمية كما ستظهر بالقسيمة التجريبية. لا يتم إرسال البيانات أو حفظها في تخزين المتصفح.",
           )}
         </p>
-        <div className="workspace-fields">
+        <fieldset className="guest-contact-section"><legend>{t("Guest & contact information", "معلومات الضيف والتواصل")}</legend><div className="workspace-fields">
           {(
             [
               ["leadName", "Lead guest name", "اسم الضيف الرئيسي"],
@@ -277,6 +266,7 @@ function GuestForm({ selection }: { selection: DemoSelection }) {
             </label>
           ))}
         </div>
+        </fieldset>
         {count > 0 && (
           <fieldset>
             <legend>{t("Additional guests", "الضيوف الإضافيون")}</legend>
@@ -332,13 +322,33 @@ function GuestForm({ selection }: { selection: DemoSelection }) {
             {t("Back", "رجوع")}
           </Link>
           <button className="button button--primary">
-            {t("Continue to payment preview", "المتابعة لمعاينة الدفع")}
+            {t("Continue to cancellation policy", "المتابعة لسياسة الإلغاء")}
           </button>
         </div>
       </form>
       <SelectionSummary selection={selection} />
     </div>
   );
+}
+export function CancellationPolicyPage() {
+  const { t } = useLocale();
+  const { selection, guests, policyAcknowledged, acknowledgePolicy } = useDemo();
+  if (selection && !guests) return <Navigate to="/booking/guests" replace />;
+  return <Workspace title={t("Cancellation Policy", "سياسة الإلغاء")}>
+    <Progress step={2} /><DemoNotice />
+    {!selection ? <EmptySelection /> : <div className="workspace-grid">
+      <section className="workspace-card workspace-form policy-stage">
+        <CancellationPolicyCard policy={selection.rate.cancellationPolicy} />
+        <label className="choice-label"><input type="checkbox" checked={policyAcknowledged} onChange={e => acknowledgePolicy(e.target.checked)} />
+          {t("I have reviewed the cancellation policy information.", "راجعت معلومات سياسة الإلغاء.")}
+        </label>
+        <div className="workspace-actions">
+          <Link className="button button--outline" to="/booking/guests">{t("Back to guest details", "العودة لبيانات الضيوف")}</Link>
+          {policyAcknowledged ? <Link className="button button--primary" to="/booking/payment">{t("Continue to payment preview", "المتابعة لمعاينة الدفع")}</Link> : <button className="button button--primary" disabled>{t("Continue to payment preview", "المتابعة لمعاينة الدفع")}</button>}
+        </div>
+      </section><SelectionSummary selection={selection} />
+    </div>}
+  </Workspace>;
 }
 export function PaymentPage() {
   const { t } = useLocale();
@@ -354,8 +364,8 @@ export function PaymentPage() {
         <EmptySelection />
       </Workspace>
     );
-  if (!policyAcknowledged) return <Navigate to="/booking/summary" replace />;
   if (!guests) return <Navigate to="/booking/guests" replace />;
+  if (!policyAcknowledged) return <Navigate to="/booking/policy" replace />;
   const insufficient =
     method === "credit" &&
     (scenario === "insufficient" ||
@@ -373,7 +383,7 @@ export function PaymentPage() {
   }
   return (
     <Workspace title={t("Payment preview", "معاينة الدفع")}>
-      <Progress step={2} />
+      <Progress step={3} />
       <DemoNotice />
       <div className="workspace-grid">
         <section className="workspace-card workspace-form">
@@ -462,7 +472,7 @@ export function PaymentPage() {
             </div>
           ) : (
             <div className="workspace-actions">
-              <Link className="button button--outline" to="/booking/guests">
+              <Link className="button button--outline" to="/booking/policy">
                 {t("Back", "رجوع")}
               </Link>
               <button
@@ -488,7 +498,7 @@ export function BookingResultPage() {
   const booking = records.find((b) => b.id === id);
   return (
     <Workspace title={t("Booking result", "نتيجة الحجز")}>
-      <Progress step={3} />
+      <Progress step={4} />
       {!booking ? (
         <EmptySelection />
       ) : (

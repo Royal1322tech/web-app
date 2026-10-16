@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { BrandLogo } from "@/components/brand-logo";
 import { Icon, type IconName } from "@/components/ui/icon";
-import { ResponsiveImage } from "@/components/ui/responsive-image";
 import { Text, useLocale } from "@/features/localization/locale-provider";
 import styles from "../home.module.css";
 import badges from "./app-store-badges.module.css";
@@ -23,6 +22,7 @@ export function SiteFooter() {
             <BrandLogo withName variant="footer" />
           </Link>
           <p><Text en="Thoughtful travel. Lasting partnerships." ar="سفر مدروس. شراكات دائمة." /></p>
+          <p><Text en="A shared workspace for travel agencies to explore stays and plan their clients’ journeys." ar="مساحة مشتركة لوكالات السفر لاستكشاف الإقامات والتخطيط لرحلات عملائها." /></p>
         </div>
         <section className={styles.footerContacts}>
           <h3>{t("Contact us", "تواصل معنا")}</h3>
@@ -34,8 +34,8 @@ export function SiteFooter() {
             <h3>{t("Our mobile apps", "تطبيقاتنا للهواتف")}</h3>
             <p>{t("Coming Soon — downloads unavailable.", "قريبًا — التنزيل غير متاح.")}</p>
             <div className={badges.row} aria-label={t("App store previews — downloads unavailable", "معاينة متاجر التطبيقات — التنزيل غير متاح")}>
-              <img className={badges.google} src="/images/app-badges/google-play.png" alt="GET IT ON Google Play — unavailable" width="646" height="250" loading="lazy" />
-              <img className={badges.apple} src="/images/app-badges/app-store.svg" alt="Download on the App Store — unavailable" width="135" height="40" loading="lazy" />
+              <img className={badges.google} src="/images/app-badges/google-play.png" alt={t("Google Play — coming soon", "جوجل بلاي — قريبًا")} width="646" height="250" loading="lazy" />
+              <img className={badges.apple} src="/images/app-badges/app-store.svg" alt={t("App Store — coming soon", "آب ستور — قريبًا")} width="135" height="40" loading="lazy" />
             </div>
           </div>
         <nav aria-label={t("Footer", "روابط التذييل")}>
@@ -44,6 +44,7 @@ export function SiteFooter() {
             <Link key={to} to={to}>
               <Icon name={icon} />
               <span><Text en={en} ar={ar} /></span>
+              <Icon name="arrowRight" />
             </Link>
           ))}
         </nav>
@@ -51,7 +52,7 @@ export function SiteFooter() {
           <Text en="Frontend demonstration · No live reservations or transactions" ar="عرض توضيحي · لا توجد حجوزات أو معاملات فعلية" />
         </p>
       </div>
-      <ResponsiveImage src="/images/home/footer-illustration.png" alt="" aria-hidden="true" width={1440} height={671} sizes="(max-width:1440px) 100vw, 1440px" />
+      <svg className={styles.footerWave} viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path d="M0 75 Q360 0 720 75 T1440 75 V120 H0Z" fill="#087e8b" fillOpacity=".16" /><path d="M0 100 Q400 35 800 90 T1440 60" fill="none" stroke="#e4b86a" strokeOpacity=".28" /></svg>
     </footer>
   );
 }

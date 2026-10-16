@@ -65,23 +65,37 @@ test('workspace navigation persists across all sections and profile edits remain
 test('policy acknowledgment gates the flow, persists within an attempt and resets on offer changes', async ({ page }) => {
   await visit(page, '/hotels/eastern-al-montazah');
   await room(page);
-  await expect(page.getByRole('heading', { name: 'Cancellation Policy', exact: true })).toBeVisible();
   await expect(page.locator('.cancellation-policy')).toContainText('Policy unavailable');
+  await page.getByRole('link', { name: 'Continue to guest details' }).click();
+  await page.getByLabel('Lead guest name', { exact: true }).fill('Demo Guest');
+  await page.getByLabel('Contact email', { exact: true }).fill('guest@example.test');
+  await page.getByLabel('Contact phone', { exact: true }).fill('+20 100 000 0000');
+  await page.getByLabel('Guest 2 name', { exact: true }).fill('Demo Companion');
+  await page.getByRole('button', { name: 'Continue to cancellation policy' }).click();
+  await expect(page).toHaveURL(/\/booking\/policy$/);
   const acknowledge = page.getByRole('checkbox', { name: /I have reviewed the cancellation policy/ });
   await expect(acknowledge).not.toBeChecked();
-  await expect(page.getByRole('button', { name: 'Continue to guest details' })).toBeDisabled();
-  // Navigate through the client router (a page reload would discard the booking attempt).
+  await expect(page.getByRole('button', { name: 'Continue to payment preview' })).toBeDisabled();
   await page.evaluate(() => { history.pushState(null, '', '/booking/payment'); window.dispatchEvent(new PopStateEvent('popstate')); });
-  await expect(page).toHaveURL(/\/booking\/summary$/);
+  await expect(page).toHaveURL(/\/booking\/policy$/);
   await acknowledge.check();
-  await page.getByRole('link', { name: 'Continue to guest details' }).click();
+  await page.getByRole('link', { name: 'Continue to payment preview' }).click();
   await page.goBack();
   await expect(acknowledge).toBeChecked();
+  await page.getByRole('link', { name: 'Back to guest details' }).click();
+  await expect(page.getByLabel('Lead guest name', { exact: true })).toHaveValue('Demo Guest');
+  await page.getByRole('link', { name: 'Back', exact: true }).click();
   await page.getByRole('link', { name: 'Change room', exact: true }).click();
   await room(page, 2);
   await expect(page.locator('.selection-summary')).toContainText('English Breakfast');
+  await page.getByRole('link', { name: 'Continue to guest details' }).click();
+  await page.getByLabel('Lead guest name', { exact: true }).fill('Demo Guest');
+  await page.getByLabel('Contact email', { exact: true }).fill('guest@example.test');
+  await page.getByLabel('Contact phone', { exact: true }).fill('+20 100 000 0000');
+  await page.getByLabel('Guest 2 name', { exact: true }).fill('Demo Companion');
+  await page.getByRole('button', { name: 'Continue to cancellation policy' }).click();
   await expect(acknowledge).not.toBeChecked();
-  await expect(page.getByRole('button', { name: 'Continue to guest details' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Continue to payment preview' })).toBeDisabled();
 });
 test('comparison shows fixture facts and Choose Hotel preserves the entire search context', async ({ page }) => {
   const start = new Date(); start.setDate(start.getDate() + 10);
@@ -165,7 +179,7 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) for (const locale of 
     await room(page);
     await expect(page.locator('.cancellation-policy')).toBeVisible();
     await noOverflow(page);
-    await expect(page.getByRole('checkbox')).not.toBeChecked();
+    await expect(page.getByRole('link', { name: /Continue to guest details|المتابعة لبيانات الضيوف/ })).toBeVisible();
     await page.screenshot({ path: `test-results/policy-${width}-${locale}.png`, fullPage: true });
   });
 }

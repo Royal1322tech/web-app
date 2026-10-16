@@ -34,13 +34,10 @@ async function selectRoom(page: Page) {
 }
 async function fillGuests(page: Page) {
   await page
-    .getByRole("checkbox", { name: /I understand this is a demonstration/ })
-    .check();
-  await page
     .getByRole("link", { name: "Continue to guest details", exact: true })
     .click();
   await page
-    .getByRole("button", { name: "Continue to payment preview" })
+    .getByRole("button", { name: "Continue to cancellation policy" })
     .click();
   await expect(
     page.getByText("Enter the lead guest name.", { exact: true }),
@@ -60,8 +57,12 @@ async function fillGuests(page: Page) {
     .getByLabel("Special requests (optional)", { exact: true })
     .fill("Demo quiet room request");
   await page
-    .getByRole("button", { name: "Continue to payment preview" })
+    .getByRole("button", { name: "Continue to cancellation policy" })
     .click();
+  await expect(page).toHaveURL(/\/booking\/policy$/);
+  await expect(page.getByRole("button", { name: "Continue to payment preview" })).toBeDisabled();
+  await page.getByRole("checkbox", { name: /I have reviewed the cancellation policy/ }).check();
+  await page.getByRole("link", { name: "Continue to payment preview" }).click();
   await expect(page).toHaveURL(/\/booking\/payment$/);
 }
 async function finish(page: Page, scenario = "confirmed") {
@@ -355,9 +356,6 @@ test("checkout accessibility and refresh recovery", async ({ page }) => {
     .analyze();
   expect(result.violations).toEqual([]);
   await page
-    .getByRole("checkbox", { name: /I understand this is a demonstration/ })
-    .check();
-  await page
     .getByRole("link", { name: "Continue to guest details", exact: true })
     .click();
   result = await new AxeBuilder({ page })
@@ -421,9 +419,6 @@ test("stay dates and multiple-room totals survive search, details and room chang
     .first()
     .click();
   await page
-    .getByRole("checkbox", { name: /I understand this is a demonstration/ })
-    .check();
-  await page
     .getByRole("link", { name: "Continue to guest details", exact: true })
     .click();
   await expect(page.getByLabel("Guest 4 name", { exact: true })).toBeVisible();
@@ -437,7 +432,6 @@ test("Arabic mobile checkout preserves guest names, contact and totals through t
   await selectRoom(page);
   await openHeaderTools(page);
   await selectLanguage(page, "ar");
-  await page.getByRole("checkbox").check();
   await page
     .getByRole("link", { name: "المتابعة لبيانات الضيوف", exact: true })
     .click();
@@ -451,7 +445,10 @@ test("Arabic mobile checkout preserves guest names, contact and totals through t
     .getByLabel("هاتف التواصل", { exact: true })
     .fill("+20 100 000 0000");
   await page.getByLabel("اسم الضيف 2", { exact: true }).fill("مرافق تجريبي");
-  await page.getByRole("button", { name: "المتابعة لمعاينة الدفع" }).click();
+  await page.getByRole("button", { name: "المتابعة لسياسة الإلغاء" }).click();
+  await expect(page.getByRole("button", { name: "المتابعة لمعاينة الدفع" })).toBeDisabled();
+  await page.getByRole("checkbox", { name: "راجعت معلومات سياسة الإلغاء." }).check();
+  await page.getByRole("link", { name: "المتابعة لمعاينة الدفع" }).click();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth + 1,

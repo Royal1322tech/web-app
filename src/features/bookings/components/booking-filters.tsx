@@ -1,6 +1,6 @@
 import { Icon } from "@/components/ui/icon";
 import { useLocale } from "@/features/localization/locale-provider";
-import type { BookingFiltersValue } from "../lib/filter-bookings";
+import { defaultBookingFilters, type BookingFiltersValue } from "../lib/filter-bookings";
 import styles from "@/features/hotels/hotels.module.css";
 export function BookingFilters({
   value,
@@ -18,6 +18,7 @@ export function BookingFilters({
   error: boolean;
 }) {
   const { t } = useLocale();
+  const selectedCount = Object.entries(value).filter(([key, selected]) => key !== "dateType" && selected !== defaultBookingFilters[key as keyof BookingFiltersValue]).length;
   const statusLabel = (status: string) =>
     status === "confirmed"
       ? t("Confirmed — sample", "مؤكد — تجريبي")
@@ -35,6 +36,8 @@ export function BookingFilters({
         onApply();
       }}
     >
+      <h2>{t("Booking Filters", "تصفية الحجوزات")}</h2>
+      <p className={styles.filterFeedback} role="status">{t(`${selectedCount} selected filters · Apply to update results`, `${selectedCount} مرشحات محددة · طبّق لتحديث النتائج`)}</p>
       <div className={styles.filterSearch}>
         <label>
           {t("Search by booking or itinerary ID", "بحث برقم الحجز أو الرحلة")}

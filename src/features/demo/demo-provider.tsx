@@ -22,6 +22,8 @@ import type {
   DemoNotification,
 } from "./types";
 interface DemoContextValue {
+  rentalPolicyAcknowledged: boolean;
+  acknowledgeRentalPolicy: (accepted: boolean) => void;
   rentalSelection: RentalSelection | null;
   rentalDriver: RentalDriver | null;
   rentals: RentalRecord[];
@@ -76,6 +78,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const demoSessionActive = useSyncExternalStore(subscribeDemoSession, demoAuth.isActive, () => false);
   const [rentalSelection, setRentalSelection] =
     useState<RentalSelection | null>(null);
+  const [rentalPolicyAcknowledged, setRentalPolicyAcknowledged] = useState(false);
   const [rentalDriver, setRentalDriver] = useState<RentalDriver | null>(null);
   const [rentals, setRentals] = useState<RentalRecord[]>([]);
   const [policyAcknowledged, setPolicyAcknowledged] = useState(false);
@@ -85,6 +88,8 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState(demoProfile);
   const [notifications, setNotifications] = useState(demoNotifications);
   const value: DemoContextValue = {
+    rentalPolicyAcknowledged,
+    acknowledgeRentalPolicy: setRentalPolicyAcknowledged,
     rentalSelection,
     rentalDriver,
     rentals,
@@ -94,12 +99,13 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         !demoVehicles.some((v) => v.id === next.vehicleId && v.available)
       )
         return;
+      setRentalPolicyAcknowledged(false);
       setRentalSelection(next);
       setRentalDriver(null);
     },
-    saveRentalDriver: setRentalDriver,
+    saveRentalDriver: driver => { setRentalDriver(driver); setRentalPolicyAcknowledged(false); },
     createRental: (status) => {
-      if (!rentalSelection || !rentalDriver) return null;
+      if (!rentalSelection || !rentalDriver || !rentalPolicyAcknowledged) return null;
       const id = `RENTAL-DEMO-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
       setRentals((current) => [
         {
@@ -158,6 +164,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       setRentalSelection(null);
       setRentalDriver(null);
       setRentals([]);
+      setRentalPolicyAcknowledged(false);
       setSelection(null);
       setPolicyAcknowledged(false);
       setGuests(null);

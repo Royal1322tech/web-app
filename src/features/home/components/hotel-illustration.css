@@ -1,0 +1,8 @@
+.hotel-miniature { width: 156px; height: 102px; margin: 0 auto 10px; pointer-events: none; }
+.hotel-miniature svg { display: block; width: 100%; height: 100%; }
+.hotel-miniature-building { animation: hotel-float 6s ease-in-out infinite; }
+.hotel-miniature-windows { animation: hotel-glow 5s ease-in-out infinite alternate; }
+@keyframes hotel-float { 50% { transform: translateY(-3px); } }
+@keyframes hotel-glow { from { opacity: .7; } to { opacity: 1; } }
+@media (max-width: 600px) { .hotel-miniature { width: 125px; height: 82px; } }
+@media (prefers-reduced-motion: reduce) { .hotel-miniature * { animation: none; } }

@@ -34,14 +34,16 @@ Browser tests use the production preview on port 4173. Set `PLAYWRIGHT_BASE_URL`
 | `/car-rental/search` | Fictional vehicle search, criteria, filters and sorting |
 | `/car-rental/vehicles/:id` | Vehicle specifications, sample conditions and selection |
 | `/car-rental/summary`, `/car-rental/driver`, `/car-rental/payment` | Rental summary, validated fictional driver information and payment outcome previews |
+| `/car-rental/review` | Vehicle, trip, contact/request review and required acknowledgment of cancellation information |
 | `/car-rental/bookings`, `/car-rental/bookings/:id` | In-memory rentals, confirmation/pending/failure details, modification/cancellation |
 | `/search`                    | Sample results, filters, sorting, comparison, rooms and rate details         |
 | `/hotels/:hotelId`           | Gallery, facts, stay form, date prices and interactive map                   |
 | `/bookings`                  | Demo bookings, filters, sorting and management links                         |
 | `/bookings/:id`              | Demo booking details, timeline, modify/cancel previews                       |
 | `/bookings/:id/voucher`      | Print-ready voucher for confirmed demo records                               |
-| `/booking/summary`           | Selected room, dates, occupancy and required cancellation-policy acknowledgment |
+| `/booking/summary`           | Selected room, dates, occupancy and rate information |
 | `/booking/guests`            | Validated fictional guest/contact information                                |
+| `/booking/policy`            | Selected-offer cancellation information and required acknowledgment before payment |
 | `/booking/payment`           | Credit/test payment UI and explicit outcome previews                         |
 | `/booking/result/:id`        | Confirmed, pending or failed simulation                                      |
 | `/agency`, `/agency/edit`    | Demo agency profile and validated local edits                                |
@@ -139,3 +141,11 @@ Contact Us and the shared footer use the owner-approved email `royal.travel@roya
 ## Targeted premium controls and readability
 
 Welcome now loops the existing emblem airplane on a seven-second orbit, with a static reduced-motion fallback. Registration uses pinned `libphonenumber-js` metadata and local `flag-icons` SVGs for international phone selection/validation; the phone country remains independent of nationality. The shared header language control reuses Popover and locale persistence. Hotel filters retain the original fixture data and add known-city filtering and six stable board categories; unsupported board categories are visibly unavailable. See [enhancement scope and integration boundaries](docs/premium-frontend-enhancement.md).
+
+## Local premium redesign (October 2026)
+
+The existing hotel/booking filters share compact styling. The footer uses navy/teal waves, official contacts and inactive Coming Soon badges. The hotel collection has a small SVG illustration and a neutral points-information indicator (no reward formula or accrual). Hotel checkout now follows Summary → Guest Details → Cancellation Policy → Payment Preview → Result. Acknowledgment uses the existing selection state and resets on offer/stay changes.
+
+Car Rental keeps the global header, original sample vehicle records and daily prices, with locally generated illustrative WebP images, a vehicle gallery, and a review stage before payment preview. No chauffeur guarantee, airport pickup service, supplier terms or new pricing calculation is introduced. See [local implementation handoff](docs/premium-redesign-local.md) and [image prompts and sources](public/images/rental/README.md). All changes in this batch remain local pending owner review.
+
+The reference-driven vehicle refinement adds horizontal self-drive results with a three-column desktop composition and numbered passenger/review panels. The original Chauffeur/Transfers enquiry URLs remain `/contact?subject=airport-transfers`, `car-with-driver`, `private-chauffeur` and `vip-transport`; service-specific local enquiry/review previews use no trip prices, vehicle allocation, payment or booking confirmation. General `/contact` retains its original composition. Use `/car-rental?service=chauffeur` to choose an enquiry service.

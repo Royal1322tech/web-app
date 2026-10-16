@@ -51,14 +51,14 @@ export function CarRentalOverview({ compact = false }: { compact?: boolean }) {
         </div>
       </div>
       <ResponsiveImage
-        src="/images/home/car-rental.png"
+        src={compact ? "/images/rental/luxury-arrival.webp" : "/images/home/car-rental.png"}
         alt={t(
           "Car Rental service illustration",
           "رسم توضيحي لخدمة تأجير السيارات",
         )}
-        width={168}
-        height={112}
-        sizes="168px"
+        width={compact ? 1536 : 168}
+        height={compact ? 1024 : 112}
+        sizes={compact ? "(max-width: 700px) 100vw, 50vw" : "168px"}
         className={styles.illustration}
       />
     </Reveal>

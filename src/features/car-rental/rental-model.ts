@@ -27,6 +27,7 @@ export const rentalSchema = z
   });
 export type RentalCriteria = z.infer<typeof rentalSchema>;
 export const driverSchema = z.object({
+  requests: z.string().max(500).optional(),
   name: z.string().trim().min(2, "Enter a fictional driver name."),
   email: z.email("Enter a valid email address."),
   phone: z

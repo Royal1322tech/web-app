@@ -86,9 +86,10 @@ export function HotelFiltersPanel({
           <label className={styles.check} key={plan.value}>
             <input type="checkbox" checked={value.board.includes(plan.value)} disabled={!availableBoards.has(plan.value)}
               onChange={() => update("board", toggle(value.board, plan.value))} />
-            <span>{plan[locale]}{!availableBoards.has(plan.value) && <small className={styles.unsupported}>{t("Not in sample data", "غير متاح في البيانات التجريبية")}</small>}</span>
+            <span>{plan[locale]}</span>
           </label>
         ))}
+        <p className={styles.unsupported}>{t("Dimmed plans are unavailable in the sample rates.", "الخطط الباهتة غير متاحة ضمن الأسعار التجريبية.")}</p>
       </details>
       <details open>
         <summary>{t("Category", "الفئة")}</summary>

@@ -1,82 +1,26 @@
-import { useRef, useState, type ReactNode } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { vehicleName } from "./rental-presentation";
+import { RentalShell, RentalSummary, MissingSelection } from "./rental-layout";
+import { useRef, useState } from "react";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocale } from "@/features/localization/locale-provider";
 import { useDemo } from "@/features/demo/demo-provider";
 import {
-  DemoNotice,
-  Workspace,
   StatusBadge,
-  useMoney,
 } from "@/features/demo/shared";
 import { StatePreview, SystemState } from "@/components/ui/system-state";
 import { Icon } from "@/components/ui/icon";
 import {
   defaultRentalCriteria,
   demoVehicles,
-  driverSchema,
-  readRentalQuery,
-  rentalDays,
   rentalLocations,
   rentalQuery,
   rentalSchema,
-  rentalTotal,
   type RentalCriteria,
-  type RentalSelection,
-  type RentalDriver,
 } from "./rental-model";
 import "./rental-flow.css";
 
-function RentalShell({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
-  const { t } = useLocale();
-  const { pathname } = useLocation();
-  const steps = [
-    ["/car-rental/summary", t("Summary", "الملخص")],
-    ["/car-rental/driver", t("Driver", "السائق")],
-    ["/car-rental/payment", t("Payment preview", "معاينة الدفع")],
-  ];
-  return (
-    <Workspace title={title}>
-      <DemoNotice />
-      <nav
-        className="rental-nav"
-        aria-label={t("Rental navigation", "التنقل في التأجير")}
-      >
-        <Link to="/car-rental">{t("Car Rental", "تأجير السيارات")}</Link>
-        <Link to="/car-rental/search">
-          {t("Vehicle search", "البحث عن سيارة")}
-        </Link>
-        <Link to="/car-rental/bookings">
-          {t("Demo rentals", "التأجيرات التجريبية")}
-        </Link>
-      </nav>
-      {steps.some(([path]) => pathname === path) && (
-        <ol
-          className="booking-progress"
-          aria-label={t("Rental progress", "خطوات التأجير")}
-        >
-          {steps.map(([path, label], index) => (
-            <li
-              key={path}
-              aria-current={pathname === path ? "step" : undefined}
-            >
-              <span>{index + 1}</span>
-              {label}
-            </li>
-          ))}
-        </ol>
-      )}
-      {children}
-    </Workspace>
-  );
-}
 export function RentalCriteriaForm({
   initial = defaultRentalCriteria(),
   onSubmit,
@@ -97,7 +41,8 @@ export function RentalCriteriaForm({
   });
   return (
     <form
-      className="workspace-card workspace-form"
+      id="rental-search-form"
+      className="workspace-card workspace-form rental-criteria"
       noValidate
       onSubmit={handleSubmit(onSubmit)}
     >
@@ -112,7 +57,7 @@ export function RentalCriteriaForm({
             {t(en, ar)}
             <select {...register(name)}>
               {rentalLocations.map((location) => (
-                <option key={location}>{location}</option>
+                <option key={location} value={location}>{t(location)}</option>
               ))}
             </select>
           </label>
@@ -163,266 +108,6 @@ export function RentalCriteriaForm({
     </form>
   );
 }
-function RentalSummary({ selection }: { selection: RentalSelection }) {
-  const { t, locale } = useLocale();
-  const money = useMoney();
-  const vehicle = demoVehicles.find((v) => v.id === selection.vehicleId)!;
-  return (
-    <section className="workspace-card rental-summary">
-      <h2>{vehicle.name[locale]}</h2>
-      <dl className="summary-dl">
-        <div>
-          <dt>{t("Pickup", "الاستلام")}</dt>
-          <dd>
-            {selection.criteria.pickup} · <bdi>{selection.criteria.start}</bdi>
-          </dd>
-        </div>
-        <div>
-          <dt>{t("Return", "الإعادة")}</dt>
-          <dd>
-            {selection.criteria.dropoff} · <bdi>{selection.criteria.end}</bdi>
-          </dd>
-        </div>
-        <div>
-          <dt>
-            {t("Days × daily sample rate", "الأيام × السعر اليومي التجريبي")}
-          </dt>
-          <dd>
-            {rentalDays(selection.criteria)} × <bdi>{money(vehicle.daily)}</bdi>
-          </dd>
-        </div>
-        <div>
-          <dt>{t("Demo subtotal", "الإجمالي التجريبي")}</dt>
-          <dd>
-            <bdi>{money(rentalTotal(selection))}</bdi>
-          </dd>
-        </div>
-      </dl>
-      <p>
-        {t(
-          "Not a payable quote. Vehicle, price and availability are fictional. No real cancellation or insurance terms are supplied.",
-          "ليس عرضًا قابلًا للدفع. السيارة والسعر والتوافر أمثلة وهمية. لا توجد شروط فعلية للإلغاء أو التأمين.",
-        )}
-      </p>
-    </section>
-  );
-}
-function MissingSelection() {
-  const { t } = useLocale();
-  return (
-    <SystemState
-      title={t("Choose a demo vehicle first", "اختر سيارة تجريبية أولًا")}
-      description={t(
-        "Selections and rental records reset on refresh or Sign Out.",
-        "تُمسح الاختيارات وسجلات التأجير عند التحديث أو تسجيل الخروج.",
-      )}
-    >
-      <Link to="/car-rental/search" className="button button--primary">
-        {t("Vehicle search", "البحث عن سيارة")}
-      </Link>
-    </SystemState>
-  );
-}
-
-export function RentalSearchPage() {
-  const { t, locale } = useLocale();
-  const navigate = useNavigate();
-  const { search } = useLocation();
-  const money = useMoney();
-  const parsed = readRentalQuery(search);
-  const criteria = parsed.success ? parsed.data : null;
-  const [category, setCategory] = useState("all");
-  const [transmission, setTransmission] = useState("all");
-  const [availableOnly, setAvailableOnly] = useState(false);
-  const [sort, setSort] = useState("low");
-  const vehicles = demoVehicles
-    .filter(
-      (v) =>
-        (category === "all" || v.category === category) &&
-        (transmission === "all" || v.transmission === transmission) &&
-        (!availableOnly || v.available),
-    )
-    .sort((a, b) => (sort === "low" ? a.daily - b.daily : b.daily - a.daily));
-  return (
-    <RentalShell title={t("Vehicle search · demo", "البحث عن سيارة · تجريبي")}>
-      {search && !criteria && (
-        <p role="alert" className="error-note">
-          {t(
-            "Invalid or expired search dates. Choose a new rental period.",
-            "تواريخ البحث غير صالحة أو منتهية. اختر فترة تأجير جديدة.",
-          )}
-        </p>
-      )}
-      <RentalCriteriaForm
-        key={search}
-        initial={criteria ?? undefined}
-        onSubmit={(v) => navigate(`/car-rental/search?${rentalQuery(v)}`)}
-      />
-      {criteria && (
-        <StatePreview>
-          <div className="table-toolbar">
-            <label>
-              {t("Vehicle category", "فئة السيارة")}
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-              >
-                {[
-                  ["all", "All", "الكل"],
-                  ["economy", "Economy", "اقتصادية"],
-                  ["suv", "SUV", "عائلية"],
-                  ["van", "Van", "فان"],
-                ].map(([id, en, ar]) => (
-                  <option key={id} value={id}>
-                    {t(en, ar)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              {t("Transmission", "ناقل الحركة")}
-              <select
-                aria-label={t("Transmission", "ناقل الحركة")}
-                value={transmission}
-                onChange={(e) => setTransmission(e.target.value)}
-              >
-                <option value="all">{t("All", "الكل")}</option>
-                <option value="automatic">{t("Automatic", "أوتوماتيك")}</option>
-                <option value="manual">{t("Manual", "يدوي")}</option>
-              </select>
-            </label>
-            <label>
-              {t("Sort price", "ترتيب السعر")}
-              <select value={sort} onChange={(e) => setSort(e.target.value)}>
-                <option value="low">{t("Lowest first", "الأقل أولًا")}</option>
-                <option value="high">
-                  {t("Highest first", "الأعلى أولًا")}
-                </option>
-              </select>
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={availableOnly}
-                onChange={(e) => setAvailableOnly(e.target.checked)}
-              />
-              {t(
-                "Available demo examples only",
-                "الأمثلة التجريبية المتاحة فقط",
-              )}
-            </label>
-          </div>
-          <p role="status">
-            {vehicles.length}{" "}
-            {t("fictional vehicle examples", "أمثلة سيارات وهمية")}
-          </p>
-          {vehicles.length ? (
-            <div className="rental-grid motion-stagger">
-              {vehicles.map((v) => (
-                <article className="workspace-card rental-card" key={v.id}>
-                  <Icon name="car" />
-                  <h2>{v.name[locale]}</h2>
-                  <p>
-                    {v.seats} {t("seats", "مقاعد")} · {v.bags}{" "}
-                    {t("bags", "حقائب")} ·{" "}
-                    {t(
-                      v.transmission,
-                      v.transmission === "automatic" ? "أوتوماتيك" : "يدوي",
-                    )}
-                  </p>
-                  <strong>
-                    <bdi>{money(v.daily)}</bdi> /{" "}
-                    {t("day · sample", "يوم · مثال")}
-                  </strong>
-                  <p>
-                    {v.available
-                      ? t(
-                          "Available example · not live",
-                          "مثال متاح · ليس توافرًا فعليًا",
-                        )
-                      : t("Unavailable example", "مثال غير متاح")}
-                  </p>
-                  <Link
-                    className="button button--outline"
-                    to={`/car-rental/vehicles/${v.id}?${rentalQuery(criteria)}`}
-                  >
-                    {t("View vehicle", "عرض السيارة")}
-                  </Link>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <SystemState
-              title={t("No matching vehicles", "لا توجد سيارات مطابقة")}
-              description={t(
-                "Try another category or transmission.",
-                "جرّب فئة أو ناقل حركة آخر.",
-              )}
-            />
-          )}
-        </StatePreview>
-      )}
-    </RentalShell>
-  );
-}
-export function VehicleDetailsPage() {
-  const { id } = useParams();
-  const { search } = useLocation();
-  const { t, locale } = useLocale();
-  const { selectRental } = useDemo();
-  const navigate = useNavigate();
-  const vehicle = demoVehicles.find((v) => v.id === id);
-  const parsed = readRentalQuery(search);
-  return (
-    <RentalShell title={t("Vehicle details · demo", "تفاصيل السيارة · تجريبي")}>
-      {!vehicle ? (
-        <SystemState
-          title={t("Vehicle not found", "السيارة غير موجودة")}
-          description={t("Return to vehicle search.", "ارجع للبحث عن سيارة.")}
-        />
-      ) : !parsed.success ? (
-        <MissingSelection />
-      ) : (
-        <StatePreview>
-          <RentalSummary
-            selection={{ vehicleId: vehicle.id, criteria: parsed.data }}
-          />
-          <section className="workspace-card">
-            <h2>{vehicle.name[locale]}</h2>
-            <p>
-              {vehicle.seats} {t("seats", "مقاعد")} · {vehicle.bags}{" "}
-              {t("bags", "حقائب")} ·{" "}
-              {t(
-                vehicle.transmission,
-                vehicle.transmission === "automatic" ? "أوتوماتيك" : "يدوي",
-              )}
-            </p>
-            <h3>{t("Sample rental conditions", "شروط المعاينة التجريبية")}</h3>
-            <p>
-              {t(
-                "No supplier, model guarantee, insurance, deposit or license eligibility has been agreed. This demonstration collects fictional contact details only, never driving-license documents or card credentials.",
-                "لم يتم تحديد مورد أو ضمان طراز أو تأمين أو وديعة أو أهلية رخصة. تجمع المعاينة بيانات تواصل وهمية فقط، دون مستندات رخصة أو بيانات بطاقة دفع.",
-              )}
-            </p>
-            <button
-              type="button"
-              className="button button--primary"
-              disabled={!vehicle.available}
-              onClick={() => {
-                selectRental({ vehicleId: vehicle.id, criteria: parsed.data });
-                navigate("/car-rental/summary");
-              }}
-            >
-              {vehicle.available
-                ? t("Select vehicle — demo", "اختر السيارة — تجريبي")
-                : t("Unavailable — demo", "غير متاحة — تجريبي")}
-            </button>
-          </section>
-        </StatePreview>
-      )}
-    </RentalShell>
-  );
-}
 export function RentalSummaryPage() {
   const { rentalSelection } = useDemo();
   const { t } = useLocale();
@@ -432,9 +117,10 @@ export function RentalSummaryPage() {
       {!rentalSelection ? (
         <MissingSelection />
       ) : (
-        <>
-          <RentalSummary selection={rentalSelection} />
-          <div className="workspace-card">
+        <div className="workspace-grid">
+          <div className="workspace-card workspace-form">
+            <h2>{t("Your journey at a glance", "رحلتك في لمحة")}</h2>
+            <p>{t("Review the pickup, return dates and sample daily pricing before adding contact details. No live rental is offered.", "راجع مكان الاستلام وتواريخ الإعادة والسعر اليومي التجريبي قبل إضافة بيانات التواصل. لا يتوفر تأجير فعلي.")}</p>
             <Link
               to={`/car-rental/search?${rentalQuery(rentalSelection.criteria)}`}
             >
@@ -456,100 +142,7 @@ export function RentalSummaryPage() {
                 {t("Continue to driver information", "المتابعة لبيانات السائق")}
               </Link>
             )}
-          </div>
-        </>
-      )}
-    </RentalShell>
-  );
-}
-export function RentalDriverPage() {
-  const { t } = useLocale();
-  const { rentalSelection, rentalDriver, saveRentalDriver } = useDemo();
-  const navigate = useNavigate();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<RentalDriver>({
-    resolver: zodResolver(driverSchema),
-    defaultValues: rentalDriver ?? {
-      name: "",
-      email: "",
-      phone: "",
-      acknowledged: false,
-    },
-  });
-  return (
-    <RentalShell
-      title={t("Driver information · demo", "بيانات السائق · تجريبي")}
-    >
-      {!rentalSelection ? (
-        <MissingSelection />
-      ) : (
-        <div className="workspace-grid">
-          <form
-            className="workspace-card workspace-form"
-            noValidate
-            onSubmit={handleSubmit((v) => {
-              saveRentalDriver(v);
-              navigate("/car-rental/payment");
-            })}
-          >
-            {(
-              [
-                ["name", "Driver name", "اسم السائق"],
-                ["email", "Driver email", "بريد السائق"],
-                ["phone", "Driver phone", "هاتف السائق"],
-              ] as const
-            ).map(([name, en, ar]) => (
-              <label key={name}>
-                {t(en, ar)}
-                <input
-                  {...register(name)}
-                  type={
-                    name === "email"
-                      ? "email"
-                      : name === "phone"
-                        ? "tel"
-                        : "text"
-                  }
-                  aria-label={t(en, ar)}
-                  aria-invalid={!!errors[name]}
-                  aria-describedby={
-                    errors[name] ? `driver-${name}-error` : undefined
-                  }
-                />
-                {errors[name] && (
-                  <span
-                    id={`driver-${name}-error`}
-                    role="alert"
-                    className="field-error"
-                  >
-                    {t(
-                      errors[name].message!,
-                      "أدخل بيانات تجريبية صالحة لهذا الحقل.",
-                    )}
-                  </span>
-                )}
-              </label>
-            ))}
-            <label className="rental-consent">
-              <input type="checkbox" {...register("acknowledged")} />
-              {t("These are fictional driver details", "هذه بيانات سائق وهمية")}
-            </label>
-            {errors.acknowledged && (
-              <p role="alert">
-                {t(errors.acknowledged.message!, "أكد أن البيانات وهمية.")}
-              </p>
-            )}
-            <button className="button button--primary">
-              {t(
-                "Continue to rental payment preview",
-                "المتابعة لمعاينة دفع التأجير",
-              )}
-            </button>
-          </form>
-          <RentalSummary selection={rentalSelection} />
+          </div><RentalSummary selection={rentalSelection} />
         </div>
       )}
     </RentalShell>
@@ -557,11 +150,12 @@ export function RentalDriverPage() {
 }
 export function RentalPaymentPage() {
   const { t } = useLocale();
-  const { rentalSelection, rentalDriver, createRental } = useDemo();
+  const { rentalSelection, rentalDriver, createRental, rentalPolicyAcknowledged } = useDemo();
   const navigate = useNavigate();
   const [outcome, setOutcome] = useState("confirmed");
   const [processing, setProcessing] = useState(false);
   const [insufficient, setInsufficient] = useState(false);
+  if (rentalSelection && rentalDriver && !rentalPolicyAcknowledged) return <Navigate to="/car-rental/review" replace />;
   return (
     <RentalShell
       title={t("Rental payment · simulation", "دفع التأجير · محاكاة")}
@@ -569,9 +163,8 @@ export function RentalPaymentPage() {
       {!rentalSelection || !rentalDriver ? (
         <MissingSelection />
       ) : (
-        <>
-          <RentalSummary selection={rentalSelection} />
-          <section className="workspace-card">
+        <div className="workspace-grid">
+          <section className="workspace-card workspace-form">
             <p>
               {t(
                 "Test payment only. No card information, debit, credit deduction or payment request is made.",
@@ -643,8 +236,8 @@ export function RentalPaymentPage() {
                 </button>
               </>
             )}
-          </section>
-        </>
+          </section><RentalSummary selection={rentalSelection} />
+        </div>
       )}
     </RentalShell>
   );
@@ -690,7 +283,7 @@ export function RentalBookingsPage() {
               <article className="workspace-card" key={r.id}>
                 <StatusBadge status={r.status} />
                 <h2>
-                  {demoVehicles.find((v) => v.id === r.vehicleId)!.name[locale]}
+                  {vehicleName(demoVehicles.find((v) => v.id === r.vehicleId)!, locale)}
                 </h2>
                 <p>
                   <bdi>{r.id}</bdi>
@@ -747,7 +340,8 @@ export function RentalBookingDetailsPage() {
         />
       ) : (
         <>
-          <StatusBadge status={record.status} />
+          <div className="rental-booking-layout"><div className="rental-panel">
+          <section className="rental-result-banner"><Icon name="shield" /><div><p className="rental-kicker">{t("YOUR DEMONSTRATION OUTCOME", "نتيجة العرض التجريبي")}</p><h2>{t("Your journey preview", "معاينة رحلتك")}</h2><StatusBadge status={record.status} /></div></section>
           <h2>
             <bdi>{record.id}</bdi>
           </h2>
@@ -757,9 +351,8 @@ export function RentalBookingDetailsPage() {
               "لم تُحجز سيارة. هذه معاينة نتيجة في الواجهة وليست تأكيد مورد.",
             )}
           </p>
-          <RentalSummary selection={record} />
-          <section className="workspace-card">
-            <h2>{t("Driver", "السائق")}</h2>
+          <section className="rental-form-section">
+            <h2>{t("Passenger / driver contact", "تواصل الراكب / السائق")}</h2>
             <p>{record.driver.name}</p>
             <p>
               <bdi>{record.driver.email}</bdi>
@@ -815,6 +408,8 @@ export function RentalBookingDetailsPage() {
               )}
             </div>
           </section>
+          <Link className="button button--outline" to="/car-rental/bookings">{t("Back to my rentals", "العودة لتأجيراتي")}</Link>
+          </div><RentalSummary selection={record} /></div>
           <dialog
             ref={dialog}
             className="rental-dialog"

@@ -1,0 +1,2 @@
+.hotel-points { display: inline-flex; align-items: center; gap: 7px; color: #164768; font-size: 13px; font-weight: 600; line-height: 1.5; border-top: 1px solid #e4ebee; padding-top: 9px; margin-top: 8px; }
+.hotel-points svg { width: 17px; height: 17px; color: #946719; }

@@ -1,3 +1,4 @@
+import { ChauffeurEnquiryPage, chauffeurSubjects } from "@/features/car-rental/chauffeur-enquiry";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -12,6 +13,11 @@ import { Icon } from "@/components/ui/icon";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
 
 export function EnquiryPage({ group = false }: { group?: boolean }) {
+  const [params] = useSearchParams();
+  if (!group && chauffeurSubjects.includes(params.get("subject") ?? "")) return <ChauffeurEnquiryPage />;
+  return <GeneralEnquiryPage group={group} />;
+}
+function GeneralEnquiryPage({ group }: { group: boolean }) {
   const { t, locale } = useLocale();
   const [params] = useSearchParams();
   const [preview, setPreview] = useState(false);

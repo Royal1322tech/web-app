@@ -1,3 +1,4 @@
+import { PointsIndicator } from "./points-indicator";
 import { ResponsiveImage as Image } from "@/components/ui/responsive-image";
 import { Icon } from "@/components/ui/icon";
 import { useHotelPreferences } from "@/features/preferences/use-hotel-preferences";
@@ -142,6 +143,7 @@ export function HotelCard({
           </p>
         )}
       </div>
+      {!compact && <PointsIndicator />}
     </article>
   );
 }

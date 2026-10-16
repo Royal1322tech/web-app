@@ -182,6 +182,10 @@ export const router = createBrowserRouter([
         }),
       },
       {
+        path: "booking/policy",
+        lazy: async () => ({ Component: (await import("@/features/demo/checkout")).CancellationPolicyPage }),
+      },
+      {
         path: "booking/payment",
         lazy: async () => ({
           Component: (await import("@/features/demo/checkout")).PaymentPage,
@@ -263,14 +267,14 @@ export const router = createBrowserRouter([
       {
         path: "car-rental/search",
         lazy: async () => ({
-          Component: (await import("@/features/car-rental/rental-flow"))
+          Component: (await import("@/features/car-rental/rental-results"))
             .RentalSearchPage,
         }),
       },
       {
         path: "car-rental/vehicles/:id",
         lazy: async () => ({
-          Component: (await import("@/features/car-rental/rental-flow"))
+          Component: (await import("@/features/car-rental/rental-details"))
             .VehicleDetailsPage,
         }),
       },
@@ -284,9 +288,13 @@ export const router = createBrowserRouter([
       {
         path: "car-rental/driver",
         lazy: async () => ({
-          Component: (await import("@/features/car-rental/rental-flow"))
+          Component: (await import("@/features/car-rental/rental-passenger"))
             .RentalDriverPage,
         }),
+      },
+      {
+        path: "car-rental/review",
+        lazy: async () => ({ Component: (await import("@/features/car-rental/rental-review")).RentalReviewPage }),
       },
       {
         path: "car-rental/payment",
