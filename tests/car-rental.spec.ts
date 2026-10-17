@@ -15,7 +15,7 @@ for (const width of [375, 1440])
     await expect(carTab).toHaveAttribute("aria-selected", "true");
     await expect(
       page.getByRole("heading", {
-        name: "Explore the car rental demo",
+        name: "Explore Car Rentals",
         exact: true,
       }),
     ).toBeVisible();
@@ -37,7 +37,7 @@ for (const width of [375, 1440])
     );
     await expect(
       page.getByText(
-        "No rental request or payment can be submitted from this preview.",
+        "Browse self-drive vehicles at illustrative daily rates, or prepare an enquiry for chauffeur and transfer services.",
         { exact: true },
       ),
     ).toBeVisible();

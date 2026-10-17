@@ -1,3 +1,4 @@
+import { hotelDisplayName, hotelDisplayAddress } from "@/features/hotels/lib/presentation";
 import { cancellationPolicyLabels } from "@/features/hotels/cancellation-policy";
 import type { ReactNode } from "react";
 import { CatalogShell } from "@/features/hotels/components/catalog-shell";
@@ -20,7 +21,7 @@ export function Workspace({
   title,
   eyebrow,
   hideHeading = false,
-  showPreview = true,
+  showPreview = false,
   children,
 }: {
   title: string;
@@ -46,17 +47,6 @@ export function Workspace({
     </CatalogShell>
   );
 }
-export function DemoNotice() {
-  const { t } = useLocale();
-  return (
-    <p className="demo-notice">
-      {t(
-        "DEMO ONLY · No reservation, payment or supplier change. Use fictional guest details. Booking data resets on refresh; demo access persists until Sign Out.",
-        "عرض تجريبي فقط · لا يوجد حجز أو دفع أو تغيير لدى المورد. استخدم بيانات ضيوف وهمية. تُمسح بيانات الحجز عند التحديث؛ يستمر الدخول التجريبي حتى تسجيل الخروج.",
-      )}
-    </p>
-  );
-}
 export function StatusBadge({ status }: { status: DemoStatus | "completed" }) {
   const { t } = useLocale();
   const labels = {
@@ -68,14 +58,15 @@ export function StatusBadge({ status }: { status: DemoStatus | "completed" }) {
   };
   return (
     <span className={`status-badge status-badge--${status}`}>
-      {labels[status]} · {t("Demo", "تجريبي")}
+      {labels[status]}
     </span>
   );
 }
 export function SelectionSummary({ selection }: { selection: DemoSelection }) {
   const { locale, t } = useLocale();
   const money = useMoney();
-  const hotel = hotels.find((h) => h.id === selection.hotelId)!;
+  const hotel = hotels.find((h) => h.id === selection.hotelId);
+  if (!hotel) return null;
   const nights = samplePriceBreakdown(
     selection.rate.nightlyRate,
     selection.criteria,
@@ -84,7 +75,7 @@ export function SelectionSummary({ selection }: { selection: DemoSelection }) {
     <aside className="workspace-card selection-summary">
       <ResponsiveImage
         src={hotel.photos[0].src}
-        alt={hotel.name[locale]}
+        alt={hotelDisplayName(hotel.name[locale])}
         width={hotel.photos[0].width}
         height={hotel.photos[0].height}
         sizes="(max-width: 800px) 100vw, 340px"
@@ -92,10 +83,10 @@ export function SelectionSummary({ selection }: { selection: DemoSelection }) {
       <p className="workspace-eyebrow">
         {t("YOUR SELECTED STAY", "إقامتك المختارة")}
       </p>
-      <h2>{hotel.name[locale]}</h2>
-      <p>{hotel.address[locale]}</p>
+      <h2>{hotelDisplayName(hotel.name[locale])}</h2>
+      <p>{hotelDisplayAddress(hotel.address[locale], locale)}</p>
       <hr />
-      <h3>{selection.room.name[locale]}</h3>
+      <h3>{hotelDisplayName(selection.room.name[locale])}</h3>
       <p>{selection.rate.board[locale]}</p>
       <dl className="summary-dl">
         <div>
@@ -133,17 +124,17 @@ export function SelectionSummary({ selection }: { selection: DemoSelection }) {
           </dd>
         </div>
         <div className="summary-total">
-          <dt>{t("Demo total", "الإجمالي التجريبي")}</dt>
+          <dt>{t("Stay total", "إجمالي الإقامة")}</dt>
           <dd>
             <bdi>{money(totalFor(selection))}</bdi>
           </dd>
         </div>
       </dl>
-      <section className="summary-policy"><h3>{t("Cancellation Policy", "سياسة الإلغاء")}</h3><p>{cancellationPolicyLabels[selection.rate.cancellationPolicy?.kind ?? "unavailable"][locale]}</p><p className="fine-print">{t("Review the selected offer’s information in the Cancellation Policy step before payment preview.", "راجع معلومات العرض المحدد في خطوة سياسة الإلغاء قبل معاينة الدفع.")}</p></section>
+      <section className="summary-policy"><h3>{t("Cancellation terms", "شروط الإلغاء")}</h3><p>{cancellationPolicyLabels[selection.rate.cancellationPolicy?.kind ?? "unavailable"][locale]}</p></section>
       <p className="fine-print">
         {t(
-          "Illustrative room subtotal. No taxes or fees have been supplied; this is not a payable quote. Cancellation terms depend on the selected offer.",
-          "إجمالي الغرف التوضيحي. لم تُقدّم ضرائب أو رسوم؛ هذا ليس عرض سعر قابل للدفع. تعتمد شروط الإلغاء على العرض المختار.",
+          "Illustrative subtotal; taxes and fees are not included.",
+          "إجمالي توضيحي؛ لا يشمل الضرائب والرسوم.",
         )}
       </p>
     </aside>

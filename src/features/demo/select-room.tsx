@@ -42,14 +42,14 @@ export function SelectRoomButton({
         }}
       >
         {soldOut
-          ? t("Sold out — demo", "نفدت الغرف — تجريبي")
-          : t("Select room — demo", "اختر الغرفة — تجريبي")}
+          ? t("Sold out", "نفدت الغرف")
+          : t("Select room", "اختر الغرفة")}
       </button>
       {mismatch && (
         <p className="fine-print">
           {t(
-            "Demo capacity: 2 adults per room, no children. Adjust your search.",
-            "السعة التجريبية: بالغان لكل غرفة دون أطفال. عدّل البحث.",
+            "This room supports up to 2 adults per room and no children. Adjust your search.",
+            "تتسع هذه الغرفة لبالغين كحد أقصى لكل غرفة دون أطفال. عدّل البحث.",
           )}
         </p>
       )}

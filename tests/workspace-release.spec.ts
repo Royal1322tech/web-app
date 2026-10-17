@@ -4,11 +4,60 @@ import { visit } from './helpers/demo-login';
 import { selectLanguage, closeHeaderMenu } from './helpers/header';
 import { demoPoints, pointsSummary } from '../src/features/demo/points-data';
 import { hotels } from '../src/features/hotels/data/hotels.fixture';
+import { hotelDisplayAddress, hotelDisplayName } from '../src/features/hotels/lib/presentation';
+import { assessAgencyCredit } from '../src/features/demo/payment-methods';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { CancellationPolicyCard } from '../src/features/demo/cancellation-policy-card';
+import { LocaleProvider } from '../src/features/localization/locale-provider';
+
+test('agency credit assessment rejects missing, insufficient and mismatched balances', () => {
+  expect(assessAgencyCredit(null, 100, 'USD')).toEqual({ status: 'unavailable' });
+  expect(assessAgencyCredit({ amount: 50, currency: 'USD' }, 100, 'USD')).toEqual({ status: 'insufficient', remaining: -50 });
+  expect(assessAgencyCredit({ amount: 500, currency: 'EGP' }, 100, 'USD')).toEqual({ status: 'currency-mismatch', availableCurrency: 'EGP', bookingCurrency: 'USD' });
+  expect(assessAgencyCredit({ amount: 150, currency: 'USD' }, 100, 'USD')).toEqual({ status: 'sufficient', remaining: 50 });
+});
+test('cancellation table renders supplier periods, charges and conditions without adding rows', () => {
+  const markup = renderToStaticMarkup(createElement(LocaleProvider, {
+    children: createElement(CancellationPolicyCard, {
+      roomName: 'Double room',
+      rateName: 'Breakfast included',
+      policy: {
+        kind: 'conditional',
+        rules: [
+          { cancelledOnOrAfter: '2027-02-10 18:00', cancelledOnOrBefore: '2027-02-11 12:00', timezone: 'Africa/Cairo', charge: { kind: 'amount', amount: 50, currency: 'USD' } },
+          { cancelledOnOrAfter: '2027-02-11 12:00', charge: { kind: 'percentage', percentage: 25 } },
+        ],
+        noShow: { en: 'Supplier no-show fee: USD 80', ar: 'رسوم عدم الحضور: ٨٠ دولارًا' },
+        earlyDeparture: { en: 'Early departure is non-refundable', ar: 'المغادرة المبكرة غير قابلة للاسترداد' },
+      },
+    }),
+  }));
+  expect(markup).toContain('Cancelled on or after');
+  expect(markup).toContain('Cancelled on or before');
+  expect(markup).toContain('Cancellation Charge');
+  expect(markup.match(/<tr>/g)).toHaveLength(3);
+  expect(markup).toContain('2027-02-10 18:00 · Africa/Cairo');
+  expect(markup).toContain('$50.00');
+  expect(markup).toContain('25%');
+  expect(markup).toContain('Supplier no-show fee: USD 80');
+  expect(markup).toContain('Early departure is non-refundable');
+
+  const partialMarkup = renderToStaticMarkup(createElement(LocaleProvider, {
+    children: createElement(CancellationPolicyCard, {
+      roomName: 'Double room',
+      rateName: 'Flexible rate',
+      policy: { kind: 'conditional', noShow: { en: 'Supplier fee applies', ar: 'تطبق رسوم المورد' } },
+    }),
+  }));
+  expect(partialMarkup).toContain('No-Show Charges');
+  expect(partialMarkup).not.toContain('Early Check-Out Conditions');
+});
 
 async function room(page: Page, offer = 0) {
   await page.getByRole('button', { name: /^(Expand All Rooms|عرض كل الغرف)$/ }).click();
-  await expect(page.getByText(/^(Policy unavailable|السياسة غير متاحة)$/).first()).toBeVisible();
-  await page.getByRole('button', { name: /Select room — demo|اختر الغرفة/ }).nth(offer).click();
+  await expect(page.getByText(/^(Not supplied|غير مقدمة)$/).first()).toBeVisible();
+  await page.getByRole('button', { name: /Select room|اختر الغرفة/ }).nth(offer).click();
 }
 async function compare(page: Page) {
   await page.getByRole('button', { name: /^(Compare|قارن)$/ }).first().click();
@@ -29,7 +78,7 @@ test('points ledger excludes pending entries and supports an empty dataset', () 
 });
 test('points history filters, paginates and shows an honest empty state', async ({ page }) => {
   await visit(page, '/points');
-  await expect(page.getByText('DEMO POINTS', { exact: false })).toBeVisible();
+  await expect(page.getByText('Points are informational; earning and redemption are not available.')).toBeVisible();
   await expect(page.locator('.points-metrics section').first()).toContainText('1,550');
   await expect(page.locator('.points-list li')).toHaveCount(4);
   await expect(page.locator('.points-list li').first()).toContainText('Pending');
@@ -52,10 +101,10 @@ test('workspace navigation persists across all sections and profile edits remain
     await expect(navigation.locator(`a[href="${route}"]`)).toHaveAttribute('aria-current', 'page');
     await expect(page.locator('header')).toHaveCount(1);
   }
-  await page.getByRole('link', { name: 'Edit demo profile' }).click();
+  await page.getByRole('link', { name: 'Edit profile' }).click();
   await page.getByLabel('Contact person', { exact: true }).fill('Demo Partner Contact');
-  await page.getByRole('button', { name: 'Save demo profile' }).click();
-  await expect(page.getByRole('status')).toContainText('Demo profile saved');
+  await page.getByRole('button', { name: 'Save profile' }).click();
+  await expect(page.getByRole('status')).toContainText('Profile changes saved for this session');
   await navigation.getByRole('link', { name: 'My Profile', exact: true }).click();
   await expect(page.locator('.profile-overview')).toContainText('Demo Partner Contact');
   await expect(page.locator('.profile-information')).toContainText('Demo Partner Contact');
@@ -65,7 +114,7 @@ test('workspace navigation persists across all sections and profile edits remain
 test('policy acknowledgment gates the flow, persists within an attempt and resets on offer changes', async ({ page }) => {
   await visit(page, '/hotels/eastern-al-montazah');
   await room(page);
-  await expect(page.locator('.cancellation-policy')).toContainText('Policy unavailable');
+  await expect(page.locator('.selection-summary')).toContainText('Not supplied');
   await page.getByRole('link', { name: 'Continue to guest details' }).click();
   await page.getByLabel('Lead guest name', { exact: true }).fill('Demo Guest');
   await page.getByLabel('Contact email', { exact: true }).fill('guest@example.test');
@@ -73,13 +122,20 @@ test('policy acknowledgment gates the flow, persists within an attempt and reset
   await page.getByLabel('Guest 2 name', { exact: true }).fill('Demo Companion');
   await page.getByRole('button', { name: 'Continue to cancellation policy' }).click();
   await expect(page).toHaveURL(/\/booking\/policy$/);
-  const acknowledge = page.getByRole('checkbox', { name: /I have reviewed the cancellation policy/ });
+  await expect(page.locator('.policy-table').getByRole('columnheader')).toHaveCount(3);
+  await expect(page.getByText('Cancellation schedule not supplied for this offer.')).toBeVisible();
+  await expect(page.locator('.policy-table tbody tr')).toHaveCount(0);
+  await expect(page.locator('.policy-conditions-empty')).toBeVisible();
+  await expect(page.getByText('Hotel Norms', { exact: true })).toBeVisible();
+  await expect(page.getByText('Terms & Conditions', { exact: true })).toBeVisible();
+  await expect(page.locator('.policy-compact-accordion[open]')).toHaveCount(0);
+  const acknowledge = page.getByRole('checkbox', { name: /I have reviewed the cancellation and stay information/ });
   await expect(acknowledge).not.toBeChecked();
-  await expect(page.getByRole('button', { name: 'Continue to payment preview' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Continue to Payment Details' })).toBeDisabled();
   await page.evaluate(() => { history.pushState(null, '', '/booking/payment'); window.dispatchEvent(new PopStateEvent('popstate')); });
   await expect(page).toHaveURL(/\/booking\/policy$/);
   await acknowledge.check();
-  await page.getByRole('link', { name: 'Continue to payment preview' }).click();
+  await page.getByRole('link', { name: 'Continue to Payment Details' }).click();
   await page.goBack();
   await expect(acknowledge).toBeChecked();
   await page.getByRole('link', { name: 'Back to guest details' }).click();
@@ -95,7 +151,7 @@ test('policy acknowledgment gates the flow, persists within an attempt and reset
   await page.getByLabel('Guest 2 name', { exact: true }).fill('Demo Companion');
   await page.getByRole('button', { name: 'Continue to cancellation policy' }).click();
   await expect(acknowledge).not.toBeChecked();
-  await expect(page.getByRole('button', { name: 'Continue to payment preview' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Continue to Payment Details' })).toBeDisabled();
 });
 test('comparison shows fixture facts and Choose Hotel preserves the entire search context', async ({ page }) => {
   const start = new Date(); start.setDate(start.getDate() + 10);
@@ -111,9 +167,9 @@ test('comparison shows fixture facts and Choose Hotel preserves the entire searc
   await expect(cards).toHaveCount(2);
   for (const card of await cards.all()) {
     const name = await card.getAttribute('aria-label');
-    const hotel = hotels.find(h => h.name.en === name)!;
-    await expect(card.getByRole('heading')).toHaveText(hotel.name.en);
-    await expect(card).toContainText(hotel.address.en);
+    const hotel = hotels.find(h => hotelDisplayName(h.name.en) === name)!;
+    await expect(card.getByRole('heading')).toHaveText(hotelDisplayName(hotel.name.en));
+    await expect(card).toContainText(hotelDisplayAddress(hotel.address.en, 'en'));
     await expect(card).toContainText(`${hotel.reviewScore} / 5`);
     await expect(card).toContainText(new Intl.NumberFormat('en', { style: 'currency', currency: 'USD' }).format(hotel.nightlyRate));
   }
@@ -177,7 +233,7 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) for (const locale of 
     await dialog.getByRole('link').first().click();
     await expect(page).toHaveURL(/\/hotels\//);
     await room(page);
-    await expect(page.locator('.cancellation-policy')).toBeVisible();
+    await expect(page.getByText(/Not supplied|غير مقدمة/, { exact: true }).first()).toBeVisible();
     await noOverflow(page);
     await expect(page.getByRole('link', { name: /Continue to guest details|المتابعة لبيانات الضيوف/ })).toBeVisible();
     await page.screenshot({ path: `test-results/policy-${width}-${locale}.png`, fullPage: true });

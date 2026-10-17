@@ -19,8 +19,8 @@ for (const width of [320, 375, 768, 1440]) {
       await expect(trigger.locator("svg")).toHaveCount(1);
       await trigger.click();
       await expect(panel).toBeVisible();
-      await expect(panel.getByText(locale === "en" ? "Demo access · Frontend only" : "دخول تجريبي · واجهة فقط")).toBeVisible();
       await expect(panel.getByRole("link")).toHaveCount(6);
+      await expect(panel.getByRole("link").first()).toBeVisible();
       await expect(panel.locator('a[href="/agency"]')).toHaveCount(0);
       await expect(trigger).toHaveCSS("background-color", "rgb(217, 242, 238)");
       const bounds = (await panel.boundingBox())!;

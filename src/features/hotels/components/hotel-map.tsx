@@ -1,3 +1,4 @@
+import { hotelDisplayAddress, hotelDisplayName } from "../lib/presentation";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { hotels } from "../data/hotels.fixture";
@@ -39,7 +40,7 @@ export function HotelMap({ hotel }: { hotel: HotelListing }) {
   return (
     <section ref={container} id="location" className={styles.detailSection}>
       <SectionHeading icon="pin" title={t("Location", "الموقع")}>
-        {hotel.address[locale]}
+        {hotelDisplayAddress(hotel.address[locale], locale)}
       </SectionHeading>
       {links ? (
         <>
@@ -70,7 +71,7 @@ export function HotelMap({ hotel }: { hotel: HotelListing }) {
           <div className={styles.map}>
             {active && !failed ? (
               <iframe
-                title={`${t("Hotel location map", "خريطة موقع الفندق")}: ${hotel.name[locale]}`}
+                title={`${t("Hotel location map", "خريطة موقع الفندق")}: ${hotelDisplayName(hotel.name[locale])}`}
                 src={links.embed}
                 loading="lazy"
                 referrerPolicy="no-referrer"
@@ -114,8 +115,8 @@ export function HotelMap({ hotel }: { hotel: HotelListing }) {
         <div className={styles.empty}>
           <p>
             {t(
-              "A verified location is not available for this sample hotel.",
-              "لا يتوفر موقع موثوق لهذا الفندق التجريبي.",
+              "A verified location is not available for this listing.",
+              "لا يتوفر موقع موثوق لهذا الفندق.",
             )}
           </p>
           {mappedHotel && (

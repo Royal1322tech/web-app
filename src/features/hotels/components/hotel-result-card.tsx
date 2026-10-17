@@ -1,3 +1,4 @@
+import { hotelDisplayAddress, hotelDisplayName } from "../lib/presentation";
 import { stayQuery } from "../lib/stay-query";
 import type { HotelSearchCriteria } from "@/features/home/schemas/hotel-search.schema";
 import { ResponsiveImage as Image } from "@/components/ui/responsive-image";
@@ -26,7 +27,7 @@ export function FavouriteButton({
       type="button"
       className={styles.heart}
       aria-pressed={active}
-      aria-label={`${t("Favourite", "المفضلة")}: ${hotel.name[locale]}`}
+      aria-label={`${t("Favourite", "المفضلة")}: ${hotelDisplayName(hotel.name[locale])}`}
       onClick={() => toggle(hotel.id)}
     >
       <Icon name="heart" fill={active ? "currentColor" : "none"} />
@@ -98,14 +99,14 @@ export function HotelResultCard({
                 }
                 className={styles.hotelName}
               >
-                {hotel.name[locale]}
+                {hotelDisplayName(hotel.name[locale])}
               </Link>
             ) : (
-              <h2 className={styles.hotelName}>{hotel.name[locale]}</h2>
+              <h2 className={styles.hotelName}>{hotelDisplayName(hotel.name[locale])}</h2>
             )}
             <p className={styles.cardAddress}>
               <Icon name="pin" />
-              {hotel.address[locale]}
+              {hotelDisplayAddress(hotel.address[locale], locale)}
             </p>
             {hotel.stars !== undefined ? (
               <p
@@ -117,8 +118,7 @@ export function HotelResultCard({
               </p>
             ) : (
               <p className={styles.stars}>
-                <Icon name="star" /> {hotel.reviewScore} / 5{" "}
-                {t("Sample review", "تقييم تجريبي")}
+                <Icon name="star" /> {hotel.reviewScore} / 5
               </p>
             )}
             <ul className={styles.amenities}>
@@ -159,15 +159,14 @@ export function HotelResultCard({
               {booking || (
                 <>
                   <p>
-                    {t("Sample room · ", "غرفة تجريبية · ")}
                     {hotel.breakfast
                       ? t("Breakfast included", "تشمل الإفطار")
                       : t("Room only", "غرفة فقط")}
                   </p>
                   <small>
                     {t(
-                      "Rates and policies are illustrative",
-                      "الأسعار والسياسات للعرض فقط",
+                      "Rate per night · USD",
+                      "السعر لليلة · دولار",
                     )}
                   </small>
                 </>

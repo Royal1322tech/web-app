@@ -5,6 +5,7 @@ import type {
 } from "@/features/hotels/data/rooms.fixture";
 import type { SampleBooking } from "@/features/bookings/data/bookings.fixture";
 export type DemoStatus = "confirmed" | "pending" | "failed" | "cancelled";
+export type PaymentMethod = "instapay" | "fawry" | "card" | "agency_credit";
 export interface DemoSelection {
   hotelId: string;
   room: SampleRoom;

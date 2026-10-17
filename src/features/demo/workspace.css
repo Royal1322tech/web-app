@@ -72,15 +72,6 @@
 .workspace-stack > .workspace-card {
   margin: 0;
 }
-.demo-notice {
-  border-inline-start: 3px solid var(--gold);
-  background: #fff8ed;
-  color: #714719;
-  padding: 14px 18px;
-  border-radius: 8px;
-  font-size: 13px;
-  margin-block: 20px !important;
-}
 .fine-print {
   font-size: 12px;
   color: var(--muted);
@@ -586,8 +577,95 @@
 .points-list h3 { font-size: 16px; margin: 0; }
 .points-list p { color: #536579; font-size: 14px; margin-block: 6px 0; }
 .points-positive { color: #08705f; }
-.cancellation-policy { padding: 22px; border-inline-start: 3px solid #c6a65b; border-radius: 12px; background: #faf8f1; color: #142c49; margin-bottom: 22px; }
-.cancellation-policy p { color: #536579; line-height: 1.7; }
+.cancellation-policy { padding: 20px; border: 1px solid var(--border); border-inline-start: 3px solid var(--gold); border-radius: 12px; background: var(--surface); color: var(--foreground); }
+.policy-page-main { display: grid; gap: 14px; min-width: 0; }
+.policy-page-grid > aside { top: 104px; }
+.policy-intro { color: var(--muted); margin-block: 0 4px; }
+.policy-group { padding: 20px; box-shadow: none; }
+.policy-section-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.policy-section-heading > svg { width: 24px; height: 24px; flex: 0 0 24px; color: var(--royal); }
+.policy-section-heading h2 { margin: 0; font-size: 18px; }
+.policy-status { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.policy-copy, .policy-empty { color: var(--muted); line-height: 1.65; margin: 0; }
+.policy-empty { font-size: 14px; }
+.policy-facts { display: grid; gap: 0; margin: 0; }
+.policy-facts > div { display: grid; grid-template-columns: minmax(120px, .8fr) minmax(0, 1.2fr); gap: 16px; padding-block: 10px; border-top: 1px solid var(--border); }
+.policy-facts dt { color: var(--muted); }
+.policy-facts dd { margin: 0; text-align: end; font-weight: 550; overflow-wrap: anywhere; }
+.policy-table-scroll { max-width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+.policy-table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 14px; }
+.policy-table th, .policy-table td { text-align: start; vertical-align: top; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.policy-table thead { background: var(--subtle); color: var(--navy); }
+.policy-table tbody tr:last-child td { border-bottom: 0; }
+.policy-restrictions { display: grid; gap: 8px; margin: 12px 0 0; padding-inline-start: 20px; color: var(--foreground); line-height: 1.6; }
+.policy-subsection, .policy-platform-note { border-top: 1px solid var(--border); margin-top: 16px; padding-top: 14px; }
+.policy-subsection h3, .policy-platform-note h3 { margin: 0 0 6px; font-size: 15px; }
+.policy-platform-note { background: var(--subtle); border-radius: 10px; padding: 14px; }
+.policy-platform-note p { margin: 0; color: var(--muted); line-height: 1.6; font-size: 14px; }
+.policy-acknowledgement { margin-top: 0; padding: 20px; }
+.policy-acknowledgement .choice-label { align-items: flex-start; line-height: 1.6; }
+.policy-acknowledgement .choice-label input { flex: 0 0 20px; margin-top: 2px; accent-color: var(--brand); }
+.policy-acknowledgement .workspace-actions { justify-content: space-between; }
+.policy-acknowledgement .button:disabled { cursor: not-allowed; }
+.policy-accordion { padding: 0; overflow: hidden; }
+.policy-accordion > summary { display: flex; align-items: center; gap: 12px; padding: 18px 20px; cursor: pointer; list-style: none; color: var(--navy); }
+.policy-accordion > summary::-webkit-details-marker { display: none; }
+.policy-accordion > summary:focus-visible { outline: 3px solid var(--teal); outline-offset: -3px; }
+.policy-accordion-icon { display: grid; place-items: center; width: 36px; height: 36px; flex: 0 0 36px; border-radius: 10px; color: var(--royal); background: var(--subtle); }
+.policy-accordion-title { display: grid; gap: 3px; flex: 1; min-width: 0; }
+.policy-accordion-title small { color: var(--muted); font-size: 13px; font-weight: 400; }
+.policy-accordion-chevron { width: 18px; height: 18px; flex: 0 0 18px; color: var(--muted); transition: transform .18s ease; }
+.policy-accordion[open] > summary { border-bottom: 1px solid var(--border); }
+.policy-accordion[open] > summary .policy-accordion-chevron { transform: rotate(180deg); }
+.policy-accordion-content { display: grid; gap: 14px; padding: 18px 20px 20px; }
+.policy-compact-accordion { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.policy-compact-accordion > summary { padding-block: 14px; }
+.policy-compact-accordion .policy-accordion-content { padding-top: 4px; }
+.policy-accordion-list { display: grid; gap: 10px; }
+.policy-conditions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; }
+.policy-conditions > div { display: grid; gap: 5px; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--subtle); }
+.policy-conditions dt { color: var(--navy); font-size: 13px; font-weight: 650; }
+.policy-conditions dd { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
+.policy-conditions-empty { padding: 12px 14px; border-radius: 8px; background: var(--subtle); }
+.policy-subsection { margin-top: 0; padding-top: 0; border-top: 0; }
+.booking-rate-policy { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.booking-rate-policy h3, .booking-rate-policy p { margin: 0; }
+.booking-rate-policy p { color: var(--muted); text-align: end; }
+.payment-details-card { display: grid; gap: 20px; }
+.payment-heading h2 { margin-bottom: 6px; }
+.payment-heading > p:last-child { margin: 0; color: var(--muted); }
+.payment-methods { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; border: 0; }
+.payment-methods legend { grid-column: 1 / -1; margin-bottom: 4px; color: var(--navy); font-weight: 650; }
+.workspace .payment-method-option { display: grid; grid-template-columns: 24px minmax(0, 1fr) 18px; align-items: center; gap: 12px; position: relative; min-width: 0; min-height: 96px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); cursor: pointer; transition: border-color .16s ease, background-color .16s ease, box-shadow .16s ease; }
+.payment-method-option:hover { border-color: var(--teal); }
+.payment-method-option:focus-within { outline: 3px solid color-mix(in srgb, var(--teal) 35%, transparent); outline-offset: 2px; }
+.payment-method-option.is-selected { border-color: var(--teal); background: color-mix(in srgb, var(--teal) 7%, white); box-shadow: 0 0 0 1px var(--teal); }
+.payment-method-option > input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.payment-method-option > svg { width: 24px; height: 24px; color: var(--royal); }
+.payment-method-copy { display: grid; gap: 4px; min-width: 0; flex: 1; }
+.payment-method-copy strong { color: var(--navy); }
+.payment-method-copy small { color: var(--muted); line-height: 1.45; }
+.payment-radio-indicator { width: 18px; height: 18px; border: 1px solid var(--muted); border-radius: 50%; }
+.is-selected .payment-radio-indicator { border: 5px solid var(--teal); }
+.payment-credit-breakdown { padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--subtle); }
+.payment-credit-breakdown dl { display: grid; gap: 10px; margin: 0; }
+.payment-credit-breakdown dl > div { display: flex; justify-content: space-between; gap: 16px; }
+.payment-credit-breakdown dt { color: var(--muted); }
+.payment-credit-breakdown dd { margin: 0; color: var(--navy); font-weight: 650; }
+.payment-credit-remaining { padding-top: 10px; border-top: 1px solid var(--border); }
+.payment-local-note, .payment-selection-hint { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+.payment-prepared-result { align-content: start; }
+.payment-prepared-result > svg { width: 40px; height: 40px; padding: 9px; border-radius: 50%; color: var(--teal); background: var(--subtle); }
+.payment-prepared-result h2 { margin-bottom: 0; }
+.payment-prepared-result > p { line-height: 1.6; }
+@media (max-width: 620px) {
+  .policy-conditions, .payment-methods { grid-template-columns: 1fr; }
+  .booking-rate-policy { align-items: flex-start; flex-direction: column; }
+  .booking-rate-policy p { text-align: start; }
+  .payment-methods legend { grid-column: auto; }
+  .policy-accordion > summary { padding-inline: 14px; }
+  .policy-accordion-content { padding-inline: 14px; }
+}
 @media (max-width: 800px) {
   .profile-overview { flex-wrap: wrap; gap: 16px; }
   .profile-overview > .button { width: 100%; }
@@ -618,7 +696,6 @@
 .selection-summary > img { border-radius: 12px; aspect-ratio: 16/10; object-fit: cover; }
 .selection-summary .summary-dl { padding: 12px 0; }
 .selection-summary .summary-dl > div { padding-block: 8px; border-bottom: 1px solid #e6edf2; }
-.policy-stage { border-top: 3px solid #b68a40; }
 @media (max-width: 600px) {
   .hotel-guest-form { padding: 16px; }
   .hotel-guest-form fieldset { padding: 14px; }
@@ -627,9 +704,8 @@
 }
 .summary-policy { background: #f4f8fa; border: 1px solid #dce6ee; border-radius: 10px; padding: 14px; margin-top: 16px; }
 .summary-policy h3 { margin: 0 0 8px; font-size: 15px; }
-.policy-stage .workspace-actions > .button { max-width: 100%; white-space: normal; text-align: center; }
-.policy-stage .choice-label input { flex: 0 0 20px; }
-@media (max-width: 430px) { .policy-stage .workspace-actions > .button { width: 100%; } }
+@media (max-width: 800px) { .policy-page-grid > aside { position: static; } }
+@media (max-width: 540px) { .policy-group, .policy-acknowledgement, .cancellation-policy { padding: 16px; } .policy-facts > div { grid-template-columns: minmax(0, 1fr); gap: 4px; } .policy-facts dd { text-align: start; } .policy-acknowledgement .workspace-actions { display: grid; grid-template-columns: minmax(0, 1fr); } .policy-acknowledgement .workspace-actions > * { width: 100%; } }
 @media (max-width: 430px) {
   .booking-progress { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

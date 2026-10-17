@@ -14,9 +14,9 @@ export function PointsPage() {
   const filtered = demoPoints.filter(entry => (filter === 'all' || entry.type === filter) && `${entry.id} ${entry.description[locale]}`.toLowerCase().includes(query.trim().toLowerCase()));
   const pages = Math.max(1, Math.ceil(filtered.length / 4));
   return <Workspace title={t('Points', 'النقاط')}>
-    <p className="demo-notice">{t('DEMO POINTS · Illustrative entries only, with no cash value. Earning and redemption are not available. Pending entries do not affect the balance.', 'نقاط تجريبية · قيود توضيحية فقط دون قيمة نقدية. الكسب والاستبدال غير متاحين. القيود المعلقة لا تؤثر على الرصيد.')}</p>
+    <p className="fine-print">{t('Points are informational; earning and redemption are not available.', 'النقاط للمعلومات فقط؛ الكسب والاستبدال غير متاحين.')}</p>
     <div className="points-metrics">
-      {[[t('Current points balance', 'رصيد النقاط الحالي'), summary.balance], [t('Total points earned', 'إجمالي النقاط المكتسبة'), summary.earned], [t('Total deductions & adjustments', 'إجمالي الخصومات والتعديلات'), summary.deducted]].map(([label, value]) => <section className="workspace-card" key={label}><h2>{label}</h2><strong><bdi>{number(Number(value))}</bdi></strong><p>{t('Demonstration points', 'نقاط توضيحية')}</p></section>)}
+      {[[t('Current points balance', 'رصيد النقاط الحالي'), summary.balance], [t('Total points earned', 'إجمالي النقاط المكتسبة'), summary.earned], [t('Total deductions & adjustments', 'إجمالي الخصومات والتعديلات'), summary.deducted]].map(([label, value]) => <section className="workspace-card" key={label}><h2>{label}</h2><strong><bdi>{number(Number(value))}</bdi></strong></section>)}
     </div>
     <section className="workspace-card points-history">
       <p className="workspace-eyebrow">{t('RECENT ACTIVITY', 'النشاط الأخير')}</p>

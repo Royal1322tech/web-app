@@ -5,7 +5,7 @@ import { Reveal } from "@/components/motion/reveal";
 import { useLocale } from "@/features/localization/locale-provider";
 import styles from "./car-rental.module.css";
 
-/** Original service overview, now linked to an explicitly fictional rental journey. */
+/** Homepage entry card for the self-drive rental journey. */
 export function CarRentalOverview({ compact = false }: { compact?: boolean }) {
   const { t } = useLocale();
   return (
@@ -19,18 +19,12 @@ export function CarRentalOverview({ compact = false }: { compact?: boolean }) {
           )}
         </span>
         <h2>
-          {t("Explore the car rental demo", "استكشف تأجير السيارات التجريبي")}
+          {t("Explore Car Rentals", "استكشف تأجير السيارات")}
         </h2>
         <p>
           {t(
-            "Car Rental is part of the Royal Vacation partner platform. Explore fictional vehicles, sample prices and a complete frontend rental simulation. No live inventory is offered.",
-            "تأجير السيارات جزء من منصة شركاء رويال فاكيشن. استكشف سيارات وأسعار أمثلة ومحاكاة تأجير كاملة في الواجهة. لا يوجد مخزون فعلي.",
-          )}
-        </p>
-        <p className={styles.note}>
-          {t(
-            "No rental request or payment can be submitted from this preview.",
-            "لا يمكن إرسال طلب تأجير أو دفع من هذه المعاينة.",
+            "Discover comfortable and premium vehicle options for your clients, with a streamlined rental experience designed for travel professionals.",
+            "اكتشف خيارات مريحة ومميزة لعملائك، مع تجربة تأجير مبسطة مصممة لمحترفي السفر.",
           )}
         </p>
         <div className={styles.actions}>
@@ -41,7 +35,7 @@ export function CarRentalOverview({ compact = false }: { compact?: boolean }) {
           ) : (
             <>
               <Link to="/car-rental/search" className="button button--primary">
-                {t("Search demo vehicles", "ابحث في السيارات التجريبية")}
+                {t("Explore vehicles", "استكشف السيارات")}
               </Link>
               <Link to="/agency" className="button button--outline">
                 {t("Agency workspace", "مساحة الوكالة")}

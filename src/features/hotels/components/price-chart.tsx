@@ -14,8 +14,8 @@ export function PriceChart({ compact = false }: { compact?: boolean }) {
       <h2>{t("Price by date", "السعر حسب التاريخ")}</h2>
       <p className={styles.muted}>
         {t(
-          "Select a bar to inspect sample prices and availability. Not live inventory.",
-          "اختر عموداً لعرض الأسعار والتوافر التجريبي. ليست بيانات حية.",
+          "Illustrative nightly rates in USD; availability requires supplier confirmation.",
+          "أسعار ليلية توضيحية بالدولار؛ التوافر يتطلب تأكيد المورد.",
         )}
       </p>
       <div className={styles.chartFrame}>
@@ -28,7 +28,7 @@ export function PriceChart({ compact = false }: { compact?: boolean }) {
           className={styles.chart}
           role="group"
           aria-label={t(
-            "Sample nightly prices in USD",
+            "Illustrative nightly rates in USD",
             "أسعار الليالي التجريبية بالدولار",
           )}
         >
@@ -44,7 +44,7 @@ export function PriceChart({ compact = false }: { compact?: boolean }) {
               return (
                 <button
                   key={price.date}
-                  aria-label={`${label}: ${price.amount} USD — ${t("Sample", "نموذج")} ${available ? t("Available", "متاح") : t("Not available", "غير متاح")}`}
+                  aria-label={`${label}: ${price.amount} USD — ${available ? t("Listed", "مدرج") : t("Not listed", "غير مدرج")}`}
                   aria-pressed={selected === price.date}
                   onClick={() => setSelected(price.date)}
                 >
@@ -72,16 +72,16 @@ export function PriceChart({ compact = false }: { compact?: boolean }) {
       <div className={styles.chartLegend}>
         <span>
           <i />
-          {t("Available (sample)", "متاح (نموذج)")}
+          {t("Listed", "مدرج")}
         </span>
         <span>
           <i />
-          {t("Not available (sample)", "غير متاح (نموذج)")}
+          {t("Not listed", "غير مدرج")}
         </span>
       </div>
       <p className={styles.muted} role="status">
         {selectedPrice
-          ? `${t("Sample price", "سعر تجريبي")}: $${selectedPrice.amount} — ${t("Booking unavailable", "الحجز غير متاح")}`
+          ? `${t("Nightly rate", "السعر لليلة")}: $${selectedPrice.amount} — ${t("Booking unavailable", "الحجز غير متاح")}`
           : t("No date selected", "لم يتم اختيار تاريخ")}
       </p>
     </section>

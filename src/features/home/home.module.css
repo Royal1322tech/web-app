@@ -1382,14 +1382,6 @@
 .footerContent nav a:is(:hover, :focus-visible) svg { transform: translateY(-2px); }
 .footerContent nav a:is(:hover, :focus-visible) span::after { transform: scaleX(1); }
 .footerContent a:focus-visible { outline: 2px solid var(--light-gold); outline-offset: 5px; }
-.footerContent .footerNotice {
-  grid-column: 1 / -1;
-  border-top: 1px solid #ffffff26;
-  padding-top: 20px;
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.7;
-}
 @media (max-width: 767px) {
   .footerContent { grid-template-columns: minmax(0, 1fr); padding: 32px 24px 20px; gap: 24px; }
   .footerContent nav { gap: 8px 20px; }
@@ -1644,7 +1636,7 @@
 /* Shared footer refinement; homepage sections and carousel styles stay isolated. */
 .footerContent { grid-template-columns: 1.1fr 1.3fr 1fr 1fr; align-items: start; gap: 28px; }
 .footerContent h3 { font-size: 17px; line-height: 1.5; color: #fff; margin: 0 0 12px; }
-.footerContent p, .footerContent .footerNotice { color: #dce8f3; font-size: 14px; line-height: 1.7; }
+.footerContent p { color: #dce8f3; font-size: 14px; line-height: 1.7; }
 .footerContent nav { grid-template-columns: 1fr; gap: 4px; }
 .footerContacts { margin-top: 0; }
 .footerContacts a { font-size: 14px; color: #dce8f3; }
@@ -1659,5 +1651,4 @@
 :global([dir=rtl]) .footerContent nav a > svg:last-child { rotate: 180deg; }
 .footerContacts a { color: #f0f5fa; }
 .footerContacts svg { color: #e4b86a; }
-.footerContent .footerNotice { border-top: 1px solid #7d9aa54d; padding-top: 20px; margin-top: 8px; }
 .footerWave { position: absolute; inset: auto 0 0; width: 100%; height: 120px; pointer-events: none; }

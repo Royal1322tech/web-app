@@ -20,7 +20,7 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
       await selectLanguage(page, locale);
       await closeHeaderMenu(page);
       await layout(page);
-      await page.getByRole("button", { name: /Search demo vehicles|ابحث في السيارات التجريبية/ }).click();
+      await page.getByRole("button", { name: /Search vehicles|ابحث عن سيارات/ }).click();
       await expect(page).toHaveURL(/car-rental\/search\?/);
       await layout(page);
       await expect(page.locator(".rental-card")).toHaveCount(3);
@@ -41,7 +41,7 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
       await expect(page.locator(".rental-thumbnails button")).toHaveCount(1);
       await expect(page.locator(".rental-cinematic-vehicle img")).toHaveAttribute("src", /rental\/compact.webp$/);
       await page.screenshot({ path: `test-results/rental-vehicle-new-${width}-${locale}.png`, fullPage: true });
-      await page.getByRole("button", { name: /Select vehicle — demo|اختر السيارة — تجريبي/ }).click();
+      await page.getByRole("button", { name: /Select vehicle|اختر السيارة/ }).click();
       await page.getByRole("checkbox").check();
       await page.getByRole("link", { name: /Continue to driver information|المتابعة لبيانات السائق/ }).click();
       await layout(page);
@@ -73,8 +73,8 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
         await page.getByRole("checkbox", { name: /I have reviewed/ }).check();
         await page.getByRole("link", { name: "Continue to rental payment preview" }).click();
       }
-      await page.getByRole("button", { name: /Simulate rental payment|محاكاة دفع التأجير/ }).click();
-      await page.getByRole("button", { name: /Show rental outcome|عرض نتيجة التأجير/ }).click();
+      await page.getByRole("button", { name: /Continue to outcome|متابعة للنتيجة/ }).click();
+      await page.getByRole("button", { name: /Show outcome|عرض النتيجة/ }).click();
       await expect(page).toHaveURL(/car-rental\/bookings\/RENTAL-DEMO-/);
       await layout(page);
     });
@@ -107,7 +107,7 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
       await selectLanguage(page, locale);
       await closeHeaderMenu(page);
       await page.getByRole("button", { name: /Expand All Rooms|عرض كل الغرف/, exact: true }).click();
-      await page.getByRole("button", { name: /Select room — demo|اختر الغرفة — تجريبي/, exact: true }).first().click();
+      await page.getByRole("button", { name: /Select room|اختر الغرفة/, exact: true }).first().click();
       await expect(page.locator(".booking-progress li")).toHaveCount(5);
       await page.getByRole("link", { name: /Continue to guest details|المتابعة لبيانات الضيوف/ }).click();
       await page.getByLabel(/Lead guest name|اسم الضيف الرئيسي/, { exact: true }).fill("Fictional Guest");
@@ -119,12 +119,12 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
       await page.getByRole("button", { name: /Continue to cancellation policy|المتابعة لسياسة الإلغاء/ }).click();
       await expect(page).toHaveURL(/booking\/policy$/);
       await expect(page.locator('.booking-progress [aria-current="step"]')).toContainText(/3/);
-      await expect(page.getByRole("button", { name: /Continue to payment preview|المتابعة لمعاينة الدفع/ })).toBeDisabled();
+      await expect(page.getByRole("button", { name: /Continue to Payment Details|المتابعة إلى بيانات الدفع/ })).toBeDisabled();
       await layout(page);
       if (width === 320 || width === 1440) expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations).toEqual([]);
       await page.screenshot({ path: `test-results/hotel-policy-new-${width}-${locale}.png`, fullPage: true });
       await page.getByRole("checkbox", { name: /I have reviewed|راجعت معلومات/ }).check();
-      await page.getByRole("link", { name: /Continue to payment preview|المتابعة لمعاينة الدفع/ }).click();
+      await page.getByRole("link", { name: /Continue to Payment Details|المتابعة إلى بيانات الدفع/ }).click();
       await expect(page).toHaveURL(/booking\/payment$/);
       await expect(page.locator('.booking-progress [aria-current="step"]')).toContainText(/4/);
       await page.getByRole("link", { name: /^(Back|رجوع)$/ }).click();

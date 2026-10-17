@@ -16,8 +16,15 @@ export const arabicMessages: Record<string, string> = {
   "Keep hotel selections, guest details and booking demonstrations in one connected workspace.":
     "اجمع اختيارات الفنادق وبيانات الضيوف ومحاكاة الحجوزات في مساحة عمل واحدة.",
   "A Clear Booking Journey": "رحلة حجز واضحة",
-  "Explore every step from room selection to a printable demo voucher, with clear status updates.":
-    "استكشف كل خطوة من اختيار الغرفة إلى قسيمة تجريبية قابلة للطباعة مع تحديثات واضحة للحالة.",
+  "Explore vehicle categories and a streamlined rental journey for your agency.":
+    "استكشف فئات المركبات ورحلة تأجير سلسة لوكالتك.",
+  "Follow each step from room selection to voucher details, with clear status updates.":
+    "تابع كل خطوة من اختيار الغرفة إلى تفاصيل القسيمة مع تحديثات واضحة للحالة.",
+  "Booking Updates & Reports": "تحديثات وتقارير الحجوزات",
+  "Review booking timelines and transaction records. Live updates and reporting require backend integration.":
+    "راجع الجداول الزمنية للحجوزات وسجلات المعاملات. تتطلب التحديثات والتقارير المباشرة الربط بالخادم.",
+  "Review booking conditions, status updates and voucher details at each step.":
+    "راجع شروط الحجز وتحديثات الحالة وتفاصيل القسيمة في كل خطوة.",
   "Your agency workspace is ready": "مساحة عمل وكالتك جاهزة",
   "Explore sample hotels, booking simulations and your credit overview.":
     "استكشف الفنادق والحجوزات التجريبية وملخص رصيدك.",

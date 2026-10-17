@@ -65,8 +65,8 @@ export function RoomOptions({
     <div className={styles.roomOptions}>
       <p className={styles.muted}>
         {t(
-          "Sample room options — not live availability. Policies and remaining places below are design examples.",
-          "خيارات غرف تجريبية وليست توافراً مباشراً. السياسات والأماكن المتبقية أدناه أمثلة تصميمية.",
+          "Illustrative room rates · availability requires supplier confirmation.",
+          "أسعار الغرف توضيحية · التوافر يتطلب تأكيد المورد.",
         )}
       </p>
       <details className={styles.alternativeDates}>
@@ -169,8 +169,8 @@ export function RoomOptions({
                       </div>
                       <span className={styles.samplePlaces}>
                         {roomIsUnavailable(room.id)
-                          ? t("Unavailable — demo", "غير متاح — تجريبي")
-                          : t("Available — demo", "متاح — تجريبي")}
+                          ? t("Unavailable", "غير متاح")
+                          : t("Listed", "مدرج")}
                       </span>
                       <div className={styles.rateDetails}>
                         <bdi>
@@ -207,8 +207,8 @@ export function RoomOptions({
       ) : (
         <p className={styles.empty}>
           {t(
-            "Room details have not been supplied for this sample property.",
-            "لم تُقدّم تفاصيل غرف لهذا الفندق التجريبي.",
+            "Room details have not been supplied for this property.",
+            "لم تُقدّم تفاصيل غرف لهذا العقار.",
           )}
         </p>
       )}
@@ -376,17 +376,17 @@ export function RoomOptions({
             <p className={styles.muted}>
               {breakdown.isReference
                 ? t(
-                    "Reference stay: 11–14 Oct 2026. Select stay dates in Search to preview another duration.",
+                    "Choose stay dates in Search to calculate a stay total.",
                     "إقامة مرجعية: ١١–١٤ أكتوبر ٢٠٢٦. اختر تواريخ الإقامة في البحث لمعاينة مدة أخرى.",
                   )
                 : t(
-                    "Calculated from your selected dates for one sample room.",
+                    "Calculated from your selected dates for one room.",
                     "محسوب من التواريخ المختارة لغرفة تجريبية واحدة.",
                   )}
             </p>
             <p className={styles.muted}>
               {t(
-                "Sample calculation only. Taxes and booking terms have not been supplied; this is not a quote.",
+                "Illustrative calculation; taxes and booking terms have not been supplied.",
                 "حساب تجريبي فقط. لم تُقدّم الضرائب أو شروط الحجز؛ هذا ليس عرض سعر.",
               )}
             </p>

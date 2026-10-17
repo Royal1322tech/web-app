@@ -38,7 +38,7 @@ export function FeaturedDeals() {
     <section ref={root} className={`${styles.section} ${carousel.section}`} aria-labelledby="deals-title">
       <div className={carousel.heading}>
         <div><h2 id="deals-title" className={styles.dealsTitle}><Text en="A world of stays. One workspace." ar="عالم من الإقامات. مساحة عمل واحدة." /></h2>
-          <p className={styles.sampleNote}><Text en="Design preview: sample hotels, prices and ratings. Live availability is not connected." /></p></div>
+          <p className={styles.sampleNote}><Text en="Illustrative rates · Confirm availability with the supplier." ar="أسعار توضيحية · يرجى تأكيد التوافر مع المورد." /></p></div>
         <div className={carousel.controls}>
           <button type="button" onClick={() => move(-1)} aria-label={t("Previous featured hotel", "الفندق المميز السابق")}>‹</button>
           <button type="button" onClick={() => move(1)} aria-label={t("Next featured hotel", "الفندق المميز التالي")}>›</button>
@@ -46,7 +46,7 @@ export function FeaturedDeals() {
         </div>
       </div>
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex -- Named carousel region supports documented Arrow-key browsing alongside native navigation buttons. */}
-      <div className={carousel.viewport} ref={emblaRef} role="region" aria-roledescription={t("carousel", "عرض شرائح")} aria-label={t("Featured sample hotels", "فنادق تجريبية مميزة")} tabIndex={0}
+      <div className={carousel.viewport} ref={emblaRef} role="region" aria-roledescription={t("carousel", "عرض شرائح")} aria-label={t("Featured hotels", "فنادق مميزة")} tabIndex={0}
         onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
         onFocusCapture={() => setFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}
         onKeyDown={event => {
@@ -56,7 +56,7 @@ export function FeaturedDeals() {
           {featuredHotels.map((hotel, index) => <div key={hotel.id} className={carousel.slide} role="group" aria-roledescription={t("slide", "شريحة")} aria-label={`${index + 1} / ${featuredHotels.length}`} inert={!inView.includes(index)}><HotelCard hotel={hotel} compact /></div>)}
         </div>
       </div>
-      <p className={carousel.position} aria-live={paused ? "polite" : "off"}>{t("Sample", "نموذج")} {selected + 1} / {featuredHotels.length} · {t("Swipe to explore", "اسحب للاستكشاف")}</p>
+      <p className={carousel.position} aria-live={paused ? "polite" : "off"}>{selected + 1} / {featuredHotels.length} · {t("Swipe to explore", "اسحب للاستكشاف")}</p>
     </section>
   );
 }

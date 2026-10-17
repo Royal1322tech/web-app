@@ -255,8 +255,8 @@ export function HotelSearchForm({
         <div role="status" className={styles.searchNotice}>
           {notice &&
             t(
-              "Sample results only — live availability is unavailable.",
-              "نتائج تجريبية فقط — التوافر المباشر غير متاح.",
+              "Illustrative listings · confirm availability with the supplier.",
+              "فنادق توضيحية · يرجى تأكيد التوافر مع المورد.",
             )}
         </div>
       </div>

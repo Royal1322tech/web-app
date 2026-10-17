@@ -4,6 +4,7 @@ import { gallery } from "./hotels.fixture";
 
 export interface SampleRoomRate {
   cancellationPolicy?: CancellationPolicy;
+  terms?: readonly LocalizedText[];
   id: string;
   board: LocalizedText;
   nightlyRate: number;

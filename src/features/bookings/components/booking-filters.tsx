@@ -21,12 +21,12 @@ export function BookingFilters({
   const selectedCount = Object.entries(value).filter(([key, selected]) => key !== "dateType" && selected !== defaultBookingFilters[key as keyof BookingFiltersValue]).length;
   const statusLabel = (status: string) =>
     status === "confirmed"
-      ? t("Confirmed — sample", "مؤكد — تجريبي")
+      ? t("Confirmed", "مؤكد")
       : status === "cancelled"
-        ? t("Cancelled — sample", "ملغى — تجريبي")
+        ? t("Cancelled", "ملغى")
         : status === "failed"
-          ? t("Failed — sample", "فشل — تجريبي")
-          : t("Pending — sample", "معلق — تجريبي");
+          ? t("Failed", "فشل")
+          : t("Pending", "معلق");
   return (
     <form
       id="booking-filters"
@@ -82,7 +82,7 @@ export function BookingFilters({
             checked={value.fees}
             onChange={(e) => onChange({ ...value, fees: e.target.checked })}
           />
-          {t("Cancellation fees — sample", "رسوم الإلغاء — تجريبي")}
+          {t("Cancellation fees", "رسوم الإلغاء")}
         </label>
       </details>
       <label>
@@ -148,7 +148,7 @@ export function BookingFilters({
               />
               {owner === "all"
                 ? t("All", "الكل")
-                : t("My Booking — sample", "حجوزاتي — تجريبي")}
+                : t("My Booking", "حجوزاتي")}
             </label>
           ))}
         </fieldset>

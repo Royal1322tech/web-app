@@ -16,7 +16,7 @@ const benefits = [
   {
     title: "Car Rental for Agencies",
     description:
-      "Explore vehicle search and rental booking previews for your agency. Demonstration only — no live availability or reservations.",
+      "Explore vehicle categories and a streamlined rental journey for your agency.",
     image: "car-rental",
     height: 112,
   },
@@ -30,7 +30,7 @@ const benefits = [
   {
     title: "A Clear Booking Journey",
     description:
-      "Explore every step from room selection to a printable demo voucher, with clear status updates.",
+      "Follow each step from room selection to voucher details, with clear status updates.",
     image: "secure-booking",
     height: 94,
   },

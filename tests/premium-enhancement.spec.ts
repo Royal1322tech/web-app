@@ -153,7 +153,7 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
       await filters.getByRole("searchbox").fill("No such hotel");
       if (await dialog.isVisible()) await dialog.getByRole("button", { name: /Show 0 hotels|عرض 0 فنادق/ }).click();
       await expect(page.locator('article[class*="resultCard"]')).toHaveCount(0);
-      await expect(page.getByText(/No sample hotels match|لا توجد فنادق تجريبية تطابق/)).toBeVisible();
+      await expect(page.getByText(/No hotels match|لا توجد فنادق تطابق/)).toBeVisible();
       if (await mobile.isVisible()) await mobile.click();
       await filters.getByRole("button", { name: /Reset filters|إعادة ضبط التصفية/ }).click();
       if (await dialog.isVisible()) await dialog.evaluate(el => el.scrollTo(0, 0));

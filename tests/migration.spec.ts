@@ -129,7 +129,7 @@ test("filters, sorting, comparison and persisted favourites", async ({
   await expect(favourites.first()).toBeVisible();
   await favourites.first().click();
   await page.getByLabel("Hotel Name", { exact: true }).fill("does-not-exist");
-  await expect(page.getByText("No sample hotels match")).toBeVisible();
+  await expect(page.getByText("No hotels match")).toBeVisible();
   await page.getByLabel("Hotel Name", { exact: true }).fill("");
   await page.getByRole("combobox", { name: /Sort/ }).selectOption("priceLow");
   const comparison = page.getByRole("button", { name: "Compare", exact: true });
@@ -137,7 +137,7 @@ test("filters, sorting, comparison and persisted favourites", async ({
   await comparison.nth(0).click();
   await page.getByRole("button", { name: "Compare hotels" }).click();
   await expect(page.getByRole("dialog")).toContainText(
-    "Sample hotel comparison",
+    "Compare hotels",
   );
   await page
     .getByRole("dialog")
@@ -157,7 +157,7 @@ test("gallery, room and rate dialogs, chart, map", async ({ page }) => {
   await gallery.getByRole("button", { name: "Next photo" }).click();
   await expect(gallery).toContainText("2 / 7");
   await page.keyboard.press("Escape");
-  const bars = page.getByRole("button", { name: /USD — Sample/ });
+  const bars = page.getByRole("button", { name: /USD —/ });
   await expect(bars).toHaveCount(20);
   await bars.first().click();
   await page.locator("#location").scrollIntoViewIfNeeded();

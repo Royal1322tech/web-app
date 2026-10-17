@@ -7,24 +7,24 @@ import { Icon } from "@/components/ui/icon";
 import { useLocale } from "@/features/localization/locale-provider";
 import { StatePreview, SystemState } from "@/components/ui/system-state";
 import { useDemo } from "./demo-provider";
-import { Workspace, DemoNotice } from "./shared";
+import { Workspace } from "./shared";
 import type { AgencyProfile } from "./types";
 export function AgencyPage() {
   const { t } = useLocale();
   const { profile, records, notifications } = useDemo();
   return (
     <Workspace title={t("Your agency, connected.", "وكالتك، في مكان واحد.")}>
-      <DemoNotice />
+
       <StatePreview>
         <div className="workspace-grid">
           <section className="workspace-card">
             <p className="workspace-eyebrow">
-              {t("AGENCY PROFILE · DEMONSTRATION", "ملف الوكالة · عرض تجريبي")}
+              {t("AGENCY PROFILE", "ملف الوكالة")}
             </p>
             <h2>{profile.name}</h2>
             <span className="status-badge">
               {t(
-                "Demo session · No backend authentication",
+                "Local session",
                 "جلسة تجريبية · دون مصادقة فعلية",
               )}
             </span>
@@ -46,10 +46,10 @@ export function AgencyPage() {
             </dl>
             <div className="workspace-actions">
               <Link className="button button--primary" to="/agency/edit">
-                {t("Edit demo profile", "تعديل الملف التجريبي")}
+                {t("Edit profile", "تعديل الملف الشخصي")}
               </Link>
               <Link className="button button--outline" to="/verify-email">
-                {t("Email verification preview", "معاينة التحقق من البريد")}
+                {t("Email verification", "التحقق من البريد")}
               </Link>
             </div>
           </section>
@@ -57,7 +57,7 @@ export function AgencyPage() {
             <h2>{t("At a glance", "نظرة سريعة")}</h2>
             <dl className="summary-dl">
               <div>
-                <dt>{t("Demo bookings", "الحجوزات التجريبية")}</dt>
+                <dt>{t("Booking records", "سجلات الحجز")}</dt>
                 <dd>{records.length}</dd>
               </div>
               <div>
@@ -75,7 +75,7 @@ export function AgencyPage() {
             <hr />
             <p className="fine-print">
               {t(
-                "Profile changes stay in memory. Registration and real account access remain separate from this demonstration.",
+                "Profile updates apply to this session only.",
                 "تبقى تعديلات الملف في الذاكرة. التسجيل والدخول الفعلي منفصلان عن هذه التجربة.",
               )}
             </p>
@@ -116,7 +116,7 @@ export function EditAgencyPage() {
   });
   return (
     <Workspace title={t("Edit agency profile", "تعديل ملف الوكالة")}>
-      <DemoNotice />
+
       <form
         className="workspace-card workspace-form"
         noValidate
@@ -165,7 +165,7 @@ export function EditAgencyPage() {
         </div>
         <div className="workspace-actions">
           <button className="button button--primary">
-            {t("Save demo profile", "حفظ الملف التجريبي")}
+            {t("Save profile", "حفظ الملف الشخصي")}
           </button>
           <Link className="button button--outline" to="/agency">
             {t("Back to profile", "العودة للملف")}
@@ -174,8 +174,8 @@ export function EditAgencyPage() {
         {saved && (
           <p role="status" className="success-note">
             {t(
-              "Demo profile saved for this session. No account record was changed.",
-              "تم حفظ الملف التجريبي لهذه الجلسة. لم يتغير أي سجل حساب فعلي.",
+              "Profile changes saved for this session.",
+              "تم حفظ الملف الشخصي لهذه الجلسة. لم يتغير أي سجل حساب فعلي.",
             )}
           </p>
         )}
@@ -190,7 +190,7 @@ export function NotificationsPage() {
   const list = notifications.filter((n) => filter === "all" || !n.read);
   return (
     <Workspace title={t("Notifications", "الإشعارات")}>
-      <DemoNotice />
+
       <div className="table-toolbar">
         <label>
           {t("Show notifications", "عرض الإشعارات")}
@@ -242,8 +242,8 @@ export function NotificationsPage() {
           <SystemState
             title={t("You’re all caught up", "كل الإشعارات مقروءة")}
             description={t(
-              "There are no unread demo notifications.",
-              "لا توجد إشعارات تجريبية غير مقروءة.",
+              "There are no unread notifications.",
+              "لا توجد إشعارات غير مقروءة.",
             )}
           />
         )}
@@ -258,9 +258,9 @@ export function EmailVerificationPage() {
   const navigate = useNavigate();
   return (
     <Workspace
-      title={t("Email verification preview", "معاينة التحقق من البريد")}
+      title={t("Email verification", "التحقق من البريد")}
     >
-      <DemoNotice />
+
       <section className="workspace-card">
         <h2>{t("Verify your agency contact", "تحقق من جهة اتصال الوكالة")}</h2>
         <p>
@@ -268,7 +268,7 @@ export function EmailVerificationPage() {
         </p>
         <p>
           {t(
-            "This preview does not send emails or verify ownership. Choose a state to explore the interface.",
+            "This page does not send email or verify ownership. Choose a status to view the interface.",
             "هذه المعاينة لا ترسل رسائل أو تتحقق من الملكية. اختر حالة لاستكشاف الواجهة.",
           )}
         </p>
@@ -278,23 +278,23 @@ export function EmailVerificationPage() {
             <option value="ready">{t("Ready", "جاهز")}</option>
             <option value="expired">{t("Expired link", "رابط منتهي")}</option>
             <option value="verified">
-              {t("Verified preview", "معاينة تم التحقق")}
+              {t("Verified appearance", "معاينة تم التحقق")}
             </option>
           </select>
         </label>
         {state === "expired" && (
           <p className="error-note" role="alert">
             {t(
-              "Expired link preview. Reset to explore the demonstration again.",
-              "معاينة رابط منتهي. أعد الضبط لاستكشاف التجربة.",
+              "The link is expired. Reset the status to view another state.",
+              "انتهت صلاحية الرابط. أعد تعيين الحالة لعرض حالة أخرى.",
             )}
           </p>
         )}
         {state === "verified" && (
           <p className="success-note" role="status">
             {t(
-              "Verified appearance — demo only. Your actual email has not been verified.",
-              "مظهر التحقق — تجريبي فقط. لم يتم التحقق من بريدك الفعلي.",
+              "This local status does not verify your email address.",
+              "هذه الحالة المحلية لا تتحقق من عنوان بريدك.",
             )}
           </p>
         )}
@@ -304,7 +304,7 @@ export function EmailVerificationPage() {
             onClick={() => setState(state === "expired" ? "ready" : "verified")}
           >
             {state === "expired"
-              ? t("Reset demo link", "إعادة ضبط الرابط التجريبي")
+              ? t("Reset link status", "إعادة تعيين حالة الرابط")
               : t("Preview verification", "معاينة التحقق")}
           </button>
           <button

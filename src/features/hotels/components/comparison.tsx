@@ -1,3 +1,4 @@
+import { hotelDisplayName, hotelDisplayAddress } from "../lib/presentation";
 import { useRef } from "react";
 import { Link, useLocation } from 'react-router-dom';
 import { useHotelPreferences } from "@/features/preferences/use-hotel-preferences";
@@ -20,11 +21,11 @@ export function Comparison() {
       <button className={styles.secondary} onClick={clear}>{t("Clear", "مسح")}</button>
     </div>
     <dialog ref={dialog} className={`${styles.dialog} ${styles.comparisonDialog}`} aria-labelledby="comparison-title">
-      <div className={styles.comparisonHeading}><div><h2 id="comparison-title">{t("Sample hotel comparison", "مقارنة فنادق تجريبية")}</h2><p>{t('Compare your shortlist. Sample prices only — no live availability.', 'قارن قائمتك المختصرة. أسعار تجريبية فقط — لا يوجد توافر مباشر.')}</p></div><button className={styles.secondary} onClick={() => dialog.current?.close()}>{t("Close", "إغلاق")}</button></div>
+      <div className={styles.comparisonHeading}><div><h2 id="comparison-title">{t("Compare hotels", "قارن الفنادق")}</h2><p>{t('Illustrative prices · confirm availability with the supplier.', 'أسعار توضيحية · يرجى تأكيد التوافر مع المورد.')}</p></div><button className={styles.secondary} onClick={() => dialog.current?.close()}>{t("Close", "إغلاق")}</button></div>
       <div className={styles.comparisonGrid}>
-        {selected.map(h => <article key={h.id} className={styles.comparisonCard} aria-label={h.name[locale]}>
-          <ResponsiveImage src={h.photos[0].src} alt={h.name[locale]} width={h.photos[0].width} height={h.photos[0].height} sizes="(max-width: 600px) 90vw, 340px" />
-          <div className={styles.comparisonIdentity}><h3>{h.name[locale]}</h3><p>{h.address[locale]}</p></div>
+        {selected.map(h => <article key={h.id} className={styles.comparisonCard} aria-label={hotelDisplayName(h.name[locale])}>
+          <ResponsiveImage src={h.photos[0].src} alt={hotelDisplayName(h.name[locale])} width={h.photos[0].width} height={h.photos[0].height} sizes="(max-width: 600px) 90vw, 340px" />
+          <div className={styles.comparisonIdentity}><h3>{hotelDisplayName(h.name[locale])}</h3><p>{hotelDisplayAddress(h.address[locale], locale)}</p></div>
           <dl>
             <div><dt>{t('Nightly price (USD)', 'السعر لليلة (دولار)')}</dt><dd><bdi>{new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD' }).format(h.nightlyRate)}</bdi></dd></div>
             <div><dt>{t('Stars', 'النجوم')}</dt><dd>{h.stars ?? t('Not specified', 'غير محدد')}</dd></div>
@@ -34,7 +35,7 @@ export function Comparison() {
           </dl>
           <div className={styles.comparisonActions}>
             {hotels.some(hotel => hotel.id === h.id) ? <Link className={styles.primary} to={`/hotels/${h.id}${search}`} onClick={() => dialog.current?.close()}>{t('Choose Hotel', 'اختر الفندق')}</Link> : <button className={styles.primary} disabled>{t('Selection unavailable', 'الاختيار غير متاح')}</button>}
-            <button className={styles.secondary} onClick={() => toggle(h.id)} aria-label={`${t('Remove', 'إزالة')} ${h.name[locale]}`}>{t('Remove', 'إزالة')}</button>
+            <button className={styles.secondary} onClick={() => toggle(h.id)} aria-label={`${t('Remove', 'إزالة')} ${hotelDisplayName(h.name[locale])}`}>{t('Remove', 'إزالة')}</button>
           </div>
         </article>)}
       </div>

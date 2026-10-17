@@ -192,6 +192,13 @@ export const router = createBrowserRouter([
         }),
       },
       {
+        path: "booking/result",
+        lazy: async () => ({
+          Component: (await import("@/features/demo/checkout"))
+            .BookingPreparedPage,
+        }),
+      },
+      {
         path: "booking/result/:id",
         lazy: async () => ({
           Component: (await import("@/features/demo/checkout"))

@@ -11,13 +11,11 @@ export function RentalShell({
   title,
   children,
   showHero = true,
-  enquiry = false,
   customProgress,
 }: {
   title: string;
   children: ReactNode;
   showHero?: boolean;
-  enquiry?: boolean;
   customProgress?: ReactNode;
 }) {
   const { t } = useLocale();
@@ -36,7 +34,6 @@ export function RentalShell({
     <Workspace title={title} hideHeading showPreview={false}>
       <div className="rental-reference-shell">
       {showHero && <RentalHero compact title={title.replace(/ · (demo|simulation|تجريبي|محاكاة)/g, "")} primary>{customProgress ?? progress}</RentalHero>}
-      <p className="rental-page-disclosure">{enquiry ? t("Local enquiry preview · Nothing is sent. No vehicle availability, trip price or booking is confirmed. Use fictional details.", "معاينة استفسار محلية · لا يُرسل شيء. لا توافر أو سعر رحلة أو حجز مؤكد. استخدم بيانات وهمية.") : t("Frontend demonstration · Illustrative vehicles and USD rates. No reservation, payment or supplier confirmation. Use fictional details.", "عرض واجهة تجريبي · سيارات وأسعار توضيحية بالدولار. لا حجز أو دفع أو تأكيد مورد. استخدم بيانات وهمية.")}</p>
       <nav
         className="rental-nav"
         aria-label={t("Rental navigation", "التنقل في التأجير")}
@@ -46,7 +43,7 @@ export function RentalShell({
           {t("Vehicle search", "البحث عن سيارة")}
         </Link>
         <Link to="/car-rental/bookings">
-          {t("Demo rentals", "التأجيرات التجريبية")}
+          {t("Rental records", "سجلات التأجير")}
         </Link>
       </nav>
       {children}
@@ -80,14 +77,14 @@ export function RentalSummary({ selection, action }: { selection: RentalSelectio
         </div>
         <div>
           <dt>
-            {t("Days × daily sample rate", "الأيام × السعر اليومي التجريبي")}
+            {t("Days × daily rate", "الأيام × السعر اليومي")}
           </dt>
           <dd>
             {rentalDays(selection.criteria)} × <bdi>{money(vehicle.daily)}</bdi>
           </dd>
         </div>
         <div>
-          <dt>{t("Demo subtotal", "الإجمالي التجريبي")}</dt>
+          <dt>{t("Rental subtotal", "إجمالي التأجير")}</dt>
           <dd>
             <bdi>{money(rentalTotal(selection))}</bdi>
           </dd>
@@ -97,8 +94,8 @@ export function RentalSummary({ selection, action }: { selection: RentalSelectio
       {action}
       <p>
         {t(
-          "Not a payable quote. Vehicle, price and availability are fictional. No real cancellation or insurance terms are supplied.",
-          "ليس عرضًا قابلًا للدفع. السيارة والسعر والتوافر أمثلة وهمية. لا توجد شروط فعلية للإلغاء أو التأمين.",
+          "Illustrative subtotal; taxes, insurance and supplier terms are not included.",
+          "إجمالي توضيحي؛ لا يشمل الضرائب أو التأمين أو شروط المورد.",
         )}
       </p>
     </section>
@@ -108,10 +105,10 @@ export function MissingSelection() {
   const { t } = useLocale();
   return (
     <SystemState
-      title={t("Choose a demo vehicle first", "اختر سيارة تجريبية أولًا")}
+      title={t("Choose a vehicle first", "اختر سيارة أولًا")}
       description={t(
-        "Selections and rental records reset on refresh or Sign Out.",
-        "تُمسح الاختيارات وسجلات التأجير عند التحديث أو تسجيل الخروج.",
+        "Your selections are kept for this session.",
+        "تُحفظ اختياراتك خلال هذه الجلسة.",
       )}
     >
       <Link to="/car-rental/search" className="button button--primary">

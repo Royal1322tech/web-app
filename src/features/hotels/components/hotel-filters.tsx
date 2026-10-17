@@ -89,7 +89,7 @@ export function HotelFiltersPanel({
             <span>{plan[locale]}</span>
           </label>
         ))}
-        <p className={styles.unsupported}>{t("Dimmed plans are unavailable in the sample rates.", "الخطط الباهتة غير متاحة ضمن الأسعار التجريبية.")}</p>
+        <p className={styles.unsupported}>{t("Other meal plans are not listed for these offers.", "خطط الوجبات الأخرى غير مدرجة لهذه العروض.")}</p>
       </details>
       <details open>
         <summary>{t("Category", "الفئة")}</summary>

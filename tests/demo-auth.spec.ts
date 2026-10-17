@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 import { submitDemoLogin, logout, visit } from "./helpers/demo-login";
 import { openHeaderTools } from "./helpers/header";
 
-const privateRoutes = ["/", "/search", "/hotels/eastern-al-montazah", "/booking/summary", "/booking/guests", "/booking/policy", "/booking/payment", "/booking/result/DEMO-1001", "/bookings", "/bookings/DEMO-1001", "/bookings/DEMO-1001/voucher", "/favourites", "/wallet", "/transactions", "/notifications", "/agency", "/agency/edit", "/profile", "/account/settings", "/verify-email", "/group-quotation", "/contact", "/car-rental", "/car-rental/search", "/car-rental/vehicles/demo", "/car-rental/summary", "/car-rental/driver", "/car-rental/review", "/car-rental/payment", "/car-rental/bookings", "/car-rental/bookings/demo", "/unknown-internal-page"];
+const privateRoutes = ["/", "/search", "/hotels/eastern-al-montazah", "/booking/summary", "/booking/guests", "/booking/policy", "/booking/payment", "/booking/result", "/booking/result/DEMO-1001", "/bookings", "/bookings/DEMO-1001", "/bookings/DEMO-1001/voucher", "/favourites", "/wallet", "/transactions", "/notifications", "/agency", "/agency/edit", "/profile", "/account/settings", "/verify-email", "/group-quotation", "/contact", "/car-rental", "/car-rental/search", "/car-rental/vehicles/demo", "/car-rental/summary", "/car-rental/driver", "/car-rental/review", "/car-rental/payment", "/car-rental/bookings", "/car-rental/bookings/demo", "/unknown-internal-page"];
 
 test("every internal route defaults to Welcome without exposing application content", async ({ page }) => {
   for (const path of privateRoutes) {

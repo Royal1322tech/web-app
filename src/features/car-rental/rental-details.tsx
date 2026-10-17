@@ -52,7 +52,7 @@ export function VehicleDetailsPage() {
           <button className="rental-gold-button" disabled={!vehicle.available} onClick={() => {
             selectRental({ vehicleId: vehicle.id, criteria: parsed.data });
             navigate("/car-rental/summary");
-          }}>{vehicle.available ? t("Select vehicle — demo", "اختر السيارة — تجريبي") : t("Unavailable — demo", "غير متاحة — تجريبي")}<Icon name="arrowRight" /></button>
+          }}>{vehicle.available ? t("Select vehicle", "اختر السيارة") : t("Unavailable", "غير متاحة")}<Icon name="arrowRight" /></button>
         } />
       </div>
     )}

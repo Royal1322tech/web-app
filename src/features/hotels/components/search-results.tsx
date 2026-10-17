@@ -123,9 +123,10 @@ function SearchResultsContent({
                 </select>
               </label>
             </div>
-            <p role="status" className={styles.muted}>
-              {result.length} {t("sample results", "نتائج تجريبية")}
-            </p>
+            <div className={styles.muted}>
+              <p role="status">{result.length} {t("hotel results", "نتائج الفنادق")}</p>
+              <p>{t("Illustrative prices · availability requires supplier confirmation.", "أسعار توضيحية · التوافر يتطلب تأكيد المورد.")}</p>
+            </div>
             <div className={styles.results}>
               {result.map((h) => (
                 <HotelResultCard key={h.id} hotel={h} dates={criteria} />
@@ -134,8 +135,8 @@ function SearchResultsContent({
             {!result.length && (
               <p className={styles.empty}>
                 {t(
-                  "No sample hotels match these filters. Try resetting the filters.",
-                  "لا توجد فنادق تجريبية تطابق هذه التصفية. جرّب إعادة ضبطها.",
+                  "No hotels match these filters. Try resetting the filters.",
+                  "لا توجد فنادق تطابق عوامل التصفية. جرّب إعادة ضبطها.",
                 )}
               </p>
             )}

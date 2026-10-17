@@ -56,7 +56,7 @@ export function PreferenceFields() {
         </label>)}
       </div>
     </fieldset>
-    <p className={styles.note}>{t("Preference only. Sample prices stay in USD; no conversion is applied. Nationality is independent of language.", "تفضيل فقط. الأسعار التجريبية بالدولار دون تحويل. الجنسية مستقلة عن اللغة.")}</p>
+    <p className={styles.note}>{t("These preferences apply to this interface. Displayed prices remain in USD; nationality is independent of language.", "تنطبق هذه التفضيلات على الواجهة. تظل الأسعار المعروضة بالدولار، والجنسية مستقلة عن اللغة.")}</p>
   </div>;
 }
 export function TravelPreferences() {

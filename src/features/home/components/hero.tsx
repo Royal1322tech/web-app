@@ -36,7 +36,6 @@ export function Hero({ content }: { content: HeroContent }) {
         <p className={styles.eyebrow}><Text en="THE WORLD, THROUGH YOUR AGENCY" ar="العالم من خلال وكالتك" /></p>
         <h1><Text en="Exceptional stays." ar="إقامات استثنائية." /><span><Text en="Stronger partnerships." ar="شراكات أقوى." /></span></h1>
         <p className={styles.description}><Text en="A considered workspace for travel professionals. Discover hotels, compare room options, and plan every guest’s next chapter." ar="مساحة عمل مصممة لمحترفي السفر. اكتشف الفنادق وقارن الغرف وخطط للرحلة القادمة لكل ضيف." /></p>
-        <p className={styles.proof}><Text en="AGENCY WORKSPACE · DEMO EXPERIENCE" ar="مساحة الوكالة · تجربة توضيحية" /></p>
       </div>
     </section>
   );

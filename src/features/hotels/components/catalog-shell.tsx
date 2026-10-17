@@ -8,7 +8,7 @@ export function CatalogShell({
   title,
   detail = false,
   workspace = false,
-  showPreview = true,
+  showPreview = false,
   children,
 }: {
   title: string;

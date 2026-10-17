@@ -64,7 +64,7 @@ test('contact and group quotation validate locally without sending requests', as
   page.on('request',req=>{if(req.method()==='POST') mutations.push(req.url());});
   for(const route of ['/contact','/group-quotation']) {
     await visit(page, route);
-    await page.getByRole('button',{name:route === '/contact' ? 'Send Message' : 'Preview request',exact:true}).click();
+    await page.getByRole('button',{name:route === '/contact' ? 'Prepare enquiry' : 'Preview request',exact:true}).click();
     await expect(page.getByText('Enter your name.',{exact:true})).toBeVisible();
     for(const [key,value] of Object.entries({name:'Demo Traveller',email:'demo@example.com',agency:'Sample Agency',subject:'Sample group request',message:'Fictional travel requirements for a preview.'})) await page.locator('#enquiry-'+key).fill(value);
     if(route==='/group-quotation') {
@@ -76,7 +76,7 @@ test('contact and group quotation validate locally without sending requests', as
       await expect(page.getByText('Choose an end date on or after departure.',{exact:true})).toBeVisible();
       await page.locator('#enquiry-end').fill('2030-11-22');
     }
-    await page.getByRole('button',{name:route === '/contact' ? 'Send Message' : 'Preview request',exact:true}).click();
+    await page.getByRole('button',{name:route === '/contact' ? 'Prepare enquiry' : 'Preview request',exact:true}).click();
     await expect(page.getByRole('status')).toContainText('Local preview ready — not sent');
   }
   expect(mutations).toEqual([]);

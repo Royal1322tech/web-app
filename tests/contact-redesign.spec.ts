@@ -40,12 +40,12 @@ for(const width of [320,375,390,430,768,1024,1440]) {
 test('contact required fields and optional agency/subject produce only a local preview',async({page})=>{
  const posts:string[]=[];page.on('request',r=>{if(r.method()==='POST') posts.push(r.url());});
  await visit(page, '/contact');
- await page.getByRole('button',{name:'Send Message',exact:true}).click();
+ await page.getByRole('button',{name:'Prepare enquiry',exact:true}).click();
  await expect(page.getByText('Enter your name.',{exact:true})).toBeVisible();
  await page.locator('#enquiry-name').fill('Demo Traveller');
  await page.locator('#enquiry-email').fill('demo@example.com');
  await page.locator('#enquiry-message').fill('A fictional enquiry to preview locally.');
- await page.getByRole('button',{name:'Send Message',exact:true}).click();
+ await page.getByRole('button',{name:'Prepare enquiry',exact:true}).click();
  await expect(page.getByRole('status')).toContainText('not sent');
  expect(posts).toEqual([]);
  expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);

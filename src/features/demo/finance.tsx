@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useLocale } from "@/features/localization/locale-provider";
 import { StatePreview, SystemState } from "@/components/ui/system-state";
 import { demoFinance, demoTransactions } from "./fixtures";
-import { Workspace, DemoNotice, StatusBadge, useMoney } from "./shared";
+import { Workspace, StatusBadge, useMoney } from "./shared";
 import type { Transaction } from "./types";
 // The named, horizontally scrollable region is keyboard-focusable so users can scroll the table.
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex */
@@ -124,7 +124,7 @@ function useTransactionDialog() {
               </div>
             </dl>
             <p>{t(row.description)}</p>
-            <DemoNotice />
+
           </>
         )}
         <button
@@ -145,7 +145,7 @@ export function WalletPage() {
   const [insufficient, setInsufficient] = useState(false);
   return (
     <Workspace title={t("Your credit, at a glance.", "رصيدك، بنظرة واحدة.")}>
-      <DemoNotice />
+      <p className="fine-print">{t("Account figures are informational and are not connected to a live balance.", "أرقام الحساب للمعلومات فقط ولا ترتبط برصيد مباشر.")}</p>
       <StatePreview
         emptyTitle={t("No credit information", "لا توجد بيانات ائتمانية")}
       >
@@ -153,19 +153,19 @@ export function WalletPage() {
           {(
             [
               [
-                t("Available demo balance", "الرصيد التجريبي المتاح"),
+                t("Available balance", "الرصيد المتاح"),
                 demoFinance.available,
               ],
               [
-                t("Used demo credit", "الائتمان التجريبي المستخدم"),
+                t("Used credit", "الائتمان المستخدم"),
                 demoFinance.used,
               ],
               [
-                t("Illustrative credit limit", "حد الائتمان التوضيحي"),
+                t("Credit limit", "حد الائتمان"),
                 demoFinance.limit,
               ],
               [
-                t("Outstanding — sample", "المستحق — تجريبي"),
+                t("Outstanding", "المستحق"),
                 demoFinance.outstanding,
               ],
             ] as const
@@ -175,19 +175,13 @@ export function WalletPage() {
               <strong>
                 <bdi>{money(amount)}</bdi>
               </strong>
-              <small>{t("Illustrative snapshot", "لقطة توضيحية")}</small>
             </div>
           ))}
         </div>
         <div className="workspace-grid">
           <section className="workspace-card">
-            <h2>{t("A transparent demo overview", "ملخص تجريبي واضح")}</h2>
-            <p>
-              {t(
-                "This illustrative balance is calculated from the completed sample transactions. Pending and failed entries do not change the available balance. New booking simulations never debit it; production credit terms are not defined.",
-                "يُحسب الرصيد التوضيحي من المعاملات التجريبية المكتملة. لا تغيّر المعاملات المعلقة أو الفاشلة الرصيد المتاح. لا تخصم محاكاة الحجوزات الجديدة منه؛ لم تُحدّد شروط الائتمان الفعلية.",
-              )}
-            </p>
+            <h2>{t("Account overview", "ملخص الحساب")}</h2>
+            <p>{t("Posted entries determine the displayed balance. Pending and failed entries do not change it.", "تحدد القيود المسجلة الرصيد المعروض. ولا تغيّره القيود المعلقة أو الفاشلة.")}</p>
             <div className="workspace-actions">
               <Link className="button button--primary" to="/transactions">
                 {t("View transaction history", "عرض سجل المعاملات")}
@@ -260,7 +254,7 @@ export function TransactionsPage() {
   const pages = Math.max(1, Math.ceil(rows.length / 4));
   return (
     <Workspace title={t("Transaction history", "سجل المعاملات")}>
-      <DemoNotice />
+      <p className="fine-print">{t("Transaction records are informational and are not processed by a payment provider.", "سجلات المعاملات للمعلومات فقط ولا يعالجها مزود دفع.")}</p>
       <div className="table-toolbar">
         <label>
           {t("Search transactions", "بحث المعاملات")}
@@ -324,7 +318,7 @@ export function TransactionsPage() {
         {rows.length ? (
           <>
             <p role="status">
-              {rows.length} {t("demo transactions", "معاملات تجريبية")}
+              {rows.length} {t("transactions", "معاملات")}
             </p>
             <TransactionTable
               rows={rows.slice((page - 1) * 4, page * 4)}

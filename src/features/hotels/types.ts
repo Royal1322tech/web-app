@@ -25,6 +25,15 @@ export interface Coordinates {
   longitude: number;
   source: string;
 }
+export interface HotelPolicies {
+  checkIn?: { from?: string; until?: string };
+  checkOut?: { from?: string; until?: string };
+  childPolicy?: LocalizedText;
+  extraBedPolicy?: LocalizedText;
+  identificationRequirements?: LocalizedText;
+  restrictions?: readonly LocalizedText[];
+  terms?: readonly LocalizedText[];
+}
 export interface HotelSummary {
   id: string;
   name: LocalizedText;
@@ -46,6 +55,7 @@ export interface HotelListing extends HotelSummary {
   breakfast: boolean;
   package: boolean;
   coordinates?: Coordinates;
+  policies?: HotelPolicies;
 }
 export interface HotelFilters {
   name: string;

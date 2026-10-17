@@ -31,7 +31,7 @@ for (const width of [375, 768, 1440]) {
         await expect(img).toHaveAttribute("srcset", /webp/);
       }
       await expect(section.getByText(locale === "en" ? "Built for Travel Partners" : "مصممة لشركاء السفر")).toBeVisible();
-      await expect(cards.last()).toContainText(locale === "en" ? "printable demo voucher" : "قسيمة");
+      await expect(cards.last()).toContainText(locale === "en" ? "voucher details" : "تفاصيل القسيمة");
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
       expect((await new AxeBuilder({ page }).include('section[aria-labelledby="benefits-title"]').analyze()).violations).toEqual([]);
       await section.screenshot({ path: `test-results/partners-${width}-${locale}.png` });

@@ -98,12 +98,12 @@ export function RentalCriteriaForm({
       </div>
       <p className="fine-print">
         {t(
-          "Whole-day sample pricing. No pickup time, airport delivery, taxes, insurance or one-way fees are quoted.",
-          "أسعار أمثلة لأيام كاملة؛ لا تشمل مواعيد الاستلام أو التوصيل أو الضرائب أو التأمين أو رسوم الإعادة المختلفة.",
+          "Daily rates exclude taxes, insurance and additional services.",
+          "الأسعار اليومية لا تشمل الضرائب أو التأمين أو الخدمات الإضافية.",
         )}
       </p>
       <button className="button button--primary">
-        {label ?? t("Search demo vehicles", "ابحث في السيارات التجريبية")}
+        {label ?? t("Search vehicles", "ابحث عن سيارات")}
       </button>
     </form>
   );
@@ -120,7 +120,7 @@ export function RentalSummaryPage() {
         <div className="workspace-grid">
           <div className="workspace-card workspace-form">
             <h2>{t("Your journey at a glance", "رحلتك في لمحة")}</h2>
-            <p>{t("Review the pickup, return dates and sample daily pricing before adding contact details. No live rental is offered.", "راجع مكان الاستلام وتواريخ الإعادة والسعر اليومي التجريبي قبل إضافة بيانات التواصل. لا يتوفر تأجير فعلي.")}</p>
+            <p>{t("Review your pickup, return dates and daily rate before adding contact details.", "راجع مكان الاستلام وتواريخ الإعادة والسعر اليومي قبل إضافة بيانات التواصل.")}</p>
             <Link
               to={`/car-rental/search?${rentalQuery(rentalSelection.criteria)}`}
             >
@@ -133,8 +133,8 @@ export function RentalSummaryPage() {
                 onChange={(e) => setAccepted(e.target.checked)}
               />
               {t(
-                "I understand this is a fictional rental with no reservation or payment.",
-                "أفهم أن هذا تأجير وهمي دون حجز أو دفع.",
+                "I understand the vehicle and price require supplier confirmation; no reservation or payment is made here.",
+                "أفهم أن السيارة والسعر يحتاجان إلى تأكيد المورد، ولا يتم هنا إنشاء حجز أو دفع.",
               )}
             </label>
             {accepted && (
@@ -158,7 +158,7 @@ export function RentalPaymentPage() {
   if (rentalSelection && rentalDriver && !rentalPolicyAcknowledged) return <Navigate to="/car-rental/review" replace />;
   return (
     <RentalShell
-      title={t("Rental payment · simulation", "دفع التأجير · محاكاة")}
+      title={t("Payment outcome", "نتيجة الدفع")}
     >
       {!rentalSelection || !rentalDriver ? (
         <MissingSelection />
@@ -167,17 +167,17 @@ export function RentalPaymentPage() {
           <section className="workspace-card workspace-form">
             <p>
               {t(
-                "Test payment only. No card information, debit, credit deduction or payment request is made.",
+                "Choose an outcome to review the payment step. No payment is processed.",
                 "دفع اختباري فقط. لا بيانات بطاقة ولا خصم من الرصيد ولا طلب دفع.",
               )}
             </p>
             {processing ? (
               <div role="status">
-                <h2>{t("Processing preview", "معاينة المعالجة")}</h2>
+                <h2>{t("Preparing outcome", "تجهيز النتيجة")}</h2>
                 <p>
                   {t(
-                    "No network request is running. Advance the simulation when ready.",
-                    "لا يجري طلب شبكة. تابع المحاكاة عندما تكون جاهزًا.",
+                    "No payment request is running. Continue to view the selected outcome.",
+                    "لا يوجد طلب دفع قيد التنفيذ. تابع لعرض النتيجة المختارة.",
                   )}
                 </p>
                 <button
@@ -190,13 +190,13 @@ export function RentalPaymentPage() {
                       navigate(`/car-rental/bookings/${id}`, { replace: true });
                   }}
                 >
-                  {t("Show rental outcome", "عرض نتيجة التأجير")}
+                  {t("Show outcome", "عرض النتيجة")}
                 </button>
               </div>
             ) : (
               <>
                 <label>
-                  {t("Rental demo outcome", "نتيجة التأجير التجريبية")}
+                  {t("Payment outcome", "نتيجة الدفع")}
                   <select
                     value={outcome}
                     onChange={(e) => {
@@ -219,8 +219,8 @@ export function RentalPaymentPage() {
                 {insufficient && (
                   <p role="alert" className="error-note">
                     {t(
-                      "Insufficient credit preview. No balance was checked or changed. Choose another demo outcome.",
-                      "معاينة رصيد غير كافٍ. لم يُفحص أو يتغير أي رصيد. اختر نتيجة تجريبية أخرى.",
+                      "The displayed credit is insufficient. No balance was checked or changed. Choose another outcome.",
+                      "الرصيد المعروض غير كافٍ. لم يُفحص أو يتغير أي رصيد. اختر نتيجة أخرى.",
                     )}
                   </p>
                 )}
@@ -232,7 +232,7 @@ export function RentalPaymentPage() {
                       : setProcessing(true)
                   }
                 >
-                  {t("Simulate rental payment", "محاكاة دفع التأجير")}
+                  {t("Continue to outcome", "متابعة للنتيجة")}
                 </button>
               </>
             )}
@@ -253,7 +253,7 @@ export function RentalBookingsPage() {
       `${r.id} ${r.driver.name}`.toLowerCase().includes(query.toLowerCase()),
   );
   return (
-    <RentalShell title={t("Demo rental bookings", "حجوزات التأجير التجريبية")}>
+    <RentalShell title={t("Rental records", "سجلات التأجير")}>
       <div className="table-toolbar">
         <label>
           {t("Search rentals", "بحث التأجيرات")}
@@ -296,10 +296,10 @@ export function RentalBookingsPage() {
           </div>
         ) : (
           <SystemState
-            title={t("No demo rentals", "لا توجد تأجيرات تجريبية")}
+            title={t("No rental records", "لا توجد سجلات تأجير")}
             description={t(
-              "Complete a simulation or change the filters. Reload clears rental records.",
-              "أكمل محاكاة أو غيّر عوامل التصفية. التحديث يمسح سجلات التأجير.",
+              "Create a local outcome or change the filters. Records are kept for this session.",
+              "أنشئ نتيجة محلية أو غيّر عوامل التصفية. تُحفظ السجلات لهذه الجلسة.",
             )}
           />
         )}
@@ -325,7 +325,7 @@ export function RentalBookingDetailsPage() {
   const active = record && ["confirmed", "pending"].includes(record.status);
   return (
     <RentalShell
-      title={t("Rental booking details · demo", "تفاصيل حجز التأجير · تجريبي")}
+      title={t("Rental record details", "تفاصيل سجل التأجير")}
     >
       {!record ? (
         <SystemState
@@ -341,7 +341,7 @@ export function RentalBookingDetailsPage() {
       ) : (
         <>
           <div className="rental-booking-layout"><div className="rental-panel">
-          <section className="rental-result-banner"><Icon name="shield" /><div><p className="rental-kicker">{t("YOUR DEMONSTRATION OUTCOME", "نتيجة العرض التجريبي")}</p><h2>{t("Your journey preview", "معاينة رحلتك")}</h2><StatusBadge status={record.status} /></div></section>
+          <section className="rental-result-banner"><Icon name="shield" /><div><p className="rental-kicker">{t("LOCAL OUTCOME", "نتيجة محلية")}</p><h2>{t("Rental outcome", "نتيجة التأجير")}</h2><StatusBadge status={record.status} /></div></section>
           <h2>
             <bdi>{record.id}</bdi>
           </h2>
@@ -385,8 +385,8 @@ export function RentalBookingDetailsPage() {
                       }}
                     >
                       {kind === "cancel"
-                        ? t("Cancel demo rental", "إلغاء التأجير التجريبي")
-                        : t("Modify demo rental", "تعديل التأجير التجريبي")}
+                        ? t("Cancel rental", "إلغاء التأجير")
+                        : t("Modify rental", "تعديل التأجير")}
                     </button>
                   ))}
                 </>
@@ -403,7 +403,7 @@ export function RentalBookingDetailsPage() {
                     navigate("/car-rental/payment");
                   }}
                 >
-                  {t("Retry rental simulation", "إعادة محاكاة التأجير")}
+                  {t("Review another outcome", "مراجعة نتيجة أخرى")}
                 </button>
               )}
             </div>
@@ -417,13 +417,13 @@ export function RentalBookingDetailsPage() {
           >
             <h2 id="rental-action-title">
               {action === "cancel"
-                ? t("Cancel this demo rental?", "إلغاء هذا التأجير التجريبي؟")
-                : t("Modify this demo rental", "تعديل هذا التأجير التجريبي")}
+                ? t("Cancel this rental record?", "إلغاء سجل التأجير هذا؟")
+                : t("Modify this rental record", "تعديل سجل التأجير هذا")}
             </h2>
             <p>
               {t(
-                "Only this local example changes. No supplier request or refund occurs.",
-                "يتغير المثال المحلي فقط؛ لا طلب مورد أو استرداد فعلي.",
+                "This updates the session record only. No supplier request or refund occurs.",
+                "يحدّث هذا سجل الجلسة فقط. لا يُرسل طلب للمورد ولا يتم استرداد مبلغ.",
               )}
             </p>
             {action === "modify" ? (

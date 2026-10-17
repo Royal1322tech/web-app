@@ -13,7 +13,7 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
       await selectLanguage(page, locale);
       await closeHeaderMenu(page);
       await page.getByRole("button", { name: /Chauffeur \/ Transfers|سائق خاص \/ انتقالات/ }).click();
-      await expect(page.getByRole("button", { name: /Search demo vehicles|ابحث في السيارات التجريبية/ })).toBeHidden();
+      await expect(page.getByRole("button", { name: /Search vehicles|ابحث عن سيارات/ })).toBeHidden();
       const services = page.getByRole("navigation", { name: /Chauffeur services|خدمات السائق/ });
       await expect(services.locator('a[href="/contact?subject=airport-transfers"]')).toBeVisible();
       await services.locator('a[href="/contact?subject=airport-transfers"]').click();
@@ -42,14 +42,13 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
       }
       await page.getByRole("button", { name: /Review enquiry|مراجعة الاستفسار/ }).click();
       await expect(page.locator(".rental-enquiry-review")).toContainText("EX123");
-      const preview = page.getByRole("button", { name: /Prepare local preview|تجهيز المعاينة المحلية/ });
-      await expect(preview).toBeDisabled();
-      await page.getByRole("checkbox", { name: /I have reviewed|راجعت معلومات/ }).check();
+      const preview = page.getByRole("button", { name: /Prepare enquiry preview|تجهيز معاينة الاستفسار/ });
+      await expect(page.getByRole("heading", { name: /Cancellation Policy|سياسة الإلغاء/ })).toHaveCount(0);
+      await expect(preview).toBeEnabled();
       await page.getByRole("button", { name: /Edit enquiry|تعديل الاستفسار/ }).click();
       await expect(page.getByLabel(/^(Full Name|الاسم الكامل)$/)).toHaveValue("Fictional Passenger");
       await page.getByRole("button", { name: /Review enquiry|مراجعة الاستفسار/ }).click();
-      await expect(preview).toBeDisabled();
-      await page.getByRole("checkbox", { name: /I have reviewed|راجعت معلومات/ }).check();
+      await expect(preview).toBeEnabled();
       if (width === 1440 || width === 320) expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations).toEqual([]);
       await page.screenshot({ path: `test-results/chauffeur-review-${width}-${locale}.png`, fullPage: true });
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);

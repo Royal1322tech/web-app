@@ -8,7 +8,6 @@ import { SystemState, StatePreview } from "@/components/ui/system-state";
 import { useDemo, totalFor } from "./demo-provider";
 import {
   Workspace,
-  DemoNotice,
   StatusBadge,
   SelectionSummary,
   useMoney,
@@ -34,17 +33,17 @@ export function BookingDetailPage() {
     <Workspace title={t("Booking details", "تفاصيل الحجز")}>
       {!booking ? (
         <SystemState
-          title={t("Demo booking not found", "الحجز التجريبي غير موجود")}
+          title={t("Booking not found", "الحجز التجريبي غير موجود")}
           description={t(
-            "This session may have been refreshed. Return to the sample bookings or start a new simulation.",
-            "ربما أُعيد تحميل الجلسة. عد إلى الحجوزات التجريبية أو ابدأ محاكاة جديدة.",
+            "This session may have been refreshed. Return to your bookings or start a new booking.",
+            "ربما أُعيد تحميل الجلسة. عد إلى حجوزاتك أو ابدأ حجزًا جديدًا.",
           )}
         >
           <Link to="/bookings">{t("My bookings", "حجوزاتي")}</Link>
         </SystemState>
       ) : (
         <>
-          <DemoNotice />
+
           <StatePreview>
             <div className="workspace-grid">
               <div className="workspace-stack">
@@ -74,7 +73,7 @@ export function BookingDetailPage() {
                         className="button button--primary"
                         to={`/bookings/${booking.id}/voucher`}
                       >
-                        {t("View demo voucher", "عرض القسيمة التجريبية")}
+                        {t("View voucher", "عرض القسيمة")}
                       </Link>
                     )}
                     {["confirmed", "pending"].includes(booking.status) && (
@@ -93,10 +92,10 @@ export function BookingDetailPage() {
                             }}
                           >
                             {a === "cancel"
-                              ? t("Cancel demo booking", "إلغاء الحجز التجريبي")
+                              ? t("Cancel booking", "إلغاء الحجز")
                               : t(
-                                  "Modify demo booking",
-                                  "تعديل الحجز التجريبي",
+                                  "Modify booking",
+                                  "تعديل الحجز",
                                 )}
                           </button>
                         ))}
@@ -143,15 +142,15 @@ export function BookingDetailPage() {
             <div className="workspace">
               <h2 id="booking-action-title">
                 {action === "cancel"
-                  ? t("Cancel this demo booking?", "إلغاء هذا الحجز التجريبي؟")
-                  : t("Modify your demo stay", "تعديل الإقامة التجريبية")}
+                  ? t("Cancel this booking?", "إلغاء هذا الحجز؟")
+                  : t("Modify your stay", "تعديل الإقامة")}
               </h2>
-              <DemoNotice />
+
               {action === "cancel" ? (
                 <p>
                   {t(
-                    "This changes the local demonstration status only. It does not contact a supplier, issue a refund or calculate cancellation fees.",
-                    "يغيّر هذا الحالة التجريبية المحلية فقط. لا يتم التواصل مع المورد أو رد مبلغ أو حساب رسوم إلغاء.",
+                    "This updates the session record only. It does not contact the supplier, issue a refund or calculate cancellation fees.",
+                    "يحدّث هذا سجل الجلسة فقط. لا يتواصل مع المورد أو يصدر استردادًا أو يحسب رسوم الإلغاء.",
                   )}
                 </p>
               ) : (
@@ -195,7 +194,7 @@ export function BookingDetailPage() {
                   </label>
                   {criteria && (
                     <p>
-                      {t("Revised demo total", "الإجمالي التجريبي المعدّل")}:{" "}
+                      {t("Revised total", "الإجمالي المعدّل")}:{" "}
                       <bdi>
                         {money(totalFor({ ...booking.selection, criteria }))}
                       </bdi>

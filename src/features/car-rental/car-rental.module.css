@@ -87,12 +87,14 @@
   }
 }
 /* Only the existing homepage Car Rental preview is refined. */
-.compact { grid-template-columns: 1.05fr 1fr; gap: 0; padding: 0; background: #082a4c; border-color: #173f60; overflow: hidden; }
-.compact > div { padding: 32px; }
+.compact { grid-template-columns: 1.12fr 1fr; gap: 0; padding: 0; background: var(--navy); border-color: #173f60; overflow: hidden; }
+.compact > div { display: flex; flex-direction: column; align-items: flex-start; padding: 30px; }
 .compact h2 { color: #fff; font-weight: 600; font-size: clamp(24px, 2.5vw, 34px); }
-.compact p { color: #dce8f3; line-height: 1.7; }
-.compact .eyebrow { color: #e4b86a; }
-.compact .illustration { width: 100%; height: 100%; min-height: 320px; object-fit: cover; border-radius: 0; justify-self: stretch; }
+.compact p { max-width: 560px; color: #dce8f3; line-height: 1.7; }
+.compact .eyebrow { color: var(--light-gold); }
+.compact .illustration { width: 100%; height: 100%; min-height: 280px; object-fit: cover; object-position: center; border-radius: 0; justify-self: stretch; }
 .compact:hover .illustration { transform: none; }
-.compact .actions a { background: #b68136; border-color: #b68136; color: #fff; }
-@media (max-width: 700px) { .compact { grid-template-columns: minmax(0,1fr); } .compact > div { padding: 24px; } .compact .illustration { min-height: 0; height: 210px; } }
+.compact .actions { margin-top: auto; padding-top: 20px; }
+.compact .actions a { background: #87521d; border-color: #87521d; color: #fff; }
+.compact .actions a:hover { background: #704116; border-color: #704116; }
+@media (max-width: 700px) { .compact { grid-template-columns: minmax(0,1fr); } .compact > div { padding: 24px; } .compact .illustration { min-height: 0; height: 220px; } }

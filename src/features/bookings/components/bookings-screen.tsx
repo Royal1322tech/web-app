@@ -25,6 +25,7 @@ export function BookingsScreen() {
   return (
     <CatalogShell title={t("Booking", "الحجوزات")}>
       <h1>{t("My Bookings", "حجوزاتي")}</h1>
+      <p className={styles.sampleNote}>{t("Booking records and changes stay in this browser session; supplier reservations are not updated.", "تظل سجلات الحجوزات والتغييرات في جلسة المتصفح؛ ولا تُحدّث حجوزات الموردين.")}</p>
       <button
         className={`${styles.secondary} ${styles.mobileFilters}`}
         aria-expanded={open}
@@ -70,7 +71,7 @@ export function BookingsScreen() {
                   <span className={styles.summaryView}>{t("View", "عرض")}</span>
                 </span>
                 <span>
-                  {t("Sample records", "سجلات تجريبية")}:{" "}
+                  {t("Records", "السجلات")}:{" "}
                   {bookings.filter((b) => b.status === "confirmed").length}
                 </span>
               </button>
@@ -87,7 +88,7 @@ export function BookingsScreen() {
                   <span className={styles.summaryView}>{t("View", "عرض")}</span>
                 </span>
                 <span>
-                  {t("Sample records", "سجلات تجريبية")}:{" "}
+                  {t("Records", "السجلات")}:{" "}
                   {bookings.filter((b) => b.cancellationFee).length}
                 </span>
               </button>
@@ -128,7 +129,7 @@ export function BookingsScreen() {
               </label>
             </div>
             <p role="status">
-              {result.length} {t("sample bookings", "حجوزات تجريبية")}
+              {result.length} {t("booking records", "سجلات الحجوزات")}
             </p>
             <div className={styles.results}>
               {result.slice(0, limit).map((b) => {
@@ -161,18 +162,12 @@ export function BookingsScreen() {
                             {t("Agency Reference", "مرجع الوكالة")}:{" "}
                             {b.agencyReference}
                           </p>
-                          <p>
-                            {t(
-                              "Demonstration only. Manage this record to preview changes.",
-                              "للعرض فقط. افتح السجل لمعاينة التغييرات.",
-                            )}
-                          </p>
                         </details>
                         <Link
                           to={`/bookings/${b.id}`}
                           className={styles.secondary}
                         >
-                          {t("Manage demo booking", "إدارة الحجز التجريبي")}
+                          {t("Manage booking", "إدارة الحجز")}
                         </Link>
                       </>
                     }
@@ -183,8 +178,8 @@ export function BookingsScreen() {
             {!result.length && (
               <p className={styles.empty}>
                 {t(
-                  "No sample bookings match these filters.",
-                  "لا توجد حجوزات تجريبية تطابق هذه التصفية.",
+                  "No bookings match these filters.",
+                  "لا توجد حجوزات تطابق هذه التصفية.",
                 )}
               </p>
             )}

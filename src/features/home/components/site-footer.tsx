@@ -48,9 +48,6 @@ export function SiteFooter() {
             </Link>
           ))}
         </nav>
-        <p className={styles.footerNotice}>
-          <Text en="Frontend demonstration · No live reservations or transactions" ar="عرض توضيحي · لا توجد حجوزات أو معاملات فعلية" />
-        </p>
       </div>
       <svg className={styles.footerWave} viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path d="M0 75 Q360 0 720 75 T1440 75 V120 H0Z" fill="#087e8b" fillOpacity=".16" /><path d="M0 100 Q400 35 800 90 T1440 60" fill="none" stroke="#e4b86a" strokeOpacity=".28" /></svg>
     </footer>

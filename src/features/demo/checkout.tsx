@@ -1,4 +1,7 @@
+import { hotelDisplayName, hotelDisplayAddress } from "@/features/hotels/lib/presentation";
+import { cancellationPolicyLabels } from "@/features/hotels/cancellation-policy";
 import { CancellationPolicyCard } from "./cancellation-policy-card";
+import { assessAgencyCredit, paymentMethods } from "./payment-methods";
 import { fitsDemoRoom } from "./room-policy";
 import { stayQuery } from "@/features/hotels/lib/stay-query";
 import { useState } from "react";
@@ -8,19 +11,28 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useLocale } from "@/features/localization/locale-provider";
 import { HotelSearchForm } from "@/features/home/components/hotel-search-form";
-import { SystemState, InlineLoadingState } from "@/components/ui/system-state";
+import { SystemState } from "@/components/ui/system-state";
+import { Icon } from "@/components/ui/icon";
 import { BrandLogo } from "@/components/brand-logo";
 import { hotels } from "@/features/hotels/data/hotels.fixture";
+import { HotelPolicySections } from "./hotel-policy-sections";
 import { useDemo, totalFor } from "./demo-provider";
 import { demoFinance } from "./fixtures";
 import {
   Workspace,
-  DemoNotice,
   SelectionSummary,
   StatusBadge,
   useMoney,
 } from "./shared";
 import type { DemoSelection, GuestValues } from "./types";
+
+function formatCurrency(amount: number, currency: string, locale: "en" | "ar") {
+  try {
+    return new Intl.NumberFormat(locale, { style: "currency", currency }).format(amount);
+  } catch {
+    return `${amount} ${currency}`;
+  }
+}
 
 function Progress({ step }: { step: number }) {
   const { t } = useLocale();
@@ -33,7 +45,7 @@ function Progress({ step }: { step: number }) {
         ["Summary", "الملخص"],
         ["Guest details", "بيانات الضيوف"],
         ["Cancellation Policy", "سياسة الإلغاء"],
-        ["Payment preview", "معاينة الدفع"],
+        ["Payment Details", "بيانات الدفع"],
         ["Result", "النتيجة"],
       ].map(([en, ar], i) => (
         <li key={en} aria-current={i === step ? "step" : undefined}>
@@ -50,8 +62,8 @@ function EmptySelection() {
     <SystemState
       title={t("Choose a room to begin", "اختر غرفة للبدء")}
       description={t(
-        "Your booking workspace is empty. Selections and guest details are kept only for this session and reset on refresh.",
-        "مساحة الحجز فارغة. تُحفظ الاختيارات وبيانات الضيوف لهذه الجلسة فقط وتُمسح عند إعادة التحميل.",
+        "Select a room to begin. Your progress is kept for this session.",
+        "اختر غرفة للبدء. يُحفظ تقدمك لهذه الجلسة.",
       )}
     >
       <Link className="button button--primary" to="/search">
@@ -61,14 +73,13 @@ function EmptySelection() {
   );
 }
 export function BookingSummaryPage() {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const { selection, updateCriteria, acknowledgePolicy: setAccepted } = useDemo();
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState("");
   return (
     <Workspace title={t("Review your stay", "راجع إقامتك")}>
       <Progress step={0} />
-      <DemoNotice />
       {!selection ? (
         <EmptySelection />
       ) : (
@@ -113,8 +124,8 @@ export function BookingSummaryPage() {
                     if (!fitsDemoRoom(criteria)) {
                       setError(
                         t(
-                          "This demo double room accommodates up to 2 adults per room, without children. Choose matching occupancy to continue.",
-                          "الغرفة المزدوجة التجريبية تتسع لبالغين كحد أقصى دون أطفال. اختر إشغالاً متوافقاً للمتابعة.",
+                          "This room supports up to 2 adults and no children. Adjust the guest count to continue.",
+                          "تتسع هذه الغرفة لبالغين كحد أقصى دون أطفال. عدّل عدد الضيوف للمتابعة.",
                         ),
                       );
                       return;
@@ -133,19 +144,22 @@ export function BookingSummaryPage() {
               )}
             </section>
             <section className="workspace-card">
-              <CancellationPolicyCard policy={selection.rate.cancellationPolicy} />
+              <div className="booking-rate-policy">
+                <h3>{t("Cancellation Policy", "سياسة الإلغاء")}</h3>
+                <p>{cancellationPolicyLabels[selection.rate.cancellationPolicy?.kind ?? "unavailable"][locale]}</p>
+              </div>
               <h3>{t("Rate conditions", "شروط السعر")}</h3>
               <ul>
                 <li>
                   {t(
-                    "Room occupancy: up to 2 adults per room. No child inventory is supplied for this demo room.",
-                    "إشغال الغرفة: بالغان كحد أقصى. لا تتوفر بيانات أطفال لهذه الغرفة التجريبية.",
+                    "Room occupancy: up to 2 adults. Child occupancy is not supplied.",
+                    "إشغال الغرفة: بالغان كحد أقصى. لم تُقدّم بيانات إشغال الأطفال.",
                   )}
                 </li>
                 <li>
                   {t(
-                    "No supplier reservation is made, and prices are illustrative.",
-                    "لا يتم إنشاء حجز لدى المورد والأسعار توضيحية.",
+                    "Continuing does not send a reservation to the hotel.",
+                    "المتابعة لا ترسل حجزًا إلى الفندق.",
                   )}
                 </li>
               </ul>
@@ -187,7 +201,6 @@ export function GuestInformationPage() {
   return (
     <Workspace title={t("Guest information", "بيانات الضيوف")}>
       <Progress step={1} />
-      <DemoNotice />
       {selection ? <GuestForm selection={selection} /> : <EmptySelection />}
     </Workspace>
   );
@@ -229,8 +242,8 @@ function GuestForm({ selection }: { selection: DemoSelection }) {
         <h2>{t("Who’s travelling?", "من المسافر؟")}</h2>
         <p className="fine-print">
           {t(
-            "Enter fictional names as they should appear on the demo voucher. Nothing is sent or saved to browser storage.",
-            "أدخل أسماء وهمية كما ستظهر بالقسيمة التجريبية. لا يتم إرسال البيانات أو حفظها في تخزين المتصفح.",
+            "These details stay in this browser session and are not sent to the hotel.",
+            "تبقى هذه البيانات في جلسة المتصفح ولا تُرسل إلى الفندق.",
           )}
         </p>
         <fieldset className="guest-contact-section"><legend>{t("Guest & contact information", "معلومات الضيف والتواصل")}</legend><div className="workspace-fields">
@@ -311,8 +324,8 @@ function GuestForm({ selection }: { selection: DemoSelection }) {
           />
           <span className="fine-print">
             {t(
-              "Requests are illustrative and cannot be guaranteed.",
-              "الطلبات توضيحية ولا يمكن ضمانها.",
+              "Requests are not sent to the hotel.",
+              "لا تُرسل الطلبات إلى الفندق.",
             )}
           </span>
         </label>
@@ -331,159 +344,156 @@ function GuestForm({ selection }: { selection: DemoSelection }) {
   );
 }
 export function CancellationPolicyPage() {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const { selection, guests, policyAcknowledged, acknowledgePolicy } = useDemo();
   if (selection && !guests) return <Navigate to="/booking/guests" replace />;
-  return <Workspace title={t("Cancellation Policy", "سياسة الإلغاء")}>
-    <Progress step={2} /><DemoNotice />
-    {!selection ? <EmptySelection /> : <div className="workspace-grid">
-      <section className="workspace-card workspace-form policy-stage">
-        <CancellationPolicyCard policy={selection.rate.cancellationPolicy} />
-        <label className="choice-label"><input type="checkbox" checked={policyAcknowledged} onChange={e => acknowledgePolicy(e.target.checked)} />
-          {t("I have reviewed the cancellation policy information.", "راجعت معلومات سياسة الإلغاء.")}
-        </label>
-        <div className="workspace-actions">
-          <Link className="button button--outline" to="/booking/guests">{t("Back to guest details", "العودة لبيانات الضيوف")}</Link>
-          {policyAcknowledged ? <Link className="button button--primary" to="/booking/payment">{t("Continue to payment preview", "المتابعة لمعاينة الدفع")}</Link> : <button className="button button--primary" disabled>{t("Continue to payment preview", "المتابعة لمعاينة الدفع")}</button>}
+  return (
+    <Workspace title={t("Cancellation Policy", "سياسة الإلغاء")}>
+      <Progress step={2} />
+      {!selection ? <EmptySelection /> : (
+        <div className="workspace-grid policy-page-grid">
+          <div className="policy-page-main">
+            <p className="policy-intro">{t("Review the conditions supplied for your selected room and rate.", "راجع الشروط المقدمة للغرفة والسعر المحددين.")}</p>
+            <CancellationPolicyCard
+              policy={selection.rate.cancellationPolicy}
+              roomName={selection.room.name[locale]}
+              rateName={selection.rate.board[locale]}
+            />
+            <HotelPolicySections
+              hotel={hotels.find((item) => item.id === selection.hotelId)}
+              rate={selection.rate}
+            />
+            <section className="workspace-card policy-acknowledgement">
+              <label className="choice-label">
+                <input
+                  type="checkbox"
+                  checked={policyAcknowledged}
+                  onChange={(event) => acknowledgePolicy(event.target.checked)}
+                />
+                {t("I have reviewed the cancellation and stay information shown above.", "راجعت معلومات الإلغاء والإقامة الموضحة أعلاه.")}
+              </label>
+              <div className="workspace-actions">
+                <Link className="button button--outline" to="/booking/guests">
+                  {t("Back to guest details", "العودة لبيانات الضيوف")}
+                </Link>
+                {policyAcknowledged ? (
+                  <Link className="button button--primary" to="/booking/payment">
+                    {t("Continue to Payment Details", "المتابعة إلى بيانات الدفع")}
+                  </Link>
+                ) : (
+                  <button className="button button--primary" disabled>
+                    {t("Continue to Payment Details", "المتابعة إلى بيانات الدفع")}
+                  </button>
+                )}
+              </div>
+            </section>
+          </div>
+          <SelectionSummary selection={selection} />
         </div>
-      </section><SelectionSummary selection={selection} />
-    </div>}
-  </Workspace>;
+      )}
+    </Workspace>
+  );
 }
 export function PaymentPage() {
-  const { t } = useLocale();
-  const { selection, guests, createBooking, policyAcknowledged } = useDemo();
+  const { locale, t } = useLocale();
+  const {
+    selection,
+    guests,
+    policyAcknowledged,
+    paymentMethod,
+    selectPaymentMethod,
+    preparePaymentDetails,
+  } = useDemo();
   const navigate = useNavigate();
   const money = useMoney();
-  const [method, setMethod] = useState("credit");
-  const [scenario, setScenario] = useState("confirmed");
-  const [processing, setProcessing] = useState(false);
+  const creditMoney = (amount: number) => formatCurrency(amount, demoFinance.currency, locale);
+  const bookingTotal = selection ? totalFor(selection) : 0;
+  const credit = assessAgencyCredit(
+    { amount: demoFinance.available, currency: demoFinance.currency },
+    bookingTotal,
+    "USD",
+  );
+  const creditInvalid = credit.status !== "sufficient";
   if (!selection)
     return (
-      <Workspace title={t("Payment preview", "معاينة الدفع")}>
+      <Workspace title={t("Payment Details", "بيانات الدفع")}>
         <EmptySelection />
       </Workspace>
     );
   if (!guests) return <Navigate to="/booking/guests" replace />;
   if (!policyAcknowledged) return <Navigate to="/booking/policy" replace />;
-  const insufficient =
-    method === "credit" &&
-    (scenario === "insufficient" ||
-      totalFor(selection) > demoFinance.available);
-  function finish() {
-    if (insufficient) return;
-    const id = createBooking(
-      scenario === "failed"
-        ? "failed"
-        : scenario === "pending"
-          ? "pending"
-          : "confirmed",
-    );
-    if (id) navigate(`/booking/result/${id}`, { replace: true });
-  }
   return (
-    <Workspace title={t("Payment preview", "معاينة الدفع")}>
+    <Workspace title={t("Payment Details", "بيانات الدفع")}>
       <Progress step={3} />
-      <DemoNotice />
       <div className="workspace-grid">
-        <section className="workspace-card workspace-form">
-          <h2>
-            {t("A clear view before confirmation.", "رؤية واضحة قبل التأكيد.")}
-          </h2>
-          <p>
-            {t(
-              "Select a simulated payment method and an outcome. No card details are collected and no credit balance is changed.",
-              "اختر طريقة دفع ونتيجة تجريبيتين. لا نجمع بيانات البطاقات ولا يتغير الرصيد الائتماني.",
-            )}
-          </p>
-          <fieldset disabled={processing}>
-            <legend>{t("Payment method", "طريقة الدفع")}</legend>
-            <label className="choice-label">
-              <input
-                type="radio"
-                name="method"
-                checked={method === "credit"}
-                onChange={() => setMethod("credit")}
-              />
-              {t("Agency credit — simulated", "ائتمان الوكالة — تجريبي")} ·{" "}
-              <bdi>{money(demoFinance.available)}</bdi>
-            </label>
-            <label className="choice-label">
-              <input
-                type="radio"
-                name="method"
-                checked={method === "test"}
-                onChange={() => {
-                  setMethod("test");
-                  if (scenario === "insufficient") setScenario("confirmed");
-                }}
-              />
-              {t("Test payment — no card required", "دفع اختباري — دون بطاقة")}
-            </label>
+        <section className="workspace-card payment-details-card">
+          <div className="payment-heading">
+            <p className="workspace-eyebrow">{t("04 · PAYMENT DETAILS", "٠٤ · بيانات الدفع")}</p>
+            <h2>{t("Choose a payment method", "اختر طريقة الدفع")}</h2>
+            <p>{t("Select how you would prefer to pay for this stay.", "اختر الطريقة التي تفضلها لدفع قيمة الإقامة.")}</p>
+          </div>
+          <fieldset className="payment-methods">
+            <legend>{t("Available methods", "الطرق المتاحة")}</legend>
+            {paymentMethods.map((option) => (
+              <label className={`payment-method-option${paymentMethod === option.id ? " is-selected" : ""}`} key={option.id}>
+                <input
+                  type="radio"
+                  name="payment-method"
+                  value={option.id}
+                  checked={paymentMethod === option.id}
+                  onChange={() => selectPaymentMethod(option.id)}
+                />
+                <Icon name={option.icon} />
+                <span className="payment-method-copy">
+                  <strong>{option.label[locale]}</strong>
+                  <small>{option.description[locale]}</small>
+                </span>
+                <span className="payment-radio-indicator" aria-hidden="true" />
+              </label>
+            ))}
           </fieldset>
-          <label>
-            {t("Demonstration outcome", "النتيجة التجريبية")}
-            <select
-              aria-label={t("Demonstration outcome", "النتيجة التجريبية")}
-              value={scenario}
-              disabled={processing}
-              onChange={(e) => setScenario(e.target.value)}
-            >
-              <option value="confirmed">{t("Confirmed", "مؤكد")}</option>
-              <option value="pending">
-                {t("Pending supplier response", "بانتظار رد المورد")}
-              </option>
-              <option value="failed">{t("Payment failed", "فشل الدفع")}</option>
-              {method === "credit" && (
-                <option value="insufficient">
-                  {t("Insufficient credit", "رصيد غير كافٍ")}
-                </option>
-              )}
-            </select>
-          </label>
-          {insufficient && (
-            <p role="alert" className="error-note">
-              {t(
-                "Insufficient demo credit. Choose test payment to continue; no top-up or real credit request is available.",
-                "الرصيد التجريبي غير كافٍ. اختر الدفع الاختباري للمتابعة؛ لا تتوفر تعبئة أو طلب ائتمان فعلي.",
-              )}
-            </p>
+          {paymentMethod === "agency_credit" && (
+            <section className="payment-credit-breakdown" aria-label={t("Agency credit summary", "ملخص رصيد الوكالة")}>
+              <dl>
+                <div><dt>{t("Available balance", "الرصيد المتاح")}</dt><dd><bdi>{creditMoney(demoFinance.available)}</bdi></dd></div>
+                <div><dt>{t("Booking total", "إجمالي الحجز")}</dt><dd><bdi>{money(bookingTotal)}</bdi></dd></div>
+                {credit.status === "sufficient" && <div className="payment-credit-remaining"><dt>{t("Estimated remaining", "الرصيد المتبقي التقديري")}</dt><dd><bdi>{creditMoney(credit.remaining)}</bdi></dd></div>}
+              </dl>
+              <p className="payment-credit-note">{t("Balance is shown from the existing account data. No funds will be deducted.", "الرصيد المعروض مستند إلى بيانات الحساب الحالية. لن يتم خصم أي أموال.")}</p>
+              {credit.status === "insufficient" && <p role="alert" className="error-note">{t("Agency credit is insufficient for this booking total.", "رصيد الوكالة غير كافٍ لإجمالي الحجز هذا.")}</p>}
+              {credit.status === "currency-mismatch" && <p role="alert" className="error-note">{t(`Agency credit is ${credit.availableCurrency}; this booking is priced in ${credit.bookingCurrency}. A currency conversion is unavailable.`, `رصيد الوكالة بعملة ${credit.availableCurrency} والحجز بعملة ${credit.bookingCurrency}. لا يتوفر تحويل للعملات.`)}</p>}
+              {credit.status === "unavailable" && <p role="status">{t("Agency balance is unavailable.", "رصيد الوكالة غير متاح.")}</p>}
+            </section>
           )}
-          {processing ? (
-            <div className="workspace-card" role="status">
-              <InlineLoadingState />
-              <p>
-                {t(
-                  "Processing state preview. Advance manually to view the selected result. No payment request is running.",
-                  "معاينة حالة المعالجة. تابع يدوياً لعرض النتيجة المختارة. لا يوجد طلب دفع قيد التنفيذ.",
-                )}
-              </p>
-              <div className="workspace-actions">
-                <button className="button button--primary" onClick={finish}>
-                  {t("Show simulated result", "عرض النتيجة التجريبية")}
-                </button>
-                <button
-                  className="button button--outline"
-                  onClick={() => setProcessing(false)}
-                >
-                  {t("Cancel preview", "إلغاء المعاينة")}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="workspace-actions">
-              <Link className="button button--outline" to="/booking/policy">
-                {t("Back", "رجوع")}
-              </Link>
-              <button
-                className="button button--primary"
-                disabled={insufficient}
-                onClick={() => setProcessing(true)}
-              >
-                {t("Simulate payment", "محاكاة الدفع")}
-              </button>
-            </div>
-          )}
+          <p className="payment-local-note">{t("Your method is saved for this session. Continuing prepares the details only; it does not initiate payment or reserve a room.", "تُحفظ الطريقة لهذه الجلسة. المتابعة تجهز التفاصيل فقط ولا تبدأ الدفع أو تحجز غرفة.")}</p>
+          <div className="workspace-actions">
+            <Link className="button button--outline" to="/booking/policy">{t("Back", "رجوع")}</Link>
+            <button className="button button--primary" disabled={!paymentMethod || (paymentMethod === "agency_credit" && creditInvalid)} onClick={() => { preparePaymentDetails(); navigate("/booking/result", { replace: true }); }}>{t("Continue", "متابعة")}</button>
+          </div>
+          {!paymentMethod && <p className="payment-selection-hint" role="status">{t("Select a payment method to continue.", "اختر طريقة دفع للمتابعة.")}</p>}
+        </section>
+        <SelectionSummary selection={selection} />
+      </div>
+    </Workspace>
+  );
+}
+export function BookingPreparedPage() {
+  const { locale, t } = useLocale();
+  const { selection, guests, policyAcknowledged, paymentMethod, paymentDetailsPrepared } = useDemo();
+  if (!selection) return <Workspace title={t("Booking details prepared", "تم تجهيز تفاصيل الحجز")}><EmptySelection /></Workspace>;
+  if (!guests) return <Navigate to="/booking/guests" replace />;
+  if (!policyAcknowledged) return <Navigate to="/booking/policy" replace />;
+  if (!paymentMethod || !paymentDetailsPrepared) return <Navigate to="/booking/payment" replace />;
+  return (
+    <Workspace title={t("Booking details prepared", "تم تجهيز تفاصيل الحجز")}>
+      <Progress step={4} />
+      <div className="workspace-grid">
+        <section className="workspace-card payment-prepared-result">
+          <Icon name="check" />
+          <h2>{t("Ready for the next step", "جاهز للخطوة التالية")}</h2>
+          <p role="status">{t("Your booking details and selected payment method are ready for the next step. No payment or hotel reservation has been processed.", "تفاصيل الحجز وطريقة الدفع المختارة جاهزة للخطوة التالية. لم تتم معالجة أي دفعة أو حجز فندقي.")}</p>
+          <p><strong>{t("Selected method", "طريقة الدفع المختارة")}:</strong> {paymentMethods.find((method) => method.id === paymentMethod)?.label[locale]}</p>
+          <div className="workspace-actions"><Link className="button button--outline" to="/booking/summary">{t("Review stay details", "مراجعة تفاصيل الإقامة")}</Link><Link className="button button--primary" to="/search">{t("Return to hotel search", "العودة إلى البحث عن الفنادق")}</Link></div>
         </section>
         <SelectionSummary selection={selection} />
       </div>
@@ -503,27 +513,26 @@ export function BookingResultPage() {
         <EmptySelection />
       ) : (
         <>
-          <DemoNotice />
           <div className="workspace-grid">
             <section className="workspace-card">
               <StatusBadge status={booking.status} />
               <h2>
                 {booking.status === "confirmed"
-                  ? t("Your demo itinerary is ready.", "برنامجك التجريبي جاهز.")
+                  ? t("Your booking record is ready.", "سجل الحجز جاهز.")
                   : booking.status === "pending"
-                    ? t("Awaiting a simulated response.", "بانتظار رد تجريبي.")
+                    ? t("Pending outcome recorded.", "تم تسجيل نتيجة معلقة.")
                     : booking.status === "cancelled"
                       ? t(
-                          "This demo booking is cancelled.",
-                          "تم إلغاء هذا الحجز التجريبي.",
+                          "This booking record is cancelled.",
+                          "أُلغي سجل الحجز هذا.",
                         )
                       : t(
-                          "The simulated payment failed.",
-                          "فشلت عملية الدفع التجريبية.",
+                          "Payment outcome recorded as failed.",
+                          "تم تسجيل نتيجة الدفع كفاشلة.",
                         )}
               </h2>
               <p>
-                {t("Demo reference", "المرجع التجريبي")}:{" "}
+                {t("Reference", "المرجع")}:{" "}
                 <strong>
                   <bdi>{booking.id}</bdi>
                 </strong>
@@ -546,7 +555,7 @@ export function BookingResultPage() {
                     className="button button--outline"
                     to={`/bookings/${booking.id}/voucher`}
                   >
-                    {t("View demo voucher", "عرض القسيمة التجريبية")}
+                    {t("View voucher", "عرض القسيمة")}
                   </Link>
                 )}
                 {booking.status === "failed" && (
@@ -580,15 +589,15 @@ export function VoucherPage() {
   const booking = records.find((b) => b.id === id);
   const hotel = hotels.find((h) => h.id === booking?.hotelId);
   return (
-    <Workspace title={t("Demo travel voucher", "قسيمة السفر التجريبية")}>
+    <Workspace title={t("Travel voucher", "قسيمة السفر")}>
       {!booking || !hotel ? (
         <EmptySelection />
       ) : booking.status !== "confirmed" ? (
         <SystemState
           title={t("Voucher unavailable", "القسيمة غير متاحة")}
           description={t(
-            "A printable demo voucher is available only for a confirmed demonstration record.",
-            "تتوفر القسيمة التجريبية للطباعة للحجوزات التجريبية المؤكدة فقط.",
+            "A printable voucher is available only for a confirmed booking record.",
+            "تتوفر القسيمة القابلة للطباعة لسجل حجز مؤكد فقط.",
           )}
         >
           <Link to={`/bookings/${booking.id}`}>
@@ -602,7 +611,7 @@ export function VoucherPage() {
               className="button button--primary"
               onClick={() => window.print()}
             >
-              {t("Print demo voucher", "طباعة القسيمة التجريبية")}
+              {t("Print voucher", "طباعة القسيمة")}
             </button>
             <Link to={`/bookings/${booking.id}`}>
               {t("Back to booking", "العودة للحجز")}
@@ -613,7 +622,7 @@ export function VoucherPage() {
               <BrandLogo withName />
               <div>
                 <p className="watermark">
-                  {t("DEMO · NOT VALID FOR TRAVEL", "تجريبي · غير صالح للسفر")}
+                  {t("NOT VALID FOR TRAVEL", "غير صالح للسفر")}
                 </p>
                 <h2>{t("Accommodation voucher", "قسيمة الإقامة")}</h2>
                 <p>
@@ -621,8 +630,8 @@ export function VoucherPage() {
                 </p>
               </div>
             </div>
-            <h2>{hotel.name[locale]}</h2>
-            <p>{hotel.address[locale]}</p>
+            <h2>{hotelDisplayName(hotel.name[locale])}</h2>
+            <p>{hotelDisplayAddress(hotel.address[locale], locale)}</p>
             <dl className="summary-dl">
               <div>
                 <dt>{t("Lead guest", "الضيف الرئيسي")}</dt>
@@ -647,7 +656,7 @@ export function VoucherPage() {
                 <dt>{t("Rooms", "الغرف")}</dt>
                 <dd>
                   {booking.selection.criteria.rooms.length} ×{" "}
-                  {booking.selection.room.name[locale]}
+                  {hotelDisplayName(booking.selection.room.name[locale])}
                 </dd>
               </div>
               <div>
@@ -669,7 +678,7 @@ export function VoucherPage() {
                 <dd>{booking.agencyReference}</dd>
               </div>
               <div>
-                <dt>{t("Demo room total", "إجمالي الغرف التجريبي")}</dt>
+                <dt>{t("Stay total", "إجمالي الإقامة")}</dt>
                 <dd>
                   <bdi>{money(booking.total)}</bdi>
                 </dd>
@@ -677,11 +686,10 @@ export function VoucherPage() {
             </dl>
             <h3>{t("Special requests", "طلبات خاصة")}</h3>
             <p>{booking.guests.requests || t("None", "لا يوجد")}</p>
-            <DemoNotice />
             <p className="fine-print">
               {t(
-                "No supplier confirmation, check-in entitlement or payment receipt. All rates and cancellation conditions are illustrative. This voucher cannot be used at the property.",
-                "لا يُعد تأكيداً من المورد أو تصريح إقامة أو إيصال دفع. جميع الأسعار وشروط الإلغاء توضيحية. لا يمكن استخدام القسيمة في الفندق.",
+                "This record is for review only. It is not a supplier confirmation, check-in document or payment receipt.",
+                "هذا السجل للمراجعة فقط، ولا يُعد تأكيدًا من المورد أو مستند تسجيل وصول أو إيصال دفع.",
               )}
             </p>
           </div>

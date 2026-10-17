@@ -17,7 +17,7 @@ import type {
   DemoSelection,
   DemoBooking,
   GuestValues,
-  DemoStatus,
+  PaymentMethod,
   AgencyProfile,
   DemoNotification,
 } from "./types";
@@ -37,6 +37,10 @@ interface DemoContextValue {
   signOut: () => void;
   selection: DemoSelection | null;
   policyAcknowledged: boolean;
+  paymentMethod: PaymentMethod | null;
+  paymentDetailsPrepared: boolean;
+  selectPaymentMethod: (method: PaymentMethod | null) => void;
+  preparePaymentDetails: () => void;
   acknowledgePolicy: (accepted: boolean) => void;
   guests: GuestValues | null;
   records: DemoBooking[];
@@ -45,7 +49,6 @@ interface DemoContextValue {
   selectRoom: (selection: DemoSelection) => void;
   updateCriteria: (criteria: HotelSearchCriteria) => void;
   saveGuests: (guests: GuestValues) => void;
-  createBooking: (status: Exclude<DemoStatus, "cancelled">) => string | null;
   cancelBooking: (id: string) => void;
   modifyBooking: (
     id: string,
@@ -82,6 +85,8 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const [rentalDriver, setRentalDriver] = useState<RentalDriver | null>(null);
   const [rentals, setRentals] = useState<RentalRecord[]>([]);
   const [policyAcknowledged, setPolicyAcknowledged] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [paymentDetailsPrepared, setPaymentDetailsPrepared] = useState(false);
   const [selection, setSelection] = useState<DemoSelection | null>(null);
   const [guests, setGuests] = useState<GuestValues | null>(null);
   const [records, setRecords] = useState(initialBookings);
@@ -167,6 +172,8 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       setRentalPolicyAcknowledged(false);
       setSelection(null);
       setPolicyAcknowledged(false);
+      setPaymentMethod(null);
+      setPaymentDetailsPrepared(false);
       setGuests(null);
       setRecords(initialBookings());
       setProfile(demoProfile);
@@ -175,6 +182,13 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     selection,
     policyAcknowledged,
     acknowledgePolicy: setPolicyAcknowledged,
+    paymentMethod,
+    paymentDetailsPrepared,
+    selectPaymentMethod: (method) => {
+      if (method !== paymentMethod) setPaymentDetailsPrepared(false);
+      setPaymentMethod(method);
+    },
+    preparePaymentDetails: () => setPaymentDetailsPrepared(true),
     guests,
     records,
     profile,
@@ -182,55 +196,18 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     selectRoom: (next) => {
       setSelection(next);
       setPolicyAcknowledged(false);
+      setPaymentMethod(null);
+      setPaymentDetailsPrepared(false);
       setGuests(null);
     },
     updateCriteria: (criteria) => {
       setPolicyAcknowledged(false);
+      setPaymentMethod(null);
+      setPaymentDetailsPrepared(false);
       setSelection((s) => (s ? { ...s, criteria } : null));
       setGuests(null);
     },
     saveGuests: setGuests,
-    createBooking: (status) => {
-      if (!selection || !guests || !policyAcknowledged) return null;
-      const id = `DEMO-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
-      const at = new Date().toISOString();
-      const record: DemoBooking = {
-        id,
-        hotelId: selection.hotelId,
-        status,
-        bookedAt: localToday(),
-        checkIn: selection.criteria.checkIn,
-        checkOut: selection.criteria.checkOut,
-        traveller: guests.leadName,
-        owner: "mine",
-        agencyReference: guests.reference || id,
-        cancellationFee: false,
-        selection,
-        policyAcknowledged,
-        guests,
-        total: totalFor(selection),
-        timeline: [
-          { label: "Demo request created", at },
-          { label: `Demo ${status}`, at },
-        ],
-      };
-      setRecords((current) => [record, ...current]);
-      setNotifications((current) => [
-        {
-          id,
-          title: `${id} · ${status}`,
-          description:
-            "A local booking simulation was created. No supplier reservation or payment occurred.",
-          href: `/bookings/${id}`,
-          read: false,
-        },
-        ...current,
-      ]);
-      setSelection(null);
-      setPolicyAcknowledged(false);
-      setGuests(null);
-      return id;
-    },
     cancelBooking: (id) =>
       setRecords((current) =>
         current.map((b) =>

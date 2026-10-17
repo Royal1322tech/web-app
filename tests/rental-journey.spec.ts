@@ -8,7 +8,7 @@ async function chooseVehicle(page: Page) {
   await page.getByLabel("Pickup date", { exact: true }).fill("2027-03-10");
   await page.getByLabel("Return date", { exact: true }).fill("2027-03-13");
   await page
-    .getByRole("button", { name: "Search demo vehicles", exact: true })
+    .getByRole("button", { name: "Search vehicles", exact: true })
     .click();
   await expect(page).toHaveURL(/start=2027-03-10/);
   await page
@@ -16,7 +16,7 @@ async function chooseVehicle(page: Page) {
     .first()
     .click();
   await page
-    .getByRole("button", { name: "Select vehicle — demo", exact: true })
+    .getByRole("button", { name: "Select vehicle", exact: true })
     .click();
   await expect(page.locator(".rental-summary")).toContainText("$135.00");
   await page.getByRole("checkbox").check();
@@ -54,18 +54,18 @@ for (const width of [375, 1440])
     });
     await page.setViewportSize({ width, height: 1000 });
     await chooseVehicle(page);
-    await page.getByLabel("Rental demo outcome").selectOption("insufficient");
-    await page.getByRole("button", { name: "Simulate rental payment" }).click();
-    await expect(page.getByRole("alert")).toContainText("Insufficient credit");
-    await page.getByLabel("Rental demo outcome").selectOption("confirmed");
-    await page.getByRole("button", { name: "Simulate rental payment" }).click();
-    await page.getByRole("button", { name: "Show rental outcome" }).click();
+    await page.getByLabel("Payment outcome").selectOption("insufficient");
+    await page.getByRole("button", { name: "Continue to outcome" }).click();
+    await expect(page.getByRole("alert")).toContainText("credit is insufficient");
+    await page.getByLabel("Payment outcome").selectOption("confirmed");
+    await page.getByRole("button", { name: "Continue to outcome" }).click();
+    await page.getByRole("button", { name: "Show outcome" }).click();
     await expect(page).toHaveURL(/car-rental\/bookings\/RENTAL-DEMO-/);
     await expect(page.locator(".status-badge")).toContainText("Confirmed");
     await expect(
       page.getByText("Sample Driver", { exact: true }),
     ).toBeVisible();
-    const modify = page.getByRole("button", { name: "Modify demo rental" });
+    const modify = page.getByRole("button", { name: "Modify rental" });
     await modify.click();
     const dialog = page.getByRole("dialog");
     await dialog.getByLabel("Return date", { exact: true }).fill("2027-03-09");
@@ -80,18 +80,18 @@ for (const width of [375, 1440])
       path: `test-results/rental-details-${width}.png`,
       fullPage: true,
     });
-    await page.getByRole("button", { name: "Cancel demo rental" }).click();
+    await page.getByRole("button", { name: "Cancel rental" }).click();
     await dialog
       .getByRole("button", { name: "Confirm simulated cancellation" })
       .click();
     await expect(page.locator(".status-badge")).toContainText("Cancelled");
     await expect(
-      page.getByRole("button", { name: "Modify demo rental" }),
+      page.getByRole("button", { name: "Modify rental" }),
     ).toHaveCount(0);
     await page.locator('.rental-nav a[href="/car-rental/bookings"]').click();
     await page.getByLabel("Rental status").selectOption("confirmed");
     await expect(
-      page.getByRole("heading", { name: "No demo rentals" }),
+      page.getByRole("heading", { name: "No rental records" }),
     ).toBeVisible();
     await page.getByLabel("Rental status").selectOption("cancelled");
     await page.getByRole("link", { name: "View rental details" }).click();
@@ -107,26 +107,26 @@ test("rental failure retry, pending status and Arabic navigation", async ({
   page,
 }) => {
   await chooseVehicle(page);
-  await page.getByLabel("Rental demo outcome").selectOption("failed");
-  await page.getByRole("button", { name: "Simulate rental payment" }).click();
-  await page.getByRole("button", { name: "Show rental outcome" }).click();
+  await page.getByLabel("Payment outcome").selectOption("failed");
+  await page.getByRole("button", { name: "Continue to outcome" }).click();
+  await page.getByRole("button", { name: "Show outcome" }).click();
   await expect(page.locator(".status-badge")).toContainText("Failed");
-  await page.getByRole("button", { name: "Retry rental simulation" }).click();
+  await page.getByRole("button", { name: "Review another outcome" }).click();
   await expect(page).toHaveURL(/car-rental\/review$/);
   await page.getByRole("checkbox", { name: /I have reviewed the cancellation/ }).check();
   await page.getByRole("link", { name: "Continue to rental payment preview" }).click();
-  await page.getByLabel("Rental demo outcome").selectOption("pending");
-  await page.getByRole("button", { name: "Simulate rental payment" }).click();
-  await page.getByRole("button", { name: "Show rental outcome" }).click();
+  await page.getByLabel("Payment outcome").selectOption("pending");
+  await page.getByRole("button", { name: "Continue to outcome" }).click();
+  await page.getByRole("button", { name: "Show outcome" }).click();
   await expect(page.locator(".status-badge")).toContainText("Pending");
   await openHeaderTools(page);
   await selectLanguage(page, "ar");
   await closeHeaderMenu(page);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "تفاصيل حجز التأجير",
+    "تفاصيل سجل التأجير",
   );
   await expect(
-    page.getByRole("button", { name: "إلغاء التأجير التجريبي" }),
+    page.getByRole("button", { name: "إلغاء التأجير" }),
   ).toBeVisible();
   expect(
     await page.evaluate(
@@ -149,7 +149,7 @@ test("rental results filters, unavailable selection, direct URLs and accessibili
   await page.getByLabel("Vehicle category").selectOption("van");
   await page.getByRole("link", { name: "View vehicle" }).click();
   await expect(
-    page.getByRole("button", { name: "Unavailable — demo" }),
+    page.getByRole("button", { name: "Unavailable" }),
   ).toBeDisabled();
   await page.screenshot({
     path: "test-results/rental-unavailable.png",

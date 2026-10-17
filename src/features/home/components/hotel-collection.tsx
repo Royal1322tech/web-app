@@ -63,10 +63,10 @@ export function HotelCollection({ hotels }: { hotels: readonly Hotel[] }) {
       <p className={styles.sampleNote} role="status">
         {filtered
           ? t(
-              `${visibleHotels.length} sample hotels shown. This filters preview content only.`,
-              `يتم عرض ${visibleHotels.length} فنادق تجريبية. التصفية تخص المحتوى التجريبي فقط.`,
+              `${visibleHotels.length} hotels shown. Rates are illustrative; availability requires supplier confirmation.`,
+              `${visibleHotels.length} فنادق معروضة. الأسعار توضيحية والتوافر يتطلب تأكيد المورد.`,
             )
-          : t("Sample collection — not live listings or availability.")}
+          : t("Illustrative hotel listings · Availability requires supplier confirmation.", "فنادق توضيحية · التوافر يتطلب تأكيد المورد.")}
       </p>
       <div key={selectedCity} className={marquee.viewport} data-collection-marquee data-running={canAnimate && !touching} data-reduced={reduced}
         onScroll={event => {
@@ -82,7 +82,7 @@ export function HotelCollection({ hotels }: { hotels: readonly Hotel[] }) {
         }}
         onTouchStart={() => setTouching(true)} onTouchEnd={() => setTouching(false)} onTouchCancel={() => setTouching(false)}
         // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- Native keyboard scrolling pauses decorative motion.
-        role="region" aria-label={t("Sample hotel collection")} tabIndex={0}>
+        role="region" aria-label={t("Hotel collection", "مجموعة الفنادق")} tabIndex={0}>
         <div className={marquee.track} style={{ "--travel-duration": `${Math.max(6, visibleHotels.length * 2) * 296 / SCROLL_SPEED_PX_PER_SECOND}s` } as CSSProperties}>
           {[0, 1].map(group => <div className={marquee.group} key={group} aria-hidden={group === 1 ? true : undefined}>
             {Array.from({ length: Math.max(6, visibleHotels.length * 2) }, (_, index) => {

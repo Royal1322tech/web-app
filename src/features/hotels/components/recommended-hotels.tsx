@@ -1,3 +1,4 @@
+import { hotelDisplayName} from "../lib/presentation";
 import { stayQuery } from "../lib/stay-query";
 import type { HotelSearchCriteria } from "@/features/home/schemas/hotel-search.schema";
 import { ResponsiveImage as Image } from "@/components/ui/responsive-image";
@@ -23,7 +24,7 @@ export function RecommendedHotels({
                   ? "/images/home/hotel-pool.png"
                   : "/images/home/hotel-lobby.png"
               }
-              alt={t("Sample hotel photograph", "صورة فندق تجريبية")}
+              alt={t("Hotel photograph", "صورة فندق")}
               width={286}
               height={index % 2 ? 190 : 185}
               sizes="(max-width: 599px) min(286px, calc(100vw - 62px)), 286px"
@@ -32,15 +33,15 @@ export function RecommendedHotels({
               <Link
                 to={`/hotels/${hotel.id}${criteria ? `?${stayQuery({ ...criteria, destination: hotel.city.en })}` : ""}`}
               >
-                {hotel.name[locale]}
+                {hotelDisplayName(hotel.name[locale])}
               </Link>
             </h3>
             <p className={styles.muted}>{hotel.city[locale]}</p>
             <strong className={styles.rate}>${hotel.nightlyRate}</strong>
             <p className={styles.muted}>
               {t(
-                "Sample nightly rate · availability pending",
-                "سعر تجريبي لليلة · التوافر غير متاح",
+                "Nightly rate · USD",
+                "السعر لليلة · دولار",
               )}
             </p>
             <Link

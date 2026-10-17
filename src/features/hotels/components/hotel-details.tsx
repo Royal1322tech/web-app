@@ -1,3 +1,4 @@
+import { hotelDisplayName, hotelDisplayAddress } from "../lib/presentation";
 import { readStayQuery } from "../lib/stay-query";
 import { useSearchParams } from "react-router-dom";
 import { RoomOptions } from "./room-options";
@@ -26,7 +27,7 @@ export function HotelDetails({ hotel }: { hotel: HotelListing }) {
     () => readStayQuery(query, hotel.city.en) ?? defaultCriteria(hotel.city.en),
   );
   return (
-    <CatalogShell title={hotel.name[locale]} detail>
+    <CatalogShell title={hotelDisplayName(hotel.name[locale])} detail>
       <HotelGallery hotel={hotel} />
       <div className={styles.detailIntro}>
         <div>
@@ -35,9 +36,9 @@ export function HotelDetails({ hotel }: { hotel: HotelListing }) {
               {t("Luxury Collection", "مجموعة فاخرة")}
             </span>
           )}
-          <h1>{hotel.name[locale]}</h1>
+          <h1>{hotelDisplayName(hotel.name[locale])}</h1>
           <p className={styles.address}>
-            <Icon name="pin" /> {hotel.address[locale]} ·{" "}
+            <Icon name="pin" /> {hotelDisplayAddress(hotel.address[locale], locale)} ·{" "}
             <a href="#location">{t("View On Map", "عرض على الخريطة")}</a>
           </p>
           <ul className={styles.amenityGrid}>
@@ -51,8 +52,8 @@ export function HotelDetails({ hotel }: { hotel: HotelListing }) {
           <h2>{t("Overview", "نظرة عامة")}</h2>
           <p>
             {t(
-              "Explore this hotel through the supplied design imagery and sample room information.",
-              "استكشف الفندق من خلال صور التصميم المقدمة ومعلومات الغرف التجريبية.",
+              "Explore the hotel, room options and stay details.",
+              "استكشف الفندق وخيارات الغرف وتفاصيل الإقامة.",
             )}
           </p>
           <details>
@@ -101,8 +102,8 @@ export function HotelDetails({ hotel }: { hotel: HotelListing }) {
           title={t("Rooms & Boards", "الغرف والوجبات")}
         >
           {t(
-            "Check stay criteria and preview sample room options.",
-            "حدد معايير إقامتك وعاين خيارات الغرف التجريبية.",
+            "Set your stay criteria to review room options and rates.",
+            "حدد معايير إقامتك لمراجعة خيارات الغرف والأسعار.",
           )}
         </SectionHeading>
         <div className={styles.roomSearch}>
@@ -133,7 +134,7 @@ export function HotelDetails({ hotel }: { hotel: HotelListing }) {
           </label>
         </details>
         <StatePreview
-          emptyTitle={t("No available demo rooms", "لا توجد غرف تجريبية متاحة")}
+          emptyTitle={t("No matching rooms", "لا توجد غرف مطابقة")}
         >
           {board === "room" ? (
             <p className={styles.empty}>

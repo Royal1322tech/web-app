@@ -13,6 +13,7 @@ const routes = [
   "/booking/summary",
   "/booking/guests",
   "/booking/payment",
+  "/booking/result",
   "/booking/result/DEMO-1001",
   "/bookings/DEMO-1001",
   "/bookings/DEMO-1001/voucher",
@@ -24,10 +25,10 @@ async function selectRoom(page: Page) {
     .getByRole("button", { name: "Expand All Rooms", exact: true })
     .click();
   await expect(
-    page.getByRole("button", { name: "Sold out — demo", exact: true }).first(),
+    page.getByRole("button", { name: "Sold out", exact: true }).first(),
   ).toBeDisabled();
   await page
-    .getByRole("button", { name: "Select room — demo", exact: true })
+    .getByRole("button", { name: "Select room", exact: true })
     .first()
     .click();
   await expect(page).toHaveURL(/\/booking\/summary$/);
@@ -60,116 +61,47 @@ async function fillGuests(page: Page) {
     .getByRole("button", { name: "Continue to cancellation policy" })
     .click();
   await expect(page).toHaveURL(/\/booking\/policy$/);
-  await expect(page.getByRole("button", { name: "Continue to payment preview" })).toBeDisabled();
-  await page.getByRole("checkbox", { name: /I have reviewed the cancellation policy/ }).check();
-  await page.getByRole("link", { name: "Continue to payment preview" }).click();
+  await expect(page.getByRole("button", { name: "Continue to Payment Details" })).toBeDisabled();
+  await page.getByRole("checkbox", { name: /I have reviewed the cancellation and stay information/ }).check();
+  await page.getByRole("link", { name: "Continue to Payment Details" }).click();
   await expect(page).toHaveURL(/\/booking\/payment$/);
 }
-async function finish(page: Page, scenario = "confirmed") {
-  await page
-    .getByLabel("Demonstration outcome", { exact: true })
-    .selectOption(scenario);
-  await page
-    .getByRole("button", { name: "Simulate payment", exact: true })
-    .click();
-  await expect(
-    page.getByText("Processing state preview.", { exact: false }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Show simulated result" }).click();
-  await expect(page).toHaveURL(/\/booking\/result\/DEMO-/);
-}
-for (const width of [375, 1440])
-  test(`complete booking, voucher and cancellation at ${width}px`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width, height: 950 });
-    const writes: string[] = [];
-    page.on("request", (r) => {
-      if (!["GET", "HEAD"].includes(r.method())) writes.push(r.url());
-    });
-    await selectRoom(page);
-    await fillGuests(page);
-    await page
-      .getByLabel("Demonstration outcome", { exact: true })
-      .selectOption("insufficient");
-    await expect(page.getByRole("alert")).toContainText(
-      "Insufficient demo credit",
-    );
-    await expect(
-      page.getByRole("button", { name: "Simulate payment", exact: true }),
-    ).toBeDisabled();
-    await finish(page);
-    await page
-      .getByRole("link", { name: "View demo voucher", exact: true })
-      .click();
-    await expect(page.locator(".voucher")).toContainText("Demo Guest");
-    await expect(page.locator(".voucher")).toContainText("Demo Companion");
-    await expect(page.locator(".voucher")).toContainText("LOCAL-AGENCY-42");
-    await expect(page.locator(".voucher")).toContainText(
-      "DEMO · NOT VALID FOR TRAVEL",
-    );
-    await page.emulateMedia({ media: "print" });
-    await expect(page.locator(".voucher")).toBeVisible();
-    await expect(page.locator("header")).toBeHidden();
-    await page.emulateMedia({ media: "screen" });
-    await page
-      .getByRole("link", { name: "Back to booking", exact: true })
-      .click();
-    await page
-      .getByRole("button", { name: "Cancel demo booking", exact: true })
-      .click();
-    await expect(page.getByRole("dialog")).toBeVisible();
-    await page
-      .getByRole("button", { name: "Keep booking", exact: true })
-      .click();
-    await expect(
-      page.getByRole("button", { name: "Cancel demo booking", exact: true }),
-    ).toBeFocused();
-    await page
-      .getByRole("button", { name: "Cancel demo booking", exact: true })
-      .click();
-    await page
-      .getByRole("button", { name: "Confirm simulated cancellation" })
-      .click();
-    await expect(page.locator(".status-badge").first()).toContainText(
-      "Cancelled",
-    );
-    await expect(
-      page.getByRole("link", { name: "View demo voucher", exact: true }),
-    ).toHaveCount(0);
-    expect(writes).toEqual([]);
-    expect(
-      await page.evaluate(() =>
-        JSON.stringify({ ...localStorage, ...sessionStorage }),
-      ),
-    ).not.toContain("Demo Guest");
+test("hotel payment details select one method and prepare a neutral result", async ({ page }) => {
+  const writes: string[] = [];
+  page.on("request", (request) => {
+    if (!["GET", "HEAD"].includes(request.method())) writes.push(request.url());
   });
-for (const scenario of ["pending", "failed"])
-  test(`${scenario} result and safe retry`, async ({ page }) => {
-    await selectRoom(page);
-    await fillGuests(page);
-    await finish(page, scenario);
-    await expect(page.locator(".status-badge").first()).toContainText(
-      scenario === "pending" ? "Pending" : "Failed",
-    );
-    await expect(
-      page.getByRole("link", { name: "View demo voucher", exact: true }),
-    ).toHaveCount(0);
-    if (scenario === "failed") {
-      await page.getByRole("button", { name: "Retry simulation" }).click();
-      await expect(page).toHaveURL(/\/booking\/payment$/);
-      await finish(page);
-      await expect(page.locator(".status-badge").first()).toContainText(
-        "Confirmed",
-      );
-    }
-  });
+  await selectRoom(page);
+  await fillGuests(page);
+  await expect(page.getByRole("heading", { name: "Choose a payment method" })).toBeVisible();
+  await page.screenshot({ path: "test-results/payment-details-desktop.png", fullPage: true });
+  const methods = page.getByRole("radio", { name: /InstaPay|Fawry|Credit \/ Debit Card|Agency Credit/ });
+  await expect(methods).toHaveCount(4);
+  await expect(page.getByRole("button", { name: "Continue", exact: true })).toBeDisabled();
+  await expect(page.getByLabel(/Card number|CVV|Expiry date/)).toHaveCount(0);
+
+  await page.getByRole("radio", { name: /Agency Credit/ }).check();
+  await expect(page.getByRole("region", { name: "Agency credit summary" })).toContainText("Available balance");
+  await expect(page.getByRole("region", { name: "Agency credit summary" })).toContainText("Estimated remaining");
+  await page.getByRole("radio", { name: "InstaPay" }).check();
+  await expect(page.getByRole("radio", { name: "Agency Credit" })).not.toBeChecked();
+  await page.getByRole("link", { name: "Back", exact: true }).click();
+  await page.getByRole("link", { name: "Continue to Payment Details" }).click();
+  await expect(page.getByRole("radio", { name: "InstaPay" })).toBeChecked();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(page).toHaveURL(/\/booking\/result$/);
+  await expect(page.getByRole("heading", { name: "Ready for the next step" })).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("No payment or hotel reservation has been processed.");
+  await page.screenshot({ path: "test-results/payment-prepared-desktop.png", fullPage: true });
+  expect(writes).toEqual([]);
+});
+
 test("booking modification updates dates, total and timeline", async ({
   page,
 }) => {
   await visit(page, "/bookings/DEMO-1001");
   await page
-    .getByRole("button", { name: "Modify demo booking", exact: true })
+    .getByRole("button", { name: "Modify booking", exact: true })
     .click();
   const dialog = page.getByRole("dialog");
   await dialog.locator("#check-in").fill("2027-01-10");
@@ -189,7 +121,7 @@ test("account editing, notifications, transactions and state previews", async ({
   await visit(page, "/agency/edit");
   await page.getByLabel("Agency name", { exact: true }).fill("");
   await page
-    .getByRole("button", { name: "Save demo profile", exact: true })
+    .getByRole("button", { name: "Save profile", exact: true })
     .click();
   await expect(page.getByRole("alert")).toContainText(
     "Enter your agency name.",
@@ -198,9 +130,9 @@ test("account editing, notifications, transactions and state previews", async ({
     .getByLabel("Agency name", { exact: true })
     .fill("Local Demo Agency");
   await page
-    .getByRole("button", { name: "Save demo profile", exact: true })
+    .getByRole("button", { name: "Save profile", exact: true })
     .click();
-  await expect(page.getByRole("status")).toContainText("Demo profile saved");
+  await expect(page.getByRole("status")).toContainText("Profile changes saved for this session");
   await page.getByRole("link", { name: "Back to profile" }).click();
   await expect(
     page.getByRole("heading", { name: "Local Demo Agency" }),
@@ -244,7 +176,7 @@ test("account editing, notifications, transactions and state previews", async ({
   ).toBeVisible();
   await page.getByRole("button", { name: "Retry", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "A transparent demo overview" }),
+    page.getByRole("heading", { name: "Account overview" }),
   ).toBeVisible();
 });
 test("mobile filters behave as a keyboard accessible drawer", async ({
@@ -258,7 +190,7 @@ test("mobile filters behave as a keyboard accessible drawer", async ({
   await dialog.getByLabel("Hotel Name", { exact: true }).fill("missing");
   await dialog.getByRole("button", { name: "Show 0 hotels" }).click();
   await expect(
-    page.getByText("No sample hotels match", { exact: false }),
+    page.getByText("No hotels match", { exact: false }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Filters (1)", exact: true }),
@@ -398,7 +330,7 @@ test("stay dates and multiple-room totals survive search, details and room chang
     .getByRole("button", { name: "Expand All Rooms", exact: true })
     .click();
   await page
-    .getByRole("button", { name: "Select room — demo", exact: true })
+    .getByRole("button", { name: "Select room", exact: true })
     .first()
     .click();
   await expect(page.locator(".selection-summary")).toContainText("$1,850.00");
@@ -415,7 +347,7 @@ test("stay dates and multiple-room totals survive search, details and room chang
     .getByRole("button", { name: "Expand All Rooms", exact: true })
     .click();
   await page
-    .getByRole("button", { name: "Select room — demo", exact: true })
+    .getByRole("button", { name: "Select room", exact: true })
     .first()
     .click();
   await page
@@ -425,56 +357,35 @@ test("stay dates and multiple-room totals survive search, details and room chang
   await expect(page.getByLabel("Guest 5 name", { exact: true })).toHaveCount(0);
 });
 
-test("Arabic mobile checkout preserves guest names, contact and totals through the voucher", async ({
-  page,
-}) => {
+test("Arabic mobile hotel payment prepares details without creating a booking", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 950 });
   await selectRoom(page);
   await openHeaderTools(page);
   await selectLanguage(page, "ar");
-  await page
-    .getByRole("link", { name: "المتابعة لبيانات الضيوف", exact: true })
-    .click();
-  await page
-    .getByLabel("اسم الضيف الرئيسي", { exact: true })
-    .fill("ضيف تجريبي");
-  await page
-    .getByLabel("البريد الإلكتروني", { exact: true })
-    .fill("demo@example.com");
-  await page
-    .getByLabel("هاتف التواصل", { exact: true })
-    .fill("+20 100 000 0000");
+  await page.getByRole("link", { name: "المتابعة لبيانات الضيوف", exact: true }).click();
+  await page.getByLabel("اسم الضيف الرئيسي", { exact: true }).fill("ضيف تجريبي");
+  await page.getByLabel("البريد الإلكتروني", { exact: true }).fill("demo@example.com");
+  await page.getByLabel("هاتف التواصل", { exact: true }).fill("+20 100 000 0000");
   await page.getByLabel("اسم الضيف 2", { exact: true }).fill("مرافق تجريبي");
   await page.getByRole("button", { name: "المتابعة لسياسة الإلغاء" }).click();
-  await expect(page.getByRole("button", { name: "المتابعة لمعاينة الدفع" })).toBeDisabled();
-  await page.getByRole("checkbox", { name: "راجعت معلومات سياسة الإلغاء." }).check();
-  await page.getByRole("link", { name: "المتابعة لمعاينة الدفع" }).click();
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth + 1,
-    ),
-  ).toBeTruthy();
-  const paymentAxe = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
-    .analyze();
+  await expect(page.getByRole("button", { name: "المتابعة إلى بيانات الدفع" })).toBeDisabled();
+  await page.getByRole("checkbox", { name: "راجعت معلومات الإلغاء والإقامة الموضحة أعلاه." }).check();
+  await page.getByRole("link", { name: "المتابعة إلى بيانات الدفع" }).click();
+  await expect(page.getByRole("heading", { name: "اختر طريقة الدفع" })).toBeVisible();
+  await expect(page.getByRole("radio")).toHaveCount(4);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBeTruthy();
+  const paymentAxe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
   expect(paymentAxe.violations).toEqual([]);
-  await page.getByRole("button", { name: "محاكاة الدفع", exact: true }).click();
-  await page.getByRole("button", { name: "عرض النتيجة التجريبية" }).click();
-  await page
-    .getByRole("link", { name: "عرض القسيمة التجريبية", exact: true })
-    .click();
-  await expect(page.locator(".voucher")).toContainText("ضيف تجريبي");
-  await expect(page.locator(".voucher")).toContainText("مرافق تجريبي");
+  await page.getByRole("radio", { name: "فوري" }).focus();
+  await page.keyboard.press("Space");
+  await expect(page.getByRole("radio", { name: "فوري" })).toBeChecked();
+  await page.getByRole("button", { name: "متابعة", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "تم تجهيز تفاصيل الحجز" }).last()).toBeVisible();
+  await expect(page.getByText("لم تتم معالجة أي دفعة أو حجز فندقي.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "عرض القسيمة", exact: true })).toHaveCount(0);
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth + 1,
-    ),
-  ).toBeTruthy();
-  await page.screenshot({
-    path: "test-results/voucher-mobile-ar.png",
-    fullPage: true,
-  });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBeTruthy();
+  await page.screenshot({ path: "test-results/payment-prepared-mobile-ar.png", fullPage: true });
 });
 
 test("email states, shared loading/empty/error states, and motion fallback remain usable", async ({
@@ -482,13 +393,13 @@ test("email states, shared loading/empty/error states, and motion fallback remai
 }) => {
   await visit(page, "/verify-email");
   await page.getByLabel("Verification state").selectOption("expired");
-  await expect(page.getByRole("alert")).toContainText("Expired link preview");
-  await page.getByRole("button", { name: "Reset demo link" }).click();
+  await expect(page.getByRole("alert")).toContainText("The link is expired");
+  await page.getByRole("button", { name: "Reset link status" }).click();
   await page
     .getByRole("button", { name: "Preview verification", exact: true })
     .click();
   await expect(page.getByRole("status")).toContainText(
-    "Your actual email has not been verified.",
+    "This local status does not verify your email address.",
   );
   for (const route of [
     "/search",

@@ -18,7 +18,7 @@ export function EnquiryPage({ group = false }: { group?: boolean }) {
   return <GeneralEnquiryPage group={group} />;
 }
 function GeneralEnquiryPage({ group }: { group: boolean }) {
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
   const [params] = useSearchParams();
   const [preview, setPreview] = useState(false);
   const schema = z.object({
@@ -87,7 +87,7 @@ function GeneralEnquiryPage({ group }: { group: boolean }) {
         </aside>}
 
         <form noValidate className={styles.form} onChange={() => setPreview(false)} onSubmit={handleSubmit(async () => { await Promise.resolve(); setPreview(true); }, () => setPreview(false))}>
-          <p className={styles.notice}>{t("Frontend preview only. Use fictional details. Nothing is sent, and no enquiry or quotation is submitted. Values clear when you leave this page.", "معاينة واجهة فقط. استخدم بيانات وهمية. لا يُرسل أي استفسار أو طلب سعر. تُمسح البيانات عند مغادرة الصفحة.")}</p>
+          <p className={styles.notice}>{t("Use fictional details. This form prepares a local preview and does not send your message.", "استخدم بيانات وهمية. يجهز هذا النموذج معاينة محلية ولا يرسل رسالتك.")}</p>
           <div className={styles.fields}>{fields.map(field => <FormField key={field.key} id={"enquiry-" + field.key} label={field.label} required={field.required} error={errors[field.key]?.message}>
             <div className={!group ? contact.inputWrap : undefined}>
             {!group && <Icon name={field.key === "email" ? "mail" : field.key === "name" ? "user" : field.key === "agency" ? "building" : "document"} />}
@@ -98,17 +98,15 @@ function GeneralEnquiryPage({ group }: { group: boolean }) {
           <FormField id="enquiry-message" label={group ? t("Message / requirements", "الرسالة / المتطلبات") : t("Message", "الرسالة")} required error={errors.message?.message}>
             <textarea placeholder={group ? undefined : t("Write your message here…", "اكتب رسالتك هنا…")} id="enquiry-message" className="input" rows={5} required maxLength={2000} aria-invalid={!!errors.message} aria-describedby={errors.message ? "enquiry-message-error" : undefined} {...register("message")} />
           </FormField>
-          <button className={`button button--primary ${!group ? contact.send : ""}`} disabled={isSubmitting} type="submit">{isSubmitting ? t("Preparing preview…", "تجهيز المعاينة…") : group ? t("Preview request", "معاينة الطلب") : t("Send Message", "إرسال الرسالة")}{!group && <Icon name="arrowRight" />}</button>
+          <button className={`button button--primary ${!group ? contact.send : ""}`} disabled={isSubmitting} type="submit">{isSubmitting ? t("Preparing preview…", "تجهيز المعاينة…") : group ? t("Preview request", "معاينة الطلب") : t("Prepare enquiry", "تجهيز الاستفسار")}{!group && <Icon name="arrowRight" />}</button>
           {preview && <section className={styles.preview} role="status"><h2>{t("Local preview ready — not sent", "المعاينة المحلية جاهزة — لم تُرسل")}</h2><p>{getValues("subject")}</p><p>{getValues("message")}</p><p>{t("Delivery is unavailable until an approved contact service is connected. No response time or price is promised.", "الإرسال غير متاح حتى ربط خدمة تواصل معتمدة. لا يوجد وعد بمدة رد أو سعر.")}</p></section>}
         </form>
         {group && <aside className={styles.aside}>
           <h2>{t("For travel professionals", "لمحترفي السفر")}</h2>
           <p>{t("Include your destination, travel dates and service requirements. Please do not enter payment details or identity documents.", "اذكر الوجهة وتواريخ السفر والخدمات المطلوبة. لا تدخل بيانات دفع أو مستندات هوية.")}</p>
-          <p>{t("Official contact channels and delivery are not configured in this preview.", "قنوات التواصل الرسمية والإرسال غير مُعدة في هذه المعاينة.")}</p>
           <Link to={group ? "/contact" : "/group-quotation"}>{group ? t("General agency enquiry", "استفسار عام للوكالة") : t("Plan a group quotation", "جهز طلب عرض سعر لمجموعة")}</Link>
-          <Link to="/search">{t("Explore hotel samples", "استكشف نماذج الفنادق")}</Link>
-          <Link to="/car-rental">{t("Explore car rental demo", "استكشف تجربة تأجير السيارات")}</Link>
-          <p lang={locale}>{t("No real reservation or transaction is created.", "لا يتم إنشاء حجز أو معاملة فعلية.")}</p>
+          <Link to="/search">{t("Explore hotels", "استكشف الفنادق")}</Link>
+          <Link to="/car-rental">{t("Explore car rentals", "استكشف تأجير السيارات")}</Link>
         </aside>}
       </div>
     </section>

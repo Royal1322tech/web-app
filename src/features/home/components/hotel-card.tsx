@@ -1,3 +1,4 @@
+import { hotelDisplayName } from "@/features/hotels/lib/presentation";
 import { PointsIndicator } from "./points-indicator";
 import { ResponsiveImage as Image } from "@/components/ui/responsive-image";
 import { Icon } from "@/components/ui/icon";
@@ -32,10 +33,7 @@ export function HotelCard({
       <div className={styles.cardImage}>
         <Image
           src={hotel.image}
-          alt={t(
-            `${hotel.name} — sample property photograph`,
-            `${hotel.nameAr ?? t(hotel.name)} — صورة فندق تجريبية`,
-          )}
+          alt={`${hotelDisplayName(t(hotel.name))} — ${t("Hotel photograph", "صورة فندق")}`}
           width={compact ? 286 : 386}
           height={compact ? (hotel.image.includes("lobby") ? 185 : 190) : 258}
           sizes={
@@ -50,8 +48,8 @@ export function HotelCard({
             className={styles.favouriteButton}
             tabIndex={duplicate ? -1 : undefined}
             aria-label={t(
-              `Favourite: ${hotel.name} — ${hotel.city}`,
-              `المفضلة: ${t(hotel.name)} — ${t(hotel.city)}`,
+              `Favourite: ${hotelDisplayName(t(hotel.name))} — ${t(hotel.city)}`,
+              `المفضلة: ${hotelDisplayName(hotel.nameAr ?? t(hotel.name))} — ${t(hotel.city)}`,
             )}
             aria-pressed={favourites.ids.includes(hotel.id)}
             onClick={() => favourites.toggle(hotel.id)}
@@ -64,12 +62,12 @@ export function HotelCard({
         )}
       </div>
       <div className={styles.hotelTitle}>
-        <h3>{t(hotel.name, hotel.nameAr)}</h3>
+        <h3>{hotelDisplayName(t(hotel.name, hotel.nameAr))}</h3>
         {!compact && (
           <span
             aria-label={t(
-              `Sample rating ${hotel.rating} out of 5`,
-              `تقييم تجريبي ${hotel.rating} من ٥`,
+              `Rating ${hotel.rating} out of 5`,
+              `التقييم ${hotel.rating} من ٥`,
             )}
           >
             <Icon name="star" />
@@ -83,7 +81,7 @@ export function HotelCard({
       </p>
       {compact ? (
         <>
-          <span className={styles.offer}>{t("Sample offer")}</span>
+          <span className={styles.offer}>{t("Nightly rate", "السعر لليلة")}</span>
           <p className={styles.rate}>
             <strong>${hotel.nightlyRate}</strong>{" "}
             {t("USD / night", "دولار / ليلة")}
@@ -125,8 +123,8 @@ export function HotelCard({
           aria-label={
             compact
               ? t(
-                  `View ${hotel.name} sample deal`,
-                  `عرض العرض التجريبي لـ ${hotel.nameAr ?? t(hotel.name)}`,
+                  `View ${hotelDisplayName(t(hotel.name))} offer`,
+                  `عرض ${hotelDisplayName(hotel.nameAr ?? t(hotel.name))}`,
                 )
               : undefined
           }
