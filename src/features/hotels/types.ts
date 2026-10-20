@@ -20,6 +20,7 @@ export type Amenity =
   | "gym"
   | "heating"
   | "accessible";
+export type HotelStarClassification = 1 | 2 | 3 | 4 | 5;
 export interface Coordinates {
   latitude: number;
   longitude: number;
@@ -38,18 +39,21 @@ export interface HotelSummary {
   id: string;
   name: LocalizedText;
   address: LocalizedText;
+  phone?: string;
   photos: readonly HotelPhoto[];
   nightlyRate: number;
-  reviewScore: number;
+  reviewScore?: number;
   amenities: readonly Amenity[];
-  stars?: number;
+  stars?: HotelStarClassification;
+  inventoryType?: "demo";
   breakfast?: boolean;
   detailsHref?: string;
 }
 export interface HotelListing extends HotelSummary {
   city: LocalizedText;
+  description?: LocalizedText;
   boardPlans?: readonly BoardPlan[];
-  stars: number;
+  stars?: HotelStarClassification;
   luxury: boolean;
   business: boolean;
   breakfast: boolean;

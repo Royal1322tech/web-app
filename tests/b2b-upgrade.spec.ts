@@ -90,8 +90,14 @@ test("hotel payment details select one method and prepare a neutral result", asy
   await expect(page.getByRole("radio", { name: "InstaPay" })).toBeChecked();
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(page).toHaveURL(/\/booking\/result$/);
-  await expect(page.getByRole("heading", { name: "Ready for the next step" })).toBeVisible();
-  await expect(page.getByRole("status")).toContainText("No payment or hotel reservation has been processed.");
+  await expect(page.getByText("Booking Details Prepared", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Prepared booking summary" })).toBeVisible();
+  await expect(page.locator(".booking-prepared-facts")).toContainText("Eastern Al Montazah Hotel");
+  await expect(page.locator(".booking-prepared-facts")).toContainText("Bed & Breakfast");
+  await expect(page.locator(".booking-prepared-facts")).toContainText("InstaPay");
+  await expect(page.getByRole("status")).toContainText("No hotel reservation has been submitted or confirmed, and no real payment has been processed.");
+  await expect(page.getByRole("link", { name: "Review Booking Details" })).toHaveAttribute("href", "/booking/summary");
+  await expect(page.getByRole("link", { name: "Return to Hotel Search" })).toHaveAttribute("href", "/search");
   await page.screenshot({ path: "test-results/payment-prepared-desktop.png", fullPage: true });
   expect(writes).toEqual([]);
 });
@@ -381,7 +387,7 @@ test("Arabic mobile hotel payment prepares details without creating a booking", 
   await expect(page.getByRole("radio", { name: "فوري" })).toBeChecked();
   await page.getByRole("button", { name: "متابعة", exact: true }).click();
   await expect(page.getByRole("heading", { name: "تم تجهيز تفاصيل الحجز" }).last()).toBeVisible();
-  await expect(page.getByText("لم تتم معالجة أي دفعة أو حجز فندقي.")).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("لم يُرسل الحجز إلى الفندق أو يُؤكد، ولم تتم معالجة دفعة فعلية.");
   await expect(page.getByRole("link", { name: "عرض القسيمة", exact: true })).toHaveCount(0);
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBeTruthy();

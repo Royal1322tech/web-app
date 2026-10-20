@@ -5,7 +5,7 @@ import { RoomOptions } from "./room-options";
 import { StatePreview } from "@/components/ui/system-state";
 import { type HotelSearchCriteria } from "@/features/home/schemas/hotel-search.schema";
 import { defaultCriteria } from "@/features/demo/demo-provider";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HotelSearchForm } from "@/features/home/components/hotel-search-form";
 import { useLocale } from "@/features/localization/locale-provider";
 import type { HotelListing } from "../types";
@@ -19,15 +19,30 @@ import { RecommendedHotels } from "./recommended-hotels";
 import { PriceChart } from "./price-chart";
 import { Comparison } from "./comparison";
 import styles from "../hotels.module.css";
+import { boardPlans, hotelBoardPlans, type BoardPlan } from "../lib/board-plans";
 export function HotelDetails({ hotel }: { hotel: HotelListing }) {
   const { locale, t } = useLocale();
-  const [board, setBoard] = useState("any");
+  const [board, setBoard] = useState<BoardPlan | "any">("any");
   const [query] = useSearchParams();
+  const roomsSection = useRef<HTMLElement>(null);
   const [criteria, setCriteria] = useState<HotelSearchCriteria>(
     () => readStayQuery(query, hotel.city.en) ?? defaultCriteria(hotel.city.en),
   );
+  useEffect(() => {
+    if (query.get("changeRoom") !== "1") return;
+    roomsSection.current?.focus({ preventScroll: true });
+    roomsSection.current?.scrollIntoView({ block: "start" });
+  }, [query]);
   return (
     <CatalogShell title={hotelDisplayName(hotel.name[locale])} detail>
+      <section className={styles.roomSearch} aria-label={t("Search your stay", "ابحث عن إقامتك")}>
+        <HotelSearchForm
+          compact
+          fixedDestination
+          initialValues={criteria}
+          onSearch={setCriteria}
+        />
+      </section>
       <HotelGallery hotel={hotel} />
       <div className={styles.detailIntro}>
         <div>
@@ -37,6 +52,7 @@ export function HotelDetails({ hotel }: { hotel: HotelListing }) {
             </span>
           )}
           <h1>{hotelDisplayName(hotel.name[locale])}</h1>
+          {hotel.inventoryType === "demo" && <span className={styles.demoInventory}>{t("Demo inventory", "بيانات تجريبية")}</span>}
           <p className={styles.address}>
             <Icon name="pin" /> {hotelDisplayAddress(hotel.address[locale], locale)} ·{" "}
             <a href="#location">{t("View On Map", "عرض على الخريطة")}</a>
@@ -51,10 +67,7 @@ export function HotelDetails({ hotel }: { hotel: HotelListing }) {
           </ul>
           <h2>{t("Overview", "نظرة عامة")}</h2>
           <p>
-            {t(
-              "Explore the hotel, room options and stay details.",
-              "استكشف الفندق وخيارات الغرف وتفاصيل الإقامة.",
-            )}
+            {hotel.description?.[locale] ?? t("Explore the hotel, room options and stay details.", "استكشف الفندق وخيارات الغرف وتفاصيل الإقامة.")}
           </p>
           <details>
             <summary>{t("View More", "عرض المزيد")}</summary>
@@ -96,7 +109,7 @@ export function HotelDetails({ hotel }: { hotel: HotelListing }) {
           </a>
         </aside>
       </div>
-      <section id="rooms" className={styles.detailSection}>
+      <section id="rooms" ref={roomsSection} tabIndex={-1} className={styles.detailSection}>
         <SectionHeading
           icon="bed"
           title={t("Rooms & Boards", "الغرف والوجبات")}
@@ -106,14 +119,6 @@ export function HotelDetails({ hotel }: { hotel: HotelListing }) {
             "حدد معايير إقامتك لمراجعة خيارات الغرف والأسعار.",
           )}
         </SectionHeading>
-        <div className={styles.roomSearch}>
-          <HotelSearchForm
-            compact
-            fixedDestination
-            initialValues={criteria}
-            onSearch={setCriteria}
-          />
-        </div>
         <details>
           <summary>{t("Board preference", "تفضيل الوجبات")}</summary>
           <label className={styles.boardField}>
@@ -122,30 +127,18 @@ export function HotelDetails({ hotel }: { hotel: HotelListing }) {
               aria-label={t("Board preference", "تفضيل الوجبات")}
               value={board}
               onChange={(event) => {
-                setBoard(event.target.value);
+                setBoard(boardPlans.find(plan => plan.value === event.target.value)?.value ?? "any");
               }}
             >
               <option value="any">{t("Any board", "كل الخيارات")}</option>
-              <option value="room">{t("Room only", "غرفة فقط")}</option>
-              <option value="breakfast">
-                {t("Breakfast included", "تشمل الإفطار")}
-              </option>
+              {hotelBoardPlans(hotel).map(plan => <option key={plan} value={plan}>{boardPlans.find(item => item.value === plan)?.[locale]}</option>)}
             </select>
           </label>
         </details>
         <StatePreview
           emptyTitle={t("No matching rooms", "لا توجد غرف مطابقة")}
         >
-          {board === "room" ? (
-            <p className={styles.empty}>
-              {t(
-                "No room-only rates are supplied. Choose Any board or Breakfast included.",
-                "لا تتوفر أسعار لغرف دون وجبات. اختر كل الخيارات أو تشمل الإفطار.",
-              )}
-            </p>
-          ) : (
-            <RoomOptions hotel={hotel} dates={criteria} />
-          )}
+          <RoomOptions hotel={hotel} dates={criteria} board={board} />
         </StatePreview>
       </section>
       <PriceChart />

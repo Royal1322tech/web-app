@@ -1,14 +1,15 @@
-import { useId, useSyncExternalStore } from "react";
+import { useCallback, useId, useMemo, useSyncExternalStore } from "react";
 import { Icon } from "@/components/ui/icon";
 import { Popover } from "@/components/ui/popover";
 import { useLocale } from "@/features/localization/locale-provider";
+import { countries } from "@/features/agency-registration/data/countries";
 
 import styles from "./travel-preferences.module.css";
 
 const currencies = ["AED", "EGP", "EUR", "KWD", "SAR", "USD"] as const;
-const nationalities = ["Egypt", "Saudi Arabia", "Global"] as const;
-type Preferences = { currency: typeof currencies[number]; nationality: typeof nationalities[number] };
-const defaults: Preferences = { currency: "USD", nationality: "Global" };
+export type NationalityCode = (typeof countries)[number]["value"];
+type Preferences = { currency: typeof currencies[number]; nationality: NationalityCode };
+const defaults: Preferences = { currency: "USD", nationality: "EG" };
 const key = "royal-vacation.travel-preferences";
 let fallback = JSON.stringify(defaults);
 const subscribe = (listener: () => void) => {
@@ -16,36 +17,44 @@ const subscribe = (listener: () => void) => {
   return () => { window.removeEventListener("rv-preferences", listener); window.removeEventListener("storage", listener); };
 };
 function snapshot() { try { return localStorage.getItem(key) || fallback; } catch { return fallback; } }
+function parsePreferences(raw: string): Preferences {
+  try {
+    const value = JSON.parse(raw) as { currency?: string; nationality?: string };
+    const legacyNationality = value.nationality === "Egypt" ? "EG" : value.nationality === "Saudi Arabia" ? "SA" : value.nationality;
+    return {
+      currency: currencies.includes(value.currency as Preferences["currency"]) ? value.currency as Preferences["currency"] : "USD",
+      nationality: countries.some(country => country.value === legacyNationality) ? legacyNationality as NationalityCode : defaults.nationality,
+    };
+  } catch { return defaults; }
+}
 export function useTravelPreferences() {
   const raw = useSyncExternalStore(subscribe, snapshot, () => fallback);
-  let preferences = defaults;
-  try {
-    const value = JSON.parse(raw) as Preferences;
-    preferences = { currency: currencies.includes(value.currency) ? value.currency : "USD", nationality: nationalities.includes(value.nationality) ? value.nationality : "Global" };
-  } catch { /* Corrupt or unavailable local storage uses safe non-sensitive defaults. */ }
-  const update = (patch: Partial<Preferences>) => {
+  const preferences = useMemo(() => parsePreferences(raw), [raw]);
+  const update = useCallback((patch: Partial<Preferences>) => {
     fallback = JSON.stringify({ ...preferences, ...patch });
     try { localStorage.setItem(key, fallback); } catch { /* Session-only fallback. */ }
     window.dispatchEvent(new Event("rv-preferences"));
-  };
+  }, [preferences]);
   return { ...preferences, update };
 }
-const nationalityFlags = { Egypt: "eg", "Saudi Arabia": "sa", Global: null } as const;
+export function isNationalityCode(value: string): value is NationalityCode {
+  return countries.some(country => country.value === value);
+}
 const currencyFlags = { AED: "ae", EGP: "eg", EUR: "eu", KWD: "kw", SAR: "sa", USD: "us" } as const;
 function Flag({ code }: { code: string | null }) {
   return <span className={styles.flag} aria-hidden="true">{code ? <img src={`/flags/${code}.svg`} alt="" width="22" height="22" /> : <Icon name="globe" />}</span>;
 }
 export function PreferenceFields() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const { currency, nationality, update } = useTravelPreferences();
   const id = useId();
+  const countryNames = new Intl.DisplayNames([locale], { type: "region" });
   return <div className={styles.fields}>
     <fieldset className={styles.group}><legend>{t("Nationality", "الجنسية")}</legend>
-      {nationalities.map((value, index) => <label className={styles.option} key={value}>
-        <input type="radio" name={id + "-nationality"} value={value} checked={nationality === value} onChange={() => update({ nationality: value })} />
-        <Flag code={nationalityFlags[value]} /><span>{t(value, ["مصر", "السعودية", "عالمي"][index])}</span>
-        {nationality === value && <Icon name="check" className={styles.check} />}
-      </label>)}
+      <label className={styles.selectLabel} htmlFor={`${id}-nationality`}>{t("Select nationality", "اختر الجنسية")}</label>
+      <select id={`${id}-nationality`} value={nationality} onChange={event => update({ nationality: event.target.value as NationalityCode })}>
+        {countries.map(country => <option key={country.value} value={country.value}>{countryNames.of(country.value) ?? country.label}</option>)}
+      </select>
     </fieldset>
     <fieldset className={styles.group}><legend>{t("Currency", "العملة")}</legend>
       <div className={styles.currencies}>
@@ -62,5 +71,8 @@ export function PreferenceFields() {
 export function TravelPreferences() {
   const { t } = useLocale();
   const { currency, nationality } = useTravelPreferences();
-  return <Popover panelClassName={styles.panel} label={t("Nationality and currency", "الجنسية والعملة")} trigger={<><Flag code={nationalityFlags[nationality]} /><bdi>{currency}</bdi><Icon name="chevron" /></>}><PreferenceFields /></Popover>;
+  const { locale } = useLocale();
+  const country = countries.find(option => option.value === nationality);
+  const name = country ? new Intl.DisplayNames([locale], { type: "region" }).of(country.value) ?? country.label : nationality;
+  return <Popover panelClassName={styles.panel} label={t("Nationality and currency", "الجنسية والعملة")} trigger={<><span aria-hidden="true"><Icon name="globe" /></span><bdi>{name}</bdi><bdi>{currency}</bdi><Icon name="chevron" /></>}><PreferenceFields /></Popover>;
 }

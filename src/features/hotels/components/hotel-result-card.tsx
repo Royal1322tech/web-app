@@ -9,8 +9,11 @@ import { useLocale } from "@/features/localization/locale-provider";
 import { useHotelPreferences } from "@/features/preferences/use-hotel-preferences";
 import type { HotelSummary } from "../types";
 import type { StayDates } from "../lib/sample-stay";
-import { amenityLabels } from "../data/hotels.fixture";
+import { amenityLabels, hotels } from "../data/hotels.fixture";
+import { boardPlanLabels, hotelBoardPlans } from "../lib/board-plans";
 import { RoomOptions } from "./room-options";
+import { HotelRating } from "./hotel-rating";
+import { ReducePriceRequest } from "./reduce-price-request";
 
 import styles from "../hotels.module.css";
 
@@ -47,21 +50,24 @@ export function HotelResultCard({
   booking,
   favourite = false,
   dates,
+  eager = false,
 }: {
   hotel: HotelSummary;
   booking?: ReactNode;
   favourite?: boolean;
   dates?: StayDates & Partial<Pick<HotelSearchCriteria, "rooms" | "nationality">>;
+  eager?: boolean;
 }) {
   const { locale, t } = useLocale();
   const compare = useHotelPreferences("comparison");
   const [open, setOpen] = useState(false);
   const panelId = useId();
+  const listing = hotels.find((item) => item.id === hotel.id);
   const href =
     hotel.detailsHref ?? ("city" in hotel ? `/hotels/${hotel.id}` : undefined);
   return (
     <div>
-      <article className={styles.resultCard}>
+      <article className={`${styles.resultCard} ${booking ? styles.bookingCard : ""}`}>
         <div className={styles.cardBody}>
           <div className={styles.cardPhotos}>
             <div className={styles.cover}>
@@ -71,6 +77,7 @@ export function HotelResultCard({
                 width={hotel.photos[0].width}
                 height={hotel.photos[0].height}
                 sizes="(max-width: 599px) 100px, (max-width: 999px) 160px, 180px"
+                eager={eager}
               />
               <FavouriteButton hotel={hotel} />
             </div>
@@ -89,7 +96,7 @@ export function HotelResultCard({
               </div>
             )}
           </div>
-          <div className={styles.cardInfo}>
+        <div className={styles.cardInfo}>
             {href ? (
               <Link
                 to={
@@ -108,19 +115,9 @@ export function HotelResultCard({
               <Icon name="pin" />
               {hotelDisplayAddress(hotel.address[locale], locale)}
             </p>
-            {hotel.stars !== undefined ? (
-              <p
-                className={styles.stars}
-                aria-label={`${hotel.stars} ${t("stars", "نجوم")}`}
-              >
-                {"★".repeat(hotel.stars)}
-                <span>{"★".repeat(5 - hotel.stars)}</span>
-              </p>
-            ) : (
-              <p className={styles.stars}>
-                <Icon name="star" /> {hotel.reviewScore} / 5
-              </p>
-            )}
+            <HotelRating stars={hotel.stars} reviewScore={hotel.reviewScore} />
+            {hotel.inventoryType === "demo" && <span className={styles.demoInventory}>{t("Demo inventory", "بيانات تجريبية")}</span>}
+            {listing && hotelBoardPlans(listing).length > 0 && <ul className={styles.boardBadges} aria-label={t("Listed board offers", "خطط الوجبات المدرجة")}>{hotelBoardPlans(listing).map(plan => <li key={plan}>{boardPlanLabels[plan][locale]}</li>)}</ul>}
             <ul className={styles.amenities}>
               {hotel.amenities.slice(0, 2).map((a) => (
                 <li key={a}>
@@ -150,6 +147,7 @@ export function HotelResultCard({
                   ? t("Selected", "تم الاختيار")
                   : t("Compare", "قارن")}
               </button>
+              {!booking && <ReducePriceRequest hotel={hotel} criteria={dates} />}
             </div>
           </div>
         </div>

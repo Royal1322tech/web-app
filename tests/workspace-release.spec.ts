@@ -94,13 +94,17 @@ test('points history filters, paginates and shows an honest empty state', async 
 test('workspace navigation persists across all sections and profile edits remain local', async ({ page }) => {
   await visit(page, '/profile');
   const navigation = page.getByRole('navigation', { name: 'Workspace navigation' });
-  for (const route of ['/wallet', '/profile', '/group-quotation', '/bookings', '/car-rental/bookings', '/agency', '/transactions', '/notifications', '/points', '/profile']) {
+  for (const route of ['/wallet', '/profile', '/bookings', '/car-rental/bookings', '/agency', '/transactions', '/notifications', '/points', '/profile']) {
     await navigation.locator(`a[href="${route}"]`).click();
     await expect(page).toHaveURL(new RegExp(`${route}$`));
     await expect(navigation).toHaveCount(1);
     await expect(navigation.locator(`a[href="${route}"]`)).toHaveAttribute('aria-current', 'page');
     await expect(page.locator('header')).toHaveCount(1);
   }
+  await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Group Quotation', exact: true }).click();
+  await expect(page).toHaveURL(/\/group-quotation$/);
+  await expect(navigation).toHaveCount(1);
+  await page.goto('/profile');
   await page.getByRole('link', { name: 'Edit profile' }).click();
   await page.getByLabel('Contact person', { exact: true }).fill('Demo Partner Contact');
   await page.getByRole('button', { name: 'Save profile' }).click();
@@ -143,7 +147,7 @@ test('policy acknowledgment gates the flow, persists within an attempt and reset
   await page.getByRole('link', { name: 'Back', exact: true }).click();
   await page.getByRole('link', { name: 'Change room', exact: true }).click();
   await room(page, 2);
-  await expect(page.locator('.selection-summary')).toContainText('English Breakfast');
+  await expect(page.locator('.selection-summary')).toContainText('Bed & Breakfast');
   await page.getByRole('link', { name: 'Continue to guest details' }).click();
   await page.getByLabel('Lead guest name', { exact: true }).fill('Demo Guest');
   await page.getByLabel('Contact email', { exact: true }).fill('guest@example.test');

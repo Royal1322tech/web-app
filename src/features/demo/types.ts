@@ -4,8 +4,35 @@ import type {
   SampleRoomRate,
 } from "@/features/hotels/data/rooms.fixture";
 import type { SampleBooking } from "@/features/bookings/data/bookings.fixture";
+import type { CancellationPolicy } from "@/features/hotels/cancellation-policy";
 export type DemoStatus = "confirmed" | "pending" | "failed" | "cancelled";
 export type PaymentMethod = "instapay" | "fawry" | "card" | "agency_credit";
+export type InvoiceLifecycleStatus = "draft" | "issued";
+export type PaymentSettlementStatus = "unpaid" | "partially_paid" | "fully_settled";
+export type AccountingReviewStatus = "not_submitted" | "pending_review" | "approved" | "rejected" | "reconciled";
+export interface InvoiceLineItem {
+  description: string;
+  amountMinor: number;
+}
+export interface InvoiceRecord {
+  reference: string;
+  referenceType: "local_preview" | "official";
+  issueDate?: string;
+  lifecycle: InvoiceLifecycleStatus;
+  settlement: PaymentSettlementStatus;
+  currency: string;
+  lineItems: readonly InvoiceLineItem[];
+  subtotalMinor: number;
+  taxAndFeesMinor?: number;
+  totalMinor: number;
+}
+export interface AccountingPaymentReview {
+  status: AccountingReviewStatus;
+  reference?: string;
+  submittedAt?: string;
+  amountMinor?: number;
+  currency?: string;
+}
 export interface DemoSelection {
   hotelId: string;
   room: SampleRoom;
@@ -24,9 +51,12 @@ export interface DemoBooking extends Omit<SampleBooking, "status"> {
   status: DemoStatus;
   selection: DemoSelection;
   policyAcknowledged?: boolean;
+  cancellationPolicySnapshot?: CancellationPolicy;
   guests: GuestValues;
   total: number;
   timeline: { label: string; at: string }[];
+  invoice?: InvoiceRecord;
+  paymentReview?: AccountingPaymentReview;
 }
 export interface AgencyProfile {
   name: string;

@@ -9,6 +9,7 @@ for (const width of [375, 768, 1440]) {
       await page.addInitScript(value => localStorage.setItem("royal-vacation.locale", value), locale);
       await visit(page, "/");
       const section = page.locator('section[aria-labelledby="benefits-title"]');
+      await page.mouse.move(0, 0);
       await section.scrollIntoViewIfNeeded();
       await section.evaluate(async el => {
         await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));

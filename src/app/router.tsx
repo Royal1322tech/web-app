@@ -1,5 +1,4 @@
 import { DemoSessionGate } from "@/features/demo/session-gate";
-import { DemoProvider } from "@/features/demo/demo-provider";
 import {
   PageLoadingState,
   InlineLoadingState,
@@ -43,16 +42,14 @@ function Root() {
   }, [pathname]);
   return (
     <LocaleProvider>
-      <DemoProvider>
-        {navigation.state !== "idle" && (
-          <div className="route-loading">
-            <InlineLoadingState />
-          </div>
-        )}
-        <div ref={content} className="route-entrance">
-          <DemoSessionGate />
+      {navigation.state !== "idle" && (
+        <div className="route-loading">
+          <InlineLoadingState />
         </div>
-      </DemoProvider>
+      )}
+      <div ref={content} className="route-entrance">
+        <DemoSessionGate />
+      </div>
       <ScrollRestoration />
     </LocaleProvider>
   );
@@ -111,7 +108,7 @@ export const router = createBrowserRouter([
         path: "welcome",
         lazy: page(() => import("@/pages/welcome"), "Welcome"),
       },
-      { path: "login", lazy: page(() => import("@/pages/login"), "Sign In") },
+      { path: "login", lazy: page(() => import("@/pages/login"), "Partner Sign In") },
       {
         path: "forgot-password",
         lazy: page(() => import("@/pages/forgot-password"), "Forgot Password"),
@@ -219,10 +216,17 @@ export const router = createBrowserRouter([
         }),
       },
       {
+        path: "bookings/:id/invoice",
+        handle: { workspace: true },
+        lazy: async () => ({ Component: (await import("@/features/demo/invoices")).InvoiceDetailPage }),
+      },
+      {
         Component: Outlet,
         handle: { workspace: true },
         children: [
           { path: "points", lazy: async () => ({ Component: (await import("@/features/demo/points")).PointsPage }) },
+          { path: "invoices", lazy: async () => ({ Component: (await import("@/features/demo/invoices")).InvoiceHistoryPage }) },
+          { path: "accounting-review", lazy: async () => ({ Component: (await import("@/features/demo/invoices")).AccountingReviewPage }) },
           { path: "profile", lazy: async () => ({ Component: (await import("@/features/demo/profile-settings")).ProfilePage }) },
           { path: "account/settings", lazy: async () => ({ Component: (await import("@/features/demo/profile-settings")).AccountSettingsPage }) },
           {

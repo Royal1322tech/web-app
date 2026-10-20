@@ -107,6 +107,7 @@
 .selection-summary h2 {
   font-size: 22px;
 }
+.hotel-demo-indicator { display:inline-flex; width:max-content; max-width:100%; padding:3px 8px; border:1px solid #b8d9dc; border-radius:999px; color:#075e68; background:#edf8f7; font-size:11px; font-weight:700; }
 .summary-dl {
   display: grid;
   gap: 12px;
@@ -437,6 +438,31 @@
 .voucher h2 {
   font-size: 25px;
 }
+.invoice-search { display:grid; gap:6px; max-width:520px; margin-block:18px; font-weight:700; }
+.invoice-search input { min-height:44px; padding:9px 12px; border:1px solid var(--border); border-radius:9px; }
+.invoice-list { display:grid; gap:14px; }
+.invoice-list-card { display:flex; align-items:center; justify-content:space-between; gap:20px; }
+.invoice-list-card h2 { margin-block:0 8px; }
+.invoice-list-status { display:flex; flex-wrap:wrap; gap:8px; }
+.invoice-document { max-width:1000px; margin-inline:auto; }
+.invoice-document-header { display:flex; justify-content:space-between; align-items:flex-start; gap:24px; padding-block-end:20px; border-block-end:2px solid var(--navy); }
+.invoice-document-header h2 { margin:0; color:var(--navy); font-size:28px; }
+.invoice-document-header > div:last-child { display:flex; gap:8px; flex-wrap:wrap; }
+.invoice-preview-notice,.accounting-local-note { padding:12px 14px; border-inline-start:3px solid var(--gold); background:#fbf7ee; color:#3f4d5d; }
+.invoice-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px 28px; margin-block:24px; }
+.invoice-facts div,.invoice-totals div { display:flex; justify-content:space-between; gap:16px; }
+.invoice-facts dt,.invoice-totals dt { color:var(--muted); }
+.invoice-facts dd,.invoice-totals dd { margin:0; text-align:end; font-weight:700; }
+.invoice-table-scroll { overflow-x:auto; }
+.invoice-table { width:100%; border-collapse:collapse; }
+.invoice-table th,.invoice-table td { padding:12px; border-block-end:1px solid var(--border); text-align:start; }
+.invoice-table th:last-child,.invoice-table td:last-child { text-align:end; }
+.invoice-totals { display:grid; gap:10px; max-width:420px; margin:20px 0 0 auto; }
+.invoice-grand-total { padding-block-start:12px; border-block-start:2px solid var(--navy); color:var(--navy); font-size:18px; }
+.invoice-settlement-note { display:flex; align-items:flex-start; gap:8px; margin-block-start:24px; color:var(--muted); font-size:13px; }
+.accounting-status-key ul { display:flex; flex-wrap:wrap; gap:10px; padding:0; list-style:none; }
+.accounting-records { display:grid; gap:12px; padding:0; list-style:none; }
+.accounting-records li { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:12px; border-block-end:1px solid var(--border); }
 @media (max-width: 900px) {
   .workspace-grid {
     grid-template-columns: 1fr;
@@ -485,6 +511,9 @@
   .voucher {
     padding: 20px;
   }
+  .invoice-list-card { align-items:stretch; flex-direction:column; }
+  .invoice-facts { grid-template-columns:1fr; }
+  .invoice-document-header { flex-direction:column; }
   .workspace-actions > .button {
     flex: 1;
   }
@@ -507,7 +536,8 @@
   .demo-state-controls,
   .no-print,
   body:has(.voucher) main > nav,
-  body:has(.voucher) main > p {
+  body:has(.voucher) main > p,
+  body:has(.invoice-document) main > nav {
     display: none !important;
   }
   .workspace {
@@ -528,6 +558,18 @@
   }
   .voucher a {
     text-decoration: none;
+    color:inherit;
+  }
+  .invoice-document {
+    border:0;
+    padding:0;
+  }
+  .invoice-document .workspace-eyebrow,
+  body:has(.invoice-document) .workspace > h1 {
+    display:block;
+  }
+  .invoice-table tr {
+    break-inside:avoid;
   }
 }
 .workspace-nav a[aria-current="page"] {
@@ -655,9 +697,15 @@
 .payment-credit-remaining { padding-top: 10px; border-top: 1px solid var(--border); }
 .payment-local-note, .payment-selection-hint { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
 .payment-prepared-result { align-content: start; }
-.payment-prepared-result > svg { width: 40px; height: 40px; padding: 9px; border-radius: 50%; color: var(--teal); background: var(--subtle); }
-.payment-prepared-result h2 { margin-bottom: 0; }
+.payment-prepared-result h2 { margin: 18px 0 0; }
 .payment-prepared-result > p { line-height: 1.6; }
+.prepared-status { display:flex; align-items:center; gap:10px; width:max-content; max-width:100%; padding:9px 12px; border:1px solid #d7e3e9; border-radius:10px; color:var(--navy); background:#f4f8fa; font-weight:750; }
+.prepared-status svg { width:20px; height:20px; color:var(--teal); }
+.booking-prepared-facts { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 18px; padding-block:6px; }
+.booking-prepared-facts > div { display:grid; gap:3px; padding-block:8px; border-bottom:1px solid #e6edf2; }
+.booking-prepared-facts dt { color:var(--muted); font-size:13px; }
+.booking-prepared-facts dd { margin:0; font-weight:650; overflow-wrap:anywhere; }
+@media(max-width:599px) { .booking-prepared-facts { grid-template-columns:1fr; } }
 @media (max-width: 620px) {
   .policy-conditions, .payment-methods { grid-template-columns: 1fr; }
   .booking-rate-policy { align-items: flex-start; flex-direction: column; }
@@ -704,6 +752,12 @@
 }
 .summary-policy { background: #f4f8fa; border: 1px solid #dce6ee; border-radius: 10px; padding: 14px; margin-top: 16px; }
 .summary-policy h3 { margin: 0 0 8px; font-size: 15px; }
+.cancellation-review { display: grid; gap: 10px; margin-block: 16px 22px; }
+.cancellation-review h3 { margin: 8px 0 0; font-size: 16px; }
+.cancellation-review p { margin: 0; line-height: 1.55; }
+.cancellation-review-unavailable { padding: 14px 16px; border: 1px solid #dce6ee; border-inline-start: 3px solid var(--gold); border-radius: 10px; background: #f7f9fb; }
+.cancellation-review-unavailable h3 { margin: 0 0 6px; }
+.cancellation-review .fine-print { color: var(--muted); font-size: 13px; }
 @media (max-width: 800px) { .policy-page-grid > aside { position: static; } }
 @media (max-width: 540px) { .policy-group, .policy-acknowledgement, .cancellation-policy { padding: 16px; } .policy-facts > div { grid-template-columns: minmax(0, 1fr); gap: 4px; } .policy-facts dd { text-align: start; } .policy-acknowledgement .workspace-actions { display: grid; grid-template-columns: minmax(0, 1fr); } .policy-acknowledgement .workspace-actions > * { width: 100%; } }
 @media (max-width: 430px) {

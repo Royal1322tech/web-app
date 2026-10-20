@@ -1,14 +1,17 @@
-.page { position:relative; isolation:isolate; max-width:none; margin:0 0 48px; padding:36px clamp(16px,4vw,64px) 48px; border-radius:24px; overflow:hidden; }
-.background { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; z-index:-2; }
-.page::before { content:""; position:absolute; inset:0; background:linear-gradient(#f7f9fce8,#f7f9fcc2 35%,#f7f9fc85); z-index:-1; }
+.page { position:relative; isolation:isolate; max-width:none; margin:0 0 40px; padding:0 clamp(16px,4vw,64px) 48px; background:#f3f6f8; }
+.hero { position:relative; overflow:hidden; margin:0 calc(clamp(16px,4vw,64px) * -1) 30px; padding:54px clamp(24px,7vw,96px) 58px; color:#fff; background:radial-gradient(ellipse at 82% 0%,#19818a 0,transparent 38%),linear-gradient(112deg,#071a35,#0c3857 66%,#0d5b67); }
+.hero::after { position:absolute; inset-block-end:0; inset-inline-start:clamp(24px,7vw,96px); width:76px; height:3px; background:#edc881; content:""; }
+.hero > p { margin:0 0 12px; color:#f4d49c; font-size:11px; font-weight:800; letter-spacing:.16em; }
+.hero h1 { margin:0; color:#fff; font-size:clamp(34px,4vw,50px); font-weight:760; line-height:1.1; }
+.hero > span { display:block; margin-block-start:12px; color:#e2edf4; font-size:17px; line-height:1.55; }
 
-.page h1 { display:flex; align-items:center; justify-content:center; gap:18px; text-align:center; font-weight:800; font-size:clamp(28px,3.4vw,44px); }
-.page h1 .headingText { color:var(--navy); }
+.page > h1 { display:flex; align-items:center; justify-content:center; gap:18px; text-align:center; font-weight:800; font-size:clamp(28px,3.4vw,44px); }
+.page > h1 .headingText { color:var(--navy); }
 .headingText > span { color:#986023; }
-.page h1::before,.page h1::after { content:""; flex:0 0 32px; height:2px; background:#b8752c; box-shadow:0 3px 0 #b8752c35; }
+.page > h1::before,.page > h1::after { content:""; flex:0 0 32px; height:2px; background:#b8752c; box-shadow:0 3px 0 #b8752c35; }
 .page > p { margin:10px auto 26px; text-align:center; font-size:14px; }
-.page > div { max-width:1080px; margin:auto; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:stretch; gap:20px; }
-.information { position:relative; isolation:isolate; overflow:hidden; min-width:0; border-radius:22px; padding:36px 28px; background:var(--navy); color:white; box-shadow:var(--shadow); }
+.page > div { max-width:1120px; margin:auto; grid-template-columns:minmax(0,.96fr) minmax(0,1.04fr); align-items:stretch; gap:24px; }
+.information { position:relative; isolation:isolate; overflow:hidden; min-width:0; border-radius:18px; padding:34px 28px; background:var(--navy); color:white; box-shadow:0 14px 36px #0b25451f; }
 .photo { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:-2; }
 .information::before { content:""; position:absolute; inset:0; background:linear-gradient(110deg,#0b2545fa 12%,#0b2545e8 48%,#0b254573); z-index:-1; }
 .information h2 { font-size:25px; color:white; line-height:1.4; }
@@ -21,16 +24,18 @@
 .information dd { font-size:13px; margin:5px 0 0; color:#dce6f2; }
 .information .pending { border-top:1px solid #ffffff35; padding-top:22px; font-size:13px; }
 .information a { display:flex; align-items:center; gap:8px; min-height:44px; color:var(--light-gold); margin-top:18px; font-weight:700; font-size:14px; }
-.page form { box-shadow:0 15px 45px #0b254512; border-radius:18px; padding:26px; gap:14px; }
-.page form label { color:var(--navy); font-weight:700; }
-.page form input,.page form textarea { background:#fcfdff; border-radius:10px; }
-.page form input:focus,.page form textarea:focus { outline:2px solid #b8752c; outline-offset:2px; border-color:#b8752c; }
+.page form { min-width:0; background:#fff; border:1px solid #dce5eb; box-shadow:0 14px 34px #0b254512; border-radius:18px; padding:clamp(20px,3vw,30px); gap:15px; }
+.page form label { display:block; color:var(--navy); font-weight:700; }
+.page form input,.page form textarea,.page form select { min-width:0; background:#fcfdff; border-radius:10px; }
+.page form input:focus,.page form textarea:focus,.page form select:focus { outline:2px solid #b8752c; outline-offset:2px; border-color:#b8752c; }
 .page form > p { font-size:12px; padding:10px 12px; }
+.phoneEntry { display:grid; grid-template-columns:minmax(118px,.82fr) minmax(0,1.18fr); gap:9px; }
+.phoneEntry select { text-overflow:ellipsis; }
 .page .send { width:100%; display:flex; align-items:center; justify-content:center; gap:12px; min-height:48px; background:linear-gradient(100deg,#a8640a,#925614); color:white; border:1px solid #b8752c; font-weight:800; }
 .page .send:hover { background:#85500c; }
 :global([dir="rtl"]) .send svg,:global([dir="rtl"]) .information a svg { transform:rotate(180deg); }
-@media(max-width:799px) { .page > div { grid-template-columns:minmax(0,1fr); } .information { padding:28px 24px; } }
-@media(max-width:599px) { .page { padding:30px 12px 36px; border-radius:16px; } .page h1 { font-size:30px; } .page form { padding:20px 16px; } .information { padding:24px 20px; } .page > div { gap:20px; } }
+@media(max-width:799px) { .page > div { grid-template-columns:minmax(0,1fr); } .information { order:2; padding:28px 24px; } .page form { order:1; } .information dd { font-size:12px; } }
+@media(max-width:599px) { .page { padding:0 12px 36px; } .hero { margin:0 -12px 22px; padding:36px 20px 40px; } .hero > span { font-size:15px; } .page > h1 { font-size:30px; } .page form { padding:20px 16px; } .information { padding:24px 20px; } .page > div { gap:18px; } .phoneEntry { grid-template-columns:minmax(108px,.85fr) minmax(0,1.15fr); gap:7px; } .phoneEntry input,.phoneEntry select { padding-inline:9px; font-size:14px; } }
 
 .inputWrap { position:relative; }
 .inputWrap > svg { position:absolute; inset-inline-start:13px; top:50%; transform:translateY(-50%); width:17px; height:17px; color:#697789; pointer-events:none; }
@@ -41,7 +46,7 @@
 .page form > button { order:4; }
 .page form > section { order:5; }
 .page form textarea { min-height:110px; }
-@media(max-width:599px) { .page h1 { gap:8px; } .page h1::before,.page h1::after { flex-basis:14px; } }
+@media(max-width:599px) { .page > h1 { gap:8px; } .page > h1::before,.page > h1::after { flex-basis:14px; } }
 /* Override the catalog input shorthand so icons never overlap typed text in either direction. */
 .page form .inputWrap input:global(.input) { padding-inline:40px; }
 .page form > div:first-of-type { align-items:end; }

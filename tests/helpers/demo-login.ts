@@ -2,16 +2,17 @@ import { expect, type Page } from "@playwright/test";
 import { openHeaderTools } from "./header";
 
 export async function submitDemoLogin(page: Page) {
-  await page.getByLabel("Email", { exact: true }).fill("demo@royalvacation.test");
-  await page.getByLabel("Password", { exact: true }).fill("Demo@12345");
-  await page.getByRole("button", { name: "Sign In", exact: true }).click();
+  const arabic = await page.locator("html").getAttribute("lang") === "ar";
+  await page.getByLabel(arabic ? "البريد الإلكتروني" : "Email", { exact: true }).fill("demo@royalvacation.test");
+  await page.getByLabel(arabic ? "كلمة المرور" : "Password", { exact: true }).fill("Demo@12345");
+  await page.getByRole("button", { name: arabic ? "تسجيل الدخول" : "Sign In", exact: true }).click();
   await expect(page.locator(".login-form, .welcome-content")).toHaveCount(0);
   await expect(page.locator("h1")).toBeVisible();
 }
 
 /** Exercise the real login UI; never inject a session or change app behavior. */
 export async function visit(page: Page, path: string) {
-  const publicPage = /^\/(welcome|login|forgot-password|verify-otp|reset-password|register)(\/|$)/.test(path);
+  const publicPage = /^\/(welcome|login|contact|forgot-password|verify-otp|reset-password|register)(\/|$)/.test(path);
   if (publicPage && page.url().startsWith("http")) {
     await page.goto("/agency");
     await expect(page.locator("h1")).toBeVisible();

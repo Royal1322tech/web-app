@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,6 +8,7 @@ import { localToday } from "@/features/home/schemas/hotel-search.schema";
 import { Icon } from "@/components/ui/icon";
 import { RentalShell } from "./rental-layout";
 import { NumberedHeading } from "./rental-passenger";
+import { demoAuth, subscribeDemoSession } from "@/features/auth/demo-auth";
 
 export const chauffeurSubjects = ["airport-transfers", "car-with-driver", "private-chauffeur", "vip-transport"];
 const schema = z.object({
@@ -22,6 +23,7 @@ const schema = z.object({
 type Values = z.infer<typeof schema>;
 export function ChauffeurEnquiryPage() {
   const { t } = useLocale();
+  const demoSessionActive = useSyncExternalStore(subscribeDemoSession, demoAuth.isActive, () => false);
   const [params] = useSearchParams();
   const [stage, setStage] = useState<"details" | "review" | "preview">("details");
   const airport = params.get("subject") === "airport-transfers";
@@ -31,7 +33,7 @@ export function ChauffeurEnquiryPage() {
   const draft = useWatch({ control });
   const field = (key: keyof Values, en: string, ar: string, type = "text", optional = false) => <label key={key}>{t(en, ar)}<input aria-label={t(en, ar)} type={type} required={!optional} {...register(key)} min={type === "date" ? localToday() : type === "number" ? key === "bags" ? 0 : 1 : undefined} aria-invalid={!!errors[key]} aria-describedby={errors[key] ? `chauffeur-${key}-error` : undefined} />{errors[key] && <span role="alert" id={`chauffeur-${key}-error`} className="field-error">{t("Enter a valid value for this field.", "أدخل قيمة صحيحة لهذا الحقل.")}</span>}</label>;
   const progress = <ol className="booking-progress rental-progress" aria-label={t("Enquiry progress", "خطوات الاستفسار")}>{[["Service Selection", "اختيار الخدمة"], ["Passenger Details", "بيانات الراكب"], ["Review Enquiry", "مراجعة الاستفسار"], ["Local Preview", "المعاينة المحلية"]].map(([en, ar], index) => <li key={en} aria-current={index === (stage === "details" ? 1 : stage === "review" ? 2 : 3) ? "step" : undefined}><span>{index + 1}</span>{t(en, ar)}</li>)}</ol>;
-  return <RentalShell customProgress={progress} title={stage === "details" ? t("Passenger & Trip Enquiry", "استفسار الراكب والرحلة") : stage === "review" ? t("Review Your Enquiry", "راجع استفسارك") : t("Enquiry Preview Ready", "معاينة الاستفسار جاهزة")}>
+  return <RentalShell publicHeader={!demoSessionActive} customProgress={progress} title={stage === "details" ? t("Passenger & Trip Enquiry", "استفسار الراكب والرحلة") : stage === "review" ? t("Review Your Enquiry", "راجع استفسارك") : t("Enquiry Preview Ready", "معاينة الاستفسار جاهزة")}>
     <div className="rental-service-context"><span className="rental-service-badge">{service}</span><p>{t("Enquiry only · trip prices and vehicle availability require confirmation.", "استفسار فقط · أسعار الرحلات وتوفر السيارات يحتاجان إلى التأكيد.")}</p></div>
     <div className="rental-booking-layout">
       <div className="rental-panel rental-passenger-form">

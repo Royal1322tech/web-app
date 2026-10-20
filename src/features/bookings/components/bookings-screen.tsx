@@ -12,6 +12,12 @@ import { StatePreview } from "@/components/ui/system-state";
 import { defaultBookingFilters, filterBookings } from "../lib/filter-bookings";
 import { BookingFilters } from "./booking-filters";
 import styles from "@/features/hotels/hotels.module.css";
+function formatBookingDate(value: string, locale: "en" | "ar") {
+  const date = new Date(`${value}T12:00:00Z`);
+  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat(locale, {
+    year: "numeric", month: "short", day: "numeric", timeZone: "UTC",
+  }).format(date);
+}
 export function BookingsScreen() {
   const { locale, t } = useLocale();
   const { records: bookings } = useDemo();
@@ -19,9 +25,21 @@ export function BookingsScreen() {
   const [filters, setFilters] = useState(defaultBookingFilters);
   const [sort, setSort] = useState("newest");
   const [limit, setLimit] = useState(20);
+  const [pageIndex, setPageIndex] = useState(0);
   const [open, setOpen] = useState(false);
   const [dateError, setDateError] = useState(false);
   const result = filterBookings(bookings, hotels, filters, sort);
+  const activeSummary = filters.status === "confirmed" ? "confirmed" : filters.fees ? "fees" : null;
+  const updateSummaryFilter = (next: "confirmed" | "fees") => {
+    const filtersWithoutQuickCard = { ...filters, status: "all", fees: false };
+    const updated = activeSummary === next
+      ? filtersWithoutQuickCard
+      : { ...filtersWithoutQuickCard, ...(next === "confirmed" ? { status: "confirmed" as const } : { fees: true }) };
+    setDraft(updated);
+    setFilters(updated);
+    setPageIndex(0);
+  };
+  const visibleBookings = result.slice(pageIndex * limit, (pageIndex + 1) * limit);
   return (
     <CatalogShell title={t("Booking", "الحجوزات")}>
       <h1>{t("My Bookings", "حجوزاتي")}</h1>
@@ -48,27 +66,28 @@ export function BookingsScreen() {
               }
               setDateError(false);
               setFilters(draft);
+              setPageIndex(0);
             }}
             onReset={() => {
               setDraft(defaultBookingFilters);
               setFilters(defaultBookingFilters);
               setDateError(false);
+              setPageIndex(0);
             }}
           />
 
           <div>
             <div className={styles.summaryCards}>
               <button
+                type="button"
                 className={styles.summaryCard}
-                onClick={() => {
-                  setDraft({ ...defaultBookingFilters, status: "confirmed" });
-                  setFilters({ ...defaultBookingFilters, status: "confirmed" });
-                }}
+                aria-pressed={activeSummary === "confirmed"}
+                onClick={() => updateSummaryFilter("confirmed")}
               >
                 <span className={styles.summaryContent}>
                   <Icon name="check" />
                   <strong>{t("Confirmed", "مؤكد")}</strong>
-                  <span className={styles.summaryView}>{t("View", "عرض")}</span>
+                  {activeSummary === "confirmed" && <Icon name="check" aria-hidden="true" />}
                 </span>
                 <span>
                   {t("Records", "السجلات")}:{" "}
@@ -76,16 +95,15 @@ export function BookingsScreen() {
                 </span>
               </button>
               <button
+                type="button"
                 className={styles.summaryCard}
-                onClick={() => {
-                  setDraft({ ...defaultBookingFilters, fees: true });
-                  setFilters({ ...defaultBookingFilters, fees: true });
-                }}
+                aria-pressed={activeSummary === "fees"}
+                onClick={() => updateSummaryFilter("fees")}
               >
                 <span className={styles.summaryContent} data-status="fees">
                   <Icon name="close" />
                   <strong>{t("Cancellation fees", "رسوم الإلغاء")}</strong>
-                  <span className={styles.summaryView}>{t("View", "عرض")}</span>
+                  {activeSummary === "fees" && <Icon name="check" aria-hidden="true" />}
                 </span>
                 <span>
                   {t("Records", "السجلات")}:{" "}
@@ -93,13 +111,14 @@ export function BookingsScreen() {
                 </span>
               </button>
             </div>
+            {activeSummary && <button className={styles.clearSummaryFilter} type="button" onClick={() => updateSummaryFilter(activeSummary)}>{t("Clear status card filter", "مسح تصفية بطاقة الحالة")}</button>}
             <div className={styles.listHeader}>
               <label>
                 {t("Sort by", "ترتيب حسب")}
                 <select
                   aria-label={t("Sort by", "ترتيب حسب")}
                   value={sort}
-                  onChange={(e) => setSort(e.target.value)}
+                  onChange={(e) => { setSort(e.target.value); setPageIndex(0); }}
                 >
                   <option value="newest">
                     {t(
@@ -120,7 +139,7 @@ export function BookingsScreen() {
                 <select
                   aria-label={t("Results", "النتائج")}
                   value={limit}
-                  onChange={(e) => setLimit(Number(e.target.value))}
+                  onChange={(e) => { setLimit(Number(e.target.value)); setPageIndex(0); }}
                 >
                   {[2, 10, 20].map((n) => (
                     <option key={n}>{n}</option>
@@ -132,21 +151,25 @@ export function BookingsScreen() {
               {result.length} {t("booking records", "سجلات الحجوزات")}
             </p>
             <div className={styles.results}>
-              {result.slice(0, limit).map((b) => {
+              {visibleBookings.map((b, index) => {
                 const h = hotels.find((h) => h.id === b.hotelId);
                 return h ? (
                   <HotelResultCard
                     key={b.id}
                     hotel={h}
+                    eager={index === 0}
                     dates={{ checkIn: b.checkIn, checkOut: b.checkOut }}
                     booking={
-                      <>
-                        <strong>{b.id}</strong>
-                        <StatusBadge status={b.status} />
-                        <p>
-                          <bdi>
-                            {b.checkIn} — {b.checkOut}
-                          </bdi>
+                      <div className={styles.bookingMetadata}>
+                        <div className={styles.bookingMetaTop}>
+                          <div><small>{t("Booking reference", "مرجع الحجز")}</small><strong><bdi>{b.id}</bdi></strong></div>
+                          <div className={styles.bookingStatus}><span className={styles.localStatus}>{t("Local preview", "معاينة محلية")}</span><StatusBadge status={b.status} /></div>
+                        </div>
+                        <p className={styles.bookingDates}>
+                          <span>{t("Stay", "الإقامة")}</span>
+                          <time dateTime={b.checkIn}><bdi>{formatBookingDate(b.checkIn, locale)}</bdi></time>
+                          <span aria-hidden="true">—</span>
+                          <time dateTime={b.checkOut}><bdi>{formatBookingDate(b.checkOut, locale)}</bdi></time>
                         </p>
                         <details>
                           <summary>
@@ -165,11 +188,11 @@ export function BookingsScreen() {
                         </details>
                         <Link
                           to={`/bookings/${b.id}`}
-                          className={styles.secondary}
+                          className={styles.primary}
                         >
                           {t("Manage booking", "إدارة الحجز")}
                         </Link>
-                      </>
+                      </div>
                     }
                   />
                 ) : null;
@@ -183,6 +206,11 @@ export function BookingsScreen() {
                 )}
               </p>
             )}
+            {result.length > limit && <nav className={styles.bookingPagination} aria-label={t("Booking result pages", "صفحات نتائج الحجوزات")}>
+              <button type="button" className={styles.secondary} disabled={pageIndex === 0} onClick={() => setPageIndex(index => Math.max(0, index - 1))}>{t("Previous", "السابق")}</button>
+              <span>{t(`Page ${pageIndex + 1} of ${Math.ceil(result.length / limit)}`, `الصفحة ${pageIndex + 1} من ${Math.ceil(result.length / limit)}`)}</span>
+              <button type="button" className={styles.secondary} disabled={(pageIndex + 1) * limit >= result.length} onClick={() => setPageIndex(index => index + 1)}>{t("Next", "التالي")}</button>
+            </nav>}
           </div>
         </div>
       </StatePreview>

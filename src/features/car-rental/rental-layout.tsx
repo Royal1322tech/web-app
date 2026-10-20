@@ -12,11 +12,13 @@ export function RentalShell({
   children,
   showHero = true,
   customProgress,
+  publicHeader = false,
 }: {
   title: string;
   children: ReactNode;
   showHero?: boolean;
   customProgress?: ReactNode;
+  publicHeader?: boolean;
 }) {
   const { t } = useLocale();
   const { pathname } = useLocation();
@@ -31,7 +33,7 @@ export function RentalShell({
     {steps.map(([path, label], index) => <li key={path} aria-current={pathname === path || (index === 3 && pathname.startsWith("/car-rental/bookings/")) ? "step" : undefined}><span>{index + 1}</span>{label}</li>)}
   </ol> : null;
   return (
-    <Workspace title={title} hideHeading showPreview={false}>
+    <Workspace title={title} hideHeading showPreview={false} publicHeader={publicHeader}>
       <div className="rental-reference-shell">
       {showHero && <RentalHero compact title={title.replace(/ · (demo|simulation|تجريبي|محاكاة)/g, "")} primary>{customProgress ?? progress}</RentalHero>}
       <nav

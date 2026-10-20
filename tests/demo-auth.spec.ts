@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 import { submitDemoLogin, logout, visit } from "./helpers/demo-login";
 import { openHeaderTools } from "./helpers/header";
 
-const privateRoutes = ["/", "/search", "/hotels/eastern-al-montazah", "/booking/summary", "/booking/guests", "/booking/policy", "/booking/payment", "/booking/result", "/booking/result/DEMO-1001", "/bookings", "/bookings/DEMO-1001", "/bookings/DEMO-1001/voucher", "/favourites", "/wallet", "/transactions", "/notifications", "/agency", "/agency/edit", "/profile", "/account/settings", "/verify-email", "/group-quotation", "/contact", "/car-rental", "/car-rental/search", "/car-rental/vehicles/demo", "/car-rental/summary", "/car-rental/driver", "/car-rental/review", "/car-rental/payment", "/car-rental/bookings", "/car-rental/bookings/demo", "/unknown-internal-page"];
+const privateRoutes = ["/", "/search", "/hotels/eastern-al-montazah", "/booking/summary", "/booking/guests", "/booking/policy", "/booking/payment", "/booking/result", "/booking/result/DEMO-1001", "/bookings", "/bookings/DEMO-1001", "/bookings/DEMO-1001/voucher", "/favourites", "/wallet", "/transactions", "/notifications", "/agency", "/agency/edit", "/profile", "/account/settings", "/verify-email", "/group-quotation", "/car-rental", "/car-rental/search", "/car-rental/vehicles/demo", "/car-rental/summary", "/car-rental/driver", "/car-rental/review", "/car-rental/payment", "/car-rental/bookings", "/car-rental/bookings/demo", "/unknown-internal-page"];
 
 test("every internal route defaults to Welcome without exposing application content", async ({ page }) => {
   for (const path of privateRoutes) {
@@ -14,11 +14,13 @@ test("every internal route defaults to Welcome without exposing application cont
   }
 });
 
-test("public recovery and registration remain accessible without a session", async ({ page }) => {
-  for (const path of ["/welcome", "/login", "/register/agency", "/forgot-password", "/verify-otp", "/reset-password"]) {
+test("public recovery, registration, and Contact Us remain accessible without a session", async ({ page }) => {
+  for (const path of ["/welcome", "/login", "/contact", "/register/agency", "/forgot-password", "/verify-otp", "/reset-password"]) {
     await page.goto(path);
     await expect(page.locator("h1")).toBeVisible();
-    await expect(page.locator("#home-navigation, footer")).toHaveCount(0);
+    await expect(page.locator("#home-navigation, .workspace")).toHaveCount(0);
+    if (path === "/login" || path === "/contact") await expect(page.locator("footer")).toBeVisible();
+    else await expect(page.locator("footer")).toHaveCount(0);
     expect(await page.evaluate(() => sessionStorage.getItem("royal-vacation.demo-auth.v1"))).toBeNull();
   }
 });

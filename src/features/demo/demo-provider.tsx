@@ -47,9 +47,10 @@ interface DemoContextValue {
   profile: AgencyProfile;
   notifications: DemoNotification[];
   selectRoom: (selection: DemoSelection) => void;
+  changeRoom: (selection: DemoSelection) => void;
   updateCriteria: (criteria: HotelSearchCriteria) => void;
   saveGuests: (guests: GuestValues) => void;
-  cancelBooking: (id: string) => void;
+  cancelBooking: (id: string, cancelledAt?: string) => void;
   modifyBooking: (
     id: string,
     criteria: HotelSearchCriteria,
@@ -200,6 +201,12 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       setPaymentDetailsPrepared(false);
       setGuests(null);
     },
+    changeRoom: (next) => {
+      setSelection(next);
+      setPolicyAcknowledged(false);
+      setPaymentMethod(null);
+      setPaymentDetailsPrepared(false);
+    },
     updateCriteria: (criteria) => {
       setPolicyAcknowledged(false);
       setPaymentMethod(null);
@@ -208,7 +215,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       setGuests(null);
     },
     saveGuests: setGuests,
-    cancelBooking: (id) =>
+    cancelBooking: (id, cancelledAt = new Date().toISOString()) =>
       setRecords((current) =>
         current.map((b) =>
           b.id === id && ["pending", "confirmed"].includes(b.status)
@@ -219,7 +226,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
                   ...b.timeline,
                   {
                     label: "Cancellation simulated — supplier unchanged",
-                    at: new Date().toISOString(),
+                    at: cancelledAt,
                   },
                 ],
               }

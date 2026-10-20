@@ -1,5 +1,5 @@
 import { cancellationPolicyLabels } from "../cancellation-policy";
-import { roomIsUnavailable } from "@/features/demo/room-policy";
+import { demoOfferIsSelectable } from "@/features/demo/room-policy";
 import { ResponsiveImage as Image } from "@/components/ui/responsive-image";
 import { useEffect, useId, useRef, useState } from "react";
 import { Icon } from "@/components/ui/icon";
@@ -15,6 +15,8 @@ import { SelectRoomButton } from "@/features/demo/select-room";
 import type { HotelSearchCriteria } from "@/features/home/schemas/hotel-search.schema";
 import { PriceChart } from "./price-chart";
 import styles from "../hotels.module.css";
+import type { BoardPlan } from "../lib/board-plan-definitions";
+import { boardPlanLabels } from "../lib/board-plan-definitions";
 
 type Selection =
   | { kind: "room"; room: SampleRoom }
@@ -23,13 +25,18 @@ type Selection =
 export function RoomOptions({
   hotel,
   dates,
+  board = "any",
 }: {
   hotel: HotelSummary;
-  dates?: StayDates & Partial<Pick<HotelSearchCriteria, "rooms">>;
+  dates?: StayDates & Partial<Pick<HotelSearchCriteria, "rooms" | "nationality" | "destination">>;
+  board?: BoardPlan | "any";
 }) {
   const { locale, t } = useLocale();
   const id = useId();
-  const rooms = roomsForHotel(hotel.id);
+  const rooms = roomsForHotel(hotel.id).map(room => ({
+    ...room,
+    rates: room.rates.filter(rate => board === "any" || rate.boardPlan === board),
+  })).filter(room => room.rates.length > 0);
   const [expanded, setExpanded] = useState<string[]>([]);
   const [selection, setSelection] = useState<Selection | null>(null);
   const [photoIndex, setPhotoIndex] = useState(0);
@@ -65,8 +72,8 @@ export function RoomOptions({
     <div className={styles.roomOptions}>
       <p className={styles.muted}>
         {t(
-          "Illustrative room rates · availability requires supplier confirmation.",
-          "أسعار الغرف توضيحية · التوافر يتطلب تأكيد المورد.",
+          "Demo fixture status only · supplier availability requires confirmation.",
+          "الحالة لبيانات توضيحية فقط · يتطلب التوافر تأكيد المورد.",
         )}
       </p>
       <details className={styles.alternativeDates}>
@@ -135,6 +142,7 @@ export function RoomOptions({
                     <Icon name="bed" />
                     {room.bed[locale]}
                   </span>
+                <span>{t(`Up to ${room.occupancy.maxAdults} adults · ${room.occupancy.maxChildren} children`, `حتى ${room.occupancy.maxAdults} بالغين · ${room.occupancy.maxChildren} أطفال`)}</span>
                   <button
                     type="button"
                     className={styles.textAction}
@@ -149,11 +157,7 @@ export function RoomOptions({
                   {room.rates.map((rate, index) => (
                     <div key={rate.id} className={styles.roomRate}>
                       <strong className={styles.boardName}>
-                        {index === 1 ? (
-                          <span className="sr-only">{rate.board[locale]}</span>
-                        ) : (
-                          rate.board[locale]
-                        )}
+                        {index === 1 ? <span className="sr-only">{boardPlanLabels[rate.boardPlan][locale]}</span> : boardPlanLabels[rate.boardPlan][locale]}
                       </strong>
                       <div className={styles.ratePolicy}>
                         <span>
@@ -168,7 +172,7 @@ export function RoomOptions({
                         )}
                       </div>
                       <span className={styles.samplePlaces}>
-                        {roomIsUnavailable(room.id)
+                        {!demoOfferIsSelectable(rate, hotel.id, room.id)
                           ? t("Unavailable", "غير متاح")
                           : t("Listed", "مدرج")}
                       </span>

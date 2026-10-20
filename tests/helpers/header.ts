@@ -2,14 +2,15 @@ import { expect, type Page } from "@playwright/test";
 export async function openHeaderTools(page: Page) {
   const language = page.locator('header button[aria-label="Language"], header button[aria-label="اللغة"]');
   await expect(language).toBeAttached();
-  if (!(await language.isVisible()))
+  if (!(await language.isVisible())) {
     await page
-      .locator('header button[aria-controls~="home-navigation"]')
+      .locator('header button[aria-controls~="home-navigation"], header button[aria-controls="public-navigation"]')
       .click();
+  }
 }
 export async function closeHeaderMenu(page: Page) {
   const toggle = page.locator(
-    'header button[aria-controls~="home-navigation"]',
+    'header button[aria-controls~="home-navigation"], header button[aria-controls="public-navigation"]',
   );
   if (
     (await toggle.isVisible()) &&

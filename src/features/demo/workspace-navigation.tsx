@@ -13,7 +13,8 @@ export function WorkspaceNavigation() {
         >
           <NavLink to="/profile">{t("My Profile", "ملفي الشخصي")}</NavLink>
           <NavLink to="/points">{t("Points", "النقاط")}</NavLink>
-          <NavLink to="/group-quotation">{t("Group quotation", "عرض سعر للمجموعات")}</NavLink>
+          <NavLink to="/invoices">{t("Invoices", "الفواتير")}</NavLink>
+          <NavLink to="/accounting-review">{t("Accounting Review", "مراجعة الحسابات")}</NavLink>
           <NavLink to="/bookings">{t("Bookings", "الحجوزات")}</NavLink>
           <NavLink to="/car-rental/bookings">
             {t("Rentals", "التأجيرات")}

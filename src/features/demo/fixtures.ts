@@ -5,6 +5,7 @@ import {
   sampleRooms,
 } from "@/features/hotels/data/rooms.fixture";
 import { samplePriceBreakdown } from "@/features/hotels/lib/sample-stay";
+import { snapshotCancellationPolicy } from "./cancellation-assessment";
 import type {
   DemoBooking,
   AgencyProfile,
@@ -136,6 +137,13 @@ export function initialBookings(): DemoBooking[] {
         {
           ...sampleRooms[0].rates[0],
           nightlyRate: hotels.find((h) => h.id === b.hotelId)!.nightlyRate,
+          availability: {
+            hotelId: b.hotelId,
+            roomId: sampleRooms[0].id,
+            rateId: sampleRooms[0].rates[0].id,
+            source: "demo-fixture" as const,
+            status: "available" as const,
+          },
         },
       ],
     };
@@ -152,6 +160,7 @@ export function initialBookings(): DemoBooking[] {
           rooms: [{ adults: 2, childAges: [] }],
         },
       },
+      cancellationPolicySnapshot: snapshotCancellationPolicy(room.rates[0].cancellationPolicy),
       guests: {
         leadName: b.traveller,
         email: "guest@example.com",

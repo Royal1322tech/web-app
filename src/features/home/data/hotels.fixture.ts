@@ -21,17 +21,17 @@ export const collectionHotels: readonly Hotel[] = [
   amenities: ["Pool", "Gym", "Food", "Spa"],
 }));
 
-export const sampleDestinations = ["Alexandria", "Cairo", "Hurghada"] as const;
+export const sampleDestinations = ["Alexandria", "Cairo", "Hurghada", "Sharm El Sheikh"] as const;
 
 
 // Reuse existing distinct catalogue fixtures, plus one existing collection sample.
 export const featuredHotels: readonly Hotel[] = [
-  ...hotels.map((hotel, index) => ({
+  ...hotels.filter(hotel => typeof hotel.reviewScore === "number" && hotel.reviewScore > 0).map((hotel, index) => ({
     id: hotel.id, name: hotel.name.en, nameAr: hotel.name.ar,
     city: hotel.city.en, address: hotel.address.en,
     image: hotel.photos[[0, 4, 3, 6][index] ?? 0]?.src ?? hotel.photos[0].src,
     nightlyRate: hotel.nightlyRate, currency: "USD" as const,
-    rating: hotel.reviewScore, description: "Sample property — no live availability.",
+    rating: hotel.reviewScore ?? 0, description: "Sample property — no live availability.",
     amenities: ["Pool", "Food"], detailsHref: `/hotels/${hotel.id}`,
   })),
   collectionHotels[0],

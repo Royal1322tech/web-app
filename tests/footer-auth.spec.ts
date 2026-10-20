@@ -12,7 +12,7 @@ for (const width of [375, 768, 1440]) {
       await footer.scrollIntoViewIfNeeded();
       const links = footer.locator("nav a");
       await expect(links).toHaveCount(4);
-      const paths = ["/car-rental", "/search", "/agency", "/welcome"];
+      const paths = ["/search", "/car-rental", "/agency", "/login"];
       for (let i = 0; i < paths.length; i++) {
         const link = links.nth(i);
         await expect(link).toHaveAttribute("href", paths[i]);
@@ -22,7 +22,7 @@ for (const width of [375, 768, 1440]) {
         await page.keyboard.press("Tab");
         await link.focus();
         await expect(link).toHaveCSS("outline-style", "solid");
-        await expect(link).toHaveCSS("color", "rgb(255, 213, 158)");
+        await expect(link).toHaveCSS("color", "rgb(255, 221, 161)");
       }
       const logo = footer.locator('a[href="/"]');
       const plane = logo.locator(".brand-plane");
@@ -49,9 +49,33 @@ for (const width of [375, 768, 1440]) {
   }
 }
 
+test("footer hotel CTA uses the public login while signed out and hotel search after sign in", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.addInitScript(() => localStorage.setItem("royal-vacation.locale", "ar"));
+  await page.goto("/login");
+  const footer = page.locator("footer");
+  const cta = footer.getByRole("link", { name: "استكشف الفنادق" });
+  await expect(cta).toHaveAttribute("href", "/login");
+  await expect(footer.getByText(/قريبًا/)).toBeVisible();
+  await expect(footer.locator('a[href*="play.google"], a[href*="apps.apple"]')).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+
+  await visit(page, "/");
+  const signedInCta = page.locator("footer").getByRole("link", { name: "استكشف الفنادق" });
+  await expect(signedInCta).toHaveAttribute("href", "/search");
+  await signedInCta.click();
+  await expect(page).toHaveURL(/\/search$/);
+  await expect(page.getByRole("heading", { name: "نتائج البحث عن الفنادق" })).toBeVisible();
+});
+
 for (const path of ["/login", "/welcome", "/register/agency/company"]) {
   test(`auth logo entrance and static fallback ${path}`, async ({ page }) => {
     await visit(page, path);
+    if (path === "/login") {
+      await expect(page.locator("header .brand-logo")).toBeVisible();
+      await expect(page.locator("#login .brand-logo")).toHaveCount(0);
+      return;
+    }
     const logo = page.locator(".brand-logo--auth");
     await expect(logo).toBeVisible();
     await page.locator(".route-entrance").evaluate(async el => {

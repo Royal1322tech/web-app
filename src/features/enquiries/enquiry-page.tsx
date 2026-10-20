@@ -11,21 +11,31 @@ import styles from "./enquiry.module.css";
 import contact from "./contact-page.module.css";
 import { Icon } from "@/components/ui/icon";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
+import { useSyncExternalStore } from "react";
+import { demoAuth, subscribeDemoSession } from "@/features/auth/demo-auth";
+import { SiteFooter } from "@/features/home/components/site-footer";
+import { getCountryCallingCode } from "libphonenumber-js/max";
+import { contactPhone, phoneCountries, validPhoneCountry } from "@/features/agency-registration/lib/phone";
+import { ComplaintContactPage } from "./complaint-page";
 
 export function EnquiryPage({ group = false }: { group?: boolean }) {
+  const demoSessionActive = useSyncExternalStore(subscribeDemoSession, demoAuth.isActive, () => false);
   const [params] = useSearchParams();
   if (!group && chauffeurSubjects.includes(params.get("subject") ?? "")) return <ChauffeurEnquiryPage />;
-  return <GeneralEnquiryPage group={group} />;
+  if (!group) return <ComplaintContactPage publicVisitor={!demoSessionActive} />;
+  return <GeneralEnquiryPage group={group} publicVisitor={!demoSessionActive && !group} />;
 }
-function GeneralEnquiryPage({ group }: { group: boolean }) {
-  const { t } = useLocale();
+function GeneralEnquiryPage({ group, publicVisitor }: { group: boolean; publicVisitor: boolean }) {
+  const { t, locale } = useLocale();
   const [params] = useSearchParams();
   const [preview, setPreview] = useState(false);
   const schema = z.object({
     name: z.string().trim().min(2, t("Enter your name.", "أدخل اسمك.")).max(100),
     email: z.email(t("Enter a valid email.", "أدخل بريدًا إلكترونيًا صحيحًا.")),
+    phone: z.string(),
+    phoneCountry: z.string(),
     agency: z.string().trim().min(group ? 2 : 0, t("Enter your agency name.", "أدخل اسم الوكالة.")).max(160, t("Use 160 characters or fewer.", "اكتب ١٦٠ حرفًا أو أقل.")),
-    subject: z.string().trim().min(group ? 3 : 0, t("Enter a subject.", "أدخل موضوع الاستفسار.")).max(160, t("Use 160 characters or fewer.", "اكتب ١٦٠ حرفًا أو أقل.")),
+    subject: z.string().trim().min(3, t("Enter a subject.", "أدخل موضوع الاستفسار.")).max(160, t("Use 160 characters or fewer.", "اكتب ١٦٠ حرفًا أو أقل.")),
     message: z.string().trim().min(10, t("Use at least 10 characters.", "اكتب ١٠ أحرف على الأقل.")).max(2000, t("Use 2000 characters or fewer.", "اكتب ٢٠٠٠ حرف أو أقل.")),
     destination: z.string(),
     start: z.string(),
@@ -34,6 +44,11 @@ function GeneralEnquiryPage({ group }: { group: boolean }) {
     rooms: z.string(),
     service: z.enum(["hotels", "transport", "both"]),
   }).superRefine((data, context) => {
+    if (!group && !validPhoneCountry(data.phoneCountry)) {
+      context.addIssue({ code: "custom", path: ["phoneCountry"], message: t("Choose a country calling code.", "اختر رمز اتصال الدولة.") });
+    } else if (!group && validPhoneCountry(data.phoneCountry) && !contactPhone({ phone: data.phone, phoneCountry: data.phoneCountry, callingCode: `+${getCountryCallingCode(data.phoneCountry)}` })) {
+      context.addIssue({ code: "custom", path: ["phone"], message: t("Enter a valid phone number for the selected country.", "أدخل رقم هاتف صحيحًا للدولة المحددة.") });
+    }
     if (!group) return;
     const issue = (path: string, message: string) => context.addIssue({ code: "custom", path: [path], message });
     if (data.destination.trim().length < 2) issue("destination", t("Enter a destination or route.", "أدخل الوجهة أو المسار."));
@@ -54,12 +69,13 @@ function GeneralEnquiryPage({ group }: { group: boolean }) {
   };
   const { register, handleSubmit, getValues, formState: { errors, isSubmitting } } = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { name:"", email:"", agency:"", subject:group ? t("Group quotation request", "طلب عرض سعر للمجموعات") : subjects[params.get("subject") ?? ""] ?? "", message:"", destination:"", start:"", end:"", passengers:"", rooms:"", service:"both" },
+    defaultValues: { name:"", email:"", phone:"", phoneCountry:"EG", agency:"", subject:group ? t("Group quotation request", "طلب عرض سعر للمجموعات") : subjects[params.get("subject") ?? ""] ?? "", message:"", destination:"", start:"", end:"", passengers:"", rooms:"", service:"both" },
   });
+  const countryNames = new Intl.DisplayNames([locale], { type: "region" });
   const title = group ? t("Group quotation", "عرض سعر للمجموعات") : t("Contact Us", "تواصل معنا");
   const fields: { key: keyof Values; label: string; type?: string; required?: boolean }[] = [
     { key:"name", label:group ? t("Name", "الاسم") : t("Full Name", "الاسم الكامل"), required:true }, { key:"email", label:group ? t("Email", "البريد الإلكتروني") : t("Email Address", "البريد الإلكتروني"), type:"email", required:true },
-    { key:"agency", label:group ? t("Agency / company", "الوكالة / الشركة") : t("Agency / Company Name (optional)", "اسم الوكالة / الشركة (اختياري)"), required:group }, { key:"subject", label:group ? t("Subject", "الموضوع") : t("Subject (optional)", "الموضوع (اختياري)"), required:group },
+    { key:"agency", label:group ? t("Agency / company", "الوكالة / الشركة") : t("Agency / Company Name (optional)", "اسم الوكالة / الشركة (اختياري)"), required:group }, { key:"subject", label:t("Subject", "الموضوع"), required:true },
     ...(group ? [
       { key:"destination" as const, label:t("Destination / route", "الوجهة / المسار"), required:true },
       { key:"passengers" as const, label:t("Passengers", "المسافرون"), type:"number", required:true },
@@ -68,12 +84,15 @@ function GeneralEnquiryPage({ group }: { group: boolean }) {
       { key:"rooms" as const, label:t("Rooms needed (optional)", "الغرف المطلوبة (اختياري)"), type:"number" },
     ] : []),
   ];
-  return <CatalogShell title={title}><title>{`${title} | Royal Vacation`}</title>
+  return <><CatalogShell title={title} publicHeader={publicVisitor}><title>{`${title} | Royal Vacation`}</title>
     <section className={`${styles.page} ${!group ? contact.page : ""}`}>
-      {!group && <ResponsiveImage className={contact.background} src="/images/home/cinematic/coastal-resort.png" alt="" width={1672} height={941} sizes="100vw" eager />}
+      {!group && <header className={contact.hero}>
+        <p>{t("ROYAL VACATION · TRAVEL PARTNERS", "رويال فاكيشن · شركاء السفر")}</p>
+        <h1>{t("Contact Us", "تواصل معنا")}</h1>
+        <span>{t("We're here to help you connect with Royal Vacation.", "نحن هنا لمساعدتك على التواصل مع رويال فاكيشن.")}</span>
+      </header>}
       {group && <p className={styles.eyebrow}>{t("ROYAL VACATION · AGENCY ENQUIRIES", "رويال فاكيشن · استفسارات الوكالات")}</p>}
-      <h1>{group ? title : <span className={contact.headingText}>{t("Get in Touch ", "تواصل ")}<span>{t("With Us", "معنا")}</span></span>}</h1>
-      <p className={styles.intro}>{group ? t("Bring your group’s travel requirements together in one clear request preview.", "اجمع متطلبات سفر مجموعتك في معاينة طلب واحدة واضحة.") : t("Have questions or need assistance? Our team is here to help with your travel needs.", "لديك أسئلة أو تحتاج إلى مساعدة؟ فريقنا هنا لمساعدتك في احتياجات سفرك.")}</p>
+      {group && <><h1>{title}</h1><p className={styles.intro}>{t("Bring your group’s travel requirements together in one clear request preview.", "اجمع متطلبات سفر مجموعتك في معاينة طلب واحدة واضحة.")}</p></>}
       <div className={styles.grid}>
         {!group && <aside className={contact.information}>
           <ResponsiveImage className={contact.photo} src="/images/home/cinematic/coastal-resort.png" alt="" width={1672} height={941} sizes="(max-width:799px) 90vw, 480px" />
@@ -83,17 +102,25 @@ function GeneralEnquiryPage({ group }: { group: boolean }) {
             <div><dt><span className={contact.icon}><Icon name="whatsapp" /></span>{t("WhatsApp", "واتساب")}</dt><dd><a href="https://wa.me/201070724143" target="_blank" rel="noopener noreferrer"><bdi>+20 01070724143</bdi></a></dd></div>
             <div><dt><span className={contact.icon}><Icon name="mail" /></span>{t("Email Address", "البريد الإلكتروني")}</dt><dd><a href="mailto:royal.travel@royalvacation.online"><bdi>royal.travel@royalvacation.online</bdi></a></dd></div>
           </dl>
-          <Link to="/group-quotation">{t("Planning a group journey?", "تخطط لرحلة جماعية؟")} <Icon name="arrowRight" /></Link>
+          {!publicVisitor && <Link to="/group-quotation">{t("Planning a group journey?", "تخطط لرحلة جماعية؟")} <Icon name="arrowRight" /></Link>}
         </aside>}
 
         <form noValidate className={styles.form} onChange={() => setPreview(false)} onSubmit={handleSubmit(async () => { await Promise.resolve(); setPreview(true); }, () => setPreview(false))}>
-          <p className={styles.notice}>{t("Use fictional details. This form prepares a local preview and does not send your message.", "استخدم بيانات وهمية. يجهز هذا النموذج معاينة محلية ولا يرسل رسالتك.")}</p>
+          <p className={styles.notice}>{t("This form prepares a local preview only. It does not send your message.", "يجهز هذا النموذج معاينة محلية فقط، ولا يرسل رسالتك.")}</p>
           <div className={styles.fields}>{fields.map(field => <FormField key={field.key} id={"enquiry-" + field.key} label={field.label} required={field.required} error={errors[field.key]?.message}>
             <div className={!group ? contact.inputWrap : undefined}>
             {!group && <Icon name={field.key === "email" ? "mail" : field.key === "name" ? "user" : field.key === "agency" ? "building" : "document"} />}
             <input placeholder={group ? undefined : field.key === "name" ? t("Enter your full name", "أدخل اسمك الكامل") : field.key === "email" ? t("Enter your email address", "أدخل بريدك الإلكتروني") : field.key === "agency" ? t("Your agency or company", "اسم الوكالة أو الشركة") : t("What can we help with?", "كيف يمكننا مساعدتك؟")} id={"enquiry-" + field.key} className="input" type={field.type ?? "text"} required={field.required} min={field.type === "number" ? 1 : undefined} step={field.type === "number" ? 1 : undefined} dir={field.type === "email" ? "ltr" : undefined} aria-invalid={!!errors[field.key]} aria-describedby={errors[field.key] ? "enquiry-" + field.key + "-error" : undefined} {...register(field.key)} />
             </div>
           </FormField>)}</div>
+          {!group && <FormField id="enquiry-phone" label={t("Phone Number", "رقم الهاتف")} required error={errors.phone?.message}>
+            <div className={contact.phoneEntry} dir="ltr">
+              <select id="enquiry-phone-country" className="input" aria-label={t("Country dialing code", "رمز اتصال الدولة")} aria-invalid={!!errors.phoneCountry} {...register("phoneCountry")}>
+                {phoneCountries.map(country => <option key={country} value={country}>{countryNames.of(country)} (+{getCountryCallingCode(country)})</option>)}
+              </select>
+              <input id="enquiry-phone" className="input" type="tel" autoComplete="tel-national" required placeholder={t("Phone number", "رقم الهاتف")} aria-invalid={!!errors.phone} aria-describedby={errors.phone ? "enquiry-phone-error" : undefined} {...register("phone")} />
+            </div>
+          </FormField>}
           {group && <FormField id="enquiry-service" label={t("Requested services", "الخدمات المطلوبة")}><select id="enquiry-service" className="input" {...register("service")}><option value="both">{t("Hotels and transportation", "فنادق ونقل")}</option><option value="hotels">{t("Hotels", "فنادق")}</option><option value="transport">{t("Transportation", "نقل")}</option></select></FormField>}
           <FormField id="enquiry-message" label={group ? t("Message / requirements", "الرسالة / المتطلبات") : t("Message", "الرسالة")} required error={errors.message?.message}>
             <textarea placeholder={group ? undefined : t("Write your message here…", "اكتب رسالتك هنا…")} id="enquiry-message" className="input" rows={5} required maxLength={2000} aria-invalid={!!errors.message} aria-describedby={errors.message ? "enquiry-message-error" : undefined} {...register("message")} />
@@ -110,5 +137,5 @@ function GeneralEnquiryPage({ group }: { group: boolean }) {
         </aside>}
       </div>
     </section>
-  </CatalogShell>;
+    </CatalogShell>{!group && <SiteFooter />}</>;
 }

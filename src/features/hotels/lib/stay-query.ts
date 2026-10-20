@@ -23,7 +23,7 @@ export function readStayQuery(
   try {
     const result = hotelSearchSchema.safeParse({
       destination: destination ?? query.get("destination"),
-      nationality: query.get("nationality") ?? undefined,
+      nationality: query.get("nationality") === "Global" ? "EG" : query.get("nationality") ?? undefined,
       checkIn: query.get("checkIn"),
       checkOut: query.get("checkOut"),
       rooms: JSON.parse(query.get("rooms") || "[]"),

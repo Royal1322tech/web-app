@@ -1,10 +1,11 @@
 import { countries } from "@/features/agency-registration/data/countries";
-import { useTravelPreferences } from "@/features/preferences/travel-preferences";
+import { isNationalityCode, useTravelPreferences } from "@/features/preferences/travel-preferences";
+import type { NationalityCode } from "@/features/preferences/travel-preferences";
 import { CarRentalOverview } from "@/features/car-rental/car-rental-overview";
 import { useNavigate } from "react-router-dom";
 import { useLocale } from "@/features/localization/locale-provider";
-import { Suspense, useState } from "react";
-import { FormProvider, useForm } from "react-hook-form";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Icon } from "@/components/ui/icon";
 import {
@@ -44,15 +45,35 @@ export function HotelSearchForm({
       checkOut: "",
       rooms: [createRoom()],
       ...initialValues,
-      nationality: initialValues?.nationality ?? (preferences.nationality === "Egypt" ? "EG" : preferences.nationality === "Saudi Arabia" ? "SA" : "Global"),
+      nationality: initialValues?.nationality ?? preferences.nationality,
     },
     shouldUnregister: false,
   });
   const {
     register,
     handleSubmit,
+    setValue,
+    control,
     formState: { errors },
   } = form;
+  const nationalityField = register("nationality");
+  const currentNationality = useWatch({ control, name: "nationality" });
+  const updateNationalityPreference = preferences.update;
+  const hasInitializedNationality = useRef(false);
+  useEffect(() => {
+    if (!hasInitializedNationality.current) {
+      hasInitializedNationality.current = true;
+      if (initialValues?.nationality && isNationalityCode(initialValues.nationality) && initialValues.nationality !== preferences.nationality) {
+        updateNationalityPreference({ nationality: initialValues.nationality });
+      } else if (currentNationality !== preferences.nationality) {
+        setValue("nationality", preferences.nationality, { shouldDirty: false });
+      }
+      return;
+    }
+    if (currentNationality !== preferences.nationality) {
+      setValue("nationality", preferences.nationality, { shouldDirty: false });
+    }
+  }, [currentNationality, initialValues?.nationality, preferences.nationality, updateNationalityPreference, setValue]);
 
   return (
     <section
@@ -126,7 +147,7 @@ export function HotelSearchForm({
                 else {
                   const query = new URLSearchParams({
                     destination: criteria.destination,
-                    nationality: criteria.nationality ?? "Global",
+                    nationality: criteria.nationality ?? preferences.nationality,
                     checkIn: criteria.checkIn,
                     checkOut: criteria.checkOut,
                     rooms: JSON.stringify(criteria.rooms),
@@ -161,11 +182,12 @@ export function HotelSearchForm({
                     <option key={city} value={city}>
                       {t(
                         city,
-                        city === "Alexandria"
-                          ? "الإسكندرية"
-                          : city === "Cairo"
-                            ? "القاهرة"
-                            : "الغردقة",
+                        {
+                          Alexandria: "الإسكندرية",
+                          Cairo: "القاهرة",
+                          Hurghada: "الغردقة",
+                          "Sharm El Sheikh": "شرم الشيخ",
+                        }[city],
                       )}
                     </option>
                   ))}
@@ -222,8 +244,7 @@ export function HotelSearchForm({
             </div>
             <div className={styles.searchField}>
               <label htmlFor="search-nationality"><Icon name="globe" />{t("Nationality", "الجنسية")}</label>
-              <select id="search-nationality" {...register("nationality")} aria-invalid={!!errors.nationality} aria-describedby={errors.nationality ? "nationality-error" : undefined}>
-                <option value="Global">{t("Global", "عالمي")}</option>
+              <select id="search-nationality" {...nationalityField} onChange={event => { preferences.update({ nationality: event.target.value as NationalityCode }); nationalityField.onChange(event); }} aria-invalid={!!errors.nationality} aria-describedby={errors.nationality ? "nationality-error" : undefined}>
                 {countries.map(country => <option key={country.value} value={country.value}>{countryNames.of(country.value) ?? country.label}</option>)}
               </select>
               {errors.nationality && <p id="nationality-error" role="alert" className={styles.error}>{t("Select a nationality.", "اختر الجنسية.")}</p>}

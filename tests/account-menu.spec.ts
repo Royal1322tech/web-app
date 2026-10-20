@@ -19,7 +19,8 @@ for (const width of [320, 375, 768, 1440]) {
       await expect(trigger.locator("svg")).toHaveCount(1);
       await trigger.click();
       await expect(panel).toBeVisible();
-      await expect(panel.getByRole("link")).toHaveCount(6);
+      const menuLinks = panel.getByRole("link");
+      await expect(menuLinks).toHaveCount(8);
       await expect(panel.getByRole("link").first()).toBeVisible();
       await expect(panel.locator('a[href="/agency"]')).toHaveCount(0);
       await expect(trigger).toHaveCSS("background-color", "rgb(217, 242, 238)");
@@ -32,7 +33,7 @@ for (const width of [320, 375, 768, 1440]) {
       await page.keyboard.press("Enter");
       await page.keyboard.press("Tab");
       await expect(panel.getByRole("link").first()).toBeFocused();
-      for (let index = 1; index < 6; index++) {
+      for (let index = 1; index < 8; index++) {
         await page.keyboard.press("Tab");
         await expect(panel.getByRole("link").nth(index)).toBeFocused();
       }

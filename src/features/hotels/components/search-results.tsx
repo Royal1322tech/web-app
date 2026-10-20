@@ -44,6 +44,12 @@ function SearchResultsContent({
     criteria?.destination || "",
     sort,
   );
+  const boardCandidates = filterHotels(
+    hotels,
+    { ...filters, board: [] },
+    criteria?.destination || "",
+    sort,
+  );
   return (
     <CatalogShell title={t("Search", "بحث")}>
       <h1>{t("Hotel Search Results", "نتائج البحث عن الفنادق")}</h1>
@@ -79,7 +85,7 @@ function SearchResultsContent({
             {t("Close", "إغلاق")}
           </button>
         </div>
-        {open && <HotelFiltersPanel value={filters} onChange={setFilters} />}
+        {open && <HotelFiltersPanel value={filters} onChange={setFilters} availableHotels={boardCandidates} />}
         <button
           className={styles.primary}
           onClick={() => drawer.current?.close()}
@@ -92,7 +98,7 @@ function SearchResultsContent({
       >
         <div className={styles.resultsLayout}>
           <div id="hotel-filters" className={styles.filterContainer}>
-            <HotelFiltersPanel value={filters} onChange={setFilters} />
+            <HotelFiltersPanel value={filters} onChange={setFilters} availableHotels={boardCandidates} />
           </div>
           <div>
             <div className={styles.listHeader}>
@@ -128,8 +134,8 @@ function SearchResultsContent({
               <p>{t("Illustrative prices · availability requires supplier confirmation.", "أسعار توضيحية · التوافر يتطلب تأكيد المورد.")}</p>
             </div>
             <div className={styles.results}>
-              {result.map((h) => (
-                <HotelResultCard key={h.id} hotel={h} dates={criteria} />
+              {result.map((h, index) => (
+                <HotelResultCard key={h.id} hotel={h} dates={criteria} eager={index === 0} />
               ))}
             </div>
             {!result.length && (

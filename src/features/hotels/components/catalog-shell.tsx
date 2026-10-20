@@ -4,17 +4,20 @@ import type { ReactNode } from "react";
 import { SiteHeader } from "@/features/home/components/site-header";
 import { useLocale } from "@/features/localization/locale-provider";
 import styles from "../hotels.module.css";
+import { PublicLandingHeader } from "@/features/auth/public-landing-header";
 export function CatalogShell({
   title,
   detail = false,
   workspace = false,
   showPreview = false,
+  publicHeader = false,
   children,
 }: {
   title: string;
   detail?: boolean;
   workspace?: boolean;
   showPreview?: boolean;
+  publicHeader?: boolean;
   children: ReactNode;
 }) {
   const { t } = useLocale();
@@ -24,7 +27,7 @@ export function CatalogShell({
       <a href="#catalog-main" className={styles.skip}>
         {t("Skip to content", "انتقل إلى المحتوى")}
       </a>
-      <SiteHeader standalone />
+      {publicHeader ? <PublicLandingHeader /> : <SiteHeader standalone />}
       <main id="catalog-main">
         <nav
           aria-label={t("Breadcrumb", "مسار التنقل")}

@@ -12,9 +12,9 @@ for (const width of [320,375,390,430,768,1024,1440]) {
     const trigger = page.getByRole('button',{name:'Nationality and currency',exact:true});
     await trigger.click();
     let panel = page.getByRole('region',{name:'Nationality and currency',exact:true});
-    await panel.locator('label').filter({hasText:/^Egypt$/}).click();
+    await panel.getByLabel('Select nationality', {exact:true}).selectOption('EG');
     await panel.locator('label').filter({hasText:/^EGP$/}).click();
-    await expect(panel.getByRole('radio',{name:'Egypt',exact:true})).toBeChecked();
+    await expect(panel.getByLabel('Select nationality', {exact:true})).toHaveValue('EG');
     await expect(panel.getByRole('radio',{name:'EGP',exact:true})).toBeChecked();
     await expect(page.locator('html')).toHaveAttribute('lang','en');
     const box = await panel.boundingBox();
@@ -23,14 +23,14 @@ for (const width of [320,375,390,430,768,1024,1440]) {
     await page.keyboard.press('Escape');
     await expect(trigger).toBeFocused();
     await expect(trigger).toContainText('EGP');
-    await expect(trigger.locator('img')).toHaveAttribute('src','/flags/eg.svg');
+    await expect(trigger).toContainText('Egypt');
     await page.reload();
     await openHeaderTools(page);
     await expect(trigger).toContainText('EGP');
     await selectLanguage(page, 'ar');
     await page.getByRole('button',{name:'الجنسية والعملة',exact:true}).click();
     panel=page.getByRole('region',{name:'الجنسية والعملة',exact:true});
-    await expect(panel.getByRole('radio',{name:'مصر',exact:true})).toBeChecked();
+    await expect(panel.getByLabel('اختر الجنسية',{exact:true})).toHaveValue('EG');
     await panel.getByRole('radio',{name:'EGP',exact:true}).focus();
     await page.keyboard.press('ArrowDown');
     await expect(panel.getByRole('radio',{name:'EUR',exact:true})).toBeChecked();
@@ -64,10 +64,18 @@ test('contact and group quotation validate locally without sending requests', as
   page.on('request',req=>{if(req.method()==='POST') mutations.push(req.url());});
   for(const route of ['/contact','/group-quotation']) {
     await visit(page, route);
-    await page.getByRole('button',{name:route === '/contact' ? 'Prepare enquiry' : 'Preview request',exact:true}).click();
-    await expect(page.getByText('Enter your name.',{exact:true})).toBeVisible();
-    for(const [key,value] of Object.entries({name:'Demo Traveller',email:'demo@example.com',agency:'Sample Agency',subject:'Sample group request',message:'Fictional travel requirements for a preview.'})) await page.locator('#enquiry-'+key).fill(value);
-    if(route==='/group-quotation') {
+    if(route==='/contact') {
+      await page.getByRole('button',{name:'Submit Complaint',exact:true}).click();
+      await expect(page.getByText('Select a service type.',{exact:true})).toBeVisible();
+      await page.getByLabel('Service Type').selectOption('other');
+      await page.getByLabel('Complaint Title').fill('Question about my request');
+      await page.getByLabel('Details of Your Complaint').fill('Please review this request and contact me about it.');
+      await page.getByRole('button',{name:'Submit Complaint',exact:true}).click();
+      await expect(page.getByRole('status')).toContainText('Online complaint submission is not available yet.');
+    } else {
+      await page.getByRole('button',{name:'Preview request',exact:true}).click();
+      await expect(page.getByText('Enter your name.',{exact:true})).toBeVisible();
+      for(const [key,value] of Object.entries({name:'Demo Traveller',email:'demo@example.com',agency:'Sample Agency',subject:'Sample group request',message:'Fictional travel requirements for a preview.'})) await page.locator('#enquiry-'+key).fill(value);
       await page.locator('#enquiry-destination').fill('Cairo');
       await page.locator('#enquiry-passengers').fill('12');
       await page.locator('#enquiry-start').fill('2030-11-20');
@@ -75,9 +83,9 @@ test('contact and group quotation validate locally without sending requests', as
       await page.getByRole('button',{name:'Preview request',exact:true}).click();
       await expect(page.getByText('Choose an end date on or after departure.',{exact:true})).toBeVisible();
       await page.locator('#enquiry-end').fill('2030-11-22');
+      await page.getByRole('button',{name:'Preview request',exact:true}).click();
+      await expect(page.getByRole('heading',{name:'Local preview ready — not sent'})).toBeVisible();
     }
-    await page.getByRole('button',{name:route === '/contact' ? 'Prepare enquiry' : 'Preview request',exact:true}).click();
-    await expect(page.getByRole('status')).toContainText('Local preview ready — not sent');
   }
   expect(mutations).toEqual([]);
 });

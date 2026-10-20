@@ -96,7 +96,7 @@ test("hotel illustration, neutral points and premium footer remain honest and ac
   expect((await new AxeBuilder({ page }).include("footer").analyze()).violations).toEqual([]);
   await footer.screenshot({ path: "test-results/footer-redesign-desktop.png" });
   await visit(page, "/contact");
-  await expect(page.locator("footer")).toHaveCount(0);
+  await expect(page.locator("footer")).toBeVisible();
 });
 
 for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {

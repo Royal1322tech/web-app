@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { CatalogShell } from "@/features/hotels/components/catalog-shell";
 import { useLocale } from "@/features/localization/locale-provider";
 import { hotels } from "@/features/hotels/data/hotels.fixture";
+import { boardPlanLabels } from "@/features/hotels/lib/board-plan-definitions";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
 import { samplePriceBreakdown } from "@/features/hotels/lib/sample-stay";
 import { totalFor } from "./demo-provider";
@@ -22,17 +23,19 @@ export function Workspace({
   eyebrow,
   hideHeading = false,
   showPreview = false,
+  publicHeader = false,
   children,
 }: {
   title: string;
   eyebrow?: string;
   hideHeading?: boolean;
   showPreview?: boolean;
+  publicHeader?: boolean;
   children: ReactNode;
 }) {
   const { t } = useLocale();
   return (
-    <CatalogShell title={title} workspace showPreview={showPreview}>
+    <CatalogShell title={title} workspace={!publicHeader} showPreview={showPreview} publicHeader={publicHeader}>
       <div className="workspace">
         {!hideHeading && <><p className="workspace-eyebrow">
           {eyebrow ??
@@ -79,15 +82,17 @@ export function SelectionSummary({ selection }: { selection: DemoSelection }) {
         width={hotel.photos[0].width}
         height={hotel.photos[0].height}
         sizes="(max-width: 800px) 100vw, 340px"
+        eager
       />
       <p className="workspace-eyebrow">
         {t("YOUR SELECTED STAY", "إقامتك المختارة")}
       </p>
+      {hotel.inventoryType === "demo" && <span className="hotel-demo-indicator">{t("Demo inventory", "بيانات تجريبية")}</span>}
       <h2>{hotelDisplayName(hotel.name[locale])}</h2>
       <p>{hotelDisplayAddress(hotel.address[locale], locale)}</p>
       <hr />
       <h3>{hotelDisplayName(selection.room.name[locale])}</h3>
-      <p>{selection.rate.board[locale]}</p>
+      <p>{boardPlanLabels[selection.rate.boardPlan][locale]}</p>
       <dl className="summary-dl">
         <div>
           <dt>{t("Check in", "الوصول")}</dt>

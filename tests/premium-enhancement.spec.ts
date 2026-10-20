@@ -5,6 +5,7 @@ import { selectLanguage, closeHeaderMenu } from "./helpers/header";
 import { contactPhone, phoneCountries } from "../src/features/agency-registration/lib/phone";
 import { filterHotels, defaultFilters } from "../src/features/hotels/lib/filter-hotels";
 import { hotels } from "../src/features/hotels/data/hotels.fixture";
+import { hotelBoardPlans } from "../src/features/hotels/lib/board-plans";
 
 async function company(page: Page) {
   await page.getByLabel("Name of Company").fill("Phone Preview Agency");
@@ -24,10 +25,20 @@ test("phone metadata validates selected country and returns E.164 without a back
   }
 });
 
-test("board categories never manufacture matching inventory", () => {
-  for (const board of ["half-board", "full-board", "all-inclusive", "ultra-all-inclusive"] as const) {
-    expect(filterHotels(hotels, { ...defaultFilters, board: [board] }, "", "recommended")).toEqual([]);
+test("board filters reflect normalized room-rate offers in the hotel catalog", () => {
+  const expected = {
+    "royal-azure-resort": ["room", "breakfast", "half-board"],
+    "coral-bay-grand-resort": ["breakfast", "full-board", "all-inclusive"],
+    "mediterranean-pearl-hotel": ["room", "breakfast", "ultra-all-inclusive"],
+  } as const;
+  for (const [hotelId, plans] of Object.entries(expected)) {
+    const hotel = hotels.find(item => item.id === hotelId)!;
+    expect(hotelBoardPlans(hotel)).toEqual(plans);
+    for (const plan of plans) {
+      expect(filterHotels(hotels, { ...defaultFilters, board: [plan] }, hotel.city.en, "recommended").map(item => item.id)).toContain(hotelId);
+    }
   }
+  expect(filterHotels(hotels, { ...defaultFilters, board: ["half-board"] }, "Alexandria", "recommended")).toEqual([]);
 });
 
 for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
@@ -141,8 +152,11 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
       const filters = page.getByRole("complementary", { name: /Hotel filters|تصفية الفنادق/ });
       await filters.getByRole("searchbox").fill("EASTERN");
       await filters.getByRole("checkbox", { name: "4 ★", exact: true }).check();
-      await filters.getByRole("checkbox", { name: /Breakfast \/ Bed|إفطار \/ مبيت/ }).check();
-      for (const name of [/Half Board|نصف إقامة/, /Full Board|إقامة كاملة/, /Ultra All Inclusive|شامل كليًا ألترا/]) await expect(filters.getByRole("checkbox", { name })).toBeDisabled();
+      await filters.getByRole("checkbox", { name: /Bed & Breakfast|مبيت وإفطار/ }).check();
+      const unavailableBoards = locale === "en"
+        ? ["Half Board", "Full Board", "All Inclusive"]
+        : ["نصف إقامة", "إقامة كاملة", "شامل كليًا"];
+      for (const name of unavailableBoards) await expect(filters.getByRole("checkbox", { name, exact: true })).toBeDisabled();
       await filters.getByRole("spinbutton", { name: /Min\.|الأدنى/ }).fill("100");
       await filters.getByRole("spinbutton", { name: /Max\.|الأقصى/ }).fill("120");
       const dialog = page.getByRole("dialog", { name: /Filters|التصفية/ });
@@ -160,7 +174,7 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
       await page.evaluate(() => window.scrollTo(0, 0));
       await page.screenshot({ path: `test-results/filters-${locale}-${width}.png`, animations: "disabled" });
       if (await dialog.isVisible()) await page.keyboard.press("Escape");
-      await expect(page.locator('article[class*="resultCard"]')).toHaveCount(2);
+      await expect(page.locator('article[class*="resultCard"]')).toHaveCount(3);
       await expect(page).toHaveURL(/nationality=EG/);
       await visit(page, "/");
       const footer = page.locator("footer");
@@ -176,20 +190,22 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
 test("city, amenities, price validation and language changes preserve combined filters", async ({ page }) => {
   await visit(page, "/search");
   const filters = page.getByRole("complementary", { name: /Hotel filters|تصفية الفنادق/ });
-  await filters.getByRole("checkbox", { name: "Cairo", exact: true }).check();
+  await filters.getByRole("checkbox", { name: "Sharm El Sheikh", exact: true }).check();
   await filters.getByRole("checkbox", { name: "Room Only", exact: true }).check();
   await expect(page.locator('article[class*="resultCard"]')).toHaveCount(1);
-  await filters.getByRole("searchbox").fill("CITY");
+  await filters.getByRole("searchbox").fill("AZURE");
   await selectLanguage(page, "ar");
-  await expect(filters.getByRole("searchbox")).toHaveValue("CITY");
+  await expect(filters.getByRole("searchbox")).toHaveValue("AZURE");
   await expect(page.locator('article[class*="resultCard"]')).toHaveCount(1);
   await selectLanguage(page, "en");
   await filters.getByRole("button", { name: "Clear hotel name", exact: true }).click();
   await expect(filters.getByRole("searchbox")).toHaveValue("");
+  await filters.getByRole("checkbox", { name: "Room Service", exact: true }).check();
+  await expect(page.locator('article[class*="resultCard"]')).toHaveCount(1);
   await filters.getByRole("checkbox", { name: "Gym", exact: true }).check();
   await expect(page.locator('article[class*="resultCard"]')).toHaveCount(0);
   await filters.getByRole("button", { name: "Reset filters", exact: true }).click();
-  await expect(page.locator('article[class*="resultCard"]')).toHaveCount(4);
+  await expect(page.locator('article[class*="resultCard"]')).toHaveCount(hotels.length);
   await filters.getByRole("spinbutton", { name: "Min.", exact: true }).fill("200");
   await filters.getByRole("spinbutton", { name: "Max.", exact: true }).fill("100");
   await expect(filters.getByRole("alert")).toHaveText("Minimum must not exceed maximum.");
@@ -197,7 +213,7 @@ test("city, amenities, price validation and language changes preserve combined f
   await filters.getByRole("spinbutton", { name: "Min.", exact: true }).fill("-1");
   await expect(filters.getByRole("alert")).toHaveText("Prices must be zero or greater.");
   await filters.getByRole("button", { name: "Reset filters", exact: true }).click();
-  await expect(page.locator('article[class*="resultCard"]')).toHaveCount(4);
+  await expect(page.locator('article[class*="resultCard"]')).toHaveCount(hotels.length);
   await page.getByRole("button", { name: "Language", exact: true }).click();
   await page.mouse.click(2, 2);
   await expect(page.getByRole("region", { name: "Language", exact: true })).toHaveCount(0);

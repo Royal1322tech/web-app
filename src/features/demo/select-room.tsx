@@ -1,5 +1,5 @@
-import { fitsDemoRoom, roomIsUnavailable } from "./room-policy";
-import { useNavigate } from "react-router-dom";
+import { demoOfferIsSelectable, fitsDemoRoom } from "./room-policy";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { hotels } from "@/features/hotels/data/hotels.fixture";
 import type {
   SampleRoom,
@@ -19,17 +19,19 @@ export function SelectRoomButton({
   hotel: HotelSummary;
   room: SampleRoom;
   rate: SampleRoomRate;
-  dates?: StayDates & Partial<Pick<HotelSearchCriteria, "rooms">>;
+  dates?: StayDates & Partial<Pick<HotelSearchCriteria, "rooms" | "nationality" | "destination">>;
 }) {
   const { t } = useLocale();
-  const { selectRoom } = useDemo();
+  const { selectRoom, changeRoom } = useDemo();
   const navigate = useNavigate();
-  const soldOut = roomIsUnavailable(room.id);
+  const [searchParams] = useSearchParams();
+  const changingRoom = searchParams.get("changeRoom") === "1";
+  const soldOut = !demoOfferIsSelectable(rate, hotel.id, room.id);
   const criteria = {
     ...defaultCriteria(hotels.find((h) => h.id === hotel.id)?.city.en ?? ""),
     ...dates,
   };
-  const mismatch = !fitsDemoRoom(criteria);
+  const mismatch = !fitsDemoRoom(criteria, room.occupancy);
   return (
     <div>
       <button
@@ -37,7 +39,9 @@ export function SelectRoomButton({
         className="button button--primary"
         disabled={soldOut || mismatch}
         onClick={() => {
-          selectRoom({ hotelId: hotel.id, room, rate, criteria });
+          const selection = { hotelId: hotel.id, room, rate, criteria };
+          if (changingRoom) changeRoom(selection);
+          else selectRoom(selection);
           navigate("/booking/summary");
         }}
       >
@@ -48,8 +52,8 @@ export function SelectRoomButton({
       {mismatch && (
         <p className="fine-print">
           {t(
-            "This room supports up to 2 adults per room and no children. Adjust your search.",
-            "تتسع هذه الغرفة لبالغين كحد أقصى لكل غرفة دون أطفال. عدّل البحث.",
+            `This room supports up to ${room.occupancy.maxAdults} adults and ${room.occupancy.maxChildren} children per room. Adjust your search.`,
+            `تتسع هذه الغرفة لـ ${room.occupancy.maxAdults} بالغين و ${room.occupancy.maxChildren} أطفال كحد أقصى لكل غرفة. عدّل البحث.`,
           )}
         </p>
       )}

@@ -1,8 +1,8 @@
 import { boardPlans, hotelBoardPlans } from "../lib/board-plans";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { hotels } from "../data/hotels.fixture";
-import type { HotelFilters } from "../types";
+import type { HotelFilters, HotelListing } from "../types";
 import { amenityLabels } from "../data/hotels.fixture";
 import { defaultFilters } from "../lib/filter-hotels";
 import { useLocale } from "@/features/localization/locale-provider";
@@ -10,14 +10,17 @@ import styles from "../hotels.module.css";
 export function HotelFiltersPanel({
   value,
   onChange,
+  availableHotels = hotels,
 }: {
   value: HotelFilters;
   onChange: (next: HotelFilters) => void;
+  availableHotels?: readonly HotelListing[];
 }) {
   const { locale, t } = useLocale();
   const [showAmenities, setShowAmenities] = useState(false);
+  const id = useId();
   const amenities = [...new Set(hotels.flatMap(hotel => hotel.amenities))];
-  const availableBoards = new Set(hotels.flatMap(hotel => hotelBoardPlans(hotel)));
+  const availableBoards = new Set(availableHotels.flatMap(hotel => hotelBoardPlans(hotel)));
   const cities = [...new Map(hotels.map(hotel => [hotel.city.en, hotel.city])).values()];
   const priceCeiling = Math.max(
     ...hotels.map((hotel) => hotel.nightlyRate),
@@ -82,14 +85,20 @@ export function HotelFiltersPanel({
       </details>
       <details open>
         <summary>{t("Board", "الوجبات")}</summary>
-        {boardPlans.map(plan => (
-          <label className={styles.check} key={plan.value}>
-            <input type="checkbox" checked={value.board.includes(plan.value)} disabled={!availableBoards.has(plan.value)}
-              onChange={() => update("board", toggle(value.board, plan.value))} />
-            <span>{plan[locale]}</span>
-          </label>
-        ))}
-        <p className={styles.unsupported}>{t("Other meal plans are not listed for these offers.", "خطط الوجبات الأخرى غير مدرجة لهذه العروض.")}</p>
+        {boardPlans.map(plan => {
+          const unavailable = !availableBoards.has(plan.value) && !value.board.includes(plan.value);
+          const explanationId = `${id}-board-unavailable-${plan.value}`;
+          return (
+            <label className={styles.check} key={plan.value}>
+              <input type="checkbox" aria-label={plan[locale]} checked={value.board.includes(plan.value)} disabled={unavailable}
+                aria-describedby={unavailable ? explanationId : undefined}
+                onChange={() => update("board", toggle(value.board, plan.value))} />
+              <span>{plan[locale]}</span>
+              {unavailable && <span id={explanationId} className="sr-only">{t("No matching room offers are listed for the current results.", "لا توجد عروض غرف مطابقة ضمن النتائج الحالية.")}</span>}
+            </label>
+          );
+        })}
+        <p className={styles.unsupported}>{t("Options are enabled only when a matching room offer is listed.", "تُفعّل الخيارات فقط عند إدراج عرض غرفة مطابق.")}</p>
       </details>
       <details open>
         <summary>{t("Category", "الفئة")}</summary>

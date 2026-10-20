@@ -1,4 +1,4 @@
-import { hotelDisplayName, hotelDisplayAddress } from "@/features/hotels/lib/presentation";
+import { hotelDisplayName, hotelDisplayAddress, hotelTelephoneHref } from "@/features/hotels/lib/presentation";
 import { cancellationPolicyLabels } from "@/features/hotels/cancellation-policy";
 import { CancellationPolicyCard } from "./cancellation-policy-card";
 import { assessAgencyCredit, paymentMethods } from "./payment-methods";
@@ -17,7 +17,10 @@ import { BrandLogo } from "@/components/brand-logo";
 import { hotels } from "@/features/hotels/data/hotels.fixture";
 import { HotelPolicySections } from "./hotel-policy-sections";
 import { useDemo, totalFor } from "./demo-provider";
+import { useTravelPreferences } from "@/features/preferences/travel-preferences";
 import { demoFinance } from "./fixtures";
+import { boardPlanLabels } from "@/features/hotels/lib/board-plan-definitions";
+import { samplePriceBreakdown } from "@/features/hotels/lib/sample-stay";
 import {
   Workspace,
   SelectionSummary,
@@ -75,6 +78,7 @@ function EmptySelection() {
 export function BookingSummaryPage() {
   const { locale, t } = useLocale();
   const { selection, updateCriteria, acknowledgePolicy: setAccepted } = useDemo();
+  const preferences = useTravelPreferences();
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState("");
   return (
@@ -110,9 +114,10 @@ export function BookingSummaryPage() {
                   {t("Edit stay dates & guests", "تعديل التواريخ والضيوف")}
                 </button>
                 <Link
-                  to={`/hotels/${selection.hotelId}?${stayQuery(selection.criteria)}`}
+                  className="button button--outline"
+                  to={`/hotels/${selection.hotelId}?${stayQuery({ ...selection.criteria, nationality: selection.criteria.nationality ?? preferences.nationality })}&changeRoom=1#rooms`}
                 >
-                  {t("Change room", "تغيير الغرفة")}
+                  <Icon name="bed" /> {t("Change room", "تغيير الغرفة")}
                 </Link>
               </div>
               {editing && (
@@ -121,11 +126,11 @@ export function BookingSummaryPage() {
                   initialValues={selection.criteria}
                   fixedDestination
                   onSearch={(criteria) => {
-                    if (!fitsDemoRoom(criteria)) {
+                    if (!fitsDemoRoom(criteria, selection.room.occupancy)) {
                       setError(
                         t(
-                          "This room supports up to 2 adults and no children. Adjust the guest count to continue.",
-                          "تتسع هذه الغرفة لبالغين كحد أقصى دون أطفال. عدّل عدد الضيوف للمتابعة.",
+                          `This room supports up to ${selection.room.occupancy.maxAdults} adults and ${selection.room.occupancy.maxChildren} children per room. Adjust the guest count to continue.`,
+                          `تتسع هذه الغرفة لـ ${selection.room.occupancy.maxAdults} بالغين و ${selection.room.occupancy.maxChildren} أطفال كحد أقصى لكل غرفة. عدّل عدد الضيوف للمتابعة.`,
                         ),
                       );
                       return;
@@ -484,16 +489,31 @@ export function BookingPreparedPage() {
   if (!guests) return <Navigate to="/booking/guests" replace />;
   if (!policyAcknowledged) return <Navigate to="/booking/policy" replace />;
   if (!paymentMethod || !paymentDetailsPrepared) return <Navigate to="/booking/payment" replace />;
+  const stay = samplePriceBreakdown(selection.rate.nightlyRate, selection.criteria);
+  const roomCount = selection.criteria.rooms.length;
+  const adultCount = selection.criteria.rooms.reduce((total, room) => total + room.adults, 0);
+  const childCount = selection.criteria.rooms.reduce((total, room) => total + room.childAges.length, 0);
+  const selectedPaymentMethod = paymentMethods.find((method) => method.id === paymentMethod);
   return (
     <Workspace title={t("Booking details prepared", "تم تجهيز تفاصيل الحجز")}>
       <Progress step={4} />
       <div className="workspace-grid">
-        <section className="workspace-card payment-prepared-result">
-          <Icon name="check" />
-          <h2>{t("Ready for the next step", "جاهز للخطوة التالية")}</h2>
-          <p role="status">{t("Your booking details and selected payment method are ready for the next step. No payment or hotel reservation has been processed.", "تفاصيل الحجز وطريقة الدفع المختارة جاهزة للخطوة التالية. لم تتم معالجة أي دفعة أو حجز فندقي.")}</p>
-          <p><strong>{t("Selected method", "طريقة الدفع المختارة")}:</strong> {paymentMethods.find((method) => method.id === paymentMethod)?.label[locale]}</p>
-          <div className="workspace-actions"><Link className="button button--outline" to="/booking/summary">{t("Review stay details", "مراجعة تفاصيل الإقامة")}</Link><Link className="button button--primary" to="/search">{t("Return to hotel search", "العودة إلى البحث عن الفنادق")}</Link></div>
+        <section className="workspace-card payment-prepared-result" data-status="prepared">
+          <div className="prepared-status"><Icon name="info" /><span>{t("Booking Details Prepared", "تم تجهيز تفاصيل الحجز")}</span></div>
+          <p role="status">{t("Your selected stay information is ready for review. No hotel reservation has been submitted or confirmed, and no real payment has been processed.", "تم إعداد تفاصيل الإقامة المختارة للمراجعة. لم يُرسل الحجز إلى الفندق أو يُؤكد، ولم تتم معالجة دفعة فعلية.")}</p>
+          <h2>{t("Prepared booking summary", "ملخص تفاصيل الحجز المُعدّة")}</h2>
+          <dl className="summary-dl booking-prepared-facts">
+            <div><dt>{t("Hotel", "الفندق")}</dt><dd>{hotelDisplayName(hotels.find(hotel => hotel.id === selection.hotelId)?.name[locale] ?? "") || "—"}</dd></div>
+            <div><dt>{t("Room", "الغرفة")}</dt><dd>{hotelDisplayName(selection.room.name[locale])}</dd></div>
+            <div><dt>{t("Check-in", "تسجيل الوصول")}</dt><dd><bdi>{selection.criteria.checkIn}</bdi></dd></div>
+            <div><dt>{t("Check-out", "تسجيل المغادرة")}</dt><dd><bdi>{selection.criteria.checkOut}</bdi></dd></div>
+            <div><dt>{t("Nights", "الليالي")}</dt><dd>{stay.nights}</dd></div>
+            <div><dt>{t("Rooms", "الغرف")}</dt><dd>{roomCount}</dd></div>
+            <div><dt>{t("Guests", "الضيوف")}</dt><dd>{adultCount} {t("adults", "بالغون")} · {childCount} {t("children", "أطفال")}</dd></div>
+            <div><dt>{t("Board", "الوجبات")}</dt><dd>{boardPlanLabels[selection.rate.boardPlan][locale]}</dd></div>
+            <div><dt>{t("Selected payment method", "طريقة الدفع المختارة")}</dt><dd>{selectedPaymentMethod?.label[locale] ?? "—"}</dd></div>
+          </dl>
+          <div className="workspace-actions"><Link className="button button--outline" to="/booking/summary">{t("Review Booking Details", "مراجعة تفاصيل الحجز")}</Link><Link className="button button--primary" to="/search">{t("Return to Hotel Search", "العودة إلى البحث عن الفنادق")}</Link></div>
         </section>
         <SelectionSummary selection={selection} />
       </div>
@@ -585,9 +605,9 @@ export function VoucherPage() {
   const { id } = useParams();
   const { records } = useDemo();
   const { locale, t } = useLocale();
-  const money = useMoney();
   const booking = records.find((b) => b.id === id);
   const hotel = hotels.find((h) => h.id === booking?.hotelId);
+  const hotelPhone = hotelTelephoneHref(hotel?.phone);
   return (
     <Workspace title={t("Travel voucher", "قسيمة السفر")}>
       {!booking || !hotel ? (
@@ -632,6 +652,7 @@ export function VoucherPage() {
             </div>
             <h2>{hotelDisplayName(hotel.name[locale])}</h2>
             <p>{hotelDisplayAddress(hotel.address[locale], locale)}</p>
+            {hotelPhone && <p>{t("Hotel phone", "هاتف الفندق")}: <a href={hotelPhone}><bdi>{hotel?.phone}</bdi></a></p>}
             <dl className="summary-dl">
               <div>
                 <dt>{t("Lead guest", "الضيف الرئيسي")}</dt>
@@ -661,7 +682,7 @@ export function VoucherPage() {
               </div>
               <div>
                 <dt>{t("Board", "الوجبات")}</dt>
-                <dd>{booking.selection.rate.board[locale]}</dd>
+                <dd>{boardPlanLabels[booking.selection.rate.boardPlan][locale]}</dd>
               </div>
               <div>
                 <dt>{t("Contact", "التواصل")}</dt>
@@ -676,12 +697,6 @@ export function VoucherPage() {
               <div>
                 <dt>{t("Agency reference", "مرجع الوكالة")}</dt>
                 <dd>{booking.agencyReference}</dd>
-              </div>
-              <div>
-                <dt>{t("Stay total", "إجمالي الإقامة")}</dt>
-                <dd>
-                  <bdi>{money(booking.total)}</bdi>
-                </dd>
               </div>
             </dl>
             <h3>{t("Special requests", "طلبات خاصة")}</h3>

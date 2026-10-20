@@ -27,12 +27,12 @@ export function filterHotels(
         (!destination || h.city.en === destination) &&
         (!filters.cities.length || filters.cities.includes(h.city.en)) &&
         (!name ||
-          `${h.name.en} ${h.name.ar}`.toLocaleLowerCase().includes(name)) &&
+          `${h.name.en} ${h.name.ar} ${h.city.en} ${h.city.ar} ${h.address.en} ${h.address.ar}`.toLocaleLowerCase().includes(name)) &&
         (!filters.luxury || h.luxury) &&
         (!filters.board.length ||
           hotelBoardPlans(h).some(plan => filters.board.includes(plan))) &&
-        (!filters.stars.length || filters.stars.includes(h.stars)) &&
-        h.reviewScore >= filters.minimumReview &&
+        (!filters.stars.length || (h.stars !== undefined && filters.stars.includes(h.stars))) &&
+        (h.reviewScore ?? 0) >= filters.minimumReview &&
         (!filters.profiles.length ||
           filters.profiles.some((p) =>
             p === "business" ? h.business : h.luxury,
@@ -49,7 +49,7 @@ export function filterHotels(
         : sort === "priceHigh"
           ? b.nightlyRate - a.nightlyRate
           : sort === "rating"
-            ? b.reviewScore - a.reviewScore
+            ? (b.reviewScore ?? 0) - (a.reviewScore ?? 0)
             : 0,
     );
 }

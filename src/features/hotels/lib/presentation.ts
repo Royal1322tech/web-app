@@ -11,3 +11,9 @@ export function hotelDisplayAddress(address: string, locale: "en" | "ar") {
   }
   return address;
 }
+
+export function hotelTelephoneHref(phone: string | undefined): string | undefined {
+  if (!phone) return undefined;
+  const normalized = phone.replace(/[\s().-]/g, "");
+  return /^\+?\d{7,15}$/.test(normalized) ? `tel:${normalized}` : undefined;
+}

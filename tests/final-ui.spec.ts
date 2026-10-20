@@ -21,8 +21,8 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
     await visit(page, "/");
     await openHeaderTools(page);
     await page.getByRole("button", { name: "Nationality and currency", exact: true }).click();
-    await page.locator("label").filter({ has: page.getByRole("radio", { name: "Egypt", exact: true }) }).click();
-    await expect(page.getByRole("radio", { name: "Egypt", exact: true })).toBeChecked();
+    await page.getByLabel("Select nationality", { exact: true }).selectOption("EG");
+    await expect(page.getByLabel("Select nationality", { exact: true })).toHaveValue("EG");
     await page.keyboard.press("Escape");
     await page.reload();
     await expect(page.locator("#search-nationality")).toHaveValue("EG");
@@ -33,7 +33,10 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
       await closeHeaderMenu(page);
       await page.locator("#search-nationality").selectOption("SA");
       await expect(page.locator("html")).toHaveAttribute("lang", locale);
-      expect(await page.evaluate(() => localStorage.getItem("royal-vacation.travel-preferences"))).toBe(preferences);
+      const storedPreferences = JSON.parse((await page.evaluate(() => localStorage.getItem("royal-vacation.travel-preferences"))) ?? "{}");
+      const previousPreferences = JSON.parse(preferences ?? "{}");
+      expect(storedPreferences.nationality).toBe("SA");
+      expect(storedPreferences.currency).toBe(previousPreferences.currency);
       await page.locator("#destination").selectOption("Alexandria");
       await page.locator("#check-in").fill("2030-11-20");
       await page.locator("#check-out").fill("2030-11-22");
@@ -44,7 +47,7 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
       await expect(page.locator("#search-nationality")).toHaveValue("SA");
       await page.locator('a[href^="/hotels/eastern-al-montazah?"]').first().click();
       await expect(page).toHaveURL(/\/hotels\/eastern-al-montazah\?.*nationality=SA/);
-      await expect(page.locator("#search-nationality")).toHaveValue("SA");
+      await expect.poll(async () => JSON.parse((await page.evaluate(() => localStorage.getItem("royal-vacation.travel-preferences"))) ?? "{}").nationality).toBe("SA");
       await visit(page, "/");
       const footer = page.locator("footer");
       for (const href of ["mailto:royal.travel@royalvacation.online", "https://wa.me/201070724143"]) {
