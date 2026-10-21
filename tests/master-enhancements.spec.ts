@@ -116,6 +116,9 @@ test("nationality stays synchronized through the navbar, hotel search, and hotel
   await page.locator("#hotel-search button[type=submit]").click();
   await expect(page).toHaveURL(/nationality=JP/);
   await page.locator('a[href^="/hotels/eastern-al-montazah?"]').first().click();
+  // Search results and hotel details share the search form, so wait for the details page itself.
+  await expect(page).toHaveURL(/\/hotels\/eastern-al-montazah\?/);
+  await expect(page.locator("[class*=gallery]").first()).toBeAttached();
   await expect(page.locator("#search-nationality")).toHaveValue("JP");
   const searchPosition = await page.locator("#hotel-search").evaluate((node) => node.compareDocumentPosition(document.querySelector("[class*=gallery]")!));
   expect(searchPosition & 4).toBeTruthy();
