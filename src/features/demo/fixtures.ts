@@ -1,3 +1,4 @@
+import { demoUserIds } from "@/features/auth/demo-auth";
 import { bookings } from "@/features/bookings/data/bookings.fixture";
 import { hotels } from "@/features/hotels/data/hotels.fixture";
 import {
@@ -149,6 +150,7 @@ export function initialBookings(): DemoBooking[] {
     };
     return {
       ...b,
+      ownerId: b.owner === "mine" ? demoUserIds.current : demoUserIds.colleague,
       selection: {
         hotelId: b.hotelId,
         room,

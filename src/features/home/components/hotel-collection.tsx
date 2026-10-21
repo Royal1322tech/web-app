@@ -41,7 +41,7 @@ export function HotelCollection({ hotels }: { hotels: readonly Hotel[] }) {
           }}
         >
           <label htmlFor="hotel-city">
-            {t("City")}
+            <span className="sr-only">{t("City")}</span>
             <select
               id="hotel-city"
               value={city}

@@ -16,5 +16,7 @@ export default defineConfig({
         url: "http://127.0.0.1:4173",
         reuseExistingServer: false,
         timeout: 120000,
+        // Browser checks exercise the developer-only interface state previews.
+        env: { VITE_ENABLE_STATE_PREVIEW: "true" },
       },
 });

@@ -65,13 +65,11 @@ test('contact and group quotation validate locally without sending requests', as
   for(const route of ['/contact','/group-quotation']) {
     await visit(page, route);
     if(route==='/contact') {
-      await page.getByRole('button',{name:'Submit Complaint',exact:true}).click();
-      await expect(page.getByText('Select a service type.',{exact:true})).toBeVisible();
-      await page.getByLabel('Service Type').selectOption('other');
-      await page.getByLabel('Complaint Title').fill('Question about my request');
-      await page.getByLabel('Details of Your Complaint').fill('Please review this request and contact me about it.');
-      await page.getByRole('button',{name:'Submit Complaint',exact:true}).click();
-      await expect(page.getByRole('status')).toContainText('Online complaint submission is not available yet.');
+      await page.getByRole('button',{name:'Prepare enquiry',exact:true}).click();
+      await expect(page.getByText('Enter your name.',{exact:true})).toBeVisible();
+      for(const [key,value] of Object.entries({name:'Demo Traveller',email:'demo@example.com',agency:'Sample Agency',subject:'Sample enquiry',phone:'1001234567',message:'Fictional travel requirements for a preview.'})) await page.locator('#enquiry-'+key).fill(value);
+      await page.getByRole('button',{name:'Prepare enquiry',exact:true}).click();
+      await expect(page.getByRole('heading',{name:'Local preview ready — not sent'})).toBeVisible();
     } else {
       await page.getByRole('button',{name:'Preview request',exact:true}).click();
       await expect(page.getByText('Enter your name.',{exact:true})).toBeVisible();

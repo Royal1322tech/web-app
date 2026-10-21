@@ -151,7 +151,7 @@ test("My Bookings keeps references, local status, stay dates, ratings and action
   await expect(card.locator('[class*="reviewScore"]')).toContainText("4.1");
   await expect(card.getByText(/DEMO-100/)).toBeVisible();
   await expect(card.getByRole("link", { name: "Manage booking" })).toBeVisible();
-  await expect(card.getByRole("button", { name: "Compare" })).toBeVisible();
+  await expect(card.getByRole("button", { name: "Compare" })).toHaveCount(0);
   await expect(card.getByRole("button", { name: "View Rooms" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
 });
@@ -173,11 +173,11 @@ for (const width of [375, 1440]) {
     expect(imageBox!.x).toBeGreaterThanOrEqual(cardBox!.x);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
 
-    const compare = card.getByRole("button", { name: "قارن" });
-    await compare.focus();
+    await expect(card.getByRole("button", { name: "قارن" })).toHaveCount(0);
+    const rooms = card.getByRole("button", { name: "عرض الغرف" });
+    await rooms.focus();
     await page.keyboard.press("Enter");
-    await expect(card.getByRole("button", { name: "تم الاختيار" })).toHaveAttribute("aria-pressed", "true");
-    await card.getByRole("button", { name: "عرض الغرف" }).click();
+    await expect(rooms).toHaveAttribute("aria-expanded", "true");
     await expect(page.getByText(/الحالة لبيانات توضيحية فقط/).first()).toBeVisible();
     await card.getByRole("link", { name: "إدارة الحجز" }).click();
     await expect(page).toHaveURL(/\/bookings\/DEMO-1001$/);

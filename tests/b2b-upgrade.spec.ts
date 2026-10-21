@@ -3,6 +3,8 @@ import { visit } from "./helpers/demo-login";
 import { openHeaderTools } from "./helpers/header";
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+// Interface state previews are developer-only; the local test build enables them (playwright.config.ts).
+const statePreviewBuild = !process.env.PLAYWRIGHT_BASE_URL || process.env.VITE_ENABLE_STATE_PREVIEW === "true";
 const routes = [
   "/agency",
   "/agency/edit",
@@ -170,11 +172,12 @@ test("account editing, notifications, transactions and state previews", async ({
   await expect(
     page.getByRole("heading", { name: "No matching transactions" }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Credit balance", exact: true }).click();
+  await page.getByRole("navigation", { name: "Workspace navigation" }).getByRole("link", { name: "Wallet", exact: true }).click();
   await page
     .getByRole("button", { name: "Preview insufficient balance" })
     .click();
   await expect(page.getByRole("alert")).toContainText("Insufficient balance");
+  if (!statePreviewBuild) return;
   await page.getByText("Preview interface states", { exact: true }).click();
   await page.getByLabel("Demo state", { exact: true }).selectOption("error");
   await expect(
@@ -407,13 +410,13 @@ test("email states, shared loading/empty/error states, and motion fallback remai
   await expect(page.getByRole("status")).toContainText(
     "This local status does not verify your email address.",
   );
-  for (const route of [
+  for (const route of statePreviewBuild ? [
     "/search",
     "/wallet",
     "/bookings",
     "/notifications",
     "/transactions",
-  ]) {
+  ] : []) {
     await visit(page, route);
     await page.getByText("Preview interface states", { exact: true }).click();
     await page

@@ -19,6 +19,17 @@ export interface ComplaintPayload {
   attachment?: File;
 }
 
+/** Supporting attachments shared by complaint and booking ticket forms. */
+export const supportAttachmentTypes = ["image/jpeg", "image/png", "application/pdf"] as const;
+export const supportAttachmentMaxBytes = 5 * 1024 * 1024;
+export const supportAttachmentAccept = ".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf";
+
+export function supportAttachmentField(messages: { attachmentType: string; attachmentSize: string }) {
+  return z.custom<FileList>().optional()
+    .refine(files => !files?.length || (supportAttachmentTypes as readonly string[]).includes(files[0].type), messages.attachmentType)
+    .refine(files => !files?.length || files[0].size <= supportAttachmentMaxBytes, messages.attachmentSize);
+}
+
 export function createComplaintSchema(messages: {
   service: string;
   titleRequired: string;
@@ -37,9 +48,7 @@ export function createComplaintSchema(messages: {
     bookingId: z.string().trim().max(100, messages.bookingIdLength),
     title: z.string().trim().min(1, messages.titleRequired).min(4, messages.titleLength).max(160, messages.titleLength),
     details: z.string().trim().min(1, messages.detailsRequired).min(10, messages.detailsLength).max(5000, messages.detailsLength),
-    attachment: z.custom<FileList>().optional()
-      .refine(files => !files?.length || ["image/jpeg", "image/png", "application/pdf"].includes(files[0].type), messages.attachmentType)
-      .refine(files => !files?.length || files[0].size <= 5 * 1024 * 1024, messages.attachmentSize),
+    attachment: supportAttachmentField(messages),
   });
 }
 

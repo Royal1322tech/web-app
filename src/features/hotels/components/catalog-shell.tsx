@@ -8,16 +8,20 @@ import { PublicLandingHeader } from "@/features/auth/public-landing-header";
 export function CatalogShell({
   title,
   detail = false,
-  workspace = false,
+  workspace,
   showPreview = false,
   publicHeader = false,
+  trail = [],
   children,
 }: {
   title: string;
   detail?: boolean;
+  /** Account navigation: explicit true/false wins; otherwise the route's workspace handle decides. */
   workspace?: boolean;
   showPreview?: boolean;
   publicHeader?: boolean;
+  /** Intermediate breadcrumb links between Home and the current page. */
+  trail?: readonly { to: string; label: string }[];
   children: ReactNode;
 }) {
   const { t } = useLocale();
@@ -41,6 +45,12 @@ export function CatalogShell({
               <span aria-hidden="true">›</span>
             </>
           )}
+          {trail.map((crumb) => (
+            <span key={crumb.to} className={styles.crumb}>
+              <Link to={crumb.to}>{crumb.label}</Link>
+              <span aria-hidden="true">›</span>
+            </span>
+          ))}
           <span aria-current="page">{title}</span>
         </nav>
         {showPreview && <p className={styles.preview}>
@@ -49,8 +59,14 @@ export function CatalogShell({
             "معاينة تصميم — فنادق وأسعار وحجوزات تجريبية. لا يوجد توافر مباشر أو معاملات فعلية.",
           )}
         </p>}
-        {(workspace || workspaceRoute) && <WorkspaceNavigation />}
-        {children}
+        {(workspace ?? workspaceRoute) ? (
+          <div className="workspace-layout">
+            <WorkspaceNavigation />
+            <div className="workspace-layout__content">{children}</div>
+          </div>
+        ) : (
+          children
+        )}
       </main>
     </div>
   );

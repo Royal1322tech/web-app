@@ -29,7 +29,7 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
         onKeyDown={event => { if (event.key === "Escape") { close(); toggle.current?.focus(); } }}>
         {[
           ["/", t("Home", "الرئيسية")], ["/search", t("Search", "بحث")],
-          ["/car-rental", t("Car Rental", "تأجير السيارات")], ["/bookings", t("Booking", "الحجوزات")],
+          ["/car-rental", t("Car Rental", "تأجير السيارات")], ["/bookings", t("My Bookings", "حجوزاتي")],
           ["/group-quotation", t("Group Quotation", "عرض سعر للمجموعات")],
           ["/wallet", t("Wallet", "المحفظة")], ["/favourites", t("Favourites", "المفضلة")], ["/contact", t("Contact Us", "تواصل معنا")],
         ].map(([href, label]) => <Link key={href} to={href} aria-current={active(href) ? "page" : undefined} onClick={close}>{label}</Link>)}
@@ -45,7 +45,7 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
           {demoSessionActive ? <Popover key={navigationKey} triggerClassName={styles.profileTrigger} panelClassName={styles.accountPanel} label={t("Account menu", "قائمة الحساب")} trigger={<Icon name="personFilled" />}>
           {[
             ["/profile", t("My Profile", "ملفي الشخصي")],
-            ["/bookings", t("My Bookings", "حجوزاتي")], ["/car-rental/bookings", t("My Rentals", "تأجيراتي")],
+            ["/bookings", t("My Bookings", "حجوزاتي")], ["/car-rental/bookings", t("My Rentals", "تأجيراتي")], ["/tickets", t("My Tickets", "تذاكري")],
             ["/invoices", t("Invoices", "الفواتير")], ["/accounting-review", t("Accounting Review", "مراجعة الحسابات")],
             ["/wallet", t("Wallet", "المحفظة")], ["/transactions", t("Transactions", "المعاملات")],
             ["/account/settings", t("Account Settings", "إعدادات الحساب")],

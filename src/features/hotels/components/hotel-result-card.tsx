@@ -79,7 +79,7 @@ export function HotelResultCard({
                 sizes="(max-width: 599px) 100px, (max-width: 999px) 160px, 180px"
                 eager={eager}
               />
-              <FavouriteButton hotel={hotel} />
+              {!booking && <FavouriteButton hotel={hotel} />}
             </div>
             {hotel.photos.length > 1 && (
               <div className={styles.thumbnails}>
@@ -137,16 +137,18 @@ export function HotelResultCard({
                   {t("View Rooms", "عرض الغرف")}
                 </Link>
               )}
-              <button
-                type="button"
-                className={styles.secondary}
-                aria-pressed={compare.ids.includes(hotel.id)}
-                onClick={() => compare.toggle(hotel.id)}
-              >
-                {compare.ids.includes(hotel.id)
-                  ? t("Selected", "تم الاختيار")
-                  : t("Compare", "قارن")}
-              </button>
+              {!booking && (
+                <button
+                  type="button"
+                  className={styles.secondary}
+                  aria-pressed={compare.ids.includes(hotel.id)}
+                  onClick={() => compare.toggle(hotel.id)}
+                >
+                  {compare.ids.includes(hotel.id)
+                    ? t("Selected", "تم الاختيار")
+                    : t("Compare", "قارن")}
+                </button>
+              )}
               {!booking && <ReducePriceRequest hotel={hotel} criteria={dates} />}
             </div>
           </div>

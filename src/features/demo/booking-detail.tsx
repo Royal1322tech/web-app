@@ -1,3 +1,5 @@
+import { hotelBookingContext } from "@/features/tickets/ticket-access";
+import { BookingSupportSection, ReportIssueAction } from "@/features/tickets/ticket-ui";
 import { fitsDemoRoom } from "./room-policy";
 import { useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -168,6 +170,7 @@ export function BookingDetailPage() {
                         {t("Review failed simulation", "راجع المحاكاة الفاشلة")}
                       </Link>
                     )}
+                    <ReportIssueAction booking={hotelBookingContext(booking)} />
                   </div>
                   {notice && (
                     <p role="status" className="success-note">
@@ -175,6 +178,7 @@ export function BookingDetailPage() {
                     </p>
                   )}
                 </section>
+                <BookingSupportSection booking={hotelBookingContext(booking)} />
                 <section className="workspace-card">
                   <h2>{t("Booking timeline", "سجل الحجز")}</h2>
                   <ol className="timeline">

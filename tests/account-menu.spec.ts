@@ -20,7 +20,7 @@ for (const width of [320, 375, 768, 1440]) {
       await trigger.click();
       await expect(panel).toBeVisible();
       const menuLinks = panel.getByRole("link");
-      await expect(menuLinks).toHaveCount(8);
+      await expect(menuLinks).toHaveCount(9);
       await expect(panel.getByRole("link").first()).toBeVisible();
       await expect(panel.locator('a[href="/agency"]')).toHaveCount(0);
       await expect(trigger).toHaveCSS("background-color", "rgb(217, 242, 238)");
@@ -33,7 +33,7 @@ for (const width of [320, 375, 768, 1440]) {
       await page.keyboard.press("Enter");
       await page.keyboard.press("Tab");
       await expect(panel.getByRole("link").first()).toBeFocused();
-      for (let index = 1; index < 8; index++) {
+      for (let index = 1; index < 9; index++) {
         await page.keyboard.press("Tab");
         await expect(panel.getByRole("link").nth(index)).toBeFocused();
       }
@@ -57,7 +57,7 @@ test("profile dropdown preserves all account destinations and closes on selectio
   await visit(page, "/");
   const routes = [
     ["My Profile", "/profile"],
-    ["My Bookings", "/bookings"], ["My Rentals", "/car-rental/bookings"],
+    ["My Bookings", "/bookings"], ["My Rentals", "/car-rental/bookings"], ["My Tickets", "/tickets"],
     ["Wallet", "/wallet"], ["Transactions", "/transactions"],
     ["Account Settings", "/account/settings"], ["Account Settings", "/account/settings"],
   ];

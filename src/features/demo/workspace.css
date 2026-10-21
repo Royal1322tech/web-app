@@ -1,35 +1,15 @@
 .workspace {
-  max-width: 1250px;
-  margin: auto;
   padding-block: 10px 40px;
 }
 .workspace-eyebrow {
-  font-size: 10px !important;
-  letter-spacing: 2px;
-  font-weight: 700;
+  font-size: var(--eyebrow-size) !important;
+  letter-spacing: var(--eyebrow-tracking);
+  font-weight: var(--weight-bold);
   color: var(--muted);
 }
 .workspace > h1 {
-  font-size: clamp(30px, 4vw, 46px);
-  margin-block: 12px 20px;
-}
-.workspace-nav {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 20px;
-  margin-bottom: 24px;
-}
-.workspace-nav a {
-  text-decoration: none;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 13px;
-}
-.workspace-nav a:hover {
-  background: var(--subtle);
+  font-size: var(--page-title-size);
+  margin-block: var(--space-3) var(--space-5);
 }
 .workspace-card {
   padding: 28px;
@@ -484,13 +464,6 @@
   .workspace-fields {
     grid-template-columns: 1fr;
   }
-  .workspace-nav {
-    gap: 0;
-  }
-  .workspace-nav a {
-    padding: 8px;
-    font-size: 12px;
-  }
   .booking-progress {
     gap: 6px;
   }
@@ -572,12 +545,6 @@
     break-inside:avoid;
   }
 }
-.workspace-nav a[aria-current="page"] {
-  background: var(--subtle);
-  color: var(--royal);
-  box-shadow: inset 0 -2px var(--gold);
-  transition: background 0.2s;
-}
 .settings-preferences { max-width:640px; display:grid; gap:16px; }
 .settings-preferences fieldset { border:1px solid var(--border); padding:16px; border-radius:12px; }
 .settings-preferences legend { font-weight:800; }
@@ -590,13 +557,10 @@
 .workspace .metric:first-child :is(span, small) { color: #dce8f3; }
 .workspace table { font-size: 14px; }
 .workspace :is(.fine-print, .timeline time), .workspace-dialog .fine-print { font-size: 13px; color: #536579; }
-.workspace .workspace-nav a { font-size: 14px; }
 .workspace .booking-progress li { font-size: 13px; }
 .workspace .status-badge { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 
 /* Shared workspace and release-specific cards; no global typography overrides. */
-.workspace-nav { margin-block: 18px 24px; padding: 12px; background: #f4f8fa; border: 1px solid #dae4ea; border-radius: 14px; }
-.workspace-nav a { font-size: 14px; }
 .profile-overview { display: flex; align-items: center; gap: 24px; border-top: 3px solid #c6a65b; }
 .profile-overview > div:nth-child(2) { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .profile-avatar { display: grid; place-items: center; flex: 0 0 76px; height: 76px; border-radius: 24px; background: #e3f3f0; color: #087e8b; font-size: 28px; font-weight: 600; }
@@ -724,8 +688,6 @@
   .profile-information { grid-template-columns: 1fr; }
   .points-list li { grid-template-columns: minmax(0, 1fr) auto; }
   .points-list li > div:first-child { grid-column: 1 / -1; }
-  .workspace-nav { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; }
-  .workspace-nav > * { flex-shrink: 0; }
   .profile-shortcuts { grid-template-columns: 1fr; }
 }
 .points-metrics > .workspace-card, .profile-information > .workspace-card { margin-top: 0; }
@@ -762,4 +724,267 @@
 @media (max-width: 540px) { .policy-group, .policy-acknowledgement, .cancellation-policy { padding: 16px; } .policy-facts > div { grid-template-columns: minmax(0, 1fr); gap: 4px; } .policy-facts dd { text-align: start; } .policy-acknowledgement .workspace-actions { display: grid; grid-template-columns: minmax(0, 1fr); } .policy-acknowledgement .workspace-actions > * { width: 100%; } }
 @media (max-width: 430px) {
   .booking-progress { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Batch B refinements --------------------------------------------------- */
+.workspace-card {
+  border-radius: var(--rounded-xl);
+}
+.status-badge {
+  padding: 4px 10px;
+  border-radius: var(--rounded-pill);
+  font-size: var(--font-size-xs);
+}
+/* Row actions in data tables stay compact so rows remain scannable. */
+.workspace table .button {
+  min-height: 36px;
+  padding: 6px 16px;
+  border-radius: var(--rounded-md);
+  font-size: var(--font-size-md);
+}
+
+/* Profile: values carry the weight, labels recede, cards are distinguishable. */
+.workspace-card .profile-card-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-block-end: var(--space-5);
+}
+.profile-card-title > span {
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  height: 36px;
+  border-radius: var(--rounded-md);
+  background: color-mix(in srgb, var(--secondary) 12%, var(--surface));
+  color: var(--secondary);
+}
+.profile-fields {
+  gap: 0;
+}
+.profile-fields > div {
+  padding-block: var(--space-3);
+  border-block-end: 1px solid var(--border);
+}
+.profile-fields > div:first-child {
+  padding-block-start: 0;
+}
+.profile-fields > div:last-child {
+  border-block-end: 0;
+}
+.profile-fields dt {
+  margin-bottom: 2px;
+  font-size: var(--font-size-sm);
+}
+.profile-fields dd {
+  font-size: var(--font-size-base);
+  font-weight: var(--weight-semibold);
+}
+.profile-information .workspace-card > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  margin-block-start: var(--space-4);
+  font-weight: var(--weight-semibold);
+}
+.profile-shortcuts a {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-3);
+  row-gap: 4px;
+  transition: background-color var(--duration-fast) ease, border-color var(--duration-fast) ease, transform var(--duration-fast) ease;
+}
+.profile-shortcuts a > strong,
+.profile-shortcuts a > span {
+  grid-column: 1;
+}
+.profile-shortcuts a > svg {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  color: var(--secondary);
+  transition: transform var(--duration-fast) ease;
+}
+[dir="rtl"] .profile-shortcuts a > svg {
+  transform: scaleX(-1);
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .profile-shortcuts a:hover > svg {
+    transform: translateX(3px);
+  }
+  [dir="rtl"] .profile-shortcuts a:hover > svg {
+    transform: scaleX(-1) translateX(3px);
+  }
+}
+
+/* Account workspace navigation ------------------------------------------- */
+/* One compact row that scrolls (never wraps) below 1200px; a grouped sidebar beside the page above. */
+.workspace-nav {
+  margin-block: var(--space-2) var(--space-5);
+  padding: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--rounded-lg);
+  background: var(--surface);
+  box-shadow: var(--elevation-1);
+}
+.workspace-nav__track {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-3);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.workspace-nav__track::-webkit-scrollbar {
+  display: none;
+}
+.workspace-nav__group {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+}
+.workspace-nav__group + .workspace-nav__group {
+  padding-inline-start: var(--space-3);
+  border-inline-start: 1px solid var(--border);
+}
+.workspace-nav__label {
+  display: none;
+}
+.workspace-nav__track a {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  min-height: 38px;
+  padding: 6px 12px;
+  border-radius: var(--rounded-sm);
+  color: var(--navy);
+  font-size: var(--font-size-md);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color var(--duration-fast) ease, color var(--duration-fast) ease;
+}
+.workspace-nav__track a:hover {
+  background: var(--subtle);
+  color: var(--primary);
+}
+.workspace-nav__track :is(a, button):focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: -2px;
+}
+.workspace-nav__track a[aria-current="page"] {
+  background: color-mix(in srgb, var(--primary) 9%, var(--surface));
+  color: var(--primary);
+  box-shadow: inset 0 -2px var(--primary);
+}
+.workspace-nav__sign-out {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  margin-inline-start: var(--space-2);
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--rounded-sm);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: var(--font-size-md);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+  transition: color var(--duration-fast) ease, background-color var(--duration-fast) ease, border-color var(--duration-fast) ease;
+}
+.workspace-nav__sign-out svg {
+  width: 16px;
+  height: 16px;
+}
+[dir="rtl"] .workspace-nav__sign-out svg {
+  transform: scaleX(-1);
+}
+.workspace-nav__sign-out:hover {
+  border-color: color-mix(in srgb, var(--error) 35%, var(--border));
+  background: var(--error-bg);
+  color: var(--error);
+}
+/* Fade whichever edge hides more links. */
+.workspace-nav__track[data-overflow-end] { mask-image: linear-gradient(to right, #000 calc(100% - 44px), transparent); }
+.workspace-nav__track[data-overflow-start] { mask-image: linear-gradient(to right, transparent, #000 44px); }
+.workspace-nav__track[data-overflow-start][data-overflow-end] { mask-image: linear-gradient(to right, transparent, #000 44px, #000 calc(100% - 44px), transparent); }
+[dir="rtl"] .workspace-nav__track[data-overflow-end] { mask-image: linear-gradient(to left, #000 calc(100% - 44px), transparent); }
+[dir="rtl"] .workspace-nav__track[data-overflow-start] { mask-image: linear-gradient(to left, transparent, #000 44px); }
+[dir="rtl"] .workspace-nav__track[data-overflow-start][data-overflow-end] { mask-image: linear-gradient(to left, transparent, #000 44px, #000 calc(100% - 44px), transparent); }
+
+@media (min-width: 1200px) {
+  .workspace-layout {
+    display: grid;
+    grid-template-columns: 232px minmax(0, 1fr);
+    gap: var(--space-8);
+    align-items: start;
+  }
+  .workspace-layout__content {
+    min-width: 0;
+  }
+  .workspace-nav {
+    position: sticky;
+    top: var(--space-6);
+    margin-block: var(--space-2) 0;
+    padding: var(--space-2);
+    border-radius: var(--rounded-xl);
+  }
+  .workspace-nav__track {
+    display: grid;
+    gap: var(--space-2);
+    overflow: visible;
+    mask-image: none !important;
+  }
+  .workspace-nav__group {
+    display: grid;
+  }
+  .workspace-nav__group + .workspace-nav__group {
+    padding: var(--space-2) 0 0;
+    border-inline-start: 0;
+    border-block-start: 1px solid var(--border);
+  }
+  .workspace-nav__label {
+    display: block;
+    margin: 0;
+    padding: var(--space-2) 12px var(--space-1);
+    color: var(--muted);
+    font-size: var(--font-size-xs);
+    font-weight: var(--weight-bold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  [dir="rtl"] .workspace-nav__label {
+    letter-spacing: 0;
+  }
+  .workspace-nav__track a {
+    position: relative;
+    display: flex;
+  }
+  .workspace-nav__track a[aria-current="page"] {
+    box-shadow: none;
+  }
+  .workspace-nav__track a[aria-current="page"]::before {
+    position: absolute;
+    inset-block: 8px;
+    inset-inline-start: 0;
+    width: 3px;
+    border-radius: 3px;
+    background: var(--primary);
+    content: "";
+  }
+  .workspace-nav__sign-out {
+    width: 100%;
+    margin: var(--space-1) 0 0;
+    border-color: transparent;
+    background: transparent;
+  }
+}
+@media print {
+  .workspace-layout {
+    display: block;
+  }
 }

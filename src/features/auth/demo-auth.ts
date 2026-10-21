@@ -4,6 +4,8 @@
 const sessionChanged = "royal-demo-session-changed";
 const sessionKey = "royal-vacation.demo-auth.v1";
 export const demoCredentials = { email: "demo@royalvacation.test", password: "Demo@12345" };
+/** Demo identities for ownership checks. The colleague only describes fixture records marked as owned by another agency user. */
+export const demoUserIds = { current: "demo-agent-001", colleague: "demo-agent-002" } as const;
 
 export const demoAuth = {
   isActive(): boolean {
@@ -16,6 +18,10 @@ export const demoAuth = {
     sessionStorage.setItem(sessionKey, "active");
     window.dispatchEvent(new Event(sessionChanged));
     return true;
+  },
+  /** The signed-in demo user, or null. Not backend identity. */
+  currentUserId(): string | null {
+    return demoAuth.isActive() ? demoUserIds.current : null;
   },
   signOut(): void {
     try { sessionStorage.removeItem(sessionKey); } catch { /* No persisted session when storage is unavailable. */ }

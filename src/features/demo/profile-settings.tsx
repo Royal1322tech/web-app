@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Icon } from "@/components/ui/icon";
 import { useLocale } from "@/features/localization/locale-provider";
 import { PreferenceFields } from "@/features/preferences/travel-preferences";
 import { useDemo } from "./demo-provider";
@@ -15,15 +16,15 @@ export function ProfilePage() {
       <Link className="button button--primary" to="/agency/edit">{t("Edit profile", "تعديل الملف الشخصي")}</Link>
     </section>
     <div className="profile-information">
-      <section className="workspace-card"><h2>{t("Personal information", "المعلومات الشخصية")}</h2><dl className="profile-fields">
+      <section className="workspace-card"><h2 className="profile-card-title"><span aria-hidden="true"><Icon name="user" /></span>{t("Personal information", "المعلومات الشخصية")}</h2><dl className="profile-fields">
         {[[t("Full name", "الاسم الكامل"), profile.contact], [t("Email", "البريد الإلكتروني"), profile.email], [t("Phone", "الهاتف"), profile.phone]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd><bdi>{value}</bdi></dd></div>)}
       </dl></section>
-      <section className="workspace-card"><h2>{t("Agency information", "معلومات الوكالة")}</h2><dl className="profile-fields">
+      <section className="workspace-card"><h2 className="profile-card-title"><span aria-hidden="true"><Icon name="building" /></span>{t("Agency information", "معلومات الوكالة")}</h2><dl className="profile-fields">
         {[[t("Agency", "الوكالة"), profile.name], [t("Country", "الدولة"), profile.country], [t("Address", "العنوان"), profile.address]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
       </dl><Link to="/agency">{t("View agency details", "عرض تفاصيل الوكالة")}</Link></section>
     </div>
     <section className="workspace-card"><h2>{t("Your workspace at a glance", "مساحة عملك بنظرة سريعة")}</h2><div className="profile-shortcuts">
-      {[["/wallet", t("Credit balance", "الرصيد الائتماني"), t("Review credit", "راجع الرصيد")], ["/transactions", t("Transactions", "المعاملات"), t("Explore financial activity", "استعرض النشاط المالي")], ["/bookings", t("Bookings", "الحجوزات"), t("Manage stays", "أدر الإقامات")], ["/points", t("Points", "النقاط"), t("View points and activity", "عرض النقاط والنشاط")]].map(([path, title, description]) => <Link to={path} key={path}><strong>{title}</strong><span>{description}</span><span aria-hidden="true">↗</span></Link>)}
+      {[["/wallet", t("Wallet", "المحفظة"), t("Review credit", "راجع الرصيد")], ["/transactions", t("Transactions", "المعاملات"), t("Explore financial activity", "استعرض النشاط المالي")], ["/bookings", t("Bookings", "الحجوزات"), t("Manage stays", "أدر الإقامات")], ["/points", t("Points", "النقاط"), t("View points and activity", "عرض النقاط والنشاط")]].map(([path, title, description]) => <Link to={path} key={path}><strong>{title}</strong><span>{description}</span><Icon name="arrowRight" aria-hidden="true" /></Link>)}
     </div></section>
   </Workspace>;
 }

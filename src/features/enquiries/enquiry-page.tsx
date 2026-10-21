@@ -16,13 +16,13 @@ import { demoAuth, subscribeDemoSession } from "@/features/auth/demo-auth";
 import { SiteFooter } from "@/features/home/components/site-footer";
 import { getCountryCallingCode } from "libphonenumber-js/max";
 import { contactPhone, phoneCountries, validPhoneCountry } from "@/features/agency-registration/lib/phone";
-import { ComplaintContactPage } from "./complaint-page";
 
+/* The complaint form (./complaint-page) is kept for the planned Ticket page and is
+ * intentionally not routed until its eligibility rules and route are approved. */
 export function EnquiryPage({ group = false }: { group?: boolean }) {
   const demoSessionActive = useSyncExternalStore(subscribeDemoSession, demoAuth.isActive, () => false);
   const [params] = useSearchParams();
   if (!group && chauffeurSubjects.includes(params.get("subject") ?? "")) return <ChauffeurEnquiryPage />;
-  if (!group) return <ComplaintContactPage publicVisitor={!demoSessionActive} />;
   return <GeneralEnquiryPage group={group} publicVisitor={!demoSessionActive && !group} />;
 }
 function GeneralEnquiryPage({ group, publicVisitor }: { group: boolean; publicVisitor: boolean }) {

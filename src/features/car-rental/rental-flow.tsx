@@ -1,3 +1,5 @@
+import { rentalBookingContext } from "@/features/tickets/ticket-access";
+import { BookingSupportSection, ReportIssueAction } from "@/features/tickets/ticket-ui";
 import { vehicleName } from "./rental-presentation";
 import { RentalShell, RentalSummary, MissingSelection } from "./rental-layout";
 import { useRef, useState } from "react";
@@ -406,8 +408,10 @@ export function RentalBookingDetailsPage() {
                   {t("Review another outcome", "مراجعة نتيجة أخرى")}
                 </button>
               )}
+              <ReportIssueAction booking={rentalBookingContext(record)} />
             </div>
           </section>
+          <BookingSupportSection booking={rentalBookingContext(record)} />
           <Link className="button button--outline" to="/car-rental/bookings">{t("Back to my rentals", "العودة لتأجيراتي")}</Link>
           </div><RentalSummary selection={record} /></div>
           <dialog

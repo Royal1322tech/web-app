@@ -103,7 +103,7 @@ export const router = createBrowserRouter([
         lazy: page(() => import("@/pages/home"), "Travel Agency Workspace"),
       },
       { path: "contact", lazy: async () => ({ Component: (await import("@/features/enquiries/enquiry-page")).EnquiryPage }) },
-      { path: "group-quotation", handle: { workspace: true }, lazy: async () => { const { EnquiryPage } = await import("@/features/enquiries/enquiry-page"); return { Component: () => <EnquiryPage group /> }; } },
+      { path: "group-quotation", lazy: async () => { const { EnquiryPage } = await import("@/features/enquiries/enquiry-page"); return { Component: () => <EnquiryPage group /> }; } },
       {
         path: "welcome",
         lazy: page(() => import("@/pages/welcome"), "Welcome"),
@@ -130,7 +130,7 @@ export const router = createBrowserRouter([
         lazy: page(() => import("@/pages/favourites"), "Favourites"),
       },
       {
-        path: "bookings", handle: { workspace: true },
+        path: "bookings",
         lazy: page(() => import("@/pages/bookings"), "My Bookings"),
       },
       {
@@ -215,6 +215,11 @@ export const router = createBrowserRouter([
           Component: (await import("@/features/demo/checkout")).VoucherPage,
         }),
       },
+      // Booking-linked support tickets (frontend demo; creation only from an owned, recorded booking).
+      { path: "bookings/:id/tickets/new", lazy: async () => { const { CreateTicketPage } = await import("@/features/tickets/create-ticket-page"); return { Component: () => <CreateTicketPage bookingType="hotel" /> }; } },
+      { path: "car-rental/bookings/:id/tickets/new", lazy: async () => { const { CreateTicketPage } = await import("@/features/tickets/create-ticket-page"); return { Component: () => <CreateTicketPage bookingType="rental" /> }; } },
+      { path: "tickets", lazy: async () => ({ Component: (await import("@/features/tickets/tickets-page")).MyTicketsPage }) },
+      { path: "tickets/:reference", lazy: async () => ({ Component: (await import("@/features/tickets/ticket-detail-page")).TicketDetailPage }) },
       {
         path: "bookings/:id/invoice",
         handle: { workspace: true },
