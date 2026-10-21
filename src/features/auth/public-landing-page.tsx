@@ -39,7 +39,6 @@ export function PublicLandingPage() {
         </section>
 
         <ProductsServices publicLanding />
-        <PlatformStrengths />
 
         <section className={styles.partnerCta} aria-labelledby="partner-cta-title">
           <div>
@@ -52,6 +51,8 @@ export function PublicLandingPage() {
             <Link to="/contact">{t("Contact Us", "تواصل معنا")}</Link>
           </div>
         </section>
+
+        <PlatformStrengths />
       </main>
       <SiteFooter />
     </div>

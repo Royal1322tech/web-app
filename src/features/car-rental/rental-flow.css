@@ -387,3 +387,9 @@
 @media (max-width: 600px) { .rental-reference-shell .rental-progress span { flex-basis: 24px; } }
 .rental-enquiry-summary > .rental-gold-button { display: flex; width: 100%; margin-block: 16px 10px; }
 .rental-enquiry-summary > a { display: block; margin-top: 12px; }
+
+/* Batch B: the local rental links read as a distinct row below the banner. */
+.rental-reference-shell .rental-nav { margin: var(--space-4) 0 var(--space-5); padding-block-end: var(--space-3); border-block-end: 1px solid var(--rental-line); }
+.rental-reference-shell .rental-nav a { display: inline-flex; align-items: center; min-height: 28px; text-underline-offset: 5px; }
+/* Batch C: remaining directional icons follow the reading direction. */
+[dir=rtl] .rental-chauffeur-choices a > svg:last-child, [dir=rtl] .rental-form-actions a > svg, [dir=rtl] .rental-form-actions button > svg { rotate: 180deg; }

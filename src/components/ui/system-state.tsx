@@ -69,6 +69,10 @@ export function SystemState({
     </div>
   );
 }
+/* Developer-only: shown by `vite dev` or a build with VITE_ENABLE_STATE_PREVIEW=true. */
+const statePreviewEnabled =
+  import.meta.env.DEV || import.meta.env.VITE_ENABLE_STATE_PREVIEW === "true";
+
 /** Explicit demonstration controls, not invented network requests or artificial loading. */
 export function StatePreview({
   children,
@@ -76,6 +80,17 @@ export function StatePreview({
 }: {
   children: ReactNode;
   emptyTitle?: string;
+}) {
+  if (!statePreviewEnabled) return children;
+  return <StatePreviewControls emptyTitle={emptyTitle}>{children}</StatePreviewControls>;
+}
+
+function StatePreviewControls({
+  children,
+  emptyTitle,
+}: {
+  children: ReactNode;
+  emptyTitle: string;
 }) {
   const { t } = useLocale();
   const [state, setState] = useState("ready");

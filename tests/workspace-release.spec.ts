@@ -94,16 +94,26 @@ test('points history filters, paginates and shows an honest empty state', async 
 test('workspace navigation persists across all sections and profile edits remain local', async ({ page }) => {
   await visit(page, '/profile');
   const navigation = page.getByRole('navigation', { name: 'Workspace navigation' });
-  for (const route of ['/wallet', '/profile', '/bookings', '/car-rental/bookings', '/agency', '/transactions', '/notifications', '/points', '/profile']) {
+  for (const route of ['/car-rental/bookings', '/profile', '/agency', '/transactions', '/notifications', '/points', '/tickets', '/account/settings', '/profile']) {
     await navigation.locator(`a[href="${route}"]`).click();
     await expect(page).toHaveURL(new RegExp(`${route}$`));
     await expect(navigation).toHaveCount(1);
     await expect(navigation.locator(`a[href="${route}"]`)).toHaveAttribute('aria-current', 'page');
     await expect(page.locator('header')).toHaveCount(1);
   }
+  // My Bookings and Wallet are reachable from the bar but intentionally render without it.
+  for (const route of ['/bookings', '/wallet']) {
+    await navigation.locator(`a[href="${route}"]`).click();
+    await expect(page).toHaveURL(new RegExp(`${route}$`));
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await expect(navigation).toHaveCount(0);
+    await page.goBack();
+    await expect(navigation).toHaveCount(1);
+  }
   await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Group Quotation', exact: true }).click();
   await expect(page).toHaveURL(/\/group-quotation$/);
-  await expect(navigation).toHaveCount(1);
+  await expect(navigation).toHaveCount(0);
+  await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible();
   await page.goto('/profile');
   await page.getByRole('link', { name: 'Edit profile' }).click();
   await page.getByLabel('Contact person', { exact: true }).fill('Demo Partner Contact');
@@ -218,7 +228,10 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) for (const locale of 
     await page.screenshot({ path: `test-results/profile-${width}-${locale}.png`, fullPage: true });
     const nav = page.locator('.workspace-nav');
     await nav.locator('a[href="/wallet"]').click();
-    await expect(nav).toBeVisible();
+    await expect(page).toHaveURL(/\/wallet$/);
+    await expect(nav).toHaveCount(0);
+    await noOverflow(page);
+    await page.goBack();
     await nav.locator('a[href="/points"]').click();
     await expect(page.locator('.points-list li')).toHaveCount(4);
     await noOverflow(page);

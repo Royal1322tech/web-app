@@ -31,7 +31,7 @@ export function ProductsServices({ publicLanding = false }: { publicLanding?: bo
     
     <h2 id="services-title"><Text en="Our Products & " ar="منتجاتنا و" /><span><Text en="Services" ar="خدماتنا" /></span></h2>
     <p className={styles.intro}><Text en="Plan each journey for your clients. Explore hotel options or prepare an enquiry for transport services." ar="خطط لكل رحلة لعملائك. استكشف خيارات الفنادق أو جهز استفسارًا لخدمات النقل." /></p>
-    <div className={styles.services}>
+    <div className={`${styles.services} ${publicLanding ? styles.servicesFour : ""}`}>
       {visibleServices.map(service => <article key={service.en}>
         <ResponsiveImage src={service.image} alt="" width={1672} height={941} sizes="(max-width:599px) 90vw, (max-width:999px) 44vw, 380px" />
         <div className={styles.body}><div className={styles.serviceTitle}><span className={styles.serviceIcon}><Icon name={service.icon} /></span><h3>{t(service.en,service.ar)}</h3></div><p>{t(service.description,service.descriptionAr)}</p>

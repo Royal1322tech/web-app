@@ -1,7 +1,10 @@
 /* Restore the original account-selection composition without restyling login. */
 .auth-page--welcome {
-  --brand: #007f93;
-  --brand-hover: #00697a;
+  --primary: var(--secondary);
+  --primary-hover: var(--secondary-hover);
+  --brand: var(--primary);
+  --brand-hover: var(--primary-hover);
+  --focus-ring-color: var(--primary);
   --muted: #454545;
   --subtle: #f2f4fa;
   grid-template-columns: 39.2% minmax(0, 1fr);

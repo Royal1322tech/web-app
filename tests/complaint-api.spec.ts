@@ -1,9 +1,10 @@
 import { expect, test } from "@playwright/test";
 
-const endpointConfigured = Boolean(process.env.VITE_COMPLAINTS_ENDPOINT);
-
+// The complaint form is preserved for the planned Ticket page but is no longer routed at /contact.
+// Re-target this contract suite to the Ticket route once it is approved, then restore the
+// VITE_COMPLAINTS_ENDPOINT gate.
 test.describe("configured complaint submission contract", () => {
-  test.skip(!endpointConfigured, "Run with VITE_COMPLAINTS_ENDPOINT and a local same-origin API base to exercise mocked responses.");
+  test.skip(true, "Complaint form is not routed until the Ticket page is approved.");
 
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 1000 });

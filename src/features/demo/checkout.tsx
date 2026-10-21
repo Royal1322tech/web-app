@@ -82,7 +82,7 @@ export function BookingSummaryPage() {
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState("");
   return (
-    <Workspace title={t("Review your stay", "راجع إقامتك")}>
+    <Workspace accountNavigation={false} title={t("Review your stay", "راجع إقامتك")}>
       <Progress step={0} />
       {!selection ? (
         <EmptySelection />
@@ -204,7 +204,7 @@ export function GuestInformationPage() {
   const { t } = useLocale();
   const { selection } = useDemo();
   return (
-    <Workspace title={t("Guest information", "بيانات الضيوف")}>
+    <Workspace accountNavigation={false} title={t("Guest information", "بيانات الضيوف")}>
       <Progress step={1} />
       {selection ? <GuestForm selection={selection} /> : <EmptySelection />}
     </Workspace>
@@ -353,7 +353,7 @@ export function CancellationPolicyPage() {
   const { selection, guests, policyAcknowledged, acknowledgePolicy } = useDemo();
   if (selection && !guests) return <Navigate to="/booking/guests" replace />;
   return (
-    <Workspace title={t("Cancellation Policy", "سياسة الإلغاء")}>
+    <Workspace accountNavigation={false} title={t("Cancellation Policy", "سياسة الإلغاء")}>
       <Progress step={2} />
       {!selection ? <EmptySelection /> : (
         <div className="workspace-grid policy-page-grid">
@@ -421,14 +421,14 @@ export function PaymentPage() {
   const creditInvalid = credit.status !== "sufficient";
   if (!selection)
     return (
-      <Workspace title={t("Payment Details", "بيانات الدفع")}>
+      <Workspace accountNavigation={false} title={t("Payment Details", "بيانات الدفع")}>
         <EmptySelection />
       </Workspace>
     );
   if (!guests) return <Navigate to="/booking/guests" replace />;
   if (!policyAcknowledged) return <Navigate to="/booking/policy" replace />;
   return (
-    <Workspace title={t("Payment Details", "بيانات الدفع")}>
+    <Workspace accountNavigation={false} title={t("Payment Details", "بيانات الدفع")}>
       <Progress step={3} />
       <div className="workspace-grid">
         <section className="workspace-card payment-details-card">
@@ -485,7 +485,7 @@ export function PaymentPage() {
 export function BookingPreparedPage() {
   const { locale, t } = useLocale();
   const { selection, guests, policyAcknowledged, paymentMethod, paymentDetailsPrepared } = useDemo();
-  if (!selection) return <Workspace title={t("Booking details prepared", "تم تجهيز تفاصيل الحجز")}><EmptySelection /></Workspace>;
+  if (!selection) return <Workspace accountNavigation={false} title={t("Booking details prepared", "تم تجهيز تفاصيل الحجز")}><EmptySelection /></Workspace>;
   if (!guests) return <Navigate to="/booking/guests" replace />;
   if (!policyAcknowledged) return <Navigate to="/booking/policy" replace />;
   if (!paymentMethod || !paymentDetailsPrepared) return <Navigate to="/booking/payment" replace />;
@@ -495,7 +495,7 @@ export function BookingPreparedPage() {
   const childCount = selection.criteria.rooms.reduce((total, room) => total + room.childAges.length, 0);
   const selectedPaymentMethod = paymentMethods.find((method) => method.id === paymentMethod);
   return (
-    <Workspace title={t("Booking details prepared", "تم تجهيز تفاصيل الحجز")}>
+    <Workspace accountNavigation={false} title={t("Booking details prepared", "تم تجهيز تفاصيل الحجز")}>
       <Progress step={4} />
       <div className="workspace-grid">
         <section className="workspace-card payment-prepared-result" data-status="prepared">
@@ -527,7 +527,7 @@ export function BookingResultPage() {
   const navigate = useNavigate();
   const booking = records.find((b) => b.id === id);
   return (
-    <Workspace title={t("Booking result", "نتيجة الحجز")}>
+    <Workspace accountNavigation={false} title={t("Booking result", "نتيجة الحجز")}>
       <Progress step={4} />
       {!booking ? (
         <EmptySelection />

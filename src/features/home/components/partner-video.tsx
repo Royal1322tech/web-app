@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMediaEnvironment } from "@/components/motion/use-media-environment";
 import { useLocale } from "@/features/localization/locale-provider";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
+import { Icon } from "@/components/ui/icon";
 import styles from "./partner-benefits.module.css";
 
 export function PartnerVideo() {
@@ -38,7 +39,7 @@ export function PartnerVideo() {
           <button type="button" onClick={() => {
             if (playing) { video.current?.pause(); setPaused(true); setManualPlay(false); }
             else { setPaused(false); setManualPlay(true); video.current?.play().catch(() => setBlocked(true)); }
-          }}>{playing ? t("Pause video", "إيقاف الفيديو") : t("Play video", "تشغيل الفيديو")}</button>}
+          }}><Icon name={playing ? "pause" : "play"} />{playing ? t("Pause video", "إيقاف الفيديو") : t("Play video", "تشغيل الفيديو")}</button>}
         {blocked && !playing && <p role="status">{t("Playback is paused by your browser. Use Play to try again.", "أوقف المتصفح التشغيل. اضغط تشغيل للمحاولة.")}</p>}
       </div>
     </div>

@@ -24,6 +24,9 @@ export function Workspace({
   hideHeading = false,
   showPreview = false,
   publicHeader = false,
+  accountNavigation = true,
+  breadcrumb,
+  trail,
   children,
 }: {
   title: string;
@@ -31,11 +34,16 @@ export function Workspace({
   hideHeading?: boolean;
   showPreview?: boolean;
   publicHeader?: boolean;
+  /** Transactional flows hide the account navigation to keep focus on the task. */
+  accountNavigation?: boolean;
+  /** Short navigation label when the page title is a longer headline. */
+  breadcrumb?: string;
+  trail?: readonly { to: string; label: string }[];
   children: ReactNode;
 }) {
   const { t } = useLocale();
   return (
-    <CatalogShell title={title} workspace={!publicHeader} showPreview={showPreview} publicHeader={publicHeader}>
+    <CatalogShell title={breadcrumb ?? title} trail={trail} workspace={!publicHeader && accountNavigation} showPreview={showPreview} publicHeader={publicHeader}>
       <div className="workspace">
         {!hideHeading && <><p className="workspace-eyebrow">
           {eyebrow ??

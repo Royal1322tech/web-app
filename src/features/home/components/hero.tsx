@@ -35,7 +35,7 @@ export function Hero({ content }: { content: HeroContent }) {
       <div className={styles.copy}>
         <p className={styles.eyebrow}><Text en="THE WORLD, THROUGH YOUR AGENCY" ar="العالم من خلال وكالتك" /></p>
         <h1><Text en="Exceptional stays." ar="إقامات استثنائية." /><span><Text en="Stronger partnerships." ar="شراكات أقوى." /></span></h1>
-        <p className={styles.description}><Text en="A considered workspace for travel professionals. Discover hotels, compare room options, and plan every guest’s next chapter." ar="مساحة عمل مصممة لمحترفي السفر. اكتشف الفنادق وقارن الغرف وخطط للرحلة القادمة لكل ضيف." /></p>
+        <p className={styles.description}><Text en="Find the right hotels, compare room options, and manage travel bookings with confidence — all in one place." ar="اعثر على الفنادق المناسبة، وقارن خيارات الغرف، وأدِر حجوزات السفر بثقة — كل ذلك في مكان واحد." /></p>
       </div>
     </section>
   );

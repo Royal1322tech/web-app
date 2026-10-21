@@ -41,7 +41,7 @@ export function BookingsScreen() {
   };
   const visibleBookings = result.slice(pageIndex * limit, (pageIndex + 1) * limit);
   return (
-    <CatalogShell title={t("Booking", "الحجوزات")}>
+    <CatalogShell title={t("My Bookings", "حجوزاتي")} workspace={false}>
       <h1>{t("My Bookings", "حجوزاتي")}</h1>
       <p className={styles.sampleNote}>{t("Booking records and changes stay in this browser session; supplier reservations are not updated.", "تظل سجلات الحجوزات والتغييرات في جلسة المتصفح؛ ولا تُحدّث حجوزات الموردين.")}</p>
       <button

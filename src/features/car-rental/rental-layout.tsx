@@ -33,7 +33,7 @@ export function RentalShell({
     {steps.map(([path, label], index) => <li key={path} aria-current={pathname === path || (index === 3 && pathname.startsWith("/car-rental/bookings/")) ? "step" : undefined}><span>{index + 1}</span>{label}</li>)}
   </ol> : null;
   return (
-    <Workspace title={title} hideHeading showPreview={false} publicHeader={publicHeader}>
+    <Workspace title={title} hideHeading showPreview={false} publicHeader={publicHeader} accountNavigation={pathname.startsWith("/car-rental/bookings")}>
       <div className="rental-reference-shell">
       {showHero && <RentalHero compact title={title.replace(/ · (demo|simulation|تجريبي|محاكاة)/g, "")} primary>{customProgress ?? progress}</RentalHero>}
       <nav

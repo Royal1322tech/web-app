@@ -49,6 +49,9 @@ const paths = {
   chevron: "m6 9 6 6 6-6",
   info: "M12 16v-4m0-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0",
   check: "m5 12 4 4L19 6",
+  signOut: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9",
+  play: "M8 5.5v13l10.5-6.5Z",
+  pause: "M9 5v14m6-14v14",
 } as const;
 
 export type IconName = keyof typeof paths;

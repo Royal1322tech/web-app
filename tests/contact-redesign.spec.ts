@@ -5,7 +5,7 @@ import { visit } from "./helpers/demo-login";
 import { openHeaderTools } from "./helpers/header";
 
 for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
-  test(`contact complaint layout and footer app availability fit ${width}px in English and Arabic`, async ({ page }) => {
+  test(`general contact layout and footer app availability fit ${width}px in English and Arabic`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
     await page.emulateMedia({ reducedMotion: "reduce" });
     await visit(page, "/contact");
@@ -13,8 +13,9 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
       await openHeaderTools(page);
       await selectLanguage(page, locale);
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(locale === "en" ? "Contact Us" : "تواصل معنا");
-      await expect(page.getByRole("heading", { name: locale === "en" ? "Customer Support" : "دعم العملاء" })).toBeVisible();
-      await expect(page.getByRole("heading", { name: locale === "en" ? "Submit a Complaint" : "تقديم شكوى" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: locale === "en" ? "Contact Information" : "معلومات التواصل" })).toBeVisible();
+      await expect(page.getByRole("button", { name: locale === "en" ? "Prepare enquiry" : "تجهيز الاستفسار" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: locale === "en" ? "Submit a Complaint" : "تقديم شكوى" })).toHaveCount(0);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
 
       const support = page.getByRole("complementary");
@@ -43,21 +44,22 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
   });
 }
 
-test("complaint validation and missing endpoint never show fake success or send data", async ({ page }) => {
+test("general contact validation prepares only a local preview and never sends data", async ({ page }) => {
   const requests: string[] = [];
   page.on("request", request => { if (request.method() === "POST") requests.push(request.url()); });
   await visit(page, "/contact");
-  await page.getByRole("button", { name: "Submit Complaint" }).click();
-  await expect(page.getByText("Select a service type.")).toBeVisible();
-  await expect(page.getByText("Enter a complaint title.")).toBeVisible();
-  await expect(page.getByText("Describe your complaint.")).toBeVisible();
-  await page.getByLabel("Service Type").selectOption("payment");
-  await page.getByLabel("Booking ID (Optional)").fill("  BOOK-2048  ");
-  await page.getByLabel("Complaint Title").fill("Payment was not reflected");
-  await page.getByLabel("Details of Your Complaint").fill("The payment is not reflected in the booking summary.");
-  await page.getByRole("button", { name: "Submit Complaint" }).click();
-  await expect(page.getByRole("status")).toContainText("Online complaint submission is not available yet.");
-  await expect(page.getByText(/Complaint Submitted/)).toHaveCount(0);
+  await page.getByRole("button", { name: "Prepare enquiry", exact: true }).click();
+  await expect(page.getByText("Enter your name.", { exact: true })).toBeVisible();
+  await expect(page.getByText("Enter a valid email.", { exact: true })).toBeVisible();
+  await expect(page.getByText("Enter a subject.", { exact: true })).toBeVisible();
+  await page.locator("#enquiry-name").fill("Demo Traveller");
+  await page.locator("#enquiry-email").fill("demo@example.com");
+  await page.locator("#enquiry-subject").fill("Partnership question");
+  await page.locator("#enquiry-phone").fill("1001234567");
+  await page.locator("#enquiry-message").fill("A fictional enquiry to preview locally.");
+  await page.getByRole("button", { name: "Prepare enquiry", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("Local preview ready — not sent");
+  await expect(page.getByText(/Submitted|sent successfully/i)).toHaveCount(0);
   expect(requests).toEqual([]);
 
   const support = page.getByRole("complementary");

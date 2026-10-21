@@ -1,8 +1,9 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Icon } from "@/components/ui/icon";
 import { FormField } from "@/components/ui/form-field";
+import { FileField } from "@/components/ui/file-field";
 import { CatalogShell } from "@/features/hotels/components/catalog-shell";
 import { SiteFooter } from "@/features/home/components/site-footer";
 import { useLocale } from "@/features/localization/locale-provider";
@@ -11,6 +12,7 @@ import {
   createComplaintSchema,
   complaintServices,
   submitComplaint,
+  supportAttachmentAccept,
   type ComplaintFormValues,
   type ComplaintFormInput,
   type ComplaintService,
@@ -34,7 +36,6 @@ export function ComplaintContactPage({ publicVisitor }: { publicVisitor: boolean
     | { status: "unavailable" }
     | { status: "error" }
   >({ status: "idle" });
-  const fileInput = useRef<HTMLInputElement>(null);
   const schema = createComplaintSchema({
     service: t("Select a service type.", "اختر نوع الخدمة."),
     titleRequired: t("Enter a complaint title.", "أدخل عنوان الشكوى."),
@@ -166,25 +167,18 @@ export function ComplaintContactPage({ publicVisitor }: { publicVisitor: boolean
                   </FormField>
                 </div>
                 <div className={styles.fullWidth}>
-                  <FormField id="complaint-attachment" label={t("Attach File (Optional)", "إرفاق ملف (اختياري)")} error={fieldError("attachment")}>
-                    <div className={styles.uploadField}>
-                      <input
-                        id="complaint-attachment"
-                        type="file"
-                        accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
-                        aria-invalid={!!errors.attachment}
-                        aria-describedby={errors.attachment ? "complaint-attachment-error" : "complaint-file-help"}
-                        {...attachmentField}
-                        ref={node => { attachmentField.ref(node); fileInput.current = node; }}
-                      />
-                      <span className={styles.uploadIcon}><Icon name="upload" /></span>
-                      <span className={styles.uploadCopy}><b>{t("Choose a file", "اختر ملفًا")}</b><small id="complaint-file-help">{t("JPG, PNG or PDF · up to 5 MB", "JPG أو PNG أو PDF · حتى ٥ ميغابايت")}</small></span>
-                    </div>
-                    {selectedFile && <div className={styles.selectedFile}>
-                      <span><Icon name="document" /> <bdi>{selectedFile.name}</bdi></span>
-                      <button type="button" onClick={() => { setValue("attachment", undefined, { shouldValidate: true }); if (fileInput.current) fileInput.current.value = ""; resetResult(); }} aria-label={t("Remove selected file", "إزالة الملف المحدد")}><Icon name="close" /></button>
-                    </div>}
-                  </FormField>
+                  <FileField
+                    id="complaint-attachment"
+                    label={t("Attach File (Optional)", "إرفاق ملف (اختياري)")}
+                    help={t("JPG, PNG or PDF · up to 5 MB", "JPG أو PNG أو PDF · حتى ٥ ميغابايت")}
+                    error={fieldError("attachment")}
+                    accept={supportAttachmentAccept}
+                    chooseLabel={t("Choose a file", "اختر ملفًا")}
+                    removeLabel={t("Remove selected file", "إزالة الملف المحدد")}
+                    registration={attachmentField}
+                    selectedFile={selectedFile}
+                    onRemove={() => { setValue("attachment", undefined, { shouldValidate: true }); resetResult(); }}
+                  />
                 </div>
               </div>
 

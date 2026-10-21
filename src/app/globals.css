@@ -1,24 +1,5 @@
 @import "tailwindcss" source("../");
-
-:root {
-  --background: #ffffff;
-  --foreground: #161616;
-  --brand: #007f93;
-  --brand-hover: #00697a;
-  --muted: #454545;
-  --border: #dedfe3;
-  --subtle: #f2f4fa;
-  --error: #b42336;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-brand: var(--brand);
-  --color-muted: var(--muted);
-  --color-border: var(--border);
-  --font-sans: Arial, Helvetica, sans-serif;
-}
+@import "./tokens.css";
 
 * {
   box-sizing: border-box;
@@ -27,13 +8,18 @@ body {
   margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 16px;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-body);
 }
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
+}
+textarea {
+  resize: vertical;
 }
 button,
 a,
@@ -57,25 +43,36 @@ a {
   color: inherit;
 }
 :focus-visible {
-  outline: 3px solid var(--brand);
-  outline-offset: 4px;
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
 }
 h1,
 h2,
 p {
   margin: 0;
 }
+h1,
+h2,
+h3,
+h4 {
+  color: var(--navy);
+  text-wrap: balance;
+  line-height: var(--line-height-tight);
+}
 h1 {
-  font-size: 30px;
-  line-height: 1.25;
-  font-weight: 700;
-  letter-spacing: -0.7px;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--weight-heavy);
+  letter-spacing: -0.045em;
 }
 h2 {
-  font-size: 18px;
-  line-height: 1.35;
-  font-weight: 700;
-  letter-spacing: -0.3px;
+  font-size: var(--font-size-lg);
+  font-weight: var(--weight-heavy);
+  letter-spacing: -0.025em;
+}
+[dir="rtl"] h1,
+[dir="rtl"] h2 {
+  letter-spacing: 0;
+  line-height: 1.5;
 }
 
 .brand-logo {
@@ -97,32 +94,34 @@ h2 {
   width: 65px;
 }
 .button {
-  min-height: 48px;
+  min-height: var(--control-height);
   padding: 10px 24px;
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  border-radius: 12px;
+  border-radius: var(--rounded-lg);
+  gap: var(--space-2);
   border: 1px solid transparent;
-  font-size: 17px;
-  line-height: 1.3;
-  font-weight: 600;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-snug);
+  font-weight: var(--weight-semibold);
   text-decoration: none;
   transition:
-    background-color 0.15s,
-    border-color 0.15s;
+    transform var(--duration-base) var(--ease),
+    background 0.2s,
+    box-shadow 0.2s;
 }
 .button--primary {
-  background: var(--brand);
-  color: white;
+  background: var(--primary);
+  color: var(--on-primary);
 }
 .button--primary:hover {
   background: var(--brand-hover);
 }
 .button--outline {
-  background: white;
+  background: var(--surface);
   color: var(--brand);
-  border-color: #6cb7c5;
+  border-color: color-mix(in srgb, var(--brand) 38%, var(--border));
 }
 .button--outline:hover {
   background: #eff8fa;
@@ -307,6 +306,7 @@ h2 {
 }
 .required-mark {
   color: var(--error);
+  white-space: nowrap;
 }
 .input-wrap {
   position: relative;
@@ -314,13 +314,13 @@ h2 {
 .input {
   width: 100%;
   min-width: 0;
-  height: 48px;
+  height: var(--control-height);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--rounded-lg);
   padding: 10px 13px;
-  background: white;
+  background: var(--surface);
   color: var(--foreground);
-  font-size: 14px;
+  font-size: var(--font-size-md);
   box-shadow: 0 1px 3px #00000003;
 }
 .input::placeholder {
@@ -328,8 +328,8 @@ h2 {
   opacity: 1;
 }
 .input:focus-visible {
-  border-color: var(--brand);
-  outline: 2px solid var(--brand);
+  border-color: var(--focus-ring-color);
+  outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
 }
 .input[aria-invalid="true"] {
@@ -377,10 +377,27 @@ h2 {
   color: #666;
 }
 .field-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
   color: var(--error);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   line-height: 1.5;
   margin-block-start: 7px;
+}
+.field-error::before {
+  content: "!";
+  display: grid;
+  place-items: center;
+  flex: 0 0 16px;
+  height: 16px;
+  margin-block-start: 2px;
+  border-radius: 50%;
+  background: var(--error);
+  color: #fff;
+  font-size: 11px;
+  font-weight: var(--weight-heavy);
+  line-height: 1;
 }
 .availability-notice {
   padding: 12px 16px;

@@ -144,7 +144,7 @@ export function WalletPage() {
   const { open, element } = useTransactionDialog();
   const [insufficient, setInsufficient] = useState(false);
   return (
-    <Workspace title={t("Your credit, at a glance.", "رصيدك، بنظرة واحدة.")}>
+    <Workspace title={t("Your credit, at a glance.", "رصيدك، بنظرة واحدة.")} breadcrumb={t("Wallet", "المحفظة")} accountNavigation={false}>
       <p className="fine-print">{t("Account figures are informational and are not connected to a live balance.", "أرقام الحساب للمعلومات فقط ولا ترتبط برصيد مباشر.")}</p>
       <StatePreview
         emptyTitle={t("No credit information", "لا توجد بيانات ائتمانية")}

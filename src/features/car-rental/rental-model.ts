@@ -88,6 +88,8 @@ export interface RentalSelection {
 export type RentalStatus = "confirmed" | "pending" | "failed" | "cancelled";
 export interface RentalRecord extends RentalSelection {
   id: string;
+  /** Demo identity of the user who recorded the rental. */
+  ownerId: string;
   driver: RentalDriver;
   status: RentalStatus;
   total: number;

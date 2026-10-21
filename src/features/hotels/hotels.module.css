@@ -11,9 +11,9 @@
   min-width: 0;
 }
 .shell h1 {
-  font-size: clamp(24px, 3vw, 34px);
+  font-size: var(--page-title-size);
   font-weight: 700;
-  margin: 16px 0;
+  margin: var(--space-3) 0 var(--space-5);
   line-height: 1.25;
 }
 .shell h2 {
@@ -516,9 +516,6 @@
   }
 }
 @media (min-width: 1000px) {
-  .shell {
-    padding-inline: 44px;
-  }
   .resultsLayout {
     grid-template-columns: 260px minmax(0, 1fr);
     gap: 40px;
@@ -1298,8 +1295,13 @@
 .shell {
   background: var(--background);
   color: var(--foreground);
-  max-width: 1440px;
-  padding-inline: clamp(16px, 3vw, 48px);
+  max-width: none;
+  padding-inline: 0;
+}
+/* Header, breadcrumbs, workspace navigation and content share one edge. */
+.shell > main {
+  width: var(--page-width);
+  margin-inline: auto;
 }
 .shell h1 {
   font-weight: 800;
@@ -1559,3 +1561,113 @@
 .sidebar input:disabled { border-color: #cad5df; background-color: #edf1f5; }
 :global([dir=rtl]) .sidebar details:not([open]) > summary::after { transform: rotate(135deg); }
 @media (forced-colors: active) { .sidebar input:is([type=checkbox], [type=radio]) { appearance: auto; } }
+
+/* Batch B refinements --------------------------------------------------- */
+
+/* Shared form fields keep the label text and required mark on one line. */
+.shell :global(.form-field) > label {
+  display: block;
+}
+
+/* Result cards: the nightly rate reads first, secondary actions stay compact. */
+.resultCard {
+  padding: var(--space-4);
+}
+.rate {
+  font-size: var(--font-size-2xl);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.cardActionButtons > :is(button, a) {
+  min-height: 40px;
+  border-radius: var(--rounded-md);
+}
+.cardFooter {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top-color: var(--border);
+}
+.cardFooter > div > p {
+  margin: 0;
+  color: var(--navy);
+  font-size: var(--font-size-md);
+  font-weight: var(--weight-semibold);
+}
+.cardFooter .primary {
+  min-height: 44px;
+  padding-inline: 22px;
+  border-radius: var(--rounded-md);
+}
+.shell .primary,
+.shell .secondary {
+  border-radius: var(--rounded-md);
+  transition:
+    background-color var(--duration-fast) ease,
+    border-color var(--duration-fast) ease,
+    box-shadow var(--duration-fast) ease;
+}
+.shell .primary:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+.shell .secondary:hover {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+  background: var(--subtle);
+}
+.shell .primary:active,
+.shell .secondary:active {
+  box-shadow: inset 0 2px 4px #0b254526;
+}
+
+/* Room options: separate cards on a quiet panel instead of white-on-white rows. */
+.roomOptions {
+  border-color: var(--border);
+  border-radius: var(--rounded-xl);
+  background: var(--subtle);
+}
+.roomOption,
+.roomOption:last-of-type {
+  margin-block-end: var(--space-3);
+  padding: var(--space-2) var(--space-5) var(--space-4);
+  border: 1px solid var(--border);
+  box-shadow: var(--elevation-1);
+}
+.roomOption:last-of-type {
+  margin-block-end: 0;
+}
+
+/* Booking records: reference, status and dates read as one summary panel. */
+.bookingMetadata {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--rounded-lg);
+  background: color-mix(in srgb, var(--subtle) 70%, var(--surface));
+}
+.bookingMetaTop > div:first-child > strong {
+  font-size: var(--font-size-base);
+  letter-spacing: 0.01em;
+}
+.bookingStatus :global(.status-badge) {
+  padding: 5px 11px;
+  border-radius: var(--rounded-pill);
+  font-size: var(--font-size-xs);
+}
+.bookingDates {
+  color: var(--navy);
+  font-size: var(--font-size-md);
+}
+
+/* Batch C: standalone navigation links and disclosures meet the 24px target size. */
+.breadcrumb a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}
+.shell summary {
+  padding-block: 3px;
+}
+
+/* Batch D: intermediate breadcrumb links share the breadcrumb's spacing. */
+.crumb {
+  display: contents;
+}

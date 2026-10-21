@@ -23,6 +23,8 @@ npx playwright install chromium
 npm run test
 ```
 
+The "Preview interface states" control (loading, empty, error and unavailable previews) is developer-only. It appears in `npm run dev`, or in a build made with `VITE_ENABLE_STATE_PREVIEW=true`; production builds omit it. Playwright builds with that flag.
+
 Browser tests use the production preview on port 4173. Set `PLAYWRIGHT_BASE_URL` to test a running Docker container or staging. Tests use disposable browser contexts and fixture data; no account or registration information is submitted.
 
 ## Routes
@@ -101,6 +103,17 @@ Playwright uses the actual login form through `tests/helpers/demo-login.ts`, wit
 Review the implementation checklist, boundaries and validation in [frontend upgrade](docs/frontend-upgrade.md). Brand originals and SVG interpretations are in `public/brand`; runtime layered animation is in `src/components/brand-logo.tsx`. No runtime dependencies were added.
 
 Public/catalog and recovery screens preserve English/Arabic and RTL/LTR support. Welcome supports English/Arabic using its original account-selection composition. Sign-in and registration retain their supplied English presentation. Full Arabic agency translation is not implemented. Source-resolution limits and provisional validation rules are documented in `docs/history`.
+
+## Booking support tickets (frontend demo)
+
+Tickets always belong to a recorded booking. The owner opens a hotel booking (`/bookings/:id`) or rental record (`/car-rental/bookings/:id`), chooses **Report an issue** (`…/tickets/new`), and tracks tickets in **My Tickets** (`/tickets`, `/tickets/:reference`). My Tickets has no standalone creation, and Contact Us stays a general enquiry page.
+
+- Every recorded status (pending, confirmed, completed, cancelled, failed) is eligible immediately and without a time limit. Categories adapt to booking type and stage; "Other" is always available. "Completed" is derived from a confirmed booking whose end date has passed.
+- Ownership uses demo identities from `src/features/auth/demo-auth.ts`: fixture bookings map `owner: "mine"` to the signed-in demo user and `"other"` to a colleague; rentals record their creator. Only the owner can create, list, open or reply to a booking's tickets; other users see a generic not-found state.
+- New tickets are labelled "Local preview — not sent to Royal Vacation support". Nothing is submitted, no support replies are simulated, and only attachment metadata is kept. Sample tickets are marked as sample data.
+- Ticket state lives in `DemoProvider` and resets on refresh or Sign Out.
+
+These checks shape the interface only. Backend authentication and authorization must enforce booking ownership for every ticket read and write before real data is supported. The preserved complaint submission contract (`docs/complaint-form-api-contract.md`) is unchanged and inactive.
 
 ## Git and deployment
 

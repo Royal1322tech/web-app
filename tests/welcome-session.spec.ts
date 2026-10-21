@@ -1,4 +1,4 @@
-import { visit, submitDemoLogin } from "./helpers/demo-login";
+import { visit, submitDemoLogin, logout } from "./helpers/demo-login";
 import { openHeaderTools } from "./helpers/header";
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
@@ -68,10 +68,10 @@ for (const width of [375, 1440]) {
       await openHeaderTools(page);
       await expect(account()).toHaveAttribute("aria-expanded", "false");
       for (const path of [
-        "/wallet",
         "/transactions",
         "/notifications",
         "/agency",
+        "/wallet",
       ]) {
         await page.locator(`.workspace-nav a[href="${path}"]`).click();
         await expect(page).toHaveURL(new RegExp(`${path}$`));
@@ -106,7 +106,12 @@ test("private demo screens require login and refresh preserves access", async ({
     await expect(page).toHaveURL(new RegExp(`${path}$`));
     await page.reload();
     await expect(page.locator(".workspace").first()).toBeVisible();
-    await page.locator(".workspace-nav").getByRole("button", { name: "Sign Out", exact: true }).click();
+    if (path === "/wallet") {
+      // Wallet intentionally has no account workspace bar; sign out from the header account menu.
+      await logout(page);
+    } else {
+      await page.locator(".workspace-nav").getByRole("button", { name: "Sign Out", exact: true }).click();
+    }
     await expect(page.locator(".welcome-content")).toBeVisible();
   }
 });

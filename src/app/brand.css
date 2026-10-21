@@ -1,69 +1,7 @@
-:root {
-  --navy: #0b2545;
-  --royal: #0e4d92;
-  --ocean: #00b4d8;
-  --teal: #38d9a9;
-  --gold: #f4a261;
-  --light-gold: #ffd59e;
-  --background: #f7f9fc;
-  --foreground: #0b2545;
-  --brand: #0e4d92;
-  --brand-hover: #0b3667;
-  --muted: #52647a;
-  --border: #dce4ed;
-  --subtle: #edf3f9;
-  --surface: #fff;
-  --success: #12684d;
-  --success-bg: #e7f6ef;
-  --warning: #855000;
-  --warning-bg: #fff2d9;
-  --error: #ab253e;
-  --error-bg: #fff0f2;
-  --pending: var(--warning);
-  --confirmed: var(--success);
-  --cancelled: #5b6574;
-  --balance: var(--navy);
-  --shadow: 0 12px 36px #0b25450b;
-  --ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --font-sans: "Segoe UI", Tahoma, Arial, sans-serif;
-}
-body {
-  font-family: var(--font-sans);
-  line-height: 1.6;
-}
+/* Design tokens live in tokens.css; base element styles live in globals.css. */
 #root {
   width: 100%;
   min-width: 0;
-}
-h1,
-h2,
-h3,
-h4 {
-  color: var(--navy);
-  text-wrap: balance;
-  line-height: 1.2;
-}
-h1 {
-  font-weight: 800;
-  letter-spacing: -0.045em;
-}
-h2 {
-  font-weight: 750;
-  letter-spacing: -0.025em;
-}
-[dir="rtl"] h1,
-[dir="rtl"] h2 {
-  letter-spacing: 0;
-  line-height: 1.5;
-}
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
-textarea {
-  resize: vertical;
 }
 .brand-logo {
   display: flex;
@@ -138,26 +76,37 @@ textarea {
   display: grid;
   place-items: center;
 }
-.button {
-  transition:
-    transform 0.25s var(--ease),
-    background 0.2s,
-    box-shadow 0.2s;
-}
 .button:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow);
 }
 .button:active {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.985);
+  box-shadow: none;
 }
+.button:disabled,
+.button[aria-disabled="true"] {
+  opacity: 0.55;
+  transform: none;
+  box-shadow: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .button:hover,
+  .button:active {
+    transform: none;
+  }
+}
+/* Finite gold feedback, with no reflow or animation over form fields. */
 .button--gold {
-  background: var(--light-gold);
-  color: var(--navy);
-  border-color: var(--light-gold);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
 }
 .button--gold:hover {
-  background: var(--gold);
+  background: var(--accent-hover);
 }
 .button--danger {
   color: var(--error);
@@ -328,8 +277,8 @@ details[open] > :not(summary) {
     font-size: 22px;
   }
   .brand-wordmark small {
-    font-size: 8px;
-    letter-spacing: 3px;
+    font-size: 9px;
+    letter-spacing: 3.5px;
   }
 }
 .route-loading {
@@ -553,12 +502,6 @@ details[open] > :not(summary) {
   }
 }
 
-/* Finite gold feedback, with no reflow or animation over form fields. */
-.button--gold {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-}
 .button--gold::after {
   content: "";
   position: absolute;

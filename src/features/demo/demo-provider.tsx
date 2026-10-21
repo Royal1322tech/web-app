@@ -13,6 +13,10 @@ import type { HotelSearchCriteria } from "@/features/home/schemas/hotel-search.s
 import { localToday } from "@/features/home/schemas/hotel-search.schema";
 import { samplePriceBreakdown } from "@/features/hotels/lib/sample-stay";
 import { demoProfile, demoNotifications, initialBookings } from "./fixtures";
+import { demoUserIds } from "@/features/auth/demo-auth";
+import { sampleTickets } from "@/features/tickets/tickets.fixture";
+import { findOwnedTicket, ownedTickets, resolveBookingAccess } from "@/features/tickets/ticket-access";
+import type { NewTicketInput, SupportTicket } from "@/features/tickets/ticket-types";
 import type {
   DemoSelection,
   DemoBooking,
@@ -58,6 +62,13 @@ interface DemoContextValue {
   ) => void;
   saveProfile: (profile: AgencyProfile) => void;
   readNotification: (id?: string) => void;
+  /** Demo identity of the signed-in user, used for ownership checks. */
+  currentUserId: string | null;
+  /** Only the signed-in user's tickets; other users' tickets are never exposed. */
+  tickets: SupportTicket[];
+  /** Records a local preview ticket for an owned, recorded booking. Nothing is sent. */
+  createTicket: (input: NewTicketInput) => string | null;
+  addTicketMessage: (reference: string, body: string) => boolean;
 }
 const DemoContext = createContext<DemoContextValue | null>(null);
 export function totalFor(selection: DemoSelection) {
@@ -93,6 +104,8 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const [records, setRecords] = useState(initialBookings);
   const [profile, setProfile] = useState(demoProfile);
   const [notifications, setNotifications] = useState(demoNotifications);
+  const [allTickets, setAllTickets] = useState<SupportTicket[]>(() => [...sampleTickets]);
+  const currentUserId = demoSessionActive ? demoUserIds.current : null;
   const value: DemoContextValue = {
     rentalPolicyAcknowledged,
     acknowledgeRentalPolicy: setRentalPolicyAcknowledged,
@@ -111,12 +124,14 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     },
     saveRentalDriver: driver => { setRentalDriver(driver); setRentalPolicyAcknowledged(false); },
     createRental: (status) => {
-      if (!rentalSelection || !rentalDriver || !rentalPolicyAcknowledged) return null;
+      const ownerId = demoAuth.currentUserId();
+      if (!ownerId || !rentalSelection || !rentalDriver || !rentalPolicyAcknowledged) return null;
       const id = `RENTAL-DEMO-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
       setRentals((current) => [
         {
           ...rentalSelection,
           id,
+          ownerId,
           driver: rentalDriver,
           status,
           total: rentalTotal(rentalSelection),
@@ -256,6 +271,45 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         ),
       ),
     saveProfile: setProfile,
+    currentUserId,
+    tickets: ownedTickets(allTickets, currentUserId),
+    createTicket: (input) => {
+      const access = resolveBookingAccess(input.bookingType, input.bookingId, { records, rentals }, currentUserId);
+      if (access.state !== "ok" || !access.categories.includes(input.category)) return null;
+      const now = new Date().toISOString();
+      const reference = `TKT-LOCAL-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
+      setAllTickets((current) => [
+        {
+          reference,
+          bookingId: access.booking.bookingId,
+          bookingReference: access.booking.bookingReference,
+          bookingType: access.booking.bookingType,
+          ownerId: access.booking.ownerId,
+          category: input.category,
+          subject: input.subject,
+          status: "open",
+          createdAt: now,
+          updatedAt: now,
+          origin: "local-preview",
+          messages: [{ id: crypto.randomUUID(), author: "owner", body: input.description, at: now, attachment: input.attachment }],
+        },
+        ...current,
+      ]);
+      return reference;
+    },
+    addTicketMessage: (reference, body) => {
+      const ticket = findOwnedTicket(allTickets, reference, currentUserId);
+      if (!ticket || ticket.status === "closed" || !body.trim()) return false;
+      const now = new Date().toISOString();
+      setAllTickets((current) =>
+        current.map((item) =>
+          item.reference === ticket.reference && item.ownerId === currentUserId
+            ? { ...item, updatedAt: now, messages: [...item.messages, { id: crypto.randomUUID(), author: "owner", body: body.trim(), at: now }] }
+            : item,
+        ),
+      );
+      return true;
+    },
     readNotification: (id) =>
       setNotifications((current) =>
         current.map((n) => (!id || n.id === id ? { ...n, read: true } : n)),

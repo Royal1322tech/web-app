@@ -49,6 +49,8 @@ export interface GuestValues {
 }
 export interface DemoBooking extends Omit<SampleBooking, "status"> {
   status: DemoStatus;
+  /** Demo identity of the booking owner, derived from the fixture's owner field. */
+  ownerId: string;
   selection: DemoSelection;
   policyAcknowledged?: boolean;
   cancellationPolicySnapshot?: CancellationPolicy;

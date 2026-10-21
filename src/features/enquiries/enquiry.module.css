@@ -1,11 +1,16 @@
-.page { max-width:1184px; margin:28px auto 64px; }
-.eyebrow { font-size:11px; font-weight:800; letter-spacing:1.5px; color:#986023; margin-bottom:14px; }
-.page h1 { font-size:clamp(30px,4vw,48px); }
+.page { margin:10px 0 40px; }
+.eyebrow { font-size:var(--eyebrow-size); font-weight:var(--weight-bold); letter-spacing:var(--eyebrow-tracking); color:var(--muted); margin-bottom:var(--space-2); }
+.page h1 { font-size:var(--page-title-size); }
 .intro { max-width:700px; margin:20px 0 30px; color:var(--muted); }
 .grid { display:grid; grid-template-columns:minmax(0,1.8fr) minmax(240px,1fr); gap:28px; align-items:start; }
 .form,.aside { background:white; border:1px solid var(--border); border-radius:18px; padding:28px; }
 .form { display:grid; gap:22px; min-width:0; }
 .fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+/* Label, control and message share rows across columns, so a wrapping label never misaligns its neighbour. */
+@supports (grid-template-rows: subgrid) {
+  .fields > :global(.form-field) { display:grid; grid-template-rows:subgrid; grid-row:span 3; row-gap:0; }
+  .fields > :global(.form-field) > label { align-self:end; }
+}
 .notice { font-size:13px; padding:14px; background:var(--subtle); border-inline-start:3px solid var(--gold); }
 .aside { display:grid; gap:20px; }
 .aside p { color:var(--muted); font-size:14px; }
