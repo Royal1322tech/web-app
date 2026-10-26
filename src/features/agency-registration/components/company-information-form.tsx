@@ -4,7 +4,7 @@ import { useFormContext } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import type { RegistrationValues } from "../schemas/registration.schema";
-import { countries } from "../data/countries";
+import { CompanyLocationFields } from "./company-location-fields";
 import { RegistrationField } from "./registration-field";
 import { RegistrationProgress } from "./registration-progress";
 import { RegistrationSection } from "./registration-section";
@@ -60,17 +60,10 @@ export function CompanyInformationForm() {
             step="1"
             inputMode="numeric"
           />
-          <RegistrationField
-            name="company.country"
-            label="Country"
-            placeholder="Select country"
-            icon="globe"
-            options={countries}
-            autoComplete="country"
-          />
+          <CompanyLocationFields />
           <RegistrationField
             name="company.registrationNumber"
-            label="Company Registration Number"
+            label="Commercial Registration Number"
             placeholder="Enter registration number"
             icon="id"
           />

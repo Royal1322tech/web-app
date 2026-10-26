@@ -1,4 +1,4 @@
-import { hotelDisplayName, hotelDisplayAddress, hotelTelephoneHref } from "@/features/hotels/lib/presentation";
+import { hotelDisplayName } from "@/features/hotels/lib/presentation";
 import { cancellationPolicyLabels } from "@/features/hotels/cancellation-policy";
 import { CancellationPolicyCard } from "./cancellation-policy-card";
 import { assessAgencyCredit, paymentMethods } from "./payment-methods";
@@ -13,9 +13,9 @@ import { useLocale } from "@/features/localization/locale-provider";
 import { HotelSearchForm } from "@/features/home/components/hotel-search-form";
 import { SystemState } from "@/components/ui/system-state";
 import { Icon } from "@/components/ui/icon";
-import { BrandLogo } from "@/components/brand-logo";
 import { hotels } from "@/features/hotels/data/hotels.fixture";
 import { HotelPolicySections } from "./hotel-policy-sections";
+import { AccommodationVoucher } from "./accommodation-voucher";
 import { useDemo, totalFor } from "./demo-provider";
 import { useTravelPreferences } from "@/features/preferences/travel-preferences";
 import { demoFinance } from "./fixtures";
@@ -604,10 +604,9 @@ export function BookingResultPage() {
 export function VoucherPage() {
   const { id } = useParams();
   const { records } = useDemo();
-  const { locale, t } = useLocale();
+  const { t } = useLocale();
   const booking = records.find((b) => b.id === id);
   const hotel = hotels.find((h) => h.id === booking?.hotelId);
-  const hotelPhone = hotelTelephoneHref(hotel?.phone);
   return (
     <Workspace title={t("Travel voucher", "قسيمة السفر")}>
       {!booking || !hotel ? (
@@ -637,77 +636,7 @@ export function VoucherPage() {
               {t("Back to booking", "العودة للحجز")}
             </Link>
           </div>
-          <div className="voucher">
-            <div className="voucher-top">
-              <BrandLogo withName />
-              <div>
-                <p className="watermark">
-                  {t("NOT VALID FOR TRAVEL", "غير صالح للسفر")}
-                </p>
-                <h2>{t("Accommodation voucher", "قسيمة الإقامة")}</h2>
-                <p>
-                  <bdi>{booking.id}</bdi>
-                </p>
-              </div>
-            </div>
-            <h2>{hotelDisplayName(hotel.name[locale])}</h2>
-            <p>{hotelDisplayAddress(hotel.address[locale], locale)}</p>
-            {hotelPhone && <p>{t("Hotel phone", "هاتف الفندق")}: <a href={hotelPhone}><bdi>{hotel?.phone}</bdi></a></p>}
-            <dl className="summary-dl">
-              <div>
-                <dt>{t("Lead guest", "الضيف الرئيسي")}</dt>
-                <dd>{booking.guests.leadName}</dd>
-              </div>
-              <div>
-                <dt>{t("Additional guests", "الضيوف الإضافيون")}</dt>
-                <dd>
-                  {booking.guests.additional.map((g) => g.name).join(", ") ||
-                    "—"}
-                </dd>
-              </div>
-              <div>
-                <dt>{t("Stay", "الإقامة")}</dt>
-                <dd>
-                  <bdi>
-                    {booking.checkIn} → {booking.checkOut}
-                  </bdi>
-                </dd>
-              </div>
-              <div>
-                <dt>{t("Rooms", "الغرف")}</dt>
-                <dd>
-                  {booking.selection.criteria.rooms.length} ×{" "}
-                  {hotelDisplayName(booking.selection.room.name[locale])}
-                </dd>
-              </div>
-              <div>
-                <dt>{t("Board", "الوجبات")}</dt>
-                <dd>{boardPlanLabels[booking.selection.rate.boardPlan][locale]}</dd>
-              </div>
-              <div>
-                <dt>{t("Contact", "التواصل")}</dt>
-                <dd>
-                  <bdi>
-                    {booking.guests.email}
-                    <br />
-                    {booking.guests.phone}
-                  </bdi>
-                </dd>
-              </div>
-              <div>
-                <dt>{t("Agency reference", "مرجع الوكالة")}</dt>
-                <dd>{booking.agencyReference}</dd>
-              </div>
-            </dl>
-            <h3>{t("Special requests", "طلبات خاصة")}</h3>
-            <p>{booking.guests.requests || t("None", "لا يوجد")}</p>
-            <p className="fine-print">
-              {t(
-                "This record is for review only. It is not a supplier confirmation, check-in document or payment receipt.",
-                "هذا السجل للمراجعة فقط، ولا يُعد تأكيدًا من المورد أو مستند تسجيل وصول أو إيصال دفع.",
-              )}
-            </p>
-          </div>
+          <AccommodationVoucher booking={booking} hotel={hotel} />
         </>
       )}
     </Workspace>

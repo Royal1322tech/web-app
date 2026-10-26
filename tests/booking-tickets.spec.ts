@@ -278,17 +278,22 @@ test("account navigation offers My Tickets and the complete grouped account map"
 });
 
 for (const locale of ["en", "ar"] as const) {
-  test(`home hero uses the approved copy in ${locale}`, async ({ page }) => {
+  test(`home hero shows imagery without marketing copy in ${locale}`, async ({ page }) => {
     await page.addInitScript((value) => localStorage.setItem("royal-vacation.locale", value), locale);
     await visit(page, "/");
     const hero = page.locator("section[aria-label]").first();
-    await expect(hero.locator("h1")).toHaveText(locale === "en" ? "Exceptional stays.Stronger partnerships." : "إقامات استثنائية.شراكات أقوى.");
-    await expect(hero).toContainText(locale === "en" ? "THE WORLD, THROUGH YOUR AGENCY" : "العالم من خلال وكالتك");
-    await expect(hero).toContainText(
-      locale === "en"
-        ? "Find the right hotels, compare room options, and manage travel bookings with confidence — all in one place."
-        : "اعثر على الفنادق المناسبة، وقارن خيارات الغرف، وأدِر حجوزات السفر بثقة — كل ذلك في مكان واحد.",
-    );
+    for (const removed of [
+      "THE WORLD, THROUGH YOUR AGENCY", "العالم من خلال وكالتك",
+      "Exceptional stays.", "إقامات استثنائية.", "Stronger partnerships.", "شراكات أقوى.",
+      "Find the right hotels", "اعثر على الفنادق المناسبة",
+    ]) await expect(hero).not.toContainText(removed);
+    // The page keeps a visually hidden main heading for assistive technology.
+    const heading = hero.getByRole("heading", { level: 1 });
+    await expect(heading).toHaveText(locale === "en" ? "Royal Vacation agency platform" : "منصة رويال فاكيشن للوكالات");
+    await expect(heading).toHaveClass(/sr-only/);
+    await expect(hero.locator("img").first()).toBeVisible();
+    await expect(page.locator("header").first()).toBeVisible();
+    await expect(page.locator("#hotel-search")).toBeVisible();
   });
 }
 

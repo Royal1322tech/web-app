@@ -128,7 +128,15 @@ git commit -m "Frontend development"
 git push origin main
 ```
 
-Exclude credentials, generated output and unrelated files before committing. Never force push. The existing pipeline remains **Frontend CI → Frontend Docker Build → Frontend Auto Deploy**. CI includes TypeScript and browser checks. Docker still builds on Node 22 and serves `dist` with nginx; `nginx.conf` adds history fallback and caching. Team image names, workflow triggers, deployment host and remote deployment script remain unchanged.
+Exclude credentials, generated output and unrelated files before committing. Never force push.
+
+Deployment runs in one GitHub Actions workflow, `.github/workflows/frontend-cicd.yml` (**Frontend CI/CD**), with three dependent jobs:
+
+1. **CI** — `npm ci`, lint, typecheck, production build and the full Playwright suite. Runs for pushes and pull requests to `main`.
+2. **Docker Build** — only after CI passes on a push to `main`; builds and pushes `ghcr.io/royal1322tech/web-app:sha-<commit>`.
+3. **Deploy to Staging** — only after Docker Build; confirms the commit is still the latest `main`, deploys that image through the existing SSH script, then checks that staging serves the app shell and its main bundle.
+
+Pull requests never build images or deploy. A failed job stops the later jobs. Deployments share the `frontend-staging-deployment` concurrency group and are not cancelled mid-run. Docker builds on Node 22 and serves `dist` with nginx; `nginx.conf` adds history fallback and caching. Image name, deployment host, secrets and the remote deployment script are unchanged from the earlier three-workflow pipeline.
 
 - Repository: https://github.com/Royal1322tech/web-app
 - Actions: https://github.com/Royal1322tech/web-app/actions

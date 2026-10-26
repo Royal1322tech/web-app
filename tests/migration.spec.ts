@@ -1,5 +1,6 @@
 import { selectLanguage } from "./helpers/header";
 import { visit } from "./helpers/demo-login";
+import { attachIdDocument, fillCompanyStep } from "./helpers/registration";
 import { openHeaderTools } from "./helpers/header";
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
@@ -162,11 +163,11 @@ test("gallery, room and rate dialogs, chart, map", async ({ page }) => {
   await bars.first().click();
   await page.locator("#location").scrollIntoViewIfNeeded();
   await expect(
-    page.locator('iframe[title^="Hotel location map"]'),
-  ).toHaveAttribute("src", /openstreetmap.org/);
+    page.getByRole("region", { name: /^Hotel location map/ }).locator(".leaflet-container"),
+  ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: "Open in Google Maps" }),
-  ).toHaveAttribute("href", /maps/);
+    page.getByRole("link", { name: "Get Directions" }),
+  ).toHaveAttribute("href", /google\.com\/maps\/dir/);
   await visit(page, "/search");
   await page
     .getByRole("button", { name: "View Rooms", exact: true })
@@ -193,12 +194,7 @@ test("gallery, room and rate dialogs, chart, map", async ({ page }) => {
 });
 
 async function company(page: Page) {
-  await page.getByLabel("Name of Company").fill("Migration Test Agency");
-  await page.getByLabel("Number of Employees").fill("12");
-  await page.getByLabel("Country", { exact: false }).selectOption("EG");
-  await page.getByLabel("Company Registration Number").fill("TEST-001");
-  await page.getByLabel("Address of Company").fill("Alexandria");
-  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await fillCompanyStep(page, { name: "Migration Test Agency", registration: "TEST-001" });
 }
 
 test("registration validation, file retention, review and prerequisite guards", async ({
@@ -213,10 +209,12 @@ test("registration validation, file retention, review and prerequisite guards", 
   await page.getByLabel("Full Name").fill("Test User");
   await page.getByLabel("Nationality").selectOption("EG");
   await page.getByLabel("ID Number").fill("TEST-002");
+  await attachIdDocument(page);
   await page.getByPlaceholder("Enter phone number").fill("1001234567");
   await page.getByLabel("Email", { exact: false }).fill("test@example.com");
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await expect(page).toHaveURL(/\/documents$/);
+  await page.getByLabel("Travel Agency", { exact: true }).check();
   const inputs = page.locator("input[type=file]");
   await inputs.first().setInputFiles({
     name: "invalid.txt",

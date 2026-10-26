@@ -1,0 +1,130 @@
+/* Location & Directions section on Hotel Details. */
+.hotel-location {
+  margin-block: var(--space-8);
+  scroll-margin-block-start: var(--space-6);
+}
+.hotel-location__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+  margin-block-start: var(--space-4);
+}
+.hotel-location__map {
+  position: relative;
+  min-height: 340px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--rounded-xl);
+  background: var(--subtle);
+}
+.hotel-location-map__canvas {
+  width: 100%;
+  height: 340px;
+  z-index: 0;
+}
+.hotel-location__map-message {
+  display: grid;
+  place-items: center;
+  min-height: 340px;
+  margin: 0;
+  padding: var(--space-5);
+  color: var(--muted);
+  font-size: var(--font-size-md);
+  text-align: center;
+}
+.hotel-location__panel {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--rounded-xl);
+  background: var(--surface);
+  box-shadow: var(--elevation-1);
+}
+.hotel-location__actions {
+  display: grid;
+  gap: var(--space-2);
+}
+.hotel-location__actions .button {
+  width: 100%;
+}
+/* Outranks the hotel page's generic link colour. */
+.hotel-location .hotel-location__actions a.button--primary {
+  color: var(--on-primary);
+}
+.hotel-location__actions .button svg {
+  width: 18px;
+  height: 18px;
+}
+[dir="rtl"] .hotel-location__actions .button--primary svg {
+  rotate: 180deg;
+}
+.hotel-location__status:empty {
+  display: none;
+}
+.hotel-location__distance {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--rounded-md);
+  background: color-mix(in srgb, var(--secondary) 9%, var(--surface));
+}
+.hotel-location__distance strong {
+  color: var(--navy);
+  font-size: var(--font-size-2xl);
+  line-height: 1.2;
+}
+.hotel-location__distance span,
+.hotel-location__message,
+.hotel-location__note {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+}
+.hotel-location__message--denied,
+.hotel-location__message--unavailable,
+.hotel-location__message--timeout,
+.hotel-location__message--unsupported {
+  padding: var(--space-3) var(--space-4);
+  border-inline-start: 3px solid var(--warning);
+  border-radius: var(--rounded-sm);
+  background: var(--warning-bg);
+  color: var(--navy);
+}
+.hotel-location__source {
+  font-size: var(--font-size-sm);
+  font-weight: var(--weight-semibold);
+}
+.hotel-location__unavailable {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-block-start: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border: 1px dashed var(--border);
+  border-radius: var(--rounded-lg);
+  background: var(--subtle);
+  color: var(--navy);
+}
+.hotel-location__unavailable svg {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  color: var(--secondary);
+}
+.hotel-location__unavailable p {
+  margin: 0;
+}
+@media (max-width: 899px) {
+  .hotel-location__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hotel-location__map,
+  .hotel-location-map__canvas,
+  .hotel-location__map-message {
+    min-height: 280px;
+    height: 280px;
+  }
+}

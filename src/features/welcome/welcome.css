@@ -130,3 +130,135 @@
 @media (prefers-reduced-motion: reduce) {
   .auth-page--welcome .welcome-flight .brand-plane { animation: none; offset-path: none; }
 }
+
+/* Premium welcome refinements: language switcher, subtitle, interactive cards and trust line. */
+.welcome-language {
+  position: absolute;
+  inset-block-start: 20px;
+  inset-inline-end: 20px;
+  z-index: 2;
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid #dfe5ea;
+  border-radius: var(--rounded-pill);
+  background: #f5f8fa;
+}
+.welcome-language button {
+  min-width: 52px;
+  min-height: 36px;
+  padding: 4px 14px;
+  border: 0;
+  border-radius: var(--rounded-pill);
+  background: transparent;
+  color: #3d4a55;
+  font-size: 14px;
+  font-weight: 700;
+  transition: background-color var(--duration-fast) ease, color var(--duration-fast) ease, box-shadow var(--duration-fast) ease;
+}
+.welcome-language button:hover {
+  color: var(--brand);
+}
+.welcome-language button[aria-pressed="true"] {
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--brand) 35%, transparent);
+}
+.welcome-language button:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.auth-page--welcome .welcome-subtitle {
+  margin-block-start: 8px;
+  color: var(--brand);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.auth-page--welcome .intro-copy {
+  margin-block-start: 6px;
+  font-size: 15px;
+}
+.auth-page--welcome .account-options {
+  margin-block-start: 32px;
+}
+.auth-page--welcome .account-card {
+  color: inherit;
+  text-decoration: none;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) ease, box-shadow var(--duration-base) var(--ease), transform var(--duration-base) var(--ease);
+}
+.auth-page--welcome .account-card:hover {
+  border-color: color-mix(in srgb, var(--brand) 45%, #e9e9ec);
+  box-shadow: 0 14px 32px #0b25451a;
+}
+.auth-page--welcome .account-card:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 3px;
+}
+.auth-page--welcome .account-card:active {
+  box-shadow: 0 4px 12px #0b254514;
+}
+.auth-page--welcome .account-card:hover .button--primary {
+  background: var(--brand-hover);
+}
+.auth-page--welcome .account-card:hover .button--outline {
+  background: color-mix(in srgb, var(--brand) 8%, #fff);
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .auth-page--welcome .account-card:hover {
+    transform: translateY(-3px);
+  }
+  .auth-page--welcome .account-card:active {
+    transform: translateY(-1px);
+  }
+}
+.auth-page--welcome .account-card__action {
+  pointer-events: none;
+}
+.welcome-trust {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-block-start: 26px;
+  color: #5b6772;
+  font-size: 14px;
+  font-weight: 600;
+}
+.welcome-trust svg {
+  width: 18px;
+  height: 18px;
+  color: var(--brand);
+}
+@media (max-width: 800px) {
+  .auth-page--welcome .welcome-content {
+    padding-block-start: 64px;
+  }
+  .auth-page--welcome .auth-panel {
+    height: 220px;
+  }
+}
+@media (max-width: 540px) {
+  .auth-page--welcome .auth-panel {
+    height: 180px;
+  }
+  .auth-page--welcome .welcome-content {
+    padding: 60px 18px 28px;
+  }
+  .auth-page--welcome h1 {
+    font-size: 26px;
+  }
+  .auth-page--welcome .welcome-subtitle {
+    font-size: 16px;
+  }
+  .auth-page--welcome .account-options {
+    margin-block-start: 22px;
+  }
+  .auth-page--welcome .account-card p {
+    margin-block-end: 14px;
+  }
+  .welcome-language {
+    inset-block-start: 14px;
+    inset-inline-end: 14px;
+  }
+}

@@ -1,4 +1,5 @@
 import { visit } from "./helpers/demo-login";
+import { fillCompanyStep } from "./helpers/registration";
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
@@ -109,12 +110,7 @@ test("registration keeps its settled logo and company data between steps", async
     await Promise.all(el.getAnimations({ subtree: true }).filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished));
     el.setAttribute("data-original-entry", "true");
   });
-  await page.getByLabel("Name of Company").fill("Footer Test Agency");
-  await page.getByLabel("Number of Employees").fill("12");
-  await page.getByLabel("Country", { exact: false }).selectOption("EG");
-  await page.getByLabel("Company Registration Number").fill("TEST-001");
-  await page.getByLabel("Address of Company").fill("Alexandria");
-  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await fillCompanyStep(page, { name: "Footer Test Agency", registration: "TEST-001" });
   await expect(page).toHaveURL(/\/contact$/);
   await expect(logo).toHaveAttribute("data-original-entry", "true");
   expect(await logo.evaluate(el => el.getAnimations({ subtree: true }).every(a => a.playState === "finished"))).toBeTruthy();

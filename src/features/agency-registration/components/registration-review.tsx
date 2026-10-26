@@ -6,6 +6,8 @@ import { Button, buttonClass } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { countries } from "../data/countries";
 import { registrationDocuments } from "../data/documents";
+import { businessTypeDefinition, requiredDocumentsFor } from "../data/business-types";
+import { cityLabel } from "../data/locations";
 import { useRegistrationStepGuard } from "../hooks/use-registration-step-guard";
 import type { RegistrationValues } from "../schemas/registration.schema";
 import { RegistrationProgress } from "./registration-progress";
@@ -70,7 +72,8 @@ export function RegistrationReview() {
           rows={[
             { label: "Company Name", value: company.name },
             { label: "Country", value: countryLabel(company.country) },
-            { label: "Registration Number", value: company.registrationNumber },
+            { label: "City", value: cityLabel(company.country, company.city) },
+            { label: "Commercial Registration Number", value: company.registrationNumber },
             { label: "Address", value: company.address },
             { label: "Number of Employees", value: company.employeeCount },
           ]}
@@ -82,6 +85,7 @@ export function RegistrationReview() {
             { label: "Full Name", value: contact.fullName },
             { label: "Nationality", value: countryLabel(contact.nationality) },
             { label: "ID Number", value: contact.idNumber },
+            { label: "ID Document", value: contact.idDocument?.name ?? "" },
             {
               label: "Phone Number",
               value: contactPhone(contact)?.number ?? `${contact.callingCode} ${contact.phone}`,
@@ -96,8 +100,14 @@ export function RegistrationReview() {
             </span>
             Documents
           </h3>
+          <dl>
+            <div className="review-row">
+              <dt>Company Business Type</dt>
+              <dd>{businessTypeDefinition(documents.businessType)?.label.en ?? ""}</dd>
+            </div>
+          </dl>
           <ul className="review-documents">
-            {registrationDocuments.map(({ name, label }) => (
+            {registrationDocuments.filter(({ name }) => requiredDocumentsFor(documents.businessType).includes(name)).map(({ name, label }) => (
               <li key={name}>
                 <span className="icon-badge">
                   <Icon name="document" />

@@ -126,4 +126,14 @@ export const arabicMessages: Record<string, string> = {
   "Choose a valid date.": "اختر تاريخاً صحيحاً.",
   "Check-in cannot be in the past.": "لا يمكن أن يكون الوصول في الماضي.",
   "Check-out must be after check-in.": "يجب أن تكون المغادرة بعد الوصول.",
+  // Agency registration: location, ID document and business type validation.
+  "Enter your company country.": "اختر دولة الشركة.",
+  "Select your company city.": "اختر مدينة الشركة.",
+  "Select a city in the selected country.": "اختر مدينة ضمن الدولة المحددة.",
+  "Select your ID document.": "أرفق مستند الهوية.",
+  "Select a valid file.": "اختر ملفًا صالحًا.",
+  "This file is empty. Select a different file.": "هذا الملف فارغ. اختر ملفًا آخر.",
+  "This file is too large. PDF, JPG/JPEG or PNG. Maximum 5 MB.": "حجم الملف كبير جدًا. PDF أو JPG/JPEG أو PNG بحد أقصى ٥ ميغابايت.",
+  "Unsupported file type. PDF, JPG/JPEG or PNG. Maximum 5 MB.": "نوع الملف غير مدعوم. PDF أو JPG/JPEG أو PNG بحد أقصى ٥ ميغابايت.",
+  "Select your company business type.": "اختر نوع نشاط الشركة.",
 };

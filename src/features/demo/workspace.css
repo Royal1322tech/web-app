@@ -393,31 +393,6 @@
 .notification a {
   font-weight: 700;
 }
-.voucher {
-  background: white;
-  padding: 40px;
-  border: 1px solid var(--border);
-  max-width: 900px;
-  margin: auto;
-}
-.voucher-top {
-  display: flex;
-  justify-content: space-between;
-  gap: 24px;
-  flex-wrap: wrap;
-  border-bottom: 2px solid var(--navy);
-  padding-bottom: 24px;
-  margin-bottom: 30px;
-}
-.voucher .watermark {
-  font-weight: 800;
-  letter-spacing: 3px;
-  color: var(--error);
-  font-size: 13px;
-}
-.voucher h2 {
-  font-size: 25px;
-}
 .invoice-search { display:grid; gap:6px; max-width:520px; margin-block:18px; font-weight:700; }
 .invoice-search input { min-height:44px; padding:9px 12px; border:1px solid var(--border); border-radius:9px; }
 .invoice-list { display:grid; gap:14px; }
@@ -480,9 +455,6 @@
   }
   .notification {
     flex-direction: column;
-  }
-  .voucher {
-    padding: 20px;
   }
   .invoice-list-card { align-items:stretch; flex-direction:column; }
   .invoice-facts { grid-template-columns:1fr; }

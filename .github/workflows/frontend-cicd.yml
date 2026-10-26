@@ -1,0 +1,197 @@
+name: Frontend CI/CD
+
+# One workflow run per push to main: CI → Docker Build → Deploy to Staging.
+# Pull requests to main run CI only; they never build images or deploy.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+
+      - name: Install browser for regression checks
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser regression checks
+        run: npm run test:e2e
+
+  docker:
+    name: Docker Build
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+      digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+      - name: Checkout tested commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Verify React project
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ ! -f package.json || ! -f package-lock.json ]]; then
+            echo "ERROR: React project is not ready."
+            echo "Both package.json and package-lock.json are required."
+            exit 1
+          fi
+
+          node -e "
+            const p = require('./package.json');
+            if (!p.scripts || !p.scripts.build) {
+              console.error('ERROR: Missing npm build script.');
+              process.exit(1);
+            }
+          "
+
+          echo "PASS: React project files verified"
+
+      - name: Image reference
+        id: image
+        run: echo "image=ghcr.io/royal1322tech/web-app:sha-${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.image.outputs.image }}
+
+  deploy:
+    name: Deploy to Staging
+    needs: docker
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    concurrency:
+      group: frontend-staging-deployment
+      cancel-in-progress: false
+
+    steps:
+      - name: Verify release and image
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          IMAGE: ${{ needs.docker.outputs.image }}
+          DIGEST: ${{ needs.docker.outputs.digest }}
+        run: |
+          set -euo pipefail
+
+          [[ "$SHA" =~ ^[a-f0-9]{40}$ ]] || exit 1
+          [[ "$IMAGE" == "ghcr.io/royal1322tech/web-app:sha-$SHA" ]] || {
+            echo "ERROR: Image does not match the tested commit"
+            exit 1
+          }
+
+          LATEST=$(gh api "repos/$REPO/commits/main" --jq '.sha')
+          [[ "$SHA" == "$LATEST" ]] || {
+            echo "ERROR: Release is not latest main"
+            exit 1
+          }
+
+          echo "PASS: Latest main commit verified"
+          echo "Deploying $IMAGE ($DIGEST)"
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ vars.STAGING_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+
+          test -n "$SSH_PRIVATE_KEY"
+          test -n "$SSH_KNOWN_HOSTS"
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/staging_deploy
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+          chmod 600 ~/.ssh/staging_deploy
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy frontend to Staging
+        env:
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          ssh -i ~/.ssh/staging_deploy \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o BatchMode=yes \
+            deploy@179.198.220.175 \
+            "/opt/royal-travel/staging-frontend/scripts/deploy.sh '$SHA'"
+
+      - name: Verify staging health
+        env:
+          STAGING_URL: https://staging.royalis.tech
+        run: |
+          set -euo pipefail
+
+          for attempt in $(seq 1 10); do
+            if HTML=$(curl -fsS --max-time 15 "$STAGING_URL/") \
+              && grep -q '<div id="root"></div>' <<<"$HTML"; then
+              ASSET=$(grep -oE '/assets/index-[A-Za-z0-9_-]+\.js' <<<"$HTML" | head -n 1)
+              if [[ -n "$ASSET" ]] && curl -fsS --max-time 15 -o /dev/null "$STAGING_URL$ASSET"; then
+                echo "PASS: Staging serves the app shell and $ASSET"
+                exit 0
+              fi
+            fi
+            echo "Staging not ready yet (attempt $attempt/10); retrying in 6s"
+            sleep 6
+          done
+
+          echo "ERROR: Staging health check failed"
+          exit 1

@@ -14,7 +14,7 @@ import { CatalogShell } from "./catalog-shell";
 import { SectionHeading } from "./section-heading";
 import { Icon } from "@/components/ui/icon";
 import { HotelGallery } from "./hotel-gallery";
-import { HotelMap } from "./hotel-map";
+import { HotelLocation } from "./hotel-location";
 import { RecommendedHotels } from "./recommended-hotels";
 import { PriceChart } from "./price-chart";
 import { Comparison } from "./comparison";
@@ -142,7 +142,7 @@ export function HotelDetails({ hotel }: { hotel: HotelListing }) {
         </StatePreview>
       </section>
       <PriceChart />
-      <HotelMap hotel={hotel} />
+      <HotelLocation hotel={hotel} />
       <RecommendedHotels criteria={criteria} />
       <Comparison />
     </CatalogShell>

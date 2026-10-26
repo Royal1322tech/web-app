@@ -1,0 +1,281 @@
+/* Accommodation voucher: document layout on screen, A4 layout in print. */
+.voucher {
+  max-width: 900px;
+  margin-inline: auto;
+  padding: clamp(18px, 3vw, 36px);
+  border: 1px solid var(--border);
+  border-radius: var(--rounded-lg);
+  background: var(--surface);
+  color: var(--navy);
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+  box-shadow: var(--elevation-1);
+}
+.voucher h2,
+.voucher h3,
+.voucher p {
+  margin: 0;
+}
+.voucher__header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-5);
+  padding-block-end: var(--space-4);
+  border-block-end: 3px solid var(--navy);
+}
+.voucher__heading h2 {
+  color: var(--navy);
+  font-size: clamp(20px, 2.4vw, 26px);
+  letter-spacing: -0.01em;
+}
+.voucher__heading p {
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+}
+.voucher__reference {
+  display: grid;
+  margin: 0;
+  border: 1px solid var(--navy);
+  border-radius: var(--rounded-sm);
+  overflow: hidden;
+}
+.voucher__reference > div {
+  padding: 6px 12px;
+}
+.voucher__reference > div + div {
+  border-block-start: 1px solid var(--border);
+}
+.voucher__reference dt {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+[dir="rtl"] .voucher__reference dt {
+  letter-spacing: 0;
+}
+.voucher__reference dd {
+  margin: 0;
+  font-weight: var(--weight-bold);
+}
+.voucher__warning {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px var(--space-4);
+  margin-block: var(--space-4);
+  padding: 10px 14px;
+  border: 1px dashed color-mix(in srgb, var(--error) 55%, transparent);
+  border-radius: var(--rounded-sm);
+  background: var(--error-bg);
+  color: var(--navy);
+  font-size: var(--font-size-sm);
+}
+.voucher .watermark {
+  color: var(--error);
+  font-size: var(--font-size-base);
+  font-weight: var(--weight-heavy);
+  letter-spacing: 0.12em;
+}
+[dir="rtl"] .voucher .watermark {
+  letter-spacing: 0;
+}
+.voucher__section {
+  margin-block-start: var(--space-5);
+  break-inside: avoid;
+}
+.voucher__section h3 {
+  margin-block-end: var(--space-2);
+  padding: 6px 10px;
+  border-inline-start: 4px solid var(--secondary);
+  background: var(--subtle);
+  color: var(--navy);
+  font-size: var(--font-size-sm);
+  font-weight: var(--weight-heavy);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+[dir="rtl"] .voucher__section h3 {
+  letter-spacing: 0;
+}
+.voucher__hotel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+.voucher__hotel-name {
+  font-size: var(--font-size-lg);
+  font-weight: var(--weight-heavy);
+}
+.voucher__stars {
+  color: #b7791f;
+  letter-spacing: 2px;
+}
+.voucher__muted {
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+}
+.voucher__facts {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  border: 1px solid var(--border);
+}
+.voucher__facts > div {
+  padding: 8px 12px;
+  border-block-end: 1px solid var(--border);
+}
+.voucher__facts > div:last-child {
+  border-block-end: 0;
+}
+.voucher__facts dt {
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--weight-semibold);
+}
+.voucher__facts dd {
+  margin: 2px 0 0;
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
+.voucher__facts dd small {
+  color: var(--muted);
+  font-weight: var(--weight-regular);
+}
+.voucher__facts--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.voucher__facts--two > div:nth-child(odd) {
+  border-inline-end: 1px solid var(--border);
+}
+.voucher__facts--two > div:nth-last-child(-n + 2) {
+  border-block-end: 0;
+}
+.voucher__facts--stay {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.voucher__facts--stay > div:not(:nth-child(3n)) {
+  border-inline-end: 1px solid var(--border);
+}
+.voucher__facts--stay > div:nth-last-child(-n + 3) {
+  border-block-end: 0;
+}
+.voucher__table-wrap {
+  overflow-x: auto;
+}
+.voucher__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+.voucher__table th,
+.voucher__table td {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  text-align: start;
+  vertical-align: top;
+}
+.voucher .voucher__table th {
+  background: var(--navy);
+  color: #fff;
+  font-size: var(--font-size-xs);
+  font-weight: var(--weight-bold);
+}
+.voucher__table tr {
+  break-inside: avoid;
+}
+.voucher__table td:first-child,
+.voucher__table th:first-child {
+  width: 40px;
+  text-align: center;
+}
+.voucher__columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: var(--space-5);
+}
+.voucher__list {
+  margin: var(--space-2) 0 0;
+  padding-inline-start: 20px;
+  font-size: var(--font-size-sm);
+}
+.voucher__remarks {
+  min-height: 48px;
+  margin-block-end: var(--space-2) !important;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  white-space: pre-line;
+}
+.voucher__footer {
+  display: grid;
+  gap: 4px;
+  margin-block-start: var(--space-6);
+  padding-block-start: var(--space-3);
+  border-block-start: 1px solid var(--border);
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+}
+@media (max-width: 720px) {
+  .voucher__header {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+  .voucher__hotel,
+  .voucher__columns,
+  .voucher__facts--two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .voucher__facts--two > div:nth-child(odd) {
+    border-inline-end: 0;
+  }
+  .voucher__facts--two > div:nth-last-child(2) {
+    border-block-end: 1px solid var(--border);
+  }
+  .voucher__facts--stay {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .voucher__facts--stay > div:not(:nth-child(3n)) {
+    border-inline-end: 0;
+  }
+  .voucher__facts--stay > div:nth-child(odd) {
+    border-inline-end: 1px solid var(--border);
+  }
+  .voucher__facts--stay > div:nth-last-child(3) {
+    border-block-end: 1px solid var(--border);
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  .voucher {
+    max-width: none;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    font-size: 10.5pt;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .voucher__header,
+  .voucher__warning,
+  .voucher__section,
+  .voucher__table tr {
+    break-inside: avoid;
+  }
+  .voucher__section h3 {
+    break-after: avoid;
+  }
+  .voucher__table-wrap {
+    overflow: visible;
+  }
+  .voucher a {
+    color: inherit;
+    text-decoration: none;
+  }
+}

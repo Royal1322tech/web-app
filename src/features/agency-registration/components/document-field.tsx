@@ -1,27 +1,40 @@
 import { useController, useFormContext } from "react-hook-form";
 import { FormField } from "@/components/ui/form-field";
 import { Icon } from "@/components/ui/icon";
-import {
-  documentAccept,
-  documentHelp,
-  type DocumentName,
-} from "../data/documents";
+import { documentAccept, documentHelp } from "../data/documents";
 import type { RegistrationValues } from "../schemas/registration.schema";
 
+export type RegistrationFilePath =
+  | "documents.commercialRegistration"
+  | "documents.tourismLicence"
+  | "documents.taxCertificate"
+  | "contact.idDocument";
+
+/** Client-side file picker: the File stays in form memory and is never uploaded or stored. */
 export function DocumentField({
-  name,
+  path,
+  id,
   label,
+  help = documentHelp,
+  uploadLabel = "Upload Document",
+  replaceLabel = "Replace Document",
+  removeLabel = "Remove",
+  translate = (message) => message,
 }: {
-  name: DocumentName;
+  path: RegistrationFilePath;
+  id: string;
   label: string;
+  help?: string;
+  uploadLabel?: string;
+  replaceLabel?: string;
+  removeLabel?: string;
+  translate?: (message: string) => string;
 }) {
   const { control, setValue } = useFormContext<RegistrationValues>();
-  const path = `documents.${name}` as const;
   const {
     field: { value: selectedFile, name: inputName, ref: inputRef, onBlur },
     fieldState: { error },
   } = useController({ control, name: path });
-  const id = `document-${name}`;
 
   function selectFile(file: File | null) {
     setValue(path, file, {
@@ -32,7 +45,7 @@ export function DocumentField({
   }
 
   return (
-    <FormField id={id} label={label} required error={error?.message}>
+    <FormField id={id} label={label} required error={error?.message ? translate(error.message) : undefined}>
       <div
         className={`document-picker${error ? " document-picker--invalid" : ""}`}
       >
@@ -55,11 +68,11 @@ export function DocumentField({
         />
         <span aria-hidden="true">
           <Icon name="upload" />
-          {selectedFile ? "Replace Document" : "Upload Document"}
+          {selectedFile ? replaceLabel : uploadLabel}
         </span>
       </div>
       <p className="document-help" id={`${id}-help`}>
-        {documentHelp}
+        {help}
       </p>
       <div
         className="document-selection"
@@ -69,7 +82,7 @@ export function DocumentField({
         {selectedFile && (
           <span>
             <Icon name="document" />
-            {selectedFile.name}
+            <bdi>{selectedFile.name}</bdi>
           </span>
         )}
       </div>
@@ -78,9 +91,9 @@ export function DocumentField({
           type="button"
           className="text-button document-remove"
           onClick={() => selectFile(null)}
-          aria-label={`Remove ${label}`}
+          aria-label={`${removeLabel} ${label}`}
         >
-          Remove
+          {removeLabel}
         </button>
       )}
     </FormField>

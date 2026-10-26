@@ -1,4 +1,5 @@
-.hero { position:relative; isolation:isolate; background:var(--navy); color:white; overflow:visible; min-height:570px; }
+/* Above the search section (z-index 2) so header menus can extend past the hero. */
+.hero { position:relative; z-index:3; isolation:isolate; background:var(--navy); color:white; overflow:visible; min-height:570px; }
 .slides,.slide,.overlay { position:absolute; inset:0; pointer-events:none; }
 .slides { z-index:-3; }
 .slide { opacity:0; transition:opacity 800ms ease; overflow:hidden; }
@@ -12,19 +13,10 @@
 .headerWrap { padding-top:16px; position:relative; z-index:5; }
 .headerWrap > header { position:relative; inset:auto; }
 .hero [data-hero-flight] { z-index:-2; top:120px; height:90px; --plane-width:140px; clip-path:none; }
-.copy { max-width:1280px; padding:48px 48px 80px; margin:auto; position:relative; }
-.eyebrow { font-size:11px; font-weight:700; letter-spacing:2px; color:var(--light-gold); margin-bottom:20px; }
-.copy h1 { color:white; font-size:clamp(36px,4vw,58px); line-height:1.14; font-weight:800; letter-spacing:-.04em; text-wrap:initial; max-width:850px; }
-.copy h1 span { display:block; color:var(--light-gold); }
-.description { font-size:16px; line-height:1.8; max-width:610px; margin-top:22px; color:#eef3fa; }
 @keyframes cinematic-drift { from { transform:scale(1.015); } to { transform:scale(1.055); } }
 @media(max-width:599px) {
- .hero { min-height:0; }
+ .hero { min-height:340px; }
  .headerWrap { padding-top:12px; }
- .copy { padding:46px 24px 76px; }
- .eyebrow { font-size:9px; letter-spacing:1.5px; margin-bottom:14px; }
- .copy h1 { font-size:clamp(28px,7.7vw,34px); line-height:1.18; letter-spacing:-.035em; }
- .description { font-size:14px; line-height:1.65; margin-top:16px; }
  .hero [data-hero-flight] { top:80px; height:66px; --plane-width:80px; }
  .slide:first-child img { object-position:73% center; }
  .slide:nth-child(3) img { object-position:53% center; }

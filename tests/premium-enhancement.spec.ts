@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { visit } from "./helpers/demo-login";
+import { attachIdDocument, fillCompanyStep } from "./helpers/registration";
 import { selectLanguage, closeHeaderMenu } from "./helpers/header";
 import { contactPhone, phoneCountries } from "../src/features/agency-registration/lib/phone";
 import { filterHotels, defaultFilters } from "../src/features/hotels/lib/filter-hotels";
@@ -8,12 +9,7 @@ import { hotels } from "../src/features/hotels/data/hotels.fixture";
 import { hotelBoardPlans } from "../src/features/hotels/lib/board-plans";
 
 async function company(page: Page) {
-  await page.getByLabel("Name of Company").fill("Phone Preview Agency");
-  await page.getByLabel("Number of Employees").fill("12");
-  await page.getByLabel("Country", { exact: false }).selectOption("EG");
-  await page.getByLabel("Company Registration Number").fill("PREVIEW-1");
-  await page.getByLabel("Address of Company").fill("Alexandria");
-  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await fillCompanyStep(page, { name: "Phone Preview Agency", registration: "PREVIEW-1" });
 }
 
 test("phone metadata validates selected country and returns E.164 without a backend", () => {
@@ -46,12 +42,13 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
     test(`international phone, independent nationality and retained steps ${width}px ${locale}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 1000 });
       await page.goto("/welcome");
-      if (locale === "ar") await page.getByRole("button", { name: "Switch to Arabic" }).click();
+      if (locale === "ar") await page.getByRole("button", { name: "العربية" }).click();
       await page.locator('a[href="/register/agency"]').click();
       await company(page);
       await page.getByLabel("Full Name").fill("Test Contact");
       await page.getByLabel("Nationality").selectOption("EG");
       await page.getByLabel("ID Number").fill("PREVIEW-2");
+      await attachIdDocument(page);
       await page.getByLabel("Email", { exact: false }).fill("phone@example.test");
       const trigger = page.getByRole("button", { name: /^(Phone country|دولة الهاتف)$/ });
       await trigger.click();

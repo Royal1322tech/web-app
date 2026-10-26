@@ -5,10 +5,12 @@ import styles from "../hotels.module.css";
 export function SectionHeading({
   icon,
   title,
+  id,
   children,
 }: {
   icon: "bed" | "pin";
   title: string;
+  id?: string;
   children: ReactNode;
 }) {
   return (
@@ -17,7 +19,7 @@ export function SectionHeading({
         <Icon name={icon} />
       </span>
       <div>
-        <h2>{title}</h2>
+        <h2 id={id}>{title}</h2>
         <p>{children}</p>
       </div>
     </div>

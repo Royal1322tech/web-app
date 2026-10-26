@@ -30,7 +30,8 @@ for (const width of [375, 768, 1440, 1920]) {
       await Promise.all(el.getAnimations().map((a) => a.finished));
     });
     const header = await page.locator("header").boundingBox();
-    const heading = await page.getByRole("heading", { level: 1 }).boundingBox();
+    // The hero has no visible headline; the plane must clear the search widget that overlaps the hero.
+    const search = await page.locator("#hotel-search").boundingBox();
     await background.evaluate(async el => {
       el.getAnimations().forEach(a => a.pause());
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
@@ -48,7 +49,7 @@ for (const width of [375, 768, 1440, 1920]) {
       const box = (await plane.boundingBox())!;
       expect(box.x).toBeGreaterThan(previousX);
       previousX = box.x;
-      expect(box.y + box.height).toBeLessThan(heading!.y);
+      expect(box.y + box.height).toBeLessThan(search!.y);
       expect(await page.locator("header").boundingBox()).toEqual(header);
       expect(await background.boundingBox()).toEqual(bg);
       expect(
@@ -90,10 +91,8 @@ test("reduced motion shows one static airplane in English and Arabic", async ({
       const planeBox = (await plane.boundingBox())!;
       expect(planeBox.x).toBeGreaterThanOrEqual(0);
       expect(planeBox.x + planeBox.width).toBeLessThanOrEqual(width);
-      const titleBox = (await page
-        .getByRole("heading", { level: 1 })
-        .boundingBox())!;
-      expect(planeBox.y + planeBox.height).toBeLessThan(titleBox.y);
+      const searchBox = (await page.locator("#hotel-search").boundingBox())!;
+      expect(planeBox.y + planeBox.height).toBeLessThan(searchBox.y);
       await page.screenshot({
         path: `test-results/hero-flight-static-${locale}-${width}.png`,
       });

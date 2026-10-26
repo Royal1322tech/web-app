@@ -11,11 +11,11 @@ for (const width of [375, 1440]) {
       await page.setViewportSize({ width, height: 1000 });
       await page.emulateMedia({ reducedMotion: "reduce" });
       await page.goto("/");
-      if (locale === "ar") await page.getByRole("button", { name: "Switch to Arabic" }).click();
+      if (locale === "ar") await page.getByRole("button", { name: "العربية" }).click();
       await expect(page.locator("header, footer")).toHaveCount(0);
       const account = () => page.getByRole("button", { name: locale === "en" ? "Account menu" : "قائمة الحساب", exact: true, includeHidden: true });
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-        locale === "en" ? "Welcome!" : "مرحبًا!",
+        locale === "en" ? "Welcome to Royal Vacation" : "مرحبًا بكم في رويال فاكيشن",
       );
       const photo = page.locator(".auth-page--welcome .travel-image");
       await expect(photo).toBeVisible();

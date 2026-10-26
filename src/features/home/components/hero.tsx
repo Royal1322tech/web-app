@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useMediaEnvironment } from "@/components/motion/use-media-environment";
-import { Text, useLocale } from "@/features/localization/locale-provider";
+import { useLocale } from "@/features/localization/locale-provider";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
 import type { HeroContent } from "../types";
 import { SiteHeader } from "./site-header";
@@ -32,11 +32,8 @@ export function Hero({ content }: { content: HeroContent }) {
       <HeroAirplane />
       <div className={styles.overlay} />
       <div className={styles.headerWrap}><SiteHeader /></div>
-      <div className={styles.copy}>
-        <p className={styles.eyebrow}><Text en="THE WORLD, THROUGH YOUR AGENCY" ar="العالم من خلال وكالتك" /></p>
-        <h1><Text en="Exceptional stays." ar="إقامات استثنائية." /><span><Text en="Stronger partnerships." ar="شراكات أقوى." /></span></h1>
-        <p className={styles.description}><Text en="Find the right hotels, compare room options, and manage travel bookings with confidence — all in one place." ar="اعثر على الفنادق المناسبة، وقارن خيارات الغرف، وأدِر حجوزات السفر بثقة — كل ذلك في مكان واحد." /></p>
-      </div>
+      {/* The imagery carries the hero; the page heading stays available to assistive technology. */}
+      <h1 className="sr-only">{t("Royal Vacation agency platform", "منصة رويال فاكيشن للوكالات")}</h1>
     </section>
   );
 }
