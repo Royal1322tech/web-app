@@ -625,16 +625,19 @@ export function VoucherPage() {
         </SystemState>
       ) : (
         <>
-          <div className="workspace-actions no-print">
+          <div className="voucher-toolbar no-print">
+            <Link to={`/bookings/${booking.id}`} className="button button--outline voucher-toolbar__back">
+              <Icon name="back" aria-hidden="true" />
+              {t("Back to booking", "العودة للحجز")}
+            </Link>
             <button
+              type="button"
               className="button button--primary"
               onClick={() => window.print()}
             >
+              <Icon name="printer" aria-hidden="true" />
               {t("Print voucher", "طباعة القسيمة")}
             </button>
-            <Link to={`/bookings/${booking.id}`}>
-              {t("Back to booking", "العودة للحجز")}
-            </Link>
           </div>
           <AccommodationVoucher booking={booking} hotel={hotel} />
         </>

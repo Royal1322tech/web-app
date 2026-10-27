@@ -5,7 +5,7 @@ import {
   type CancellationRule,
 } from "@/features/hotels/cancellation-policy";
 
-function formatCharge(rule: CancellationRule, locale: "en" | "ar") {
+export function formatCharge(rule: CancellationRule, locale: "en" | "ar") {
   if (rule.charge?.kind === "percentage") {
     return new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 2 }).format(
       rule.charge.percentage / 100,
@@ -27,7 +27,7 @@ function formatCharge(rule: CancellationRule, locale: "en" | "ar") {
   return "—";
 }
 
-function dateBoundary(value: string | undefined, timezone: string | undefined) {
+export function dateBoundary(value: string | undefined, timezone: string | undefined) {
   if (!value) return "—";
   return timezone ? `${value} · ${timezone}` : value;
 }

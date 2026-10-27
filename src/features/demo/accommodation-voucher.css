@@ -218,6 +218,82 @@
   color: var(--muted);
   font-size: var(--font-size-xs);
 }
+/* Cancellation Policy: the badge colour separates free, conditional, non-refundable and not supplied. */
+.voucher-policy {
+  --policy-accent: var(--muted);
+  --policy-bg: var(--subtle);
+}
+.voucher-policy[data-policy="free"] {
+  --policy-accent: var(--success);
+  --policy-bg: var(--success-bg);
+}
+.voucher-policy[data-policy="conditional"] {
+  --policy-accent: var(--warning);
+  --policy-bg: var(--warning-bg);
+}
+.voucher-policy[data-policy="non-refundable"] {
+  --policy-accent: var(--error);
+  --policy-bg: var(--error-bg);
+}
+.voucher-policy__summary {
+  display: grid;
+  gap: 6px;
+  margin-block-end: var(--space-3);
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--policy-accent) 35%, var(--border));
+  border-inline-start: 4px solid var(--policy-accent);
+  background: var(--policy-bg);
+}
+.voucher-policy__badge {
+  justify-self: start;
+  color: var(--policy-accent);
+  font-size: var(--font-size-sm);
+  font-weight: var(--weight-heavy);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+[dir="rtl"] .voucher-policy__badge {
+  letter-spacing: 0;
+}
+.voucher-policy__lead {
+  color: var(--navy);
+  font-size: var(--font-size-sm);
+}
+.voucher-policy .voucher__facts + .voucher-policy__rules {
+  margin-block-start: var(--space-3);
+}
+.voucher-policy__rules td:first-child,
+.voucher-policy__rules th:first-child {
+  width: auto;
+  text-align: start;
+}
+.voucher-policy__note {
+  display: block;
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+}
+/* Screen-only actions above the voucher, aligned to the document width. */
+.voucher-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  max-width: 900px;
+  margin: var(--space-6) auto var(--space-4);
+}
+.voucher-toolbar .button {
+  gap: 8px;
+  min-height: 44px;
+  padding-inline: 20px;
+}
+.voucher-toolbar .button svg {
+  width: 18px;
+  height: 18px;
+}
+[dir="rtl"] .voucher-toolbar .voucher-toolbar__back svg {
+  rotate: 180deg;
+}
 @media (max-width: 720px) {
   .voucher__header {
     grid-template-columns: minmax(0, 1fr);
@@ -227,6 +303,9 @@
   .voucher__columns,
   .voucher__facts--two {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .voucher-toolbar .button {
+    flex: 1 1 auto;
   }
   .voucher__facts--two > div:nth-child(odd) {
     border-inline-end: 0;

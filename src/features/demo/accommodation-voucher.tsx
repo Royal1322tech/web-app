@@ -1,10 +1,10 @@
 import { BrandLogo } from "@/components/brand-logo";
-import { cancellationPolicyLabels } from "@/features/hotels/cancellation-policy";
 import { boardPlanLabels } from "@/features/hotels/lib/board-plan-definitions";
 import { hotelDisplayAddress, hotelDisplayName, hotelTelephoneHref } from "@/features/hotels/lib/presentation";
 import type { HotelListing, LocalizedText } from "@/features/hotels/types";
 import { useLocale } from "@/features/localization/locale-provider";
 import type { DemoBooking } from "./types";
+import { VoucherCancellationPolicy } from "./voucher-cancellation-policy";
 import "./accommodation-voucher.css";
 
 function nights(checkIn: string, checkOut: string) {
@@ -160,25 +160,21 @@ export function AccommodationVoucher({ booking, hotel }: { booking: DemoBooking;
         </div>
       </section>
 
+      <VoucherCancellationPolicy policy={policy} />
+
       <div className="voucher__columns">
         <section className="voucher__section" aria-labelledby="voucher-conditions">
           <h3 id="voucher-conditions">{t("Hotel remarks and booking conditions", "ملاحظات الفندق وشروط الحجز")}</h3>
-          <dl className="voucher__facts">
-            <div>
-              <dt>{t("Cancellation", "الإلغاء")}</dt>
-              <dd>
-                {policy && policy.kind !== "unavailable"
-                  ? [cancellationPolicyLabels[policy.kind][locale], text(policy.penalty), text(policy.conditions)].filter(Boolean).join(" · ")
-                  : t("Cancellation terms were not supplied for this rate.", "لم تُقدَّم شروط الإلغاء لهذا السعر.")}
-              </dd>
-            </div>
-            {hotel.policies?.identificationRequirements && (
-              <div><dt>{t("Identification", "إثبات الهوية")}</dt><dd>{text(hotel.policies.identificationRequirements)}</dd></div>
-            )}
-            {hotel.policies?.childPolicy && (
-              <div><dt>{t("Children", "الأطفال")}</dt><dd>{text(hotel.policies.childPolicy)}</dd></div>
-            )}
-          </dl>
+          {(hotel.policies?.identificationRequirements || hotel.policies?.childPolicy) && (
+            <dl className="voucher__facts">
+              {hotel.policies?.identificationRequirements && (
+                <div><dt>{t("Identification", "إثبات الهوية")}</dt><dd>{text(hotel.policies.identificationRequirements)}</dd></div>
+              )}
+              {hotel.policies?.childPolicy && (
+                <div><dt>{t("Children", "الأطفال")}</dt><dd>{text(hotel.policies.childPolicy)}</dd></div>
+              )}
+            </dl>
+          )}
           {conditions.length > 0 ? (
             <ul className="voucher__list">{conditions.map((item) => <li key={item}>{item}</li>)}</ul>
           ) : (
