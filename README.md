@@ -138,6 +138,8 @@ Deployment runs in one GitHub Actions workflow, `.github/workflows/frontend-cicd
 
 Pull requests never build images or deploy. A failed job stops the later jobs. Deployments share the `frontend-staging-deployment` concurrency group and are not cancelled mid-run. Docker builds on Node 22 and serves `dist` with nginx; `nginx.conf` adds history fallback and caching. Image name, deployment host, secrets and the remote deployment script are unchanged from the earlier three-workflow pipeline.
 
+To release reviewed changes, stage them explicitly and run `./scripts/release-staging.sh "commit message"`. It validates, commits, pushes to `main`, follows the workflow and verifies staging. See [docs/release-staging.md](docs/release-staging.md).
+
 - Repository: https://github.com/Royal1322tech/web-app
 - Actions: https://github.com/Royal1322tech/web-app/actions
 - Staging: https://staging.royalis.tech

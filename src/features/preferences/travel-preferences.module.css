@@ -2,9 +2,9 @@
 .fields { color:#172333; text-align:start; }
 .fields .group { display:block; min-width:0; margin:0; padding:20px; border:0; }
 .fields .group + .group { border-top:1px solid #e0e5eb; }
-.fields .group legend { float:inline-start; width:100%; margin:0 0 12px; padding:0; font-size:14px; font-weight:750; }
+.fields .group legend { float:inline-start; width:100%; margin:0 0 12px; padding:0; font-size:14px; font-weight:700; }
 .fields .group legend + * { clear:both; }
-.selectLabel { display:block; margin-block:0 6px; color:#556579; font-size:12px; font-weight:650; }
+.selectLabel { display:block; margin-block:0 6px; color:#556579; font-size:12px; font-weight:600; }
 .group select { width:100%; min-height:44px; padding:8px 36px 8px 11px; border:1px solid #ccd7e1; border-radius:10px; background:white; color:#172333; font:inherit; }
 .group select:focus-visible { outline:2px solid #0874df; outline-offset:2px; }
 .fields .option { position:relative; display:flex; flex-direction:row; align-items:center; gap:12px; min-height:45px; margin:0 0 4px; padding:10px 13px; border:0; border-radius:13px; font-size:14px; font-weight:400; cursor:pointer; color:#172333; }

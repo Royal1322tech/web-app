@@ -2,7 +2,7 @@
 .hero { position:relative; overflow:hidden; margin:0 calc(clamp(16px,4vw,64px) * -1) 30px; padding:54px clamp(24px,7vw,96px) 58px; color:#fff; background:radial-gradient(ellipse at 82% 0%,#19818a 0,transparent 38%),linear-gradient(112deg,#071a35,#0c3857 66%,#0d5b67); }
 .hero::after { position:absolute; inset-block-end:0; inset-inline-start:clamp(24px,7vw,96px); width:76px; height:3px; background:#edc881; content:""; }
 .hero > p { margin:0 0 12px; color:#f4d49c; font-size:11px; font-weight:800; letter-spacing:.16em; }
-.hero h1 { margin:0; color:#fff; font-size:clamp(34px,4vw,50px); font-weight:760; line-height:1.1; }
+.hero h1 { margin:0; color:#fff; font-size:clamp(34px,4vw,50px); font-weight:800; line-height:1.1; }
 .hero > span { display:block; margin-block-start:12px; color:#e2edf4; font-size:17px; line-height:1.55; }
 
 .page > h1 { display:flex; align-items:center; justify-content:center; gap:18px; text-align:center; font-weight:800; font-size:clamp(28px,3.4vw,44px); }
@@ -20,7 +20,7 @@
 .information dl { margin:30px 0; display:grid; gap:28px; }
 .information dl > div { position:relative; padding-inline-start:58px; min-height:44px; }
 .icon { position:absolute; inset-inline-start:0; top:0; width:44px; display:grid; place-items:center; flex:0 0 44px; height:44px; border-radius:50%; background:var(--light-gold); color:var(--navy); }
-.information dt { font-size:16px; font-weight:750; }
+.information dt { font-size:16px; font-weight:700; }
 .information dd { font-size:13px; margin:5px 0 0; color:#dce6f2; }
 .information .pending { border-top:1px solid #ffffff35; padding-top:22px; font-size:13px; }
 .information a { display:flex; align-items:center; gap:8px; min-height:44px; color:var(--light-gold); margin-top:18px; font-weight:700; font-size:14px; }
@@ -42,7 +42,7 @@
 .page .inputWrap input { padding-inline-start:40px; }
 .page input::placeholder,.page textarea::placeholder { color:#697789; opacity:1; }
 .page form > div:first-of-type > div:nth-child(-n+2) { grid-column:1/-1; }
-.page form > p { order:3; background:#f7f9fc; border-inline-start:2px solid #b8752c; margin:0; }
+.page form > p { order:3; background:var(--background); border-inline-start:2px solid #b8752c; margin:0; }
 .page form > button { order:4; }
 .page form > section { order:5; }
 .page form textarea { min-height:110px; }

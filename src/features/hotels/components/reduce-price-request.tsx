@@ -12,6 +12,8 @@ import {
 } from "../price-reduction-request";
 import { Icon } from "@/components/ui/icon";
 import styles from "../hotels.module.css";
+import { formatCalendarDate } from "@/lib/format-date";
+import { hotelDisplayRate } from "../lib/display-rate";
 
 type SearchContext = Pick<HotelSearchCriteria, "checkIn" | "checkOut"> &
   Partial<Pick<HotelSearchCriteria, "rooms">>;
@@ -47,7 +49,8 @@ export function ReducePriceRequest({
   const trigger = useRef<HTMLButtonElement>(null);
   const id = useId();
   const hasSelectedStay = Boolean(criteria?.checkIn && criteria?.checkOut);
-  const comparablePrice = hasSelectedStay ? hotel.nightlyRate : undefined;
+  const displayedRate = hotelDisplayRate(hotel).amount;
+  const comparablePrice = hasSelectedStay ? displayedRate : undefined;
   const schema = createPriceReductionFormSchema(comparablePrice);
   const {
     register,
@@ -94,7 +97,7 @@ export function ReducePriceRequest({
         rooms: roomCount,
         adults,
         children,
-        currentPrice: hotel.nightlyRate,
+        currentPrice: displayedRate,
         priceBasis: "per night",
         priceComparisonEligible: hasSelectedStay,
         requestedPrice,
@@ -154,11 +157,11 @@ export function ReducePriceRequest({
               <div><dt>{t("Hotel", "الفندق")}</dt><dd>{hotel.name[locale]}</dd></div>
               {hotel.address[locale] && <div><dt>{t("Location", "الموقع")}</dt><dd>{hotel.address[locale]}</dd></div>}
               <div><dt>{t("Room / Board", "الغرفة / الوجبات")}</dt><dd>{t("Not selected", "لم يتم الاختيار")}</dd></div>
-              {criteria?.checkIn && <div><dt>{t("Check-in", "تسجيل الوصول")}</dt><dd><bdi>{criteria.checkIn}</bdi></dd></div>}
-              {criteria?.checkOut && <div><dt>{t("Check-out", "تسجيل المغادرة")}</dt><dd><bdi>{criteria.checkOut}</bdi></dd></div>}
+              {criteria?.checkIn && <div><dt>{t("Check-in", "تسجيل الوصول")}</dt><dd><bdi>{formatCalendarDate(criteria.checkIn, locale)}</bdi></dd></div>}
+              {criteria?.checkOut && <div><dt>{t("Check-out", "تسجيل المغادرة")}</dt><dd><bdi>{formatCalendarDate(criteria.checkOut, locale)}</bdi></dd></div>}
               {roomCount !== undefined && <div><dt>{t("Rooms", "الغرف")}</dt><dd><bdi>{roomCount}</bdi></dd></div>}
               {adults !== undefined && <div><dt>{t("Guests", "الضيوف")}</dt><dd><bdi>{adults + (children ?? 0)}</bdi></dd></div>}
-              <div><dt>{t("Current displayed rate", "السعر الحالي المعروض")}</dt><dd><bdi>{money.format(hotel.nightlyRate)}</bdi> {t("per night", "لليلة الواحدة")}</dd></div>
+              <div><dt>{t("Current displayed rate", "السعر الحالي المعروض")}</dt><dd><bdi>{money.format(displayedRate)}</bdi> {t("per night", "لليلة الواحدة")}</dd></div>
             </dl>
           </section>
           <fieldset className={styles.requestFields}>

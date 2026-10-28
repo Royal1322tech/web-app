@@ -1,23 +1,7 @@
 /* Booking-linked support tickets: workspace cards, design tokens and existing status colours. */
 
 /* Status and labels -------------------------------------------------------- */
-.ticket-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: var(--rounded-pill);
-  font-size: var(--font-size-xs);
-  font-weight: var(--weight-bold);
-  white-space: nowrap;
-}
-.ticket-status::before {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  content: "";
-}
+/* Shape comes from the shared status-badge base in globals.css; these set status colours. */
 .ticket-status--open { background: color-mix(in srgb, var(--secondary) 12%, var(--surface)); color: var(--secondary-hover); }
 .ticket-status--in_progress { background: color-mix(in srgb, var(--primary) 10%, var(--surface)); color: var(--primary); }
 .ticket-status--waiting_for_customer { background: var(--warning-bg); color: var(--warning); }

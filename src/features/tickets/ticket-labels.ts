@@ -1,5 +1,6 @@
 import { useLocale } from "@/features/localization/locale-provider";
 import type { BookingStage, TicketBookingType, TicketCategory, TicketStatus } from "./ticket-types";
+import { formatCalendarDate, formatDateTime } from "@/lib/format-date";
 
 export function useTicketLabels() {
   const { t, locale } = useLocale();
@@ -32,9 +33,7 @@ export function useTicketLabels() {
     cancelled: t("Cancelled", "ملغى"),
     failed: t("Failed", "فشل"),
   };
-  const dateTime = (value: string) =>
-    new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
-  const date = (value: string) =>
-    new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`));
+  const dateTime = (value: string) => formatDateTime(value, locale);
+  const date = (value: string) => formatCalendarDate(value, locale);
   return { category, status, bookingType, stage, dateTime, date };
 }

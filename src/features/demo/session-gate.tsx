@@ -2,6 +2,7 @@ import { Suspense, lazy, useSyncExternalStore } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { demoAuth, isPublicAuthPath, safeDemoReturnTo, subscribeDemoSession } from "@/features/auth/demo-auth";
 import { PageLoadingState } from "@/components/ui/system-state";
+import { PageTitle } from "@/components/layout/page-title";
 
 const WelcomeScreen = lazy(async () => {
   const { WelcomeScreen } = await import("@/features/welcome/components/welcome-screen");
@@ -22,6 +23,6 @@ export function DemoSessionGate() {
     return <Suspense fallback={<PageLoadingState />}><AuthenticatedDemoProvider><Outlet /></AuthenticatedDemoProvider></Suspense>;
   }
   if (isPublicAuthPath(location.pathname)) return <Outlet />;
-  if (location.pathname === "/") return <><title>Welcome | Royal Vacation</title><Suspense fallback={<PageLoadingState />}><WelcomeScreen /></Suspense></>;
+  if (location.pathname === "/") return <><PageTitle en="Welcome" ar="مرحبًا" /><Suspense fallback={<PageLoadingState />}><WelcomeScreen /></Suspense></>;
   return <Navigate to="/welcome" replace state={{ from: location.pathname + location.search + location.hash }} />;
 }

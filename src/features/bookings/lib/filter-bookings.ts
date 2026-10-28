@@ -13,8 +13,8 @@ export const defaultBookingFilters = {
   fees: false,
 };
 export type BookingFiltersValue = typeof defaultBookingFilters;
-export function filterBookings(
-  bookings: readonly SampleBooking[],
+export function filterBookings<T extends Omit<SampleBooking, "status"> & { status: string }>(
+  bookings: readonly T[],
   hotels: readonly HotelListing[],
   filters: BookingFiltersValue,
   sort: string,

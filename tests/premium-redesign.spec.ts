@@ -149,10 +149,10 @@ test("booking filter styling preserves selected feedback, apply and reset in bot
       await filters.getByRole("searchbox").fill("no such itinerary");
       await expect(filters.getByRole("status")).toContainText("1");
       await filters.getByRole("button", { name: /^(Apply|تطبيق)$/ }).click();
-      await expect(page.locator('article[class*="resultCard"]')).toHaveCount(0);
+      await expect(page.locator('article[class*="bookingCard"]')).toHaveCount(0);
       await filters.getByRole("button", { name: /Reset filters|إعادة ضبط التصفية/ }).click();
       await expect(filters.getByRole("searchbox")).toHaveValue("");
-      await expect(page.locator('article[class*="resultCard"]').first()).toBeVisible();
+      await expect(page.locator('article[class*="bookingCard"]').first()).toBeVisible();
       await layout(page);
       await page.screenshot({ path: `test-results/booking-filters-new-${width}-${locale}.png`, fullPage: true });
     }

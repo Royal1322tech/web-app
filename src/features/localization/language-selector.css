@@ -1,6 +1,6 @@
 .language-trigger { gap: 8px; white-space: nowrap; }
-.language-trigger:hover, .language-trigger[aria-expanded="true"] { background: #edf8f7; border-color: #007f93; }
-.language-trigger:focus-visible, .language-panel button:focus-visible { outline: 2px solid #007f93; outline-offset: 3px; }
+.language-trigger:hover, .language-trigger[aria-expanded="true"] { background: #edf8f7; border-color: var(--brand-teal); }
+.language-trigger:focus-visible, .language-panel button:focus-visible { outline: 2px solid var(--brand-teal); outline-offset: 3px; }
 .language-panel { width: 200px; }
 .language-panel button { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; min-height: 44px; padding: 10px 12px; border: 0; border-radius: 8px; color: var(--navy); background: white; font-size: 15px; }
-.language-panel button:hover, .language-panel button[aria-pressed="true"] { background: #e6f5f2; color: #00697a; }
+.language-panel button:hover, .language-panel button[aria-pressed="true"] { background: #e6f5f2; color: var(--brand-teal-dark); }

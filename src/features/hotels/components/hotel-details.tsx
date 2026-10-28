@@ -25,6 +25,9 @@ export function HotelDetails({ hotel }: { hotel: HotelListing }) {
   const [board, setBoard] = useState<BoardPlan | "any">("any");
   const [query] = useSearchParams();
   const roomsSection = useRef<HTMLElement>(null);
+  const checkIn = hotel.policies?.checkIn;
+  const checkInTime = checkIn?.from && checkIn.until ? `${checkIn.from}–${checkIn.until}` : checkIn?.from;
+  const checkOutTime = hotel.policies?.checkOut?.until;
   const [criteria, setCriteria] = useState<HotelSearchCriteria>(
     () => readStayQuery(query, hotel.city.en) ?? defaultCriteria(hotel.city.en),
   );
@@ -85,28 +88,16 @@ export function HotelDetails({ hotel }: { hotel: HotelListing }) {
           </h2>
           <dl className={styles.stayTimes}>
             <dt>{t("Check-in time", "وقت الوصول")}</dt>
-            <dd>{t("Not connected", "غير متصل")}</dd>
+            <dd>{checkInTime ? <bdi>{checkInTime}</bdi> : t("Not supplied", "غير متوفر")}</dd>
             <dt>{t("Check-out time", "وقت المغادرة")}</dt>
-            <dd>{t("Not connected", "غير متصل")}</dd>
+            <dd>{checkOutTime ? <bdi>{checkOutTime}</bdi> : t("Not supplied", "غير متوفر")}</dd>
           </dl>
-          <dl>
-            <dt>{t("Year of most recent renovation", "سنة آخر تجديد")}</dt>
-            <dd>—</dd>
-            <dt>
-              {t(
-                "Number of floors (main building)",
-                "عدد الطوابق (المبنى الرئيسي)",
-              )}
-            </dt>
-            <dd>—</dd>
-            <dt>{t("Connecting rooms", "غرف متصلة")}</dt>
-            <dd>—</dd>
-            <dt>{t("Number of rooms", "عدد الغرف")}</dt>
-            <dd>—</dd>
-          </dl>
-          <a className={styles.primary} href="#location">
-            {t("View On Map", "عرض على الخريطة")}
-          </a>
+          <p className={styles.factsNote}>
+            {t(
+              "Renovation year, floors, connecting rooms and room count have not been supplied for this property.",
+              "لم تُقدَّم سنة التجديد وعدد الطوابق والغرف المتصلة وعدد الغرف لهذا الفندق.",
+            )}
+          </p>
         </aside>
       </div>
       <section id="rooms" ref={roomsSection} tabIndex={-1} className={styles.detailSection}>

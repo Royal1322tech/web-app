@@ -55,6 +55,10 @@
   --pending: var(--warning);
   --confirmed: var(--success);
   --cancelled: #5b6574;
+  /* Demo and illustrative content: one look wherever sample data is labelled. */
+  --demo-fg: #075e68;
+  --demo-bg: #edf8f7;
+  --demo-border: #b8d9dc;
   --balance: var(--navy);
 
   /* Legacy aliases kept so existing styles render unchanged. */

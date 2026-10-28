@@ -28,6 +28,7 @@ import {
   useMoney,
 } from "./shared";
 import type { DemoSelection, GuestValues } from "./types";
+import { formatCalendarDate } from "@/lib/format-date";
 
 function formatCurrency(amount: number, currency: string, locale: "en" | "ar") {
   try {
@@ -505,8 +506,8 @@ export function BookingPreparedPage() {
           <dl className="summary-dl booking-prepared-facts">
             <div><dt>{t("Hotel", "الفندق")}</dt><dd>{hotelDisplayName(hotels.find(hotel => hotel.id === selection.hotelId)?.name[locale] ?? "") || "—"}</dd></div>
             <div><dt>{t("Room", "الغرفة")}</dt><dd>{hotelDisplayName(selection.room.name[locale])}</dd></div>
-            <div><dt>{t("Check-in", "تسجيل الوصول")}</dt><dd><bdi>{selection.criteria.checkIn}</bdi></dd></div>
-            <div><dt>{t("Check-out", "تسجيل المغادرة")}</dt><dd><bdi>{selection.criteria.checkOut}</bdi></dd></div>
+            <div><dt>{t("Check-in", "تسجيل الوصول")}</dt><dd><time dateTime={selection.criteria.checkIn}>{formatCalendarDate(selection.criteria.checkIn, locale)}</time></dd></div>
+            <div><dt>{t("Check-out", "تسجيل المغادرة")}</dt><dd><time dateTime={selection.criteria.checkOut}>{formatCalendarDate(selection.criteria.checkOut, locale)}</time></dd></div>
             <div><dt>{t("Nights", "الليالي")}</dt><dd>{stay.nights}</dd></div>
             <div><dt>{t("Rooms", "الغرف")}</dt><dd>{roomCount}</dd></div>
             <div><dt>{t("Guests", "الضيوف")}</dt><dd>{adultCount} {t("adults", "بالغون")} · {childCount} {t("children", "أطفال")}</dd></div>

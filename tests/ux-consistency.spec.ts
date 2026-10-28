@@ -11,7 +11,8 @@ test("booking records omit catalogue actions while search results keep them", as
   await expect(records.getByRole("button", { name: /Compare|Selected/ })).toHaveCount(0);
   await expect(records.locator('button[aria-pressed]')).toHaveCount(0);
   await expect(records.first().getByRole("link", { name: "Manage booking" })).toBeVisible();
-  await expect(records.first().getByRole("button", { name: "View Rooms" })).toBeVisible();
+  await expect(records.getByRole("button", { name: "View Rooms" })).toHaveCount(0);
+  await expect(records.first().getByRole("link", { name: "View voucher" })).toBeVisible();
 
   await visit(page, search);
   const result = page.locator('article[class*="resultCard"]').first();

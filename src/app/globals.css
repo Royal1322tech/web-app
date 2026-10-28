@@ -1051,3 +1051,26 @@ button.submission-disabled:disabled {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Shared status badge for bookings, transactions and support tickets. Each feature sets colours by status. */
+.status-badge,
+.ticket-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--rounded-pill);
+  font-size: var(--font-size-xs);
+  font-weight: var(--weight-bold);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.status-badge::before,
+.ticket-status::before {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+}

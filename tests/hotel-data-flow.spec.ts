@@ -140,19 +140,24 @@ test("changing room returns to Rooms & Boards and replaces the selected offer wi
   await expect(page.locator(".selection-summary")).toContainText("$186");
 });
 
-test("My Bookings keeps references, local status, stay dates, ratings and actions compact and usable", async ({ page }) => {
+test("My Bookings leads with reference, status and stay, and offers booking actions only", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 900 });
   await visit(page, "/bookings");
   const card = page.locator('article[class*="bookingCard"]').first();
   await expect(card).toBeVisible();
   await expect(card.getByText("Booking reference")).toBeVisible();
+  await expect(card.getByRole("heading", { name: /^DEMO-100\d$/ })).toBeVisible();
+  await expect(card.locator(".status-badge")).toBeVisible();
   await expect(card.getByText("Local preview")).toBeVisible();
   await expect(card.locator('[aria-label="4-star hotel classification"]')).toBeVisible();
-  await expect(card.locator('[class*="reviewScore"]')).toContainText("4.1");
-  await expect(card.getByText(/DEMO-100/)).toBeVisible();
+  await expect(card).toContainText(/Stay[A-Z][a-z]{2} \d{1,2}, \d{4} – [A-Z][a-z]{2} \d{1,2}, \d{4} · \d+ nights/);
+  await expect(card).toContainText("Booking total");
   await expect(card.getByRole("link", { name: "Manage booking" })).toBeVisible();
+  // Confirmed bookings link straight to their voucher; search actions are not offered on a booking.
+  await expect(card.getByRole("link", { name: "View voucher" })).toHaveAttribute("href", /\/bookings\/DEMO-100\d\/voucher$/);
   await expect(card.getByRole("button", { name: "Compare" })).toHaveCount(0);
-  await expect(card.getByRole("button", { name: "View Rooms" })).toBeVisible();
+  await expect(card.getByRole("button", { name: "View Rooms" })).toHaveCount(0);
+  await expect(page.locator('article[class*="bookingCard"]').filter({ hasText: "DEMO-1002" }).getByRole("link", { name: "View voucher" })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
 });
 
@@ -174,12 +179,10 @@ for (const width of [375, 1440]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
 
     await expect(card.getByRole("button", { name: "قارن" })).toHaveCount(0);
-    const rooms = card.getByRole("button", { name: "عرض الغرف" });
-    await rooms.focus();
+    await expect(card.getByRole("button", { name: "عرض الغرف" })).toHaveCount(0);
+    await expect(card.getByRole("link", { name: "عرض القسيمة" })).toBeVisible();
+    await card.getByRole("link", { name: "إدارة الحجز" }).focus();
     await page.keyboard.press("Enter");
-    await expect(rooms).toHaveAttribute("aria-expanded", "true");
-    await expect(page.getByText(/الحالة لبيانات توضيحية فقط/).first()).toBeVisible();
-    await card.getByRole("link", { name: "إدارة الحجز" }).click();
     await expect(page).toHaveURL(/\/bookings\/DEMO-1001$/);
     await expect(page.getByRole("heading", { name: /تفاصيل الحجز/ })).toBeVisible();
   });

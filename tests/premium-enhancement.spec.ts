@@ -154,8 +154,9 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
         ? ["Half Board", "Full Board", "All Inclusive"]
         : ["نصف إقامة", "إقامة كاملة", "شامل كليًا"];
       for (const name of unavailableBoards) await expect(filters.getByRole("checkbox", { name, exact: true })).toBeDisabled();
-      await filters.getByRole("spinbutton", { name: /Min\.|الأدنى/ }).fill("100");
-      await filters.getByRole("spinbutton", { name: /Max\.|الأقصى/ }).fill("120");
+      // The price filter uses the displayed rate: Eastern Al Montazah is shown "From $185".
+      await filters.getByRole("spinbutton", { name: /Min\.|الأدنى/ }).fill("180");
+      await filters.getByRole("spinbutton", { name: /Max\.|الأقصى/ }).fill("190");
       const dialog = page.getByRole("dialog", { name: /Filters|التصفية/ });
       if (await dialog.isVisible()) await dialog.getByRole("button", { name: /Show 1 hotels|عرض 1 فنادق/ }).click();
       await expect(page.locator('article[class*="resultCard"]')).toHaveCount(1);

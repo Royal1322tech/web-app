@@ -10,6 +10,7 @@ import { samplePriceBreakdown } from "@/features/hotels/lib/sample-stay";
 import { totalFor } from "./demo-provider";
 import type { DemoSelection, DemoStatus } from "./types";
 import "./workspace.css";
+import { formatCalendarDate } from "@/lib/format-date";
 export function useMoney() {
   const { locale } = useLocale();
   return (amount: number) =>
@@ -44,6 +45,7 @@ export function Workspace({
   const { t } = useLocale();
   return (
     <CatalogShell title={breadcrumb ?? title} trail={trail} workspace={!publicHeader && accountNavigation} showPreview={showPreview} publicHeader={publicHeader}>
+      <title>{`${breadcrumb ?? title} | Royal Vacation`}</title>
       <div className="workspace">
         {!hideHeading && <><p className="workspace-eyebrow">
           {eyebrow ??
@@ -105,13 +107,13 @@ export function SelectionSummary({ selection }: { selection: DemoSelection }) {
         <div>
           <dt>{t("Check in", "الوصول")}</dt>
           <dd>
-            <bdi>{selection.criteria.checkIn}</bdi>
+            <time dateTime={selection.criteria.checkIn}>{formatCalendarDate(selection.criteria.checkIn, locale)}</time>
           </dd>
         </div>
         <div>
           <dt>{t("Check out", "المغادرة")}</dt>
           <dd>
-            <bdi>{selection.criteria.checkOut}</bdi>
+            <time dateTime={selection.criteria.checkOut}>{formatCalendarDate(selection.criteria.checkOut, locale)}</time>
           </dd>
         </div>
         <div>

@@ -5,6 +5,13 @@ import { StatePreview, SystemState } from "@/components/ui/system-state";
 import { demoFinance, demoTransactions } from "./fixtures";
 import { Workspace, StatusBadge, useMoney } from "./shared";
 import type { Transaction } from "./types";
+import { formatCalendarDate } from "@/lib/format-date";
+const transactionTypeLabels: Record<Transaction["type"], [string, string]> = {
+  credit: ["Credit top-up", "إضافة رصيد"],
+  reservation: ["Reservation", "حجز"],
+  adjustment: ["Account adjustment", "تسوية حساب"],
+};
+
 // The named, horizontally scrollable region is keyboard-focusable so users can scroll the table.
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex */
 function TransactionTable({
@@ -14,7 +21,7 @@ function TransactionTable({
   rows: readonly Transaction[];
   onOpen: (row: Transaction, trigger: HTMLButtonElement) => void;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const money = useMoney();
   return (
     <div
@@ -47,9 +54,9 @@ function TransactionTable({
                 <bdi>{row.id}</bdi>
               </td>
               <td>
-                <time dateTime={row.date}>{row.date}</time>
+                <time dateTime={row.date}>{formatCalendarDate(row.date, locale)}</time>
               </td>
-              <td>{t(row.type)}</td>
+              <td>{t(...transactionTypeLabels[row.type])}</td>
               <td>
                 <StatusBadge status={row.status} />
               </td>
@@ -75,7 +82,7 @@ function TransactionTable({
   );
 }
 function useTransactionDialog() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const money = useMoney();
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
@@ -106,11 +113,11 @@ function useTransactionDialog() {
               </div>
               <div>
                 <dt>{t("Date", "التاريخ")}</dt>
-                <dd>{row.date}</dd>
+                <dd><time dateTime={row.date}>{formatCalendarDate(row.date, locale)}</time></dd>
               </div>
               <div>
                 <dt>{t("Type", "النوع")}</dt>
-                <dd>{t(row.type)}</dd>
+                <dd>{t(...transactionTypeLabels[row.type])}</dd>
               </div>
               <div>
                 <dt>{t("Amount", "المبلغ")}</dt>
@@ -144,7 +151,7 @@ export function WalletPage() {
   const { open, element } = useTransactionDialog();
   const [insufficient, setInsufficient] = useState(false);
   return (
-    <Workspace title={t("Your credit, at a glance.", "رصيدك، بنظرة واحدة.")} breadcrumb={t("Wallet", "المحفظة")} accountNavigation={false}>
+    <Workspace title={t("Wallet", "المحفظة")} accountNavigation={false}>
       <p className="fine-print">{t("Account figures are informational and are not connected to a live balance.", "أرقام الحساب للمعلومات فقط ولا ترتبط برصيد مباشر.")}</p>
       <StatePreview
         emptyTitle={t("No credit information", "لا توجد بيانات ائتمانية")}
@@ -186,8 +193,13 @@ export function WalletPage() {
               <Link className="button button--primary" to="/transactions">
                 {t("View transaction history", "عرض سجل المعاملات")}
               </Link>
+            </div>
+            {/* Demo-only control: kept available but visually separate from real account actions. */}
+            <div className="demo-tools">
+              <span className="demo-tools__label">{t("Demo", "تجريبي")}</span>
               <button
-                className="button button--outline"
+                type="button"
+                className="text-button"
                 aria-pressed={insufficient}
                 onClick={() => setInsufficient(!insufficient)}
               >

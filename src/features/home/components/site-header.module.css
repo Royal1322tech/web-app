@@ -30,7 +30,7 @@
 
 .icons .profileTrigger { width:44px; height:44px; padding:0; border:0; background:transparent; color:var(--navy); border-radius:10px; transition:background-color 160ms ease, color 160ms ease; }
 .icons .profileTrigger:hover,
-.icons .profileTrigger[aria-expanded="true"] { background:#d9f2ee; color:#00697a; }
-.icons .profileTrigger:focus-visible { outline:2px solid #007f93; outline-offset:2px; }
+.icons .profileTrigger[aria-expanded="true"] { background:#d9f2ee; color:var(--brand-teal-dark); }
+.icons .profileTrigger:focus-visible { outline:2px solid var(--brand-teal); outline-offset:2px; }
 .icons .accountPanel a { width:100%; height:auto; }
 @media (prefers-reduced-motion: reduce) { .icons .profileTrigger { transition:none; } }

@@ -5,6 +5,7 @@ import { selectLanguage, closeHeaderMenu } from './helpers/header';
 import { demoPoints, pointsSummary } from '../src/features/demo/points-data';
 import { hotels } from '../src/features/hotels/data/hotels.fixture';
 import { hotelDisplayAddress, hotelDisplayName } from '../src/features/hotels/lib/presentation';
+import { hotelDisplayRate } from '../src/features/hotels/lib/display-rate';
 import { assessAgencyCredit } from '../src/features/demo/payment-methods';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -185,7 +186,7 @@ test('comparison shows fixture facts and Choose Hotel preserves the entire searc
     await expect(card.getByRole('heading')).toHaveText(hotelDisplayName(hotel.name.en));
     await expect(card).toContainText(hotelDisplayAddress(hotel.address.en, 'en'));
     await expect(card).toContainText(`${hotel.reviewScore} / 5`);
-    await expect(card).toContainText(new Intl.NumberFormat('en', { style: 'currency', currency: 'USD' }).format(hotel.nightlyRate));
+    await expect(card).toContainText(new Intl.NumberFormat('en', { style: 'currency', currency: 'USD' }).format(hotelDisplayRate(hotel).amount));
   }
   const link = cards.first().getByRole('link', { name: 'Choose Hotel' });
   const href = await link.getAttribute('href');

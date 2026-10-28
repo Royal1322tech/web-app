@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { useLocale } from "@/features/localization/locale-provider";
 import { hotels } from "../data/hotels.fixture";
 import styles from "../hotels.module.css";
+import { hotelDisplayRate } from "../lib/display-rate";
 export function RecommendedHotels({
   criteria,
 }: {
@@ -37,12 +38,14 @@ export function RecommendedHotels({
               </Link>
             </h3>
             <p className={styles.muted}>{hotel.city[locale]}</p>
-            <strong className={styles.rate}>${hotel.nightlyRate}</strong>
+            <strong className={styles.rate}>
+              {hotelDisplayRate(hotel).basis === "offer" && <small className={styles.ratePrefix}>{t("From", "من")}</small>}
+              <bdi>${hotelDisplayRate(hotel).amount}</bdi>
+            </strong>
             <p className={styles.muted}>
-              {t(
-                "Nightly rate · USD",
-                "السعر لليلة · دولار",
-              )}
+              {hotelDisplayRate(hotel).basis === "offer"
+                ? t("Lowest available nightly rate · USD", "أقل سعر متاح لليلة · دولار")
+                : t("Listed nightly rate · USD", "السعر المدرج لليلة · دولار")}
             </p>
             <Link
               to={`/hotels/${hotel.id}${criteria ? `?${stayQuery({ ...criteria, destination: hotel.city.en })}` : ""}`}

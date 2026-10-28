@@ -143,7 +143,14 @@
   border-radius: var(--rounded-pill);
   background: #f5f8fa;
 }
+/* The pill stays 36px tall; the pseudo-element extends each touch target to 44px. */
+.welcome-language button::after {
+  position: absolute;
+  inset: -4px 0;
+  content: "";
+}
 .welcome-language button {
+  position: relative;
   min-width: 52px;
   min-height: 36px;
   padding: 4px 14px;

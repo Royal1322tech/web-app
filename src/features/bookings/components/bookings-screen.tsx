@@ -3,23 +3,15 @@ import { useState } from "react";
 import { useLocale } from "@/features/localization/locale-provider";
 import { hotels } from "@/features/hotels/data/hotels.fixture";
 import { CatalogShell } from "@/features/hotels/components/catalog-shell";
-import { HotelResultCard } from "@/features/hotels/components/hotel-result-card";
+import { BookingRecordCard } from "./booking-record-card";
 import { Comparison } from "@/features/hotels/components/comparison";
-import { Link } from "react-router-dom";
 import { useDemo } from "@/features/demo/demo-provider";
-import { StatusBadge } from "@/features/demo/shared";
 import { StatePreview } from "@/components/ui/system-state";
 import { defaultBookingFilters, filterBookings } from "../lib/filter-bookings";
 import { BookingFilters } from "./booking-filters";
 import styles from "@/features/hotels/hotels.module.css";
-function formatBookingDate(value: string, locale: "en" | "ar") {
-  const date = new Date(`${value}T12:00:00Z`);
-  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat(locale, {
-    year: "numeric", month: "short", day: "numeric", timeZone: "UTC",
-  }).format(date);
-}
 export function BookingsScreen() {
-  const { locale, t } = useLocale();
+  const { t } = useLocale();
   const { records: bookings } = useDemo();
   const [draft, setDraft] = useState(defaultBookingFilters);
   const [filters, setFilters] = useState(defaultBookingFilters);
@@ -154,47 +146,7 @@ export function BookingsScreen() {
               {visibleBookings.map((b, index) => {
                 const h = hotels.find((h) => h.id === b.hotelId);
                 return h ? (
-                  <HotelResultCard
-                    key={b.id}
-                    hotel={h}
-                    eager={index === 0}
-                    dates={{ checkIn: b.checkIn, checkOut: b.checkOut }}
-                    booking={
-                      <div className={styles.bookingMetadata}>
-                        <div className={styles.bookingMetaTop}>
-                          <div><small>{t("Booking reference", "مرجع الحجز")}</small><strong><bdi>{b.id}</bdi></strong></div>
-                          <div className={styles.bookingStatus}><span className={styles.localStatus}>{t("Local preview", "معاينة محلية")}</span><StatusBadge status={b.status} /></div>
-                        </div>
-                        <p className={styles.bookingDates}>
-                          <span>{t("Stay", "الإقامة")}</span>
-                          <time dateTime={b.checkIn}><bdi>{formatBookingDate(b.checkIn, locale)}</bdi></time>
-                          <span aria-hidden="true">—</span>
-                          <time dateTime={b.checkOut}><bdi>{formatBookingDate(b.checkOut, locale)}</bdi></time>
-                        </p>
-                        <details>
-                          <summary>
-                            {t("View booking details", "عرض تفاصيل الحجز")}
-                          </summary>
-                          <p>
-                            {t("Traveller", "المسافر")}:{" "}
-                            {locale === "ar"
-                              ? `مسافر تجريبي ${b.id}`
-                              : b.traveller}
-                          </p>
-                          <p>
-                            {t("Agency Reference", "مرجع الوكالة")}:{" "}
-                            {b.agencyReference}
-                          </p>
-                        </details>
-                        <Link
-                          to={`/bookings/${b.id}`}
-                          className={styles.primary}
-                        >
-                          {t("Manage booking", "إدارة الحجز")}
-                        </Link>
-                      </div>
-                    }
-                  />
+                  <BookingRecordCard key={b.id} booking={b} hotel={h} eager={index === 0} />
                 ) : null;
               })}
             </div>

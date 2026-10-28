@@ -1,4 +1,5 @@
 import { hotelDisplayName } from "@/features/hotels/lib/presentation";
+import { hotelDisplayRate } from "@/features/hotels/lib/display-rate";
 import { PointsIndicator } from "./points-indicator";
 import { ResponsiveImage as Image } from "@/components/ui/responsive-image";
 import { Icon } from "@/components/ui/icon";
@@ -20,6 +21,7 @@ export function HotelCard({
 }) {
   const { t, locale } = useLocale();
   const favourites = useHotelPreferences("favourites");
+  const rate = hotelDisplayRate(hotel);
   const amenityIcons: Record<string, IconName> = {
     Pool: "pool",
     Gym: "gym",
@@ -81,9 +83,12 @@ export function HotelCard({
       </p>
       {compact ? (
         <>
-          <span className={styles.offer}>{t("Nightly rate", "السعر لليلة")}</span>
+          <span className={styles.offer}>
+            {rate.basis === "offer" ? t("Lowest available rate", "أقل سعر متاح") : t("Listed rate", "السعر المدرج")}
+          </span>
           <p className={styles.rate}>
-            <strong>${hotel.nightlyRate}</strong>{" "}
+            {rate.basis === "offer" && <>{t("From", "من")}{" "}</>}
+            <strong>${rate.amount}</strong>{" "}
             {t("USD / night", "دولار / ليلة")}
           </p>
           <p className={styles.smallCopy}>
@@ -137,7 +142,8 @@ export function HotelCard({
         </Link>
         {!compact && (
           <p className={styles.rate}>
-            <strong>${hotel.nightlyRate}</strong> {t("/ night", "/ ليلة")}
+            {rate.basis === "offer" && <>{t("From", "من")}{" "}</>}
+            <strong>${rate.amount}</strong> {t("/ night", "/ ليلة")}
           </p>
         )}
       </div>

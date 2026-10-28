@@ -7,6 +7,7 @@ import { amenityLabels } from "../data/hotels.fixture";
 import { defaultFilters } from "../lib/filter-hotels";
 import { useLocale } from "@/features/localization/locale-provider";
 import styles from "../hotels.module.css";
+import { hotelDisplayRate } from "../lib/display-rate";
 export function HotelFiltersPanel({
   value,
   onChange,
@@ -23,7 +24,7 @@ export function HotelFiltersPanel({
   const availableBoards = new Set(availableHotels.flatMap(hotel => hotelBoardPlans(hotel)));
   const cities = [...new Map(hotels.map(hotel => [hotel.city.en, hotel.city])).values()];
   const priceCeiling = Math.max(
-    ...hotels.map((hotel) => hotel.nightlyRate),
+    ...hotels.map((hotel) => hotelDisplayRate(hotel).amount),
     Number(value.minPrice) || 0,
     Number(value.maxPrice) || 0,
   );

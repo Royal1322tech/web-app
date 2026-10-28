@@ -117,7 +117,7 @@ test("booking modification updates dates, total and timeline", async ({
   await dialog.getByRole("button", { name: "Search", exact: true }).click();
   await expect(dialog).toContainText("$740.00");
   await dialog.getByRole("button", { name: "Save simulated changes" }).click();
-  await expect(page.locator(".selection-summary")).toContainText("2027-01-14");
+  await expect(page.locator(".selection-summary")).toContainText("Jan 14, 2027");
   await expect(page.locator(".selection-summary")).toContainText("$740.00");
   await expect(page.locator(".timeline")).toContainText(
     "Stay modification simulated",

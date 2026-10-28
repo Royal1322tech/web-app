@@ -14,6 +14,7 @@ import {
   useNavigation,
 } from "react-router-dom";
 import { LocaleProvider } from "@/features/localization/locale-provider";
+import { PageTitle } from "@/components/layout/page-title";
 
 function Root() {
   const { pathname } = useLocation();
@@ -78,13 +79,14 @@ export function NotFound() {
 function page(
   load: () => Promise<{ default: React.ComponentType }>,
   title: string,
+  arabicTitle?: string,
 ) {
   return async () => {
     const { default: Page } = await load();
     return {
       Component: () => (
         <>
-          <title>{`${title} | Royal Vacation`}</title>
+          <PageTitle en={title} ar={arabicTitle} />
           <Page />
         </>
       ),
@@ -100,38 +102,38 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        lazy: page(() => import("@/pages/home"), "Travel Agency Workspace"),
+        lazy: page(() => import("@/pages/home"), "Home", "الرئيسية"),
       },
       { path: "contact", lazy: async () => ({ Component: (await import("@/features/enquiries/enquiry-page")).EnquiryPage }) },
       { path: "group-quotation", lazy: async () => { const { EnquiryPage } = await import("@/features/enquiries/enquiry-page"); return { Component: () => <EnquiryPage group /> }; } },
       {
         path: "welcome",
-        lazy: page(() => import("@/pages/welcome"), "Welcome"),
+        lazy: page(() => import("@/pages/welcome"), "Welcome", "مرحبًا"),
       },
-      { path: "login", lazy: page(() => import("@/pages/login"), "Partner Sign In") },
+      { path: "login", lazy: page(() => import("@/pages/login"), "Partner Sign In", "تسجيل دخول الشركاء") },
       {
         path: "forgot-password",
-        lazy: page(() => import("@/pages/forgot-password"), "Forgot Password"),
+        lazy: page(() => import("@/pages/forgot-password"), "Forgot Password", "نسيت كلمة المرور"),
       },
       {
         path: "verify-otp",
-        lazy: page(() => import("@/pages/verify-otp"), "Verify Code"),
+        lazy: page(() => import("@/pages/verify-otp"), "Verify Code", "رمز التحقق"),
       },
       {
         path: "reset-password",
-        lazy: page(() => import("@/pages/reset-password"), "Reset Password"),
+        lazy: page(() => import("@/pages/reset-password"), "Reset Password", "إعادة تعيين كلمة المرور"),
       },
       {
         path: "search",
-        lazy: page(() => import("@/pages/search"), "Hotel Search"),
+        lazy: page(() => import("@/pages/search"), "Hotel Search", "البحث عن فنادق"),
       },
       {
         path: "favourites",
-        lazy: page(() => import("@/pages/favourites"), "Favourites"),
+        lazy: page(() => import("@/pages/favourites"), "Favourites", "المفضلة"),
       },
       {
         path: "bookings",
-        lazy: page(() => import("@/pages/bookings"), "My Bookings"),
+        lazy: page(() => import("@/pages/bookings"), "My Bookings", "حجوزاتي"),
       },
       {
         path: "hotels/:hotelId",
@@ -148,19 +150,19 @@ export const router = createBrowserRouter([
           { index: true, element: <Navigate to="company" replace /> },
           {
             path: "company",
-            lazy: page(() => import("@/pages/company"), "Company Information"),
+            lazy: page(() => import("@/pages/company"), "Company Information", "Company Information"),
           },
           {
             path: "contact",
-            lazy: page(() => import("@/pages/contact"), "Contact Information"),
+            lazy: page(() => import("@/pages/contact"), "Contact Information", "Contact Information"),
           },
           {
             path: "documents",
-            lazy: page(() => import("@/pages/documents"), "Upload Documents"),
+            lazy: page(() => import("@/pages/documents"), "Upload Documents", "Upload Documents"),
           },
           {
             path: "review",
-            lazy: page(() => import("@/pages/review"), "Review & Submit"),
+            lazy: page(() => import("@/pages/review"), "Review & Submit", "Review & Submit"),
           },
         ],
       },
@@ -278,7 +280,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "car-rental",
-        lazy: page(() => import("@/pages/car-rental"), "Car Rental"),
+        lazy: page(() => import("@/pages/car-rental"), "Car Rental", "تأجير السيارات"),
       },
       {
         path: "car-rental/search",

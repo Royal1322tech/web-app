@@ -24,7 +24,7 @@ test("hotel result keeps Compare and provides a validated, honest Reduce Price r
   const dialog = page.getByRole("dialog", { name: "Request a Better Price" });
   await expect(dialog).toBeVisible();
   await expect(dialog).toContainText("Royal Azure Resort");
-  await expect(dialog).toContainText("2030-11-20");
+  await expect(dialog).toContainText("Nov 20, 2030");
   await expect(dialog).toContainText("$92.00");
   await expect(dialog.getByLabel(/Agency name/)).toHaveValue("Horizon Travel — Demo Agency");
   await expect(dialog.getByLabel(/Agent name/)).toHaveValue("Alex Morgan");

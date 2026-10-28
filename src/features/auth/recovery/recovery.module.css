@@ -26,7 +26,7 @@
   margin-top: 32px;
 }
 .help {
-  color: #007f93;
+  color: var(--brand-teal);
   text-decoration: underline;
   font-size: 14px;
   margin-top: -8px;
@@ -62,7 +62,7 @@
   border-color: var(--error);
 }
 .content :is(input, select, button, a):focus-visible {
-  outline: 3px solid #007f93;
+  outline: 3px solid var(--brand-teal);
   outline-offset: 3px;
 }
 @media (max-width: 800px) {

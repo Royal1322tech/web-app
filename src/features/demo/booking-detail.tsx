@@ -13,6 +13,7 @@ import { HotelSearchForm } from "@/features/home/components/hotel-search-form";
 import type { HotelSearchCriteria } from "@/features/home/schemas/hotel-search.schema";
 import { SystemState, StatePreview } from "@/components/ui/system-state";
 import { useDemo, totalFor } from "./demo-provider";
+import { formatDateTime } from "@/lib/format-date";
 import {
   Workspace,
   StatusBadge,
@@ -32,10 +33,7 @@ function CancellationReview({
   t: (english: string, arabic?: string) => string;
 }) {
   const policy = booking.cancellationPolicySnapshot;
-  const formatDeadline = (value: string) => {
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? value : date.toLocaleString(locale);
-  };
+  const formatDeadline = (value: string) => formatDateTime(value, locale);
 
   return (
     <section className="cancellation-review" aria-label={t("Cancellation review", "مراجعة الإلغاء")}>
@@ -186,7 +184,7 @@ export function BookingDetailPage() {
                       <li key={`${item.at}-${i}`}>
                         <strong>{t(item.label)}</strong>
                         <time dateTime={item.at}>
-                          {new Date(item.at).toLocaleString(locale)}
+                          {formatDateTime(item.at, locale)}
                         </time>
                       </li>
                     ))}

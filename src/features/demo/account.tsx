@@ -13,7 +13,7 @@ export function AgencyPage() {
   const { t } = useLocale();
   const { profile, records, notifications } = useDemo();
   return (
-    <Workspace title={t("Your agency, connected.", "وكالتك، في مكان واحد.")}>
+    <Workspace title={t("Agency Profile", "ملف الوكالة")}>
 
       <StatePreview>
         <div className="workspace-grid">

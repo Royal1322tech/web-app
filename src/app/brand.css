@@ -111,7 +111,42 @@
 .button--danger {
   color: var(--error);
   background: var(--error-bg);
-  border-color: #eac6ce;
+  border-color: color-mix(in srgb, var(--error) 22%, var(--border));
+}
+.button--danger:hover {
+  border-color: var(--error);
+}
+/* Ghost: a quiet secondary action with no fill until hover. */
+.button--ghost {
+  color: var(--primary);
+  background: transparent;
+  border-color: transparent;
+}
+.button--ghost:hover {
+  background: var(--subtle);
+  border-color: var(--border);
+  box-shadow: none;
+}
+/* Sizes. Medium is the default .button size (48px). */
+.button--sm {
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: var(--rounded-md);
+  font-size: var(--font-size-md);
+}
+.button--lg {
+  min-height: 56px;
+  padding: 14px 32px;
+  font-size: var(--font-size-lg);
+}
+.button svg {
+  flex-shrink: 0;
+}
+/* Loading: keeps the label for screen readers and blocks repeat activation. */
+.button[aria-busy="true"] {
+  cursor: progress;
+  opacity: 0.75;
+  pointer-events: none;
 }
 .reveal-enter {
   animation: rise-in 0.75s var(--ease) both;

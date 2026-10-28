@@ -14,6 +14,7 @@ import { boardPlanLabels, hotelBoardPlans } from "../lib/board-plans";
 import { RoomOptions } from "./room-options";
 import { HotelRating } from "./hotel-rating";
 import { ReducePriceRequest } from "./reduce-price-request";
+import { hotelDisplayRate } from "../lib/display-rate";
 
 import styles from "../hotels.module.css";
 
@@ -63,6 +64,7 @@ export function HotelResultCard({
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const listing = hotels.find((item) => item.id === hotel.id);
+  const rate = hotelDisplayRate(hotel);
   const href =
     hotel.detailsHref ?? ("city" in hotel ? `/hotels/${hotel.id}` : undefined);
   return (
@@ -129,7 +131,8 @@ export function HotelResultCard({
           </div>
           <div className={styles.cardActions}>
             <strong className={styles.rate}>
-              <bdi>${hotel.nightlyRate}</bdi>
+              {rate.basis === "offer" && <small className={styles.ratePrefix}>{t("From", "من")}</small>}
+              <bdi>${rate.amount}</bdi>
             </strong>
             <div className={styles.cardActionButtons}>
               {favourite && (
@@ -164,10 +167,9 @@ export function HotelResultCard({
                       : t("Room only", "غرفة فقط")}
                   </p>
                   <small>
-                    {t(
-                      "Rate per night · USD",
-                      "السعر لليلة · دولار",
-                    )}
+                    {rate.basis === "offer"
+                      ? t("Lowest available rate per night · USD", "أقل سعر متاح لليلة · دولار")
+                      : t("Listed rate per night · USD", "السعر المدرج لليلة · دولار")}
                   </small>
                 </>
               )}

@@ -50,7 +50,7 @@
 .check { display: inline-flex; align-items: center; border-radius: 50%; background: #fff3e3; }
 .check svg { stroke-dasharray: 30; stroke-dashoffset: 0; }
 .route { position: absolute; inset-inline: 8px; bottom: 4px; width: calc(100% - 16px); height: 20px; }
-.route path { fill: none; stroke: #ffd59e; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 1; }
+.route path { fill: none; stroke: var(--light-gold); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 1; }
 .visual {
   position: relative;
   align-self: center;
@@ -85,7 +85,7 @@
   border-radius: 12px;
   background: #ffffffdf;
   backdrop-filter: blur(10px);
-  color: #0b2545;
+  color: var(--navy);
   box-shadow: 0 5px 20px #0b254510;
   font-size: 13px;
   font-weight: 700;

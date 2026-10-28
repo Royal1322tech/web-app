@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLocale } from '@/features/localization/locale-provider';
 import { Workspace } from './shared';
 import { demoPoints, pointsSummary } from './points-data';
+import { formatCalendarDate } from '@/lib/format-date';
 
 export function PointsPage() {
   const { locale, t } = useLocale();
@@ -26,7 +27,7 @@ export function PointsPage() {
         <div className="points-filter-field"><label htmlFor="points-type">{t('Transaction type', 'نوع المعاملة')}</label><select id="points-type" className="input" value={filter} onChange={e => { setFilter(e.target.value); setPage(0); }}><option value="all">{t('All types', 'كل الأنواع')}</option>{Object.entries(types).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>
       </div>
       {!filtered.length ? <p role="status">{t('No points activity matches your filters.', 'لا يوجد نشاط نقاط يطابق عوامل التصفية.')}</p> : <ul className="points-list">{filtered.slice(page * 4, page * 4 + 4).map(entry => <li key={entry.id}>
-        <div><h3>{entry.description[locale]}</h3><p><time dateTime={entry.date}>{entry.date}</time> · <bdi>{entry.id}</bdi></p></div>
+        <div><h3>{entry.description[locale]}</h3><p><time dateTime={entry.date}>{formatCalendarDate(entry.date, locale)}</time> · <bdi>{entry.id}</bdi></p></div>
         <div><span>{types[entry.type]}</span><p>{entry.status === 'pending' ? t('Pending', 'معلق') : t('Posted', 'مسجل')}</p></div>
         <strong className={entry.change > 0 ? 'points-positive' : ''}><bdi>{entry.change > 0 ? '+' : ''}{number(entry.change)}</bdi> <small>{t('pts', 'نقطة')}</small></strong>
       </li>)}</ul>}

@@ -24,7 +24,7 @@
 .shell p {
   margin-block: 8px;
 }
-.shell a {
+.shell a:where(:not(:global(.button))) {
   color: var(--brand);
 }
 .shell button,
@@ -67,28 +67,55 @@
   height: 20px;
   flex-shrink: 0;
 }
+/*
+ * Catalog buttons: the compact size of the shared button system (see .button in globals.css and
+ * brand.css). Same tokens for colour, radius, weight and states; kept as module classes so the
+ * many catalog call sites need no markup changes.
+ */
 .shell .primary,
 .shell .secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 42px;
   padding: 8px 18px;
-  border-radius: 8px;
+  border: 1px solid transparent;
+  border-radius: var(--rounded-md);
   text-decoration: none;
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   line-height: 1.4;
+  transition:
+    background-color var(--duration-fast) ease,
+    border-color var(--duration-fast) ease,
+    box-shadow var(--duration-fast) ease;
 }
 .shell .primary {
-  background: var(--brand);
-  color: white;
-  border: 1px solid var(--brand);
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
 }
 .shell .secondary {
-  background: white;
-  color: var(--brand);
-  border: 1px solid #9ac6d1;
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--primary);
+}
+.shell .primary:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+.shell .secondary:hover {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+  background: var(--subtle);
+}
+.shell .primary:active,
+.shell .secondary:active {
+  box-shadow: inset 0 2px 4px #0b254526;
+}
+.shell .primary:disabled,
+.shell .secondary:disabled {
+  opacity: 0.55;
+  box-shadow: none;
 }
 .skip {
   position: absolute;
@@ -214,6 +241,13 @@
 }
 .cover {
   position: relative;
+}
+/* The visible circle stays 36px; the pseudo-element extends the touch target to 44px. */
+.heart::before {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  content: "";
 }
 .heart {
   position: absolute;
@@ -667,8 +701,9 @@
 }
 
 @media (min-width: 1000px) {
+  /* Four fields (no destination on a hotel page) plus the Search button on one row. */
   .roomSearch form {
-    grid-template-columns: 1fr 1fr 1.15fr auto;
+    grid-template-columns: 1fr 1fr 1fr 1.15fr auto;
   }
   .detailIntro {
     grid-template-columns: minmax(0, 1fr) 380px;
@@ -1214,10 +1249,6 @@
   border-radius: 6px;
   padding: 8px 12px;
 }
-.shell .primary:hover {
-  background: #00697a;
-}
-.shell .secondary:hover,
 .closeDialog:hover {
   background: #edf7f9;
 }
@@ -1307,19 +1338,10 @@
   font-weight: 800;
 }
 .shell h2 {
-  font-weight: 750;
+  font-weight: 700;
 }
-.shell a {
+.shell a:where(:not(:global(.button))) {
   color: var(--royal);
-}
-.shell .primary {
-  background: var(--royal);
-  border-color: var(--royal);
-  color: #fff;
-}
-.shell .secondary {
-  color: var(--royal);
-  border-color: var(--border);
 }
 .resultCard {
   border-color: var(--border);
@@ -1331,11 +1353,18 @@
     transform 0.25s;
 }
 .hotelName {
-  font-weight: 750 !important;
+  font-weight: 700 !important;
 }
 .rate {
   color: var(--navy);
   font-weight: 800;
+}
+/* "From" marks a price taken from the lowest available offer. */
+.ratePrefix {
+  margin-inline-end: 4px;
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--weight-semibold);
 }
 .preview {
   background: var(--subtle);
@@ -1415,16 +1444,16 @@
 .sidebar .check { min-height: 44px; }
 .sidebar .unsupported { display: block; font-size: 13px; color: #536579; line-height: 1.5; }
 .starFilters label { min-height: 44px; padding: 6px; border: 1px solid #dfe3e7; border-radius: 8px; }
-.starFilters label:has(:checked) { background: #e6f5f2; border-color: #007f93; color: #00697a; }
+.starFilters label:has(:checked) { background: #e6f5f2; border-color: var(--brand-teal); color: var(--brand-teal-dark); }
 
 .hotelRating { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; margin-block:8px; font-size:12px; }
 .starClassification,.reviewScore { display:inline-flex; align-items:center; gap:5px; }
 .starClassification > span { color:#9a6a14; letter-spacing:1px; font-size:15px; }
 .hotelRating small { color:#536579; font-size:11px; }
-.reviewScore { color:var(--navy); font-weight:750; }
+.reviewScore { color:var(--navy); font-weight:700; }
 .reviewScore svg { width:15px; height:15px; color:#9a6a14; fill:#9a6a14; }
 .unrated { color:#66768a; }
-.demoInventory { display:inline-flex; width:max-content; align-items:center; min-height:24px; padding:3px 8px; border:1px solid #b8d9dc; border-radius:999px; color:#075e68; background:#edf8f7; font-size:11px; font-weight:700; }
+.demoInventory { display:inline-flex; width:max-content; align-items:center; min-height:24px; padding:3px 8px; border:1px solid var(--demo-border); border-radius:var(--rounded-pill); color:var(--demo-fg); background:var(--demo-bg); font-size:11px; font-weight:700; }
 .boardBadges { display:flex; flex-wrap:wrap; gap:5px; margin:8px 0; padding:0; list-style:none; }
 .boardBadges li { padding:3px 7px; border:1px solid #d8e4e8; border-radius:999px; color:#36536b; background:#f6f9fa; font-size:11px; }
 .bookingCard { padding:12px; }
@@ -1444,7 +1473,7 @@
 .bookingDates { display:flex; flex-wrap:wrap; align-items:baseline; gap:5px; margin:0; }
 .bookingDates > span:first-child { margin-inline-end:4px; color:#536579; }
 .bookingMetadata details { font-size:13px; }
-.bookingMetadata summary { width:max-content; min-height:36px; cursor:pointer; color:var(--royal); font-weight:650; }
+.bookingMetadata summary { width:max-content; min-height:36px; cursor:pointer; color:var(--royal); font-weight:600; }
 .bookingMetadata .primary { width:max-content; min-height:40px; padding:8px 14px; }
 @media(max-width:599px) {
   .bookingCard .cardFooter { grid-template-columns:minmax(0,1fr); }
@@ -1478,7 +1507,7 @@
 
 /* Shared compact filter surfaces for hotel and booking discovery. */
 .sidebar { padding: 20px; border: 1px solid #dce5ed; box-shadow: 0 8px 28px #06274708; }
-.sidebar h2 { margin: 0 0 18px; padding-bottom: 14px; border-bottom: 2px solid #d9ecec; font-weight: 650; }
+.sidebar h2 { margin: 0 0 18px; padding-bottom: 14px; border-bottom: 2px solid #d9ecec; font-weight: 600; }
 .sidebar details { margin: 0; padding: 12px 0; border-bottom: 1px solid #e5ebf0; }
 .sidebar summary { min-height: 32px; margin: 0 0 6px; gap: 12px; cursor: pointer; font-weight: 600; }
 .sidebar summary::after { content: ''; width: 8px; height: 8px; flex: 0 0 8px; border-right: 1.8px solid currentColor; border-bottom: 1.8px solid currentColor; transform: rotate(45deg); margin-inline-end: 4px; transition: transform .2s; }
@@ -1493,10 +1522,11 @@
 
 .cardActionButtons { display:grid; grid-template-columns:minmax(0, 1fr); justify-items:stretch; gap:8px; }
 .cardActionButtons > :is(button, a) { width:100%; }
-.reducePriceButton { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:42px; padding:8px 14px; border:1px solid #c9ad66; border-radius:8px; background:#fffaf0; color:#735414; font:inherit; font-weight:650; line-height:1.35; cursor:pointer; transition:background .16s, border-color .16s, color .16s; }
+/* A secondary, ghost-style action: available but visually quieter than View Rooms. */
+.reducePriceButton { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:42px; padding:8px 14px; border:1px solid transparent; border-radius:var(--rounded-sm); background:transparent; color:var(--primary); font:inherit; font-weight:var(--weight-semibold); line-height:1.35; cursor:pointer; transition:background var(--duration-fast), border-color var(--duration-fast), color var(--duration-fast); }
 .reducePriceButton svg { width:18px; height:18px; }
-.reducePriceButton:hover { border-color:#a9832c; background:#fff3d4; color:#5d420b; }
-.reducePriceButton:active { background:#f7e7bd; }
+.reducePriceButton:hover { border-color:var(--border); background:var(--subtle); }
+.reducePriceButton:active { background:color-mix(in srgb, var(--primary) 10%, var(--subtle)); }
 .reducePriceDialog { width:min(760px, calc(100vw - 24px)); max-width:none; max-height:min(90dvh, 900px); margin:auto; padding:0; overflow:auto; border:1px solid #d8e3e9; border-radius:18px; background:#fff; color:#142c49; box-shadow:0 24px 80px #091e3652; }
 .reducePriceDialog::backdrop { background:#091e367a; }
 .reducePriceHeader { position:sticky; top:0; z-index:1; display:flex; align-items:flex-start; justify-content:space-between; gap:18px; padding:22px 24px 16px; border-bottom:1px solid #e3ebef; background:#fff; }
@@ -1518,7 +1548,7 @@
 .requestInfo dl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 20px; margin:0; }
 .requestInfo dl > div { min-width:0; }
 .requestInfo dt { color:#64758a; font-size:12px; }
-.requestInfo dd { margin:2px 0 0; color:#172f4c; font-size:14px; font-weight:650; overflow-wrap:anywhere; }
+.requestInfo dd { margin:2px 0 0; color:#172f4c; font-size:14px; font-weight:600; overflow-wrap:anywhere; }
 .requestDisclosure { margin:0; padding-inline-start:12px; border-inline-start:3px solid #d2b35c; color:#526579; font-size:13px; line-height:1.5; }
 .requestUnavailable { margin:0; padding:11px 13px; border:1px solid #d8e3e9; border-radius:8px; background:#f4f8fa; color:#354f65; font-size:14px; line-height:1.5; }
 .requestActions { display:flex; justify-content:flex-end; gap:10px; padding-top:14px; border-top:1px solid #e7edf0; }
@@ -1598,26 +1628,6 @@
   padding-inline: 22px;
   border-radius: var(--rounded-md);
 }
-.shell .primary,
-.shell .secondary {
-  border-radius: var(--rounded-md);
-  transition:
-    background-color var(--duration-fast) ease,
-    border-color var(--duration-fast) ease,
-    box-shadow var(--duration-fast) ease;
-}
-.shell .primary:hover {
-  background: var(--primary-hover);
-  border-color: var(--primary-hover);
-}
-.shell .secondary:hover {
-  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
-  background: var(--subtle);
-}
-.shell .primary:active,
-.shell .secondary:active {
-  box-shadow: inset 0 2px 4px #0b254526;
-}
 
 /* Room options: separate cards on a quiet panel instead of white-on-white rows. */
 .roomOptions {
@@ -1659,9 +1669,16 @@
 
 /* Batch C: standalone navigation links and disclosures meet the 24px target size. */
 .breadcrumb a {
+  position: relative;
   display: inline-flex;
   align-items: center;
   min-height: 24px;
+}
+/* Extends the touch target to 44px tall without changing the breadcrumb's spacing. */
+.breadcrumb a::after {
+  position: absolute;
+  inset: -10px -4px;
+  content: "";
 }
 .shell summary {
   padding-block: 3px;
@@ -1670,4 +1687,29 @@
 /* Batch D: intermediate breadcrumb links share the breadcrumb's spacing. */
 .crumb {
   display: contents;
+}
+
+/* Property facts that have not been supplied are summarised in one line instead of empty rows. */
+.factsNote {
+  margin: var(--space-3) 0 0;
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-body);
+}
+
+/* Related hotels: equal-height cards with a consistent image ratio and the action aligned at the bottom. */
+.recommendation {
+  display: flex;
+  flex-direction: column;
+}
+.recommendation > img {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+.recommendation > :last-child {
+  align-self: flex-start;
+  margin-top: auto;
+}
+.recommendation > p:last-of-type {
+  margin-bottom: var(--space-3);
 }

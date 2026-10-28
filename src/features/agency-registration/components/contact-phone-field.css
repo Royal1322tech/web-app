@@ -8,8 +8,8 @@
 .phone-country-options { display: grid; gap: 4px; margin-top: 8px; }
 .phone-country-options button { display: flex; align-items: center; gap: 8px; padding: 10px 8px; min-height: 44px; width: 100%; border: 0; border-radius: 8px; background: white; color: #142c49; text-align: start; font-size: 14px; }
 .phone-country-options button span { flex: 1; }
-.phone-country-options button:hover, .phone-country-options button[aria-pressed="true"] { background: #e6f5f2; color: #00697a; }
-.international-phone :is(button, input):focus-visible { outline: 2px solid #007f93; outline-offset: 2px; }
+.phone-country-options button:hover, .phone-country-options button[aria-pressed="true"] { background: #e6f5f2; color: var(--brand-teal-dark); }
+.international-phone :is(button, input):focus-visible { outline: 2px solid var(--brand-teal); outline-offset: 2px; }
 @media (max-width: 599px) {
   .phone-country-panel { width: auto; max-width: calc(100vw - 32px); }
 }

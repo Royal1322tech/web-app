@@ -1,5 +1,6 @@
 import { hotelBoardPlans } from "./board-plans";
 import type { HotelFilters, HotelListing, HotelSort } from "../types";
+import { hotelDisplayRate } from "./display-rate";
 export const defaultFilters: HotelFilters = {
   name: "",
   luxury: false,
@@ -38,16 +39,16 @@ export function filterHotels(
             p === "business" ? h.business : h.luxury,
           )) &&
         filters.amenities.every((a) => h.amenities.includes(a)) &&
-        (!filters.minPrice || h.nightlyRate >= Number(filters.minPrice)) &&
-        (!filters.maxPrice || h.nightlyRate <= Number(filters.maxPrice)) &&
+        (!filters.minPrice || hotelDisplayRate(h).amount >= Number(filters.minPrice)) &&
+        (!filters.maxPrice || hotelDisplayRate(h).amount <= Number(filters.maxPrice)) &&
         (filters.packaging === "all" ||
           h.package === (filters.packaging === "with")),
     )
     .sort((a, b) =>
       sort === "priceLow"
-        ? a.nightlyRate - b.nightlyRate
+        ? hotelDisplayRate(a).amount - hotelDisplayRate(b).amount
         : sort === "priceHigh"
-          ? b.nightlyRate - a.nightlyRate
+          ? hotelDisplayRate(b).amount - hotelDisplayRate(a).amount
           : sort === "rating"
             ? (b.reviewScore ?? 0) - (a.reviewScore ?? 0)
             : 0,

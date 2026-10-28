@@ -7,6 +7,7 @@ import { savedHotelCatalog } from "@/features/preferences/saved-hotel-catalog";
 import { amenityLabels, hotels } from '../data/hotels.fixture';
 import { ResponsiveImage } from '@/components/ui/responsive-image';
 import styles from "../hotels.module.css";
+import { hotelDisplayRate } from '../lib/display-rate';
 export function Comparison() {
   const { ids, clear, toggle } = useHotelPreferences("comparison");
   const { locale, t } = useLocale();
@@ -27,7 +28,7 @@ export function Comparison() {
           <ResponsiveImage src={h.photos[0].src} alt={hotelDisplayName(h.name[locale])} width={h.photos[0].width} height={h.photos[0].height} sizes="(max-width: 600px) 90vw, 340px" />
           <div className={styles.comparisonIdentity}><h3>{hotelDisplayName(h.name[locale])}</h3><p>{hotelDisplayAddress(h.address[locale], locale)}</p>{h.inventoryType === "demo" && <span className={styles.demoInventory}>{t("Demo inventory", "بيانات تجريبية")}</span>}</div>
           <dl>
-            <div><dt>{t('Nightly price (USD)', 'السعر لليلة (دولار)')}</dt><dd><bdi>{new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD' }).format(h.nightlyRate)}</bdi></dd></div>
+            <div><dt>{t('Nightly price (USD)', 'السعر لليلة (دولار)')}</dt><dd><bdi>{new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD' }).format(hotelDisplayRate(h).amount)}</bdi></dd></div>
             <div><dt>{t('Stars', 'النجوم')}</dt><dd>{h.stars ?? t('Not specified', 'غير محدد')}</dd></div>
             <div><dt>{t('Review score / 5', 'تقييم النزلاء / ٥')}</dt><dd>{h.reviewScore && h.reviewScore > 0 ? <bdi>{h.reviewScore} / 5</bdi> : t('Not rated', 'غير مُقيّم')}</dd></div>
             <div><dt>{t('Breakfast', 'الإفطار')}</dt><dd>{h.breakfast === undefined ? t('Not specified', 'غير محدد') : h.breakfast ? t('Included', 'مشمول') : t('Not included', 'غير مشمول')}</dd></div>

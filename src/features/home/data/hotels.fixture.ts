@@ -2,6 +2,8 @@ import { hotels } from "@/features/hotels/data/hotels.fixture";
 import type { Hotel } from "../types";
 
 // Design-preview fixtures only. These are not live rates, ratings, or availability.
+// Each sample uses a different existing home photograph so the collection does not repeat one image.
+const collectionImages = ["/images/home/hotel-resort.png", "/images/home/hotel-lobby.png", "/images/home/hotel-pool.png"] as const;
 export const collectionHotels: readonly Hotel[] = [
   "Alexandria",
   "Cairo",
@@ -12,7 +14,7 @@ export const collectionHotels: readonly Hotel[] = [
   name: "Golden Rose Hotel",
   city,
   address: `${city}, Egypt`,
-  image: "/images/home/hotel-resort.png",
+  image: collectionImages[index],
   nightlyRate: 116,
   currency: "USD",
   rating: 4.5,

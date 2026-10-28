@@ -49,10 +49,6 @@
 .hotel-location__actions .button {
   width: 100%;
 }
-/* Outranks the hotel page's generic link colour. */
-.hotel-location .hotel-location__actions a.button--primary {
-  color: var(--on-primary);
-}
 .hotel-location__actions .button svg {
   width: 18px;
   height: 18px;
