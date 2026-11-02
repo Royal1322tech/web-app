@@ -2,13 +2,17 @@
 .section h2 { font-size:clamp(25px,2.6vw,34px); font-weight:800; text-align:center; }
 .section h2 span { color:#986023; }
 .intro { max-width:800px; color:var(--muted); margin:14px auto 36px; line-height:1.7; text-align:center; font-size:15px; }
-.services { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:26px; }
+.services { display:flex; flex-wrap:wrap; justify-content:center; gap:22px; }
+.services > article { flex:0 1 calc((100% - 66px) / 4); min-width:0; }
 .services article { padding:10px; border:1px solid var(--border); border-radius:var(--rounded-xl); background:var(--surface); display:flex; flex-direction:column; }
-.services article > img { width:100%; aspect-ratio:1.65; object-fit:cover; border-radius:var(--rounded-lg); }
+.serviceImage { position:relative; overflow:hidden; aspect-ratio:1.65; border-radius:var(--rounded-lg); background:var(--subtle); }
+.serviceImage img { display:block; width:100%; height:100%; object-fit:cover; }
+/* A status label, not an action: these services have no booking or enquiry flow yet. */
+.comingSoon { position:absolute; inset-block-start:10px; inset-inline-start:10px; padding:4px 12px; border-radius:var(--rounded-pill); background:var(--navy); color:var(--light-gold); font-size:12px; font-weight:var(--weight-bold); }
 /* The four public services form one balanced row instead of three plus an orphan. */
-.servicesFour { grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px; }
+.servicesFour { gap:20px; }
+.servicesFour > article { flex-basis:calc((100% - 60px) / 4); }
 .servicesFour h3 { font-size:16px; }
-.services article:nth-child(4) > img,.services article:nth-child(6) > img { object-position:right; }
 .body { padding:12px 2px 0; display:flex; flex-direction:column; flex:1; }
 .serviceTitle { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
 .serviceIcon { flex:0 0 30px; width:30px; height:30px; display:grid; place-items:center; background:#986023; color:white; border-radius:50%; }
@@ -23,5 +27,5 @@
 .strengthIcon svg { width:24px; height:24px; }
 .strengths h3 { margin:8px 0 12px; min-height:50px; }
 @media(hover:hover) and (prefers-reduced-motion:no-preference) { .services article,.strengths article { transition:transform 220ms ease,box-shadow 220ms ease; } .services article:hover,.strengths article:hover { transform:translateY(-3px); box-shadow:var(--shadow); } }
-@media(max-width:999px) { .services,.strengths { grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px; } .strengths { row-gap:48px; } }
-@media(max-width:599px) { .section { width:calc(100% - 32px); margin-block:48px; } .services,.strengths { grid-template-columns:minmax(0,1fr); } .services { max-width:380px; margin-inline:auto; } .strengths h3 { min-height:0; } .intro { font-size:14px; } }
+@media(max-width:999px) { .strengths { grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px; row-gap:48px; } .services,.servicesFour { gap:22px; } .services > article,.servicesFour > article { flex-basis:calc(50% - 11px); } }
+@media(max-width:599px) { .section { width:calc(100% - 32px); margin-block:48px; } .strengths { grid-template-columns:minmax(0,1fr); } .services > article,.servicesFour > article { flex-basis:100%; } .services { max-width:380px; margin-inline:auto; } .strengths h3 { min-height:0; } .intro { font-size:14px; } }

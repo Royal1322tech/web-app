@@ -9,28 +9,7 @@ for (const width of [375, 1440])
   }) => {
     await page.setViewportSize({ width, height: 950 });
     await visit(page, "/");
-    await page.locator("#destination").selectOption("Alexandria");
-    const carTab = page.getByRole("tab", { name: "Car Rental", exact: true });
-    await carTab.click();
-    await expect(carTab).toHaveAttribute("aria-selected", "true");
-    await expect(
-      page.getByRole("heading", {
-        name: "Explore Car Rentals",
-        exact: true,
-      }),
-    ).toBeVisible();
-    await expect(page.locator("#hotels-panel")).toBeHidden();
-    await carTab.focus();
-    await page.keyboard.press("Home");
-    await expect(
-      page.getByRole("tab", { name: "Hotels", exact: true }),
-    ).toBeFocused();
-    await expect(page.locator("#destination")).toHaveValue("Alexandria");
-    await page.keyboard.press("End");
-    await expect(carTab).toBeFocused();
-    await page
-      .getByRole("link", { name: "Explore Car Rental", exact: true })
-      .click();
+    await page.locator("#hotel-search").getByRole("link", { name: "Car Rental", exact: true }).click();
     await expect(page).toHaveURL(/\/car-rental$/);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
       "Car Rental for your clients",

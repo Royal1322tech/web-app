@@ -15,7 +15,7 @@ type LocationState =
   | { status: "ready"; point: GeoPoint };
 
 /** Keeps a map failure (script, tiles setup) from breaking Hotel Details. */
-class MapBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
+export class MapBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() {
     return { failed: true };

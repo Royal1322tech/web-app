@@ -65,7 +65,7 @@ export function WelcomeScreen() {
           ))}
         </div>
         <div className="welcome-flight"><BrandLogo variant="auth" /></div>
-        <h1>{t("Welcome to Royal Vacation", "مرحبًا بكم في رويال فاكيشن")}</h1>
+        <h1>{t("Your Journey Starts Here", "رحلتك تبدأ من هنا")}</h1>
         <p className="welcome-subtitle">
           {t("Your gateway to seamless travel partnerships.", "بوابتك إلى شراكات سفر سلسة.")}
         </p>

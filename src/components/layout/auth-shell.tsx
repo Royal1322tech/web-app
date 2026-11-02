@@ -26,21 +26,23 @@ export function AuthShell({
       <div className="auth-panel">
         <Image
           src={
-            isLogin ? "/images/login-travel.png" : "/images/welcome-travel.png"
+            isLogin ? "/images/login-travel.png" : "/images/welcome/resort-aerial.jpg"
           }
           alt={
             language === "ar"
-              ? "شرفة مشمسة تطل على البحر. اكتشف المزيد، وجهتك القادمة بانتظارك."
+              ? isLogin
+                ? "شرفة مشمسة تطل على البحر. اكتشف المزيد، وجهتك القادمة بانتظارك."
+                : "منظر جوي لمنتجع ساحلي بمسبح لا متناهٍ يطل على البحر"
               : isLogin
                 ? "Explore more. Your next destination awaits. A sunlit terrace overlooking the sea."
-                : "A sunlit poolside terrace overlooking the Mediterranean Sea"
+                : "Aerial view of a coastal resort with an infinity pool overlooking the sea"
           }
-          width={isLogin ? 667 : 565}
-          height={isLogin ? 855 : 966}
+          width={isLogin ? 667 : 1600}
+          height={isLogin ? 855 : 1067}
           sizes={
             isLogin
               ? "(max-width: 640px) 1px, (max-width: 1100px) 45vw, 560px"
-              : "(max-width: 800px) 100vw, (max-width: 1264px) 40vw, 470px"
+              : "(max-width: 800px) 100vw, 1440px"
           }
           eager
           className="travel-image"

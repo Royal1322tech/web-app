@@ -25,6 +25,8 @@ export interface InvoiceRecord {
   subtotalMinor: number;
   taxAndFeesMinor?: number;
   totalMinor: number;
+  /** Authoritative cancellation amounts, when supplied. Never derived from policy text. */
+  cancellation?: { chargeMinor?: number; refundMinor?: number };
 }
 export interface AccountingPaymentReview {
   status: AccountingReviewStatus;

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import type { RegistrationValues } from "../schemas/registration.schema";
 import { CompanyLocationFields } from "./company-location-fields";
+import { CompanyLogoField } from "./company-logo-field";
 import { RegistrationField } from "./registration-field";
 import { RegistrationProgress } from "./registration-progress";
 import { RegistrationSection } from "./registration-section";
@@ -74,6 +75,7 @@ export function CompanyInformationForm() {
             icon="pin"
             autoComplete="street-address"
           />
+          <CompanyLogoField />
         </RegistrationSection>
         <div className="registration-actions registration-actions--next">
           <Button type="submit" disabled={isValidating}>

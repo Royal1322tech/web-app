@@ -129,6 +129,11 @@ export const arabicMessages: Record<string, string> = {
   // Agency registration: location, ID document and business type validation.
   "Enter your company country.": "اختر دولة الشركة.",
   "Select your company city.": "اختر مدينة الشركة.",
+  "Company logo is required.": "شعار الشركة مطلوب.",
+  "Unsupported file type. Upload a PNG, JPG or WEBP image.": "نوع الملف غير مدعوم. ارفع صورة PNG أو JPG أو WEBP.",
+  "This file is larger than 2MB. Upload a smaller logo.": "حجم هذا الملف أكبر من 2 ميجابايت. ارفع شعارًا أصغر.",
+  "This file is empty. Select a different logo.": "هذا الملف فارغ. اختر شعارًا آخر.",
+  "This file is not a valid image. Upload a PNG, JPG or WEBP image.": "هذا الملف ليس صورة صالحة. ارفع صورة PNG أو JPG أو WEBP.",
   "Select a city in the selected country.": "اختر مدينة ضمن الدولة المحددة.",
   "Select your ID document.": "أرفق مستند الهوية.",
   "Select a valid file.": "اختر ملفًا صالحًا.",

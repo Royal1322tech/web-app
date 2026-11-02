@@ -350,20 +350,9 @@
 .rental-integrated-search { position: relative; margin: -34px 24px 0; z-index: 2; border-radius: 12px; box-shadow: 0 10px 30px #06274718; background: white; border: 1px solid #dfe7ee; overflow: hidden; }
 .rental-integrated-search .rental-criteria { border: 0; box-shadow: none; border-radius: 0; padding: 20px; }
 .rental-integrated-search .workspace-fields { grid-template-columns: repeat(4,minmax(0,1fr)); gap: 14px; }
-.rental-integrated-search .rental-criteria > button { justify-self: end; background: #ad782f; }
-.rental-service-switch { display: flex; gap: 0; border-bottom: 1px solid #e2e9ef; background: #f8fafc; }
-.rental-service-switch button { display: flex; gap: 9px; align-items: center; padding: 16px 24px; min-height: 52px; background: transparent; border: 0; border-bottom: 3px solid transparent; color: #536579; font-weight: 600; font-size: 14px; cursor: pointer; }
-.rental-service-switch button[aria-pressed=true] { color: #082a4c; border-bottom-color: #b68136; background: white; }
-.rental-service-switch svg { width: 21px; height: 21px; }
-.rental-chauffeur-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 24px; }
-.rental-chauffeur-choices h2 { font-size: 26px; }
-.rental-chauffeur-choices p { font-size: 14px; line-height: 1.7; color: #536579; }
-.rental-chauffeur-choices nav { display: grid; gap: 10px; }
-.rental-chauffeur-choices nav a { display: flex; align-items: center; gap: 12px; background: #f6f9fc; border: 1px solid #e0e8ee; padding: 14px; border-radius: 9px; text-decoration: none; color: #082a4c; }
-.rental-chauffeur-choices nav a > svg { width: 22px; height: 22px; color: #946719; }
-.rental-chauffeur-choices nav a > svg:last-child { margin-inline-start: auto; width: 18px; }
-.rental-chauffeur-choices nav span { display: grid; gap: 5px; }
-.rental-chauffeur-choices nav small { color: #536579; }
+/* The smallest darkening of the gold that gives white text AA contrast (4.53:1). */
+.rental-integrated-search .rental-criteria > button { justify-self: end; background: #9e6c29; }
+.rental-integrated-search .rental-criteria > button:hover { background: #87521d; }
 .rental-service-context { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; }
 .rental-service-context p { font-size: 13px; color: #536579; }
 .rental-enquiry-summary { padding: 14px; }
@@ -373,13 +362,10 @@
 .rental-enquiry-review p { overflow-wrap: anywhere; }
 @media (max-width: 800px) {
   .rental-integrated-search .workspace-fields { grid-template-columns: repeat(2,minmax(0,1fr)); }
-  .rental-chauffeur-choices { grid-template-columns: minmax(0,1fr); }
 }
 @media (max-width: 430px) {
   .rental-integrated-search { margin: -18px 10px 0; }
   .rental-integrated-search .workspace-fields { grid-template-columns: minmax(0,1fr); }
-  .rental-service-switch button { padding: 12px; font-size: 13px; flex: 1; }
-  .rental-service-switch svg { display: none; }
   .rental-integrated-search .rental-criteria { padding: 16px; }
 }
 .rental-gold-button { background: linear-gradient(115deg,#9e6826,#87521d); border-color: #87521d; }
@@ -392,4 +378,61 @@
 .rental-reference-shell .rental-nav { margin: var(--space-4) 0 var(--space-5); padding-block-end: var(--space-3); border-block-end: 1px solid var(--rental-line); }
 .rental-reference-shell .rental-nav a { display: inline-flex; align-items: center; min-height: 28px; text-underline-offset: 5px; }
 /* Batch C: remaining directional icons follow the reading direction. */
-[dir=rtl] .rental-chauffeur-choices a > svg:last-child, [dir=rtl] .rental-form-actions a > svg, [dir=rtl] .rental-form-actions button > svg { rotate: 180deg; }
+[dir=rtl] .rental-form-actions a > svg, [dir=rtl] .rental-form-actions button > svg { rotate: 180deg; }
+
+/* Car Rental page refinement: stronger hero contrast, clear tabs and readable fields, image-led service cards. */
+.rental-landing .rental-hero { min-height: 420px; }
+.rental-landing .rental-hero::after { background: linear-gradient(90deg, #031b32f5 0%, #031b32c7 45%, #031b3226 100%), linear-gradient(0deg, #031b32a6 0%, transparent 45%); }
+[dir=rtl] .rental-landing .rental-hero::after { background: linear-gradient(270deg, #031b32f5 0%, #031b32c7 45%, #031b3226 100%), linear-gradient(0deg, #031b32a6 0%, transparent 45%); }
+.rental-landing .rental-hero-copy { padding-block-end: 80px; }
+.rental-landing .rental-hero h1 { font-weight: var(--weight-heavy); letter-spacing: -0.02em; }
+[dir=rtl] .rental-landing .rental-hero h1 { letter-spacing: 0; }
+.rental-landing .rental-hero-copy > p:last-child { font-size: var(--font-size-lg); }
+.rental-landing .rental-integrated-search { margin-block-start: -56px; border-radius: var(--rounded-xl); box-shadow: var(--elevation-3); }
+.rental-landing .rental-integrated-search .rental-criteria { padding: var(--space-5) var(--space-6); }
+.rental-landing .rental-integrated-search label { color: var(--navy); font-weight: var(--weight-semibold); }
+.rental-landing .rental-integrated-search :is(input, select) { height: 48px; min-height: 48px; font-size: var(--font-size-base); }
+/* The rates note and Search vehicles share one row, so no empty band sits above the button. */
+.rental-landing .rental-integrated-search .rental-criteria { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-4); }
+.rental-landing .rental-integrated-search .rental-criteria > .workspace-fields { grid-column: 1 / -1; }
+.rental-landing .rental-integrated-search .rental-criteria > p { margin: 0; }
+.rental-services { padding-block: var(--space-12) var(--space-8); }
+.rental-services .rental-intro { padding: 0 var(--space-6) var(--space-8); }
+.rental-services .rental-intro h2 { margin-block: var(--space-2); color: var(--navy); font-size: clamp(24px, 2.6vw, 32px); font-weight: var(--weight-heavy); }
+.rental-service-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); }
+.rental-service-card { display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border); border-radius: var(--rounded-xl); background: var(--surface); color: var(--navy); text-decoration: none; box-shadow: var(--elevation-1); transition: transform var(--duration-fast) ease, box-shadow var(--duration-fast) ease, border-color var(--duration-fast) ease; }
+.rental-service-card:hover { border-color: #b68136; box-shadow: var(--elevation-3); transform: translateY(-3px); }
+.rental-service-card > img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; }
+.rental-service-card__body { display: flex; flex: 1; flex-direction: column; gap: var(--space-2); padding: var(--space-5); }
+.rental-service-card strong { font-size: var(--font-size-lg); font-weight: var(--weight-bold); }
+.rental-service-card small { color: var(--muted); font-size: var(--font-size-md); line-height: var(--line-height-body); }
+.rental-service-card__action { display: inline-flex; align-items: center; gap: var(--space-2); margin-block-start: auto; padding-block-start: var(--space-2); color: var(--primary); font-size: var(--font-size-md); font-weight: var(--weight-bold); }
+.rental-service-card__action svg { width: 18px; height: 18px; }
+[dir=rtl] .rental-service-card__action svg { rotate: 180deg; }
+@media (prefers-reduced-motion: reduce) { .rental-service-card:hover { transform: none; } }
+@media (max-width: 800px) {
+  .rental-landing .rental-hero { min-height: 320px; }
+  .rental-service-cards { grid-template-columns: minmax(0, 1fr); max-width: 520px; margin-inline: auto; }
+}
+@media (max-width: 599px) {
+  .rental-landing .rental-integrated-search .rental-criteria { grid-template-columns: minmax(0, 1fr); }
+  .rental-landing .rental-integrated-search .rental-criteria > button { justify-self: stretch; }
+}
+@media (max-width: 430px) {
+  .rental-landing .rental-integrated-search { margin-block-start: -40px; }
+  .rental-landing .rental-integrated-search .rental-criteria { padding: var(--space-4); }
+}
+
+/* Car Rental hero carousel: stacked slides crossfade inside a fixed frame, so nothing shifts. */
+/* Outranks the older ".rental-hero > div" copy padding at every width. */
+.rental-hero > .rental-hero__slide { max-width: none; padding: 0; }
+.rental-hero__slide { position: absolute; inset: 0; z-index: -2; opacity: 0; transition: opacity 900ms ease; }
+.rental-hero__slide[data-active="true"] { opacity: 1; }
+.rental-hero__slide img { display: block; width: 100%; height: 100%; object-fit: cover; }
+@media (prefers-reduced-motion: reduce) { .rental-hero__slide { transition: none; } }
+@media (max-width: 800px) {
+  .rental-landing .rental-hero-copy { padding-block-end: 72px; }
+}
+@media (max-width: 430px) {
+  .rental-landing .rental-integrated-search .rental-criteria { padding: var(--space-4); }
+}

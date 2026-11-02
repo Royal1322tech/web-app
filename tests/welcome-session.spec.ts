@@ -15,11 +15,11 @@ for (const width of [375, 1440]) {
       await expect(page.locator("header, footer")).toHaveCount(0);
       const account = () => page.getByRole("button", { name: locale === "en" ? "Account menu" : "قائمة الحساب", exact: true, includeHidden: true });
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-        locale === "en" ? "Welcome to Royal Vacation" : "مرحبًا بكم في رويال فاكيشن",
+        locale === "en" ? "Your Journey Starts Here" : "رحلتك تبدأ من هنا",
       );
       const photo = page.locator(".auth-page--welcome .travel-image");
       await expect(photo).toBeVisible();
-      await expect(photo).toHaveAttribute("src", "/images/welcome-travel.png");
+      await expect(photo).toHaveAttribute("src", "/images/welcome/resort-aerial.jpg");
       const imageBox = (await photo.boundingBox())!;
       const contentBox = (await page
         .locator(".welcome-content")
@@ -31,7 +31,7 @@ for (const width of [375, 1440]) {
         const shell = (await page
           .locator(".auth-page--welcome")
           .boundingBox())!;
-        expect(imageBox.width / shell.width).toBeCloseTo(0.392, 2);
+        expect(imageBox.width / shell.width).toBeCloseTo(0.45, 2);
         expect(imageBox.height).toBeCloseTo(shell.height, 0);
         expect(first.y).toBeCloseTo(second.y, 0);
       } else {

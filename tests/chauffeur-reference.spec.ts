@@ -12,11 +12,7 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
       await visit(page, "/car-rental");
       await selectLanguage(page, locale);
       await closeHeaderMenu(page);
-      await page.getByRole("button", { name: /Chauffeur \/ Transfers|سائق خاص \/ انتقالات/ }).click();
-      await expect(page.getByRole("button", { name: /Search vehicles|ابحث عن سيارات/ })).toBeHidden();
-      const services = page.getByRole("navigation", { name: /Chauffeur services|خدمات السائق/ });
-      await expect(services.locator('a[href="/contact?subject=airport-transfers"]')).toBeVisible();
-      await services.locator('a[href="/contact?subject=airport-transfers"]').click();
+      await page.locator('.rental-service-card[href="/contact?subject=airport-transfers"]').click();
       await expect(page).toHaveURL(/contact\?subject=airport-transfers/);
       await expect(page.locator("header")).toBeVisible();
       await expect(page.locator("footer")).toHaveCount(0);

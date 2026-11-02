@@ -1,14 +1,12 @@
 /* Restore the original account-selection composition without restyling login. */
 .auth-page--welcome {
-  --primary: var(--secondary);
-  --primary-hover: var(--secondary-hover);
   --brand: var(--primary);
   --brand-hover: var(--primary-hover);
   --focus-ring-color: var(--primary);
-  --muted: #454545;
-  --subtle: #f2f4fa;
-  grid-template-columns: 39.2% minmax(0, 1fr);
-  min-height: min(800px, calc(100svh - 64px));
+  --muted: #4d5c6d;
+  --subtle: #f2f5fa;
+  grid-template-columns: 45% minmax(0, 1fr);
+  min-height: min(820px, calc(100svh - 64px));
   color: #161616;
   background: #fff;
 }
@@ -268,4 +266,29 @@
     inset-block-start: 14px;
     inset-inline-end: 14px;
   }
+}
+
+/* Premium refinement: navy and royal blue hierarchy, a calm image edge, generous whitespace. */
+.auth-page--welcome h1 { color: var(--navy); font-size: clamp(30px, 3vw, 42px); letter-spacing: -0.02em; line-height: 1.15; }
+[dir="rtl"].auth-page--welcome h1 { letter-spacing: 0; }
+.auth-page--welcome .travel-image { border-start-end-radius: 32px; border-end-end-radius: 32px; object-position: center; }
+.auth-page--welcome .auth-panel::after { position: absolute; inset: 0; border-start-end-radius: 32px; border-end-end-radius: 32px; background: linear-gradient(180deg, #0b254500 60%, #0b254559 100%); content: ""; pointer-events: none; }
+.auth-page--welcome .welcome-content { max-width: 680px; margin-inline: auto; padding: 56px 48px; }
+.auth-page--welcome .welcome-subtitle { color: #8a5a1c; font-weight: var(--weight-semibold); }
+.auth-page--welcome .intro-copy { color: var(--muted); font-size: var(--font-size-base); }
+.auth-page--welcome .account-options { margin-block-start: 32px; gap: 18px; }
+.auth-page--welcome .account-card { display: flex; flex-direction: column; align-items: center; padding: 26px 18px 18px; border: 1px solid var(--border); box-shadow: var(--elevation-1); }
+.auth-page--welcome .account-card h2 { color: var(--navy); }
+.auth-page--welcome .account-card p { flex: 1; color: var(--muted); }
+.auth-page--welcome .account-card .button { width: 100%; }
+.auth-page--welcome .icon-badge { background: color-mix(in srgb, var(--primary) 9%, var(--surface)); color: var(--primary); }
+.auth-page--welcome .account-card:hover { border-color: color-mix(in srgb, var(--primary) 45%, var(--border)); box-shadow: var(--elevation-3); }
+.auth-page--welcome .welcome-trust { color: var(--muted); }
+.auth-page--welcome .welcome-language button[aria-pressed="true"] { background: var(--navy); color: #fff; }
+@media (min-width: 801px) and (max-width: 1099px) {
+  .auth-page--welcome .welcome-content { padding: 48px 24px 32px; }
+}
+@media (max-width: 800px) {
+  .auth-page--welcome .travel-image, .auth-page--welcome .auth-panel::after { border-radius: 0 0 24px 24px; }
+  .auth-page--welcome .welcome-content { padding: 56px 24px 40px; }
 }

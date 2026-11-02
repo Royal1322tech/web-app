@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { visit } from "./helpers/demo-login";
-import { attachIdDocument, chooseOption, fillCompanyStep, samplePdf } from "./helpers/registration";
+import { attachCompanyLogo, attachIdDocument, chooseOption, fillCompanyStep, samplePdf } from "./helpers/registration";
 import { directionsUrl, haversineKm } from "../src/features/hotels/lib/geo";
 import { businessTypes, requiredDocumentsFor } from "../src/features/agency-registration/data/business-types";
 import { citiesForCountry, cityLabel } from "../src/features/agency-registration/data/locations";
@@ -65,6 +65,7 @@ test.describe("company information", () => {
     await chooseOption(page, "company-country", "Egypt");
     await page.getByLabel("Commercial Registration Number").fill("CR-1");
     await page.getByLabel("Address of Company").fill("Cairo");
+    await attachCompanyLogo(page);
     await page.getByRole("button", { name: "Next", exact: true }).click();
     await expect(page.locator("#company-city-error")).toHaveText("Select your company city.");
     await expect(page).toHaveURL(/\/company$/);
@@ -191,14 +192,14 @@ test.describe("welcome", () => {
     const english = page.getByRole("button", { name: "English" });
     const arabic = page.getByRole("button", { name: "العربية" });
     await expect(english).toHaveAttribute("aria-pressed", "true");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Welcome to Royal Vacation");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Your Journey Starts Here");
     await expect(page.getByText("Your gateway to seamless travel partnerships.")).toBeVisible();
     await expect(page.getByText("Built for travel professionals.")).toBeVisible();
 
     await arabic.click();
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     await expect(arabic).toHaveAttribute("aria-pressed", "true");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("مرحبًا بكم في رويال فاكيشن");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("رحلتك تبدأ من هنا");
     await expect(page.getByText("مصممة لمحترفي السفر.")).toBeVisible();
     await english.click();
     await expect(page.locator("html")).toHaveAttribute("dir", "ltr");

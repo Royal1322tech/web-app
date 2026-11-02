@@ -148,12 +148,11 @@ test("voucher shows booking guests and references without prices or invented hot
   await expect(voucher.locator('a[href^="tel:"]')).toHaveCount(0);
 });
 
-test("invoices and accounting remain empty without actual supporting records", async ({ page }) => {
-  await visit(page, "/bookings/DEMO-1001/invoice");
+test("bookings without an invoice and accounting stay empty without supporting records", async ({ page }) => {
+  // Only a pending or failed booking has no invoice; no number or amount is generated for it.
+  await visit(page, "/bookings/DEMO-1005/invoice");
   await expect(page.getByRole("heading", { name: "Invoice not available" })).toBeVisible();
   await expect(page.getByText(/No invoice number or financial values have been generated/)).toBeVisible();
-  await page.goto("/invoices");
-  await expect(page.getByRole("heading", { name: "No invoice records" })).toBeVisible();
   await page.goto("/accounting-review");
   await expect(page.getByRole("heading", { name: "No payment reviews" })).toBeVisible();
   await expect(page.getByText(/No payment approval, reconciliation or settlement is performed/)).toBeVisible();

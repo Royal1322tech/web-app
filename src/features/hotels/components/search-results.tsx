@@ -12,6 +12,9 @@ import { CatalogShell } from "./catalog-shell";
 import { HotelFiltersPanel } from "./hotel-filters";
 import { HotelResultCard } from "./hotel-result-card";
 import { Comparison } from "./comparison";
+import { EventDistance, HotelMapView } from "./hotel-map-view";
+import { eventDistanceKm, sortByEventDistance } from "../lib/event-proximity";
+import type { GeoPoint } from "../lib/geo";
 import styles from "../hotels.module.css";
 export function SearchResults() {
   const [query, setQuery] = useSearchParams();
@@ -33,23 +36,32 @@ function SearchResultsContent({
   const { t } = useLocale();
   const [criteria] = useState(() => readStayQuery(query));
   const [filters, setFilters] = useState({ ...defaultFilters });
-  const [sort, setSort] = useState<HotelSort>("recommended");
+  const [sort, setSort] = useState<HotelSort | "nearest">("recommended");
+  const [view, setView] = useState<"list" | "map">("list");
+  const [event, setEvent] = useState<GeoPoint | null>(null);
   const [open, setOpen] = useState(false);
   const drawer = useRef<HTMLDialogElement>(null);
   const filterTrigger = useRef<HTMLButtonElement>(null);
   const activeCount = Object.entries(filters).reduce((count, [key, value]) => count + (Array.isArray(value) ? value.length : key === "packaging" ? Number(value !== "all") : Number(Boolean(value))), 0);
-  const result = filterHotels(
+  const baseSort = sort === "nearest" ? "recommended" : sort;
+  const filtered = filterHotels(
     hotels,
     filters,
     criteria?.destination || "",
-    sort,
+    baseSort,
   );
+  // Proximity only reorders the results the filters already produced.
+  const result = sort === "nearest" && event ? sortByEventDistance(filtered, event) : filtered;
   const boardCandidates = filterHotels(
     hotels,
     { ...filters, board: [] },
     criteria?.destination || "",
-    sort,
+    baseSort,
   );
+  const clearEvent = () => {
+    setEvent(null);
+    if (sort === "nearest") setSort("recommended");
+  };
   return (
     <CatalogShell title={t("Search", "بحث")}>
       <h1>{t("Hotel Search Results", "نتائج البحث عن الفنادق")}</h1>
@@ -103,12 +115,17 @@ function SearchResultsContent({
           <div>
             <div className={styles.listHeader}>
               <h2>{t("Our top choices for you", "أفضل اختياراتنا لك")}</h2>
+              <div className={styles.resultsTools}>
+              <div className={styles.viewSwitch} role="group" aria-label={t("Results view", "طريقة عرض النتائج")}>
+                <button type="button" aria-pressed={view === "list"} onClick={() => setView("list")}>{t("List View", "عرض القائمة")}</button>
+                <button type="button" aria-pressed={view === "map"} onClick={() => setView("map")}>{t("Map View", "عرض الخريطة")}</button>
+              </div>
               <label>
                 {t("Sort by", "ترتيب حسب")}
                 <select
                   aria-label={t("Sort by", "ترتيب حسب")}
                   value={sort}
-                  onChange={(e) => setSort(e.target.value as HotelSort)}
+                  onChange={(e) => setSort(e.target.value as HotelSort | "nearest")}
                 >
                   {[
                     ["recommended", t("Recommended", "موصى به")],
@@ -126,18 +143,33 @@ function SearchResultsContent({
                       {label}
                     </option>
                   ))}
+                  <option value="nearest" disabled={!event}>
+                    {t("Nearest to Event", "الأقرب إلى الفعالية")}
+                  </option>
                 </select>
               </label>
+              </div>
             </div>
             <div className={styles.muted}>
               <p role="status">{result.length} {t("hotel results", "نتائج الفنادق")}</p>
               <p>{t("Illustrative prices · availability requires supplier confirmation.", "أسعار توضيحية · التوافر يتطلب تأكيد المورد.")}</p>
             </div>
-            <div className={styles.results}>
-              {result.map((h, index) => (
-                <HotelResultCard key={h.id} hotel={h} dates={criteria} eager={index === 0} />
-              ))}
-            </div>
+            {view === "map" && result.length > 0 && (
+              <HotelMapView hotels={result} event={event} criteria={criteria} onSelectEvent={setEvent} onClearEvent={clearEvent} />
+            )}
+            {view === "list" && (
+              <div className={styles.results}>
+                {result.map((h, index) => (
+                  <HotelResultCard
+                    key={h.id}
+                    hotel={h}
+                    dates={criteria}
+                    eager={index === 0}
+                    distanceBadge={event ? <EventDistance distance={eventDistanceKm(h, event)} /> : undefined}
+                  />
+                ))}
+              </div>
+            )}
             {!result.length && (
               <p className={styles.empty}>
                 {t(

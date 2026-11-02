@@ -1,26 +1,33 @@
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useLocale } from "@/features/localization/locale-provider";
 import { Icon } from "@/components/ui/icon";
-import { RentalHero } from "./rental-presentation";
+import { RentalHeroCarousel } from "./rental-hero-carousel";
 import { RentalCriteriaForm } from "./rental-flow";
 import { rentalQuery } from "./rental-model";
+const services = [
+  { to: "/car-rental/search", image: "/images/rental/suv.webp", en: "Self-Drive Rental", ar: "تأجير قيادة ذاتية", description: "Compare vehicle categories at illustrative daily rates.", descriptionAr: "قارن فئات السيارات بأسعار يومية توضيحية.", action: "Browse vehicles", actionAr: "تصفح السيارات" },
+  { to: "/contact?subject=airport-transfers", image: "/images/home/cinematic/airport-transfers.png", en: "Airport Transfers", ar: "انتقالات المطار", description: "Share arrival or departure details in a structured enquiry.", descriptionAr: "شارك تفاصيل الوصول أو المغادرة في استفسار منظم.", action: "Prepare an enquiry", actionAr: "جهز استفسارًا" },
+  { to: "/contact?subject=private-chauffeur", image: "/images/services/private-chauffeur.jpg", en: "Private Chauffeur", ar: "سائق خاص", description: "Plan executive travel, meetings or a tailored day itinerary.", descriptionAr: "خطط لرحلات الأعمال والاجتماعات أو برنامج يوم خاص.", action: "Prepare an enquiry", actionAr: "جهز استفسارًا" },
+];
 export function RentalLanding() {
   const { t } = useLocale();
   const navigate = useNavigate();
-  const [params, setParams] = useSearchParams();
-  const chauffeur = params.get("service") === "chauffeur";
+  const [params] = useSearchParams();
+  // The old Chauffeur / Transfers tab link now goes straight to the existing enquiry.
+  if (params.get("service") === "chauffeur") return <Navigate to="/contact?subject=private-chauffeur" replace />;
   return <div className="rental-landing rental-reference-shell">
-    <RentalHero primary title={t("Car Rental for your clients", "تأجير السيارات لعملائك")} />
-    <section className="rental-integrated-search">
-      <div className="rental-service-switch" role="group" aria-label={t("Vehicle service", "خدمة السيارات")}>
-        <button type="button" aria-pressed={!chauffeur} onClick={() => setParams({})}><Icon name="car" />{t("Self-Drive Rental", "تأجير قيادة ذاتية")}</button>
-        <button type="button" aria-pressed={chauffeur} onClick={() => setParams({ service: "chauffeur" })}><Icon name="people" />{t("Chauffeur / Transfers", "سائق خاص / انتقالات")}</button>
-      </div>
-      <div hidden={chauffeur}><RentalCriteriaForm onSubmit={criteria => navigate(`/car-rental/search?${rentalQuery(criteria)}`)} /></div>
-      {chauffeur && <div className="rental-chauffeur-choices"><div><p className="rental-kicker">{t("TRAVEL WITH A DRIVER", "سفر مع سائق")}</p><h2>{t("A thoughtful arrival. A clear enquiry.", "وصول مدروس. واستفسار واضح.")}</h2><p>{t("Choose an existing service to prepare your itinerary. Trip prices and availability require confirmation.", "اختر خدمة لتجهيز مسار رحلتك. الأسعار والتوافر يحتاجان إلى التأكيد.")}</p></div><nav aria-label={t("Chauffeur services", "خدمات السائق")}>
-        {[["airport-transfers", "Airport Transfers", "انتقالات المطار"], ["car-with-driver", "Car Rental with Driver", "تأجير سيارات بسائق"], ["private-chauffeur", "Private Chauffeur", "سائق خاص"]].map(([subject,en,ar]) => <Link key={subject} to={`/contact?subject=${subject}`}><Icon name="car" /><span><strong>{t(en,ar)}</strong><small>{t("Prepare an enquiry", "جهز استفسارًا")}</small></span><Icon name="arrowRight" /></Link>)}
-      </nav></div>}
+    <RentalHeroCarousel title={t("Car Rental for your clients", "تأجير السيارات لعملائك")} />
+    <section className="rental-integrated-search" aria-label={t("Search rental vehicles", "البحث عن سيارات للتأجير")}>
+      <RentalCriteriaForm onSubmit={criteria => navigate(`/car-rental/search?${rentalQuery(criteria)}`)} />
     </section>
-    <section className="rental-intro"><p className="rental-kicker">{t("ROYAL VACATION · FOR TRAVEL PROFESSIONALS", "رويال فاكيشن · لمحترفي السفر")}</p><h2>{t("Explore Car Rentals", "استكشف تأجير السيارات")}</h2><p>{t("Browse self-drive vehicles at illustrative daily rates, or prepare an enquiry for chauffeur and transfer services.", "تصفح سيارات القيادة الذاتية بأسعار يومية توضيحية، أو جهز استفسارًا لخدمات السائق والانتقالات.")}</p></section>
+    <section className="rental-services" aria-labelledby="rental-services-title">
+      <div className="rental-intro"><p className="rental-kicker">{t("ROYAL VACATION · FOR TRAVEL PROFESSIONALS", "رويال فاكيشن · لمحترفي السفر")}</p><h2 id="rental-services-title">{t("Ground transport for every itinerary", "نقل بري لكل برنامج رحلة")}</h2><p>{t("Browse self-drive vehicles at illustrative daily rates, or prepare an enquiry for chauffeur and transfer services.", "تصفح سيارات القيادة الذاتية بأسعار يومية توضيحية، أو جهز استفسارًا لخدمات السائق والانتقالات.")}</p></div>
+      <div className="rental-service-cards">
+        {services.map((service) => <Link key={service.to} to={service.to} className="rental-service-card">
+          <img src={service.image} alt="" width="640" height="400" loading="lazy" decoding="async" />
+          <span className="rental-service-card__body"><strong>{t(service.en, service.ar)}</strong><small>{t(service.description, service.descriptionAr)}</small><span className="rental-service-card__action">{t(service.action, service.actionAr)}<Icon name="arrowRight" /></span></span>
+        </Link>)}
+      </div>
+    </section>
   </div>;
 }

@@ -49,12 +49,15 @@ const amenityIcons: Partial<Record<keyof typeof amenityLabels, IconName>> = {
 export function HotelResultCard({
   hotel,
   booking,
+  distanceBadge,
   favourite = false,
   dates,
   eager = false,
 }: {
   hotel: HotelSummary;
   booking?: ReactNode;
+  /** Shown while an event location is selected on Hotel Search. */
+  distanceBadge?: ReactNode;
   favourite?: boolean;
   dates?: StayDates & Partial<Pick<HotelSearchCriteria, "rooms" | "nationality">>;
   eager?: boolean;
@@ -120,6 +123,7 @@ export function HotelResultCard({
             <HotelRating stars={hotel.stars} reviewScore={hotel.reviewScore} />
             {hotel.inventoryType === "demo" && <span className={styles.demoInventory}>{t("Demo inventory", "بيانات تجريبية")}</span>}
             {listing && hotelBoardPlans(listing).length > 0 && <ul className={styles.boardBadges} aria-label={t("Listed board offers", "خطط الوجبات المدرجة")}>{hotelBoardPlans(listing).map(plan => <li key={plan}>{boardPlanLabels[plan][locale]}</li>)}</ul>}
+            {distanceBadge}
             <ul className={styles.amenities}>
               {hotel.amenities.slice(0, 2).map((a) => (
                 <li key={a}>

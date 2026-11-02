@@ -1,5 +1,5 @@
 import { contactPhone } from "../lib/phone";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useFormContext, useWatch } from "react-hook-form";
 import { Button, buttonClass } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { businessTypeDefinition, requiredDocumentsFor } from "../data/business-t
 import { cityLabel } from "../data/locations";
 import { useRegistrationStepGuard } from "../hooks/use-registration-step-guard";
 import type { RegistrationValues } from "../schemas/registration.schema";
+import { CompanyLogoPreview } from "./company-logo-preview";
 import { RegistrationProgress } from "./registration-progress";
 import { RegistrationSection } from "./registration-section";
 
@@ -21,10 +22,12 @@ function InformationCard({
   title,
   icon,
   rows,
+  children,
 }: {
   title: string;
   icon: IconName;
   rows: { label: string; value: string }[];
+  children?: ReactNode;
 }) {
   return (
     <section className="review-card">
@@ -34,6 +37,7 @@ function InformationCard({
         </span>
         {title}
       </h3>
+      {children}
       <dl>
         {rows.map(({ label, value }) => (
           <div className="review-row" key={label}>
@@ -77,7 +81,20 @@ export function RegistrationReview() {
             { label: "Address", value: company.address },
             { label: "Number of Employees", value: company.employeeCount },
           ]}
-        />
+        >
+          {company.logo && (
+            <div className="review-logo">
+              <span className="company-logo__frame">
+                <CompanyLogoPreview file={company.logo} alt={`${company.name} logo`} />
+              </span>
+              <div>
+                <span>Company Logo</span>
+                <strong><Icon name="check" />Provided</strong>
+                <small><bdi>{company.logo.name}</bdi></small>
+              </div>
+            </div>
+          )}
+        </InformationCard>
         <InformationCard
           title="Contact Information"
           icon="personFilled"

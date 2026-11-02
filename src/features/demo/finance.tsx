@@ -3,7 +3,9 @@ import { Link } from "react-router-dom";
 import { useLocale } from "@/features/localization/locale-provider";
 import { StatePreview, SystemState } from "@/components/ui/system-state";
 import { demoFinance, demoTransactions } from "./fixtures";
+import { useDemo } from "./demo-provider";
 import { Workspace, StatusBadge, useMoney } from "./shared";
+import { transactionParties } from "./transaction-parties";
 import type { Transaction } from "./types";
 import { formatCalendarDate } from "@/lib/format-date";
 const transactionTypeLabels: Record<Transaction["type"], [string, string]> = {
@@ -14,13 +16,28 @@ const transactionTypeLabels: Record<Transaction["type"], [string, string]> = {
 
 // The named, horizontally scrollable region is keyboard-focusable so users can scroll the table.
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex */
+/** Customer and hotel for a transaction, read from the booking it references. Account-level entries have neither. */
+function useTransactionParties() {
+  const { locale } = useLocale();
+  const { records } = useDemo();
+  return (row: Transaction) => transactionParties(row, records, locale);
+}
+
+function NotApplicable() {
+  const { t } = useLocale();
+  return <span aria-label={t("Not applicable", "غير منطبق")}>—</span>;
+}
+
 function TransactionTable({
   rows,
   onOpen,
+  showParties = false,
 }: {
   rows: readonly Transaction[];
   onOpen: (row: Transaction, trigger: HTMLButtonElement) => void;
+  showParties?: boolean;
 }) {
+  const parties = useTransactionParties();
   const { t, locale } = useLocale();
   const money = useMoney();
   return (
@@ -30,11 +47,12 @@ function TransactionTable({
       aria-label={t("Transaction table", "جدول المعاملات")}
       tabIndex={0}
     >
-      <table>
+      <table className={showParties ? "transaction-table--parties" : undefined}>
         <thead>
           <tr>
             {[
               ["Reference", "المرجع"],
+              ...(showParties ? [["Customer Name", "اسم العميل"], ["Hotel Name", "اسم الفندق"]] : []),
               ["Date", "التاريخ"],
               ["Type", "النوع"],
               ["Status", "الحالة"],
@@ -53,6 +71,10 @@ function TransactionTable({
               <td>
                 <bdi>{row.id}</bdi>
               </td>
+              {showParties && <>
+                <td>{parties(row).customer ? <bdi>{parties(row).customer}</bdi> : <NotApplicable />}</td>
+                <td>{parties(row).hotel ?? <NotApplicable />}</td>
+              </>}
               <td>
                 <time dateTime={row.date}>{formatCalendarDate(row.date, locale)}</time>
               </td>
@@ -83,6 +105,7 @@ function TransactionTable({
 }
 function useTransactionDialog() {
   const { t, locale } = useLocale();
+  const parties = useTransactionParties();
   const money = useMoney();
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
@@ -128,6 +151,14 @@ function useTransactionDialog() {
               <div>
                 <dt>{t("Related reference", "المرجع المرتبط")}</dt>
                 <dd>{row.reference}</dd>
+              </div>
+              <div>
+                <dt>{t("Customer Name", "اسم العميل")}</dt>
+                <dd>{parties(row).customer ? <bdi>{parties(row).customer}</bdi> : <NotApplicable />}</dd>
+              </div>
+              <div>
+                <dt>{t("Hotel Name", "اسم الفندق")}</dt>
+                <dd>{parties(row).hotel ?? <NotApplicable />}</dd>
               </div>
             </dl>
             <p>{t(row.description)}</p>
@@ -255,11 +286,12 @@ export function TransactionsPage() {
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
   const { open, element } = useTransactionDialog();
+  const parties = useTransactionParties();
   const rows = demoTransactions.filter(
     (r) =>
       (type === "all" || r.type === type) &&
       (status === "all" || r.status === status) &&
-      `${r.id} ${r.description} ${r.reference}`
+      `${r.id} ${r.description} ${r.reference} ${parties(r).customer ?? ""} ${parties(r).hotel ?? ""}`
         .toLowerCase()
         .includes(query.toLowerCase()),
   );
@@ -273,7 +305,7 @@ export function TransactionsPage() {
           <input
             type="search"
             value={query}
-            placeholder={t("Reference or description", "المرجع أو الوصف")}
+            placeholder={t("Reference, customer, hotel or description", "المرجع أو العميل أو الفندق أو الوصف")}
             onChange={(e) => {
               setQuery(e.target.value);
               setPage(1);
@@ -333,6 +365,7 @@ export function TransactionsPage() {
               {rows.length} {t("transactions", "معاملات")}
             </p>
             <TransactionTable
+              showParties
               rows={rows.slice((page - 1) * 4, page * 4)}
               onOpen={open}
             />

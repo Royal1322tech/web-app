@@ -8,7 +8,7 @@ const privateRoutes = ["/", "/search", "/hotels/eastern-al-montazah", "/booking/
 test("every internal route defaults to Welcome without exposing application content", async ({ page }) => {
   for (const path of privateRoutes) {
     await page.goto(path);
-    await expect(page.getByRole("heading", { name: "Welcome to Royal Vacation", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Your Journey Starts Here", exact: true })).toBeVisible();
     await expect(page.locator("header, footer, .workspace, #hotel-search")).toHaveCount(0);
     await expect(page).toHaveURL(path === "/" ? /\/$/ : /\/welcome$/);
   }
@@ -61,7 +61,7 @@ for (const width of [375, 768, 1440]) {
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     const preferences = await page.evaluate(() => JSON.stringify(localStorage));
     await logout(page);
-    await expect(page.getByRole("heading", { name: "مرحبًا بكم في رويال فاكيشن" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "رحلتك تبدأ من هنا" })).toBeVisible();
     expect(await page.evaluate(() => JSON.stringify(localStorage))).toBe(preferences);
     expect(await page.evaluate(() => sessionStorage.getItem("royal-vacation.demo-auth.v1"))).toBeNull();
     await page.goBack();

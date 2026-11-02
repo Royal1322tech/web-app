@@ -1,6 +1,7 @@
 import { contactPhone, validPhoneCountry } from "../lib/phone";
 import { z } from "zod";
 import { citiesForCountry } from "../data/locations";
+import { logoFileIssue, logoRequired } from "../lib/company-logo";
 import { documentsSchema, requiredFile, type FilePolicy } from "./documents.schema";
 
 const requiredText = (label: string) =>
@@ -19,6 +20,12 @@ export const companySchema = z.object({
   city: z.string().trim().min(1, cityRequired),
   registrationNumber: requiredText("your commercial registration number"),
   address: requiredText("your company address"),
+  logo: z
+    .custom<File | null>((value) => value === null || (typeof File !== "undefined" && value instanceof File), logoRequired)
+    .superRefine((file, context) => {
+      const issue = logoFileIssue(file);
+      if (issue) context.addIssue({ code: "custom", message: issue });
+    }),
 }).superRefine((company, context) => {
   // When the country has a city list, the city must be one of its stable identifiers.
   const cities = citiesForCountry(company.country);
@@ -69,6 +76,7 @@ export const registrationDefaults: RegistrationValues = {
     city: "",
     registrationNumber: "",
     address: "",
+    logo: null,
   },
   contact: {
     fullName: "",

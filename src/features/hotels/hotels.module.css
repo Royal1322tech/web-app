@@ -1713,3 +1713,19 @@
 .recommendation > p:last-of-type {
   margin-bottom: var(--space-3);
 }
+
+/* Hotel Search results toolbar: heading on one side; view switch and sort aligned on the other. */
+.resultsTools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4); }
+.resultsTools label { display: flex; align-items: center; gap: var(--space-2); white-space: nowrap; }
+.resultsTools select { width: auto; height: 42px; min-height: 42px; }
+.viewSwitch { display: inline-flex; min-height: 42px; padding: 3px; border: 1px solid var(--border); border-radius: var(--rounded-sm); background: var(--subtle); }
+.viewSwitch button { min-height: 34px; padding: 4px 14px; border: 0; border-radius: var(--rounded-xs); background: transparent; color: var(--navy); font-size: var(--font-size-md); font-weight: var(--weight-semibold); }
+.viewSwitch button[aria-pressed="true"] { background: var(--navy); color: #fff; }
+.listHeader > h2 { flex: 1 1 auto; }
+@media (max-width: 599px) {
+  .resultsTools { width: 100%; }
+  .viewSwitch { width: 100%; }
+  .viewSwitch button { flex: 1; min-height: 40px; }
+  .resultsTools label { width: 100%; }
+  .resultsTools select { flex: 1; min-width: 0; }
+}

@@ -1,7 +1,7 @@
 import { countries } from "@/features/agency-registration/data/countries";
 import { isNationalityCode, useTravelPreferences } from "@/features/preferences/travel-preferences";
 import type { NationalityCode } from "@/features/preferences/travel-preferences";
-import { CarRentalOverview } from "@/features/car-rental/car-rental-overview";
+import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useLocale } from "@/features/localization/locale-provider";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -35,7 +35,6 @@ export function HotelSearchForm({
   const preferences = useTravelPreferences();
   const countryNames = new Intl.DisplayNames([locale], { type: "region" });
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"hotels" | "cars">("hotels");
   const [notice, setNotice] = useState(false);
   const form = useForm<HotelSearchFormValues, unknown, HotelSearchCriteria>({
     resolver: zodResolver(hotelSearchSchema),
@@ -82,59 +81,22 @@ export function HotelSearchForm({
       aria-label={t("Find your stay", "ابحث عن إقامتك")}
     >
       {!compact && (
-        <div
-          className={styles.tabs}
-          role="tablist"
-          tabIndex={-1}
-          aria-label={t("Travel service", "خدمات السفر")}
-          onKeyDown={(event) => {
-            if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key))
-              return;
-            event.preventDefault();
-            const next =
-              event.key === "Home"
-                ? "hotels"
-                : event.key === "End"
-                  ? "cars"
-                  : tab === "hotels"
-                    ? "cars"
-                    : "hotels";
-            setTab(next);
-            document.getElementById(`${next}-tab`)?.focus();
-          }}
-        >
-          <button
-            type="button"
-            role="tab"
-            id="hotels-tab"
-            aria-selected={tab === "hotels"}
-            aria-controls="hotels-panel"
-            tabIndex={tab === "hotels" ? 0 : -1}
-            onClick={() => setTab("hotels")}
-          >
+        <nav className={styles.tabs} aria-label={t("Travel service", "خدمات السفر")}>
+          <span aria-current="true">
             <Icon name="buildingFilled" />
             {t("Hotels", "فنادق")}
-          </button>
-          <button
-            type="button"
-            role="tab"
-            id="cars-tab"
-            aria-selected={tab === "cars"}
-            aria-controls="cars-panel"
-            tabIndex={tab === "cars" ? 0 : -1}
-            onClick={() => setTab("cars")}
-          >
+          </span>
+          {/* Car Rental opens its own page straight away; there is no intermediate panel. */}
+          <Link to="/car-rental">
             <Icon name="car" />
             {t("Car Rental", "تأجير السيارات")}
-          </button>
-        </div>
+          </Link>
+        </nav>
       )}
       <div
-        role={compact ? undefined : "tabpanel"}
         id="hotels-panel"
-        aria-label={compact ? t("Hotel search", "بحث الفنادق") : undefined}
-        aria-labelledby={compact ? undefined : "hotels-tab"}
-        hidden={!compact && tab !== "hotels"}
+        aria-label={t("Hotel search", "بحث الفنادق")}
+        role="group"
       >
         <FormProvider {...form}>
           <form
@@ -281,16 +243,6 @@ export function HotelSearchForm({
             )}
         </div>
       </div>
-      {!compact && (
-        <div
-          role="tabpanel"
-          id="cars-panel"
-          aria-labelledby="cars-tab"
-          hidden={tab !== "cars"}
-        >
-          <CarRentalOverview compact />
-        </div>
-      )}
     </section>
   );
 }
