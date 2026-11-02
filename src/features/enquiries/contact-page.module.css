@@ -1,5 +1,5 @@
 .page { max-width:none; margin:0 0 40px; padding:0 0 48px; }
-.page > div:not(:global(.page-hero)) { max-width:none; margin:0; grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr); align-items:start; gap:24px; }
+.page > div > div { max-width:none; margin:0; grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr); align-items:start; gap:24px; }
 
 /* Direct contact: first on phones, in the side card from tablet width up. */
 .quickActions { display:none; }
@@ -47,7 +47,7 @@
 .page form .inputWrap input:global(.input) { padding-inline:40px; }
 
 @media(max-width:799px) {
-  .page > div:not(:global(.page-hero)) { grid-template-columns:minmax(0,1fr); }
+  .page > div > div { grid-template-columns:minmax(0,1fr); }
   .quickActions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-block-end:18px; }
   .information { position:static; }
 }
@@ -55,7 +55,7 @@
   .page { padding-block-end:36px; }
   .page form { padding:20px 16px; }
   .information { padding:24px 20px; }
-  .page > div:not(:global(.page-hero)) { gap:18px; }
+  .page > div > div { gap:18px; }
   .phoneEntry { grid-template-columns:minmax(108px,.85fr) minmax(0,1.15fr); gap:7px; }
   .phoneEntry input,.phoneEntry select { padding-inline:9px; font-size:14px; }
   .sendActions { grid-template-columns:minmax(0,1fr); }

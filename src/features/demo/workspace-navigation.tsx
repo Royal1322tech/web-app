@@ -59,6 +59,7 @@ export function WorkspaceNavigation() {
           <NavLink to="/bookings">{t("My Bookings", "حجوزاتي")}</NavLink>
           <NavLink to="/car-rental/bookings">{t("My Rentals", "تأجيراتي")}</NavLink>
           <NavLink to="/tickets">{t("My Tickets", "تذاكري")}</NavLink>
+          <NavLink to="/group-requests">{t("My Group Requests", "طلبات مجموعاتي")}</NavLink>
         </div>
         <div className="workspace-nav__group" role="group" aria-labelledby={`${id}-finance`}>
           <p className="workspace-nav__label" id={`${id}-finance`}>{t("Finance", "المالية")}</p>

@@ -209,6 +209,8 @@ export const router = createBrowserRouter([
       // Booking-linked support tickets (frontend demo; creation only from an owned, recorded booking).
       { path: "bookings/:id/tickets/new", lazy: async () => { const { CreateTicketPage } = await import("@/features/tickets/create-ticket-page"); return { Component: () => <CreateTicketPage bookingType="hotel" /> }; } },
       { path: "car-rental/bookings/:id/tickets/new", lazy: async () => { const { CreateTicketPage } = await import("@/features/tickets/create-ticket-page"); return { Component: () => <CreateTicketPage bookingType="rental" /> }; } },
+      { path: "group-requests", lazy: async () => ({ Component: (await import("@/features/group-requests/group-requests-page")).MyGroupRequestsPage }) },
+      { path: "group-requests/:reference", lazy: async () => ({ Component: (await import("@/features/group-requests/group-requests-page")).GroupRequestDetailPage }) },
       { path: "tickets", lazy: async () => ({ Component: (await import("@/features/tickets/tickets-page")).MyTicketsPage }) },
       { path: "tickets/:reference", lazy: async () => ({ Component: (await import("@/features/tickets/ticket-detail-page")).TicketDetailPage }) },
       {

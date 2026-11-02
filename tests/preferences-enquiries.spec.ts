@@ -71,16 +71,20 @@ test('contact and group quotation validate locally without sending requests', as
       await page.getByRole('button',{name:'Prepare enquiry',exact:true}).click();
       await expect(page.getByRole('heading',{name:'Local preview ready — not sent'})).toBeVisible();
     } else {
-      await page.getByRole('button',{name:'Preview request',exact:true}).click();
-      await expect(page.getByText('Enter your name.',{exact:true})).toBeVisible();
-      for(const [key,value] of Object.entries({name:'Demo Traveller',email:'demo@example.com',agency:'Sample Agency',subject:'Sample group request',message:'Fictional travel requirements for a preview.'})) await page.locator('#enquiry-'+key).fill(value);
+      await page.getByRole('button',{name:'Next step',exact:true}).click();
+      await expect(page.getByText('Enter a destination or route.',{exact:true})).toBeVisible();
       await page.locator('#enquiry-destination').fill('Cairo');
       await page.locator('#enquiry-passengers').fill('12');
       await page.locator('#enquiry-start').fill('2030-11-20');
       await page.locator('#enquiry-end').fill('2030-11-19');
-      await page.getByRole('button',{name:'Preview request',exact:true}).click();
+      await page.getByRole('button',{name:'Next step',exact:true}).click();
       await expect(page.getByText('Choose an end date on or after departure.',{exact:true})).toBeVisible();
       await page.locator('#enquiry-end').fill('2030-11-22');
+      await page.getByRole('button',{name:'Next step',exact:true}).click();
+      await page.getByRole('button',{name:'Next step',exact:true}).click();
+      await expect(page.getByText('Enter your name.',{exact:true})).toBeVisible();
+      for(const [key,value] of Object.entries({name:'Demo Traveller',email:'demo@example.com',agency:'Sample Agency',subject:'Sample group request',message:'Fictional travel requirements for a preview.'})) await page.locator('#enquiry-'+key).fill(value);
+      await page.getByRole('button',{name:'Next step',exact:true}).click();
       await page.getByRole('button',{name:'Preview request',exact:true}).click();
       await expect(page.getByRole('heading',{name:'Local preview ready — not sent'})).toBeVisible();
     }

@@ -1,4 +1,6 @@
 import { BrandLogo } from "@/components/brand-logo";
+import { Icon } from "@/components/ui/icon";
+import { ResponsiveImage } from "@/components/ui/responsive-image";
 import { boardPlanLabels } from "@/features/hotels/lib/board-plan-definitions";
 import { hotelDisplayAddress, hotelDisplayName, hotelTelephoneHref } from "@/features/hotels/lib/presentation";
 import type { HotelListing, LocalizedText } from "@/features/hotels/types";
@@ -37,6 +39,11 @@ export function AccommodationVoucher({ booking, hotel }: { booking: DemoBooking;
   ]
     .map(text)
     .filter((item): item is string => !!item);
+  const adults = rooms.reduce((total, occupancy) => total + occupancy.adults, 0);
+  const children = rooms.reduce((total, occupancy) => total + occupancy.childAges.length, 0);
+  const hotelPhoto = hotel.photos[0];
+  const roomPhoto = room.photos[0];
+  const description = text(hotel.description);
   const generated = new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date());
 
   return (
@@ -76,33 +83,59 @@ export function AccommodationVoucher({ booking, hotel }: { booking: DemoBooking;
             ) : (
               <p className="voucher__muted">{t("Star rating not provided", "تصنيف النجوم غير متوفر")}</p>
             )}
+            <p className="voucher__location"><Icon name="pin" />{hotelDisplayAddress(hotel.address[locale], locale)}</p>
+            {description && <p className="voucher__description">{description}</p>}
           </div>
-          <dl className="voucher__facts voucher__facts--two">
+          {hotelPhoto && <ResponsiveImage className="voucher__hotel-photo" src={hotelPhoto.src} alt="" width={hotelPhoto.width} height={hotelPhoto.height} sizes="(max-width: 720px) 100vw, 320px" eager />}
+        </div>
+        <dl className="voucher__facts voucher__facts--two">
             <div><dt>{t("Address", "العنوان")}</dt><dd>{hotelDisplayAddress(hotel.address[locale], locale)}</dd></div>
             <div>
               <dt>{t("Hotel telephone", "هاتف الفندق")}</dt>
               <dd>{phoneHref ? <a href={phoneHref}><bdi>{hotel.phone}</bdi></a> : notProvided}</dd>
             </div>
-            <div><dt>{t("Hotel confirmation reference", "مرجع تأكيد الفندق")}</dt><dd>{t("Not available — demonstration record", "غير متاح — سجل تجريبي")}</dd></div>
-            <div><dt>{t("Agency reference", "مرجع الوكالة")}</dt><dd><bdi>{booking.agencyReference}</bdi></dd></div>
-          </dl>
-        </div>
+        </dl>
+      </section>
+
+      <section className="voucher__section" aria-labelledby="voucher-booking">
+        <h3 id="voucher-booking">{t("Booking details", "تفاصيل الحجز")}</h3>
+        <dl className="voucher__facts voucher__facts--four">
+          <div><dt>{t("Booking reference", "مرجع الحجز")}</dt><dd><bdi>{booking.id}</bdi></dd></div>
+          <div><dt>{t("Booking status", "حالة الحجز")}</dt><dd className="voucher__status">{t("Confirmed", "مؤكد")}</dd></div>
+          <div><dt>{t("Booking date", "تاريخ الحجز")}</dt><dd><time dateTime={booking.bookedAt}>{date(booking.bookedAt)}</time></dd></div>
+          <div><dt>{t("Supplier reference", "مرجع المورد")}</dt><dd>{t("Not available — demonstration record", "غير متاح — سجل تجريبي")}</dd></div>
+          <div><dt>{t("Hotel confirmation reference", "مرجع تأكيد الفندق")}</dt><dd>{t("Not available — demonstration record", "غير متاح — سجل تجريبي")}</dd></div>
+          <div><dt>{t("Agency reference", "مرجع الوكالة")}</dt><dd><bdi>{booking.agencyReference}</bdi></dd></div>
+        </dl>
       </section>
 
       <section className="voucher__section" aria-labelledby="voucher-stay">
         <h3 id="voucher-stay">{t("Stay", "الإقامة")}</h3>
         <dl className="voucher__facts voucher__facts--stay">
-          <div><dt>{t("Lead traveller", "المسافر الرئيسي")}</dt><dd>{booking.guests.leadName}</dd></div>
-          <div><dt>{t("Check-in", "تسجيل الوصول")}</dt><dd><time dateTime={booking.checkIn}>{date(booking.checkIn)}</time>{checkInTime && <small> · {t("from", "من")} <bdi>{checkInTime}</bdi></small>}</dd></div>
-          <div><dt>{t("Check-out", "تسجيل المغادرة")}</dt><dd><time dateTime={booking.checkOut}>{date(booking.checkOut)}</time>{checkOutTime && <small> · {t("until", "حتى")} <bdi>{checkOutTime}</bdi></small>}</dd></div>
-          <div><dt>{t("Nights", "الليالي")}</dt><dd>{nights(booking.checkIn, booking.checkOut)}</dd></div>
-          <div><dt>{t("Rooms", "الغرف")}</dt><dd>{rooms.length}</dd></div>
-          <div><dt>{t("Board", "الوجبات")}</dt><dd>{boardPlanLabels[rate.boardPlan][locale]}</dd></div>
+          <div><dt><Icon name="user" />{t("Lead traveller", "المسافر الرئيسي")}</dt><dd>{booking.guests.leadName}</dd></div>
+          <div><dt><Icon name="calendar" />{t("Check-in", "تسجيل الوصول")}</dt><dd><time dateTime={booking.checkIn}>{date(booking.checkIn)}</time>{checkInTime && <small> · {t("from", "من")} <bdi>{checkInTime}</bdi></small>}</dd></div>
+          <div><dt><Icon name="calendar" />{t("Check-out", "تسجيل المغادرة")}</dt><dd><time dateTime={booking.checkOut}>{date(booking.checkOut)}</time>{checkOutTime && <small> · {t("until", "حتى")} <bdi>{checkOutTime}</bdi></small>}</dd></div>
+          <div><dt><Icon name="moon" />{t("Nights", "الليالي")}</dt><dd>{nights(booking.checkIn, booking.checkOut)}</dd></div>
+          <div><dt><Icon name="users" />{t("Guests", "الضيوف")}</dt><dd>{adults} {t("adults", "بالغون")}{children > 0 && ` · ${children} ${t("children", "أطفال")}`}</dd></div>
+          <div><dt><Icon name="bed" />{t("Rooms", "الغرف")}</dt><dd>{rooms.length}</dd></div>
+          <div><dt><Icon name="document" />{t("Board", "الوجبات")}</dt><dd>{boardPlanLabels[rate.boardPlan][locale]}</dd></div>
         </dl>
       </section>
 
       <section className="voucher__section" aria-labelledby="voucher-rooms">
         <h3 id="voucher-rooms">{t("Room details", "تفاصيل الغرف")}</h3>
+        <div className="voucher__room">
+          {roomPhoto && <ResponsiveImage src={roomPhoto.src} alt="" width={roomPhoto.width} height={roomPhoto.height} sizes="(max-width: 720px) 100vw, 220px" eager />}
+          <div>
+            <p className="voucher__room-name">{hotelDisplayName(room.name[locale])}</p>
+            <ul className="voucher__chips">
+              <li>{room.bed[locale]}</li>
+              {room.size > 0 && <li><bdi>{room.size} m²</bdi></li>}
+              <li>{boardPlanLabels[rate.boardPlan][locale]}</li>
+              {room.included.map((item) => <li key={item.en}>{text(item)}</li>)}
+            </ul>
+          </div>
+        </div>
         {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrollable region must be reachable by keyboard. */}
         <div className="voucher__table-wrap" role="region" tabIndex={0} aria-labelledby="voucher-rooms">
           <table className="voucher__table">

@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { selectLanguage } from "./helpers/header";
 import { visit } from "./helpers/demo-login";
+import { fillGroupTrip } from "./helpers/group-quotation";
 import { openHeaderTools } from "./helpers/header";
 
 for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
@@ -67,6 +68,7 @@ test("general contact validation prepares only a local preview and never sends d
   await expect(support.locator('a[href="mailto:royal.travel@royalvacation.online"]')).toBeVisible();
 
   await visit(page, "/group-quotation");
-  await page.getByRole("button", { name: "Preview request", exact: true }).click();
+  await fillGroupTrip(page);
+  await page.getByRole("button", { name: "Next step", exact: true }).click();
   await expect(page.getByText("Enter your name.", { exact: true })).toBeVisible();
 });

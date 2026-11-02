@@ -1,5 +1,8 @@
-/* Accommodation voucher: document layout on screen, A4 layout in print. */
+/* Accommodation voucher: premium document on screen, A4 layout in print. */
 .voucher {
+  --voucher-gold: #c9973f;
+  position: relative;
+  overflow: hidden;
   max-width: 900px;
   margin-inline: auto;
   padding: clamp(18px, 3vw, 36px);
@@ -11,22 +14,36 @@
   line-height: 1.5;
   box-shadow: var(--elevation-1);
 }
+.voucher::before {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  width: 190px;
+  height: 56px;
+  background: linear-gradient(to bottom left, var(--navy) 42%, var(--voucher-gold) 42% 58%, transparent 58%);
+  content: "";
+}
+[dir="rtl"] .voucher::before {
+  transform: scaleX(-1);
+}
 .voucher h2,
 .voucher h3,
 .voucher p {
   margin: 0;
 }
 .voucher__header {
+  position: relative;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
+  align-items: end;
   gap: var(--space-5);
-  padding-block-end: var(--space-4);
-  border-block-end: 3px solid var(--navy);
+  padding-block: 40px var(--space-4);
+  border-block-end: 1px solid var(--border);
 }
 .voucher__heading h2 {
   color: var(--navy);
   font-size: clamp(20px, 2.4vw, 26px);
+  font-weight: var(--weight-heavy);
   letter-spacing: -0.01em;
 }
 .voucher__heading p {
@@ -36,29 +53,20 @@
 .voucher__reference {
   display: grid;
   margin: 0;
-  border: 1px solid var(--navy);
-  border-radius: var(--rounded-sm);
-  overflow: hidden;
+  text-align: end;
 }
 .voucher__reference > div {
-  padding: 6px 12px;
-}
-.voucher__reference > div + div {
-  border-block-start: 1px solid var(--border);
+  padding: 2px 0;
 }
 .voucher__reference dt {
   color: var(--muted);
   font-size: 12px;
   font-weight: var(--weight-bold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-[dir="rtl"] .voucher__reference dt {
-  letter-spacing: 0;
 }
 .voucher__reference dd {
   margin: 0;
   font-weight: var(--weight-bold);
+  overflow-wrap: anywhere;
 }
 .voucher__warning {
   display: flex;
@@ -83,15 +91,19 @@
   letter-spacing: 0;
 }
 .voucher__section {
-  margin-block-start: var(--space-5);
+  margin-block-start: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--rounded-lg);
+  overflow: hidden;
   break-inside: avoid;
 }
+.voucher__section > :not(h3) {
+  margin: var(--space-3) var(--space-4);
+}
 .voucher__section h3 {
-  margin-block-end: var(--space-2);
-  padding: 6px 10px;
-  border-inline-start: 4px solid var(--secondary);
-  background: var(--subtle);
-  color: var(--navy);
+  padding: 8px var(--space-4);
+  background: var(--navy);
+  color: #fff;
   font-size: var(--font-size-sm);
   font-weight: var(--weight-heavy);
   letter-spacing: 0.06em;
@@ -102,13 +114,37 @@
 }
 .voucher__hotel {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
   gap: var(--space-4);
   align-items: start;
 }
 .voucher__hotel-name {
   font-size: var(--font-size-lg);
   font-weight: var(--weight-heavy);
+  overflow-wrap: anywhere;
+}
+.voucher__hotel-photo {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--rounded-sm);
+  object-fit: cover;
+}
+.voucher__location {
+  display: flex;
+  gap: 6px;
+  margin-block-start: 4px !important;
+  font-size: var(--font-size-sm);
+}
+.voucher__location svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-block-start: 2px;
+}
+.voucher__description {
+  margin-block-start: var(--space-2) !important;
+  color: var(--muted);
+  font-size: var(--font-size-sm);
 }
 .voucher__stars {
   color: #b7791f;
@@ -120,21 +156,21 @@
 }
 .voucher__facts {
   display: grid;
-  gap: 0;
+  gap: var(--space-3) var(--space-4);
   margin: 0;
-  border: 1px solid var(--border);
-}
-.voucher__facts > div {
-  padding: 8px 12px;
-  border-block-end: 1px solid var(--border);
-}
-.voucher__facts > div:last-child {
-  border-block-end: 0;
 }
 .voucher__facts dt {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   color: var(--muted);
   font-size: var(--font-size-xs);
   font-weight: var(--weight-semibold);
+}
+.voucher__facts dt svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
 }
 .voucher__facts dd {
   margin: 2px 0 0;
@@ -145,23 +181,45 @@
   color: var(--muted);
   font-weight: var(--weight-regular);
 }
+.voucher__status {
+  color: var(--success);
+}
 .voucher__facts--two {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-.voucher__facts--two > div:nth-child(odd) {
-  border-inline-end: 1px solid var(--border);
-}
-.voucher__facts--two > div:nth-last-child(-n + 2) {
-  border-block-end: 0;
-}
+.voucher__facts--four,
 .voucher__facts--stay {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
 }
-.voucher__facts--stay > div:not(:nth-child(3n)) {
-  border-inline-end: 1px solid var(--border);
+.voucher__room {
+  display: grid;
+  grid-template-columns: minmax(0, 200px) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: center;
 }
-.voucher__facts--stay > div:nth-last-child(-n + 3) {
-  border-block-end: 0;
+.voucher__room img {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  border-radius: var(--rounded-sm);
+  object-fit: cover;
+}
+.voucher__room-name {
+  font-weight: var(--weight-heavy);
+  font-size: var(--font-size-base);
+}
+.voucher__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.voucher__chips li {
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--rounded-pill);
+  font-size: var(--font-size-xs);
 }
 .voucher__table-wrap {
   overflow-x: auto;
@@ -174,13 +232,13 @@
 .voucher__table th,
 .voucher__table td {
   padding: 8px 10px;
-  border: 1px solid var(--border);
+  border-block-end: 1px solid var(--border);
   text-align: start;
   vertical-align: top;
 }
 .voucher .voucher__table th {
-  background: var(--navy);
-  color: #fff;
+  background: var(--subtle);
+  color: var(--navy);
   font-size: var(--font-size-xs);
   font-weight: var(--weight-bold);
 }
@@ -195,26 +253,23 @@
 .voucher__columns {
   display: grid;
   grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  gap: var(--space-5);
+  gap: var(--space-4);
 }
 .voucher__list {
-  margin: var(--space-2) 0 0;
   padding-inline-start: 20px;
   font-size: var(--font-size-sm);
 }
 .voucher__remarks {
-  min-height: 48px;
-  margin-block-end: var(--space-2) !important;
-  padding: 8px 12px;
-  border: 1px solid var(--border);
+  min-height: 40px;
   white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 .voucher__footer {
   display: grid;
   gap: 4px;
-  margin-block-start: var(--space-6);
+  margin-block-start: var(--space-5);
   padding-block-start: var(--space-3);
-  border-block-start: 1px solid var(--border);
+  border-block-start: 2px solid var(--voucher-gold);
   color: var(--muted);
   font-size: var(--font-size-xs);
 }
@@ -294,36 +349,38 @@
 [dir="rtl"] .voucher-toolbar .voucher-toolbar__back svg {
   rotate: 180deg;
 }
+.voucher-toolbar__hint {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: end;
+}
 @media (max-width: 720px) {
+  .voucher::before {
+    width: 110px;
+    height: 32px;
+  }
   .voucher__header {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-3);
   }
+  .voucher__reference {
+    text-align: start;
+  }
   .voucher__hotel,
   .voucher__columns,
+  .voucher__room,
   .voucher__facts--two {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .voucher__hotel-photo {
+    order: -1;
   }
   .voucher-toolbar .button {
     flex: 1 1 auto;
   }
-  .voucher__facts--two > div:nth-child(odd) {
-    border-inline-end: 0;
-  }
-  .voucher__facts--two > div:nth-last-child(2) {
-    border-block-end: 1px solid var(--border);
-  }
-  .voucher__facts--stay {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .voucher__facts--stay > div:not(:nth-child(3n)) {
-    border-inline-end: 0;
-  }
-  .voucher__facts--stay > div:nth-child(odd) {
-    border-inline-end: 1px solid var(--border);
-  }
-  .voucher__facts--stay > div:nth-last-child(3) {
-    border-block-end: 1px solid var(--border);
+  .voucher-toolbar__hint {
+    text-align: start;
   }
 }
 
@@ -335,20 +392,53 @@
   .voucher {
     max-width: none;
     padding: 0;
+    overflow: visible;
     border: 0;
     box-shadow: none;
-    font-size: 10.5pt;
+    font-size: 10pt;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .voucher *,
+  .voucher::before {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
   .voucher__header,
   .voucher__warning,
   .voucher__section,
+  .voucher__columns,
   .voucher__table tr {
     break-inside: avoid;
   }
+  .voucher__header {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding-block-start: 14mm;
+  }
+  .voucher__section {
+    margin-block-start: 3mm;
+  }
+  .voucher__section > :not(h3) {
+    margin: 2mm 3mm;
+  }
   .voucher__section h3 {
     break-after: avoid;
+    padding: 1.5mm 3mm;
+  }
+  .voucher__hotel {
+    grid-template-columns: minmax(0, 1fr) 62mm;
+  }
+  .voucher__room {
+    grid-template-columns: 38mm minmax(0, 1fr);
+  }
+  .voucher__facts--two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .voucher__columns {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  }
+  .voucher__hotel-photo {
+    order: 0;
   }
   .voucher__table-wrap {
     overflow: visible;

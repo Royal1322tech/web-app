@@ -20,3 +20,4 @@
 .preview p { margin-top:12px; white-space:pre-wrap; }
 @media(max-width:799px) { .grid { grid-template-columns:minmax(0,1fr); } }
 @media(max-width:599px) { .fields { grid-template-columns:minmax(0,1fr); } .form,.aside { padding:18px; } }
+.saveDemo { width:100%; margin-block-start:14px; }

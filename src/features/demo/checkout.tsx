@@ -1,11 +1,13 @@
 import { hotelDisplayName } from "@/features/hotels/lib/presentation";
+import { BookingProcessingPanel, BookingStatusPanel } from "./booking-status";
+import { statePreviewEnabled } from "@/components/ui/system-state";
 import { cancellationPolicyLabels } from "@/features/hotels/cancellation-policy";
 import { CancellationPolicyCard } from "./cancellation-policy-card";
 import { assessAgencyCredit, paymentMethods } from "./payment-methods";
 import { fitsDemoRoom } from "./room-policy";
 import { stayQuery } from "@/features/hotels/lib/stay-query";
-import { useState } from "react";
-import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -17,6 +19,7 @@ import { hotels } from "@/features/hotels/data/hotels.fixture";
 import { HotelPolicySections } from "./hotel-policy-sections";
 import { AccommodationVoucher } from "./accommodation-voucher";
 import { useDemo, totalFor } from "./demo-provider";
+import type { DemoBookingOutcome } from "./demo-provider";
 import { useTravelPreferences } from "@/features/preferences/travel-preferences";
 import { demoFinance } from "./fixtures";
 import { boardPlanLabels } from "@/features/hotels/lib/board-plan-definitions";
@@ -24,7 +27,6 @@ import { samplePriceBreakdown } from "@/features/hotels/lib/sample-stay";
 import {
   Workspace,
   SelectionSummary,
-  StatusBadge,
   useMoney,
 } from "./shared";
 import type { DemoSelection, GuestValues } from "./types";
@@ -483,9 +485,27 @@ export function PaymentPage() {
     </Workspace>
   );
 }
+/** A short visual transition only. The outcome is what the viewer chose, never decided by this timer. */
+const SIMULATION_DISPLAY_MS = 2600;
+const SIMULATION_DISPLAY_REDUCED_MS = 900;
 export function BookingPreparedPage() {
   const { locale, t } = useLocale();
-  const { selection, guests, policyAcknowledged, paymentMethod, paymentDetailsPrepared } = useDemo();
+  const { selection, guests, policyAcknowledged, paymentMethod, paymentDetailsPrepared, simulateBooking } = useDemo();
+  const navigate = useNavigate();
+  const [outcome, setOutcome] = useState<DemoBookingOutcome>("confirmed");
+  const [simulating, setSimulating] = useState(false);
+  const simulationTimer = useRef(0);
+  useEffect(() => () => window.clearTimeout(simulationTimer.current), []);
+  const runSimulation = () => {
+    setSimulating(true);
+    window.scrollTo(0, 0);
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    simulationTimer.current = window.setTimeout(() => {
+      const id = simulateBooking(outcome);
+      if (id) navigate(`/booking/result/${id}`, { replace: true, state: { simulated: true } });
+      else setSimulating(false);
+    }, reduced ? SIMULATION_DISPLAY_REDUCED_MS : SIMULATION_DISPLAY_MS);
+  };
   if (!selection) return <Workspace accountNavigation={false} title={t("Booking details prepared", "تم تجهيز تفاصيل الحجز")}><EmptySelection /></Workspace>;
   if (!guests) return <Navigate to="/booking/guests" replace />;
   if (!policyAcknowledged) return <Navigate to="/booking/policy" replace />;
@@ -495,6 +515,19 @@ export function BookingPreparedPage() {
   const adultCount = selection.criteria.rooms.reduce((total, room) => total + room.adults, 0);
   const childCount = selection.criteria.rooms.reduce((total, room) => total + room.childAges.length, 0);
   const selectedPaymentMethod = paymentMethods.find((method) => method.id === paymentMethod);
+  if (simulating) {
+    return (
+      <Workspace accountNavigation={false} title={t("Processing booking", "معالجة الحجز")}>
+        <Progress step={4} />
+        <BookingProcessingPanel selection={selection} />
+      </Workspace>
+    );
+  }
+  const outcomes: [DemoBookingOutcome, string][] = [
+    ["confirmed", t("Confirmed", "مؤكد")],
+    ["pending", t("Pending confirmation", "في انتظار التأكيد")],
+    ["failed", t("Failed", "فشل")],
+  ];
   return (
     <Workspace accountNavigation={false} title={t("Booking details prepared", "تم تجهيز تفاصيل الحجز")}>
       <Progress step={4} />
@@ -515,6 +548,15 @@ export function BookingPreparedPage() {
             <div><dt>{t("Selected payment method", "طريقة الدفع المختارة")}</dt><dd>{selectedPaymentMethod?.label[locale] ?? "—"}</dd></div>
           </dl>
           <div className="workspace-actions"><Link className="button button--outline" to="/booking/summary">{t("Review Booking Details", "مراجعة تفاصيل الحجز")}</Link><Link className="button button--primary" to="/search">{t("Return to Hotel Search", "العودة إلى البحث عن الفنادق")}</Link></div>
+          <section className="demo-simulation" aria-labelledby="demo-simulation-title">
+            <h3 id="demo-simulation-title">{t("Demo booking simulation", "محاكاة حجز تجريبية")}</h3>
+            <p>{t("Preview what happens after booking. This creates a demonstration record in this browser session only. No supplier is contacted, no room is reserved and no payment is taken.", "عاين ما يحدث بعد الحجز. ينشئ هذا سجلًا تجريبيًا في جلسة المتصفح هذه فقط. لا يتم التواصل مع أي مورد أو حجز أي غرفة أو تحصيل أي مبلغ.")}</p>
+            <fieldset>
+              <legend>{t("Outcome to simulate", "النتيجة المراد محاكاتها")}</legend>
+              {outcomes.map(([value, label]) => <label key={value}><input type="radio" name="demo-outcome" value={value} checked={outcome === value} onChange={() => setOutcome(value)} />{label}</label>)}
+            </fieldset>
+            <button type="button" className="button button--primary" onClick={runSimulation}>{t("Run demo booking", "تشغيل الحجز التجريبي")}</button>
+          </section>
         </section>
         <SelectionSummary selection={selection} />
       </div>
@@ -526,78 +568,35 @@ export function BookingResultPage() {
   const { records, selectRoom, saveGuests, acknowledgePolicy } = useDemo();
   const { t } = useLocale();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const booking = records.find((b) => b.id === id);
+  // No booking service exists yet, so nothing is ever in flight; developers can preview the state.
+  const previewProcessing = statePreviewEnabled && params.get("preview") === "processing";
   return (
     <Workspace accountNavigation={false} title={t("Booking result", "نتيجة الحجز")}>
       <Progress step={4} />
       {!booking ? (
         <EmptySelection />
       ) : (
-        <>
-          <div className="workspace-grid">
-            <section className="workspace-card">
-              <StatusBadge status={booking.status} />
-              <h2>
-                {booking.status === "confirmed"
-                  ? t("Your booking record is ready.", "سجل الحجز جاهز.")
-                  : booking.status === "pending"
-                    ? t("Pending outcome recorded.", "تم تسجيل نتيجة معلقة.")
-                    : booking.status === "cancelled"
-                      ? t(
-                          "This booking record is cancelled.",
-                          "أُلغي سجل الحجز هذا.",
-                        )
-                      : t(
-                          "Payment outcome recorded as failed.",
-                          "تم تسجيل نتيجة الدفع كفاشلة.",
-                        )}
-              </h2>
-              <p>
-                {t("Reference", "المرجع")}:{" "}
-                <strong>
-                  <bdi>{booking.id}</bdi>
-                </strong>
-              </p>
-              <p>
-                {t(
-                  "No real booking or payment occurred. This record is available only in the current browser session.",
-                  "لم يحدث حجز أو دفع فعلي. يتوفر هذا السجل في جلسة المتصفح الحالية فقط.",
-                )}
-              </p>
-              <div className="workspace-actions">
-                <Link
-                  className="button button--primary"
-                  to={`/bookings/${booking.id}`}
-                >
-                  {t("View booking details", "عرض تفاصيل الحجز")}
-                </Link>
-                {booking.status === "confirmed" && (
-                  <Link
-                    className="button button--outline"
-                    to={`/bookings/${booking.id}/voucher`}
-                  >
-                    {t("View voucher", "عرض القسيمة")}
-                  </Link>
-                )}
-                {booking.status === "failed" && (
-                  <button
-                    className="button button--outline"
-                    onClick={() => {
-                      selectRoom(booking.selection);
-                      saveGuests(booking.guests);
-                      // Retrying the unchanged offer retains its explicitly recorded review.
-                      acknowledgePolicy(booking.policyAcknowledged === true);
-                      navigate(booking.policyAcknowledged ? "/booking/payment" : "/booking/summary");
-                    }}
-                  >
-                    {t("Retry simulation", "إعادة المحاكاة")}
-                  </button>
-                )}
-              </div>
-            </section>
-            <SelectionSummary selection={booking.selection} />
-          </div>
-        </>
+        <BookingStatusPanel
+          booking={booking}
+          state={previewProcessing ? "processing" : booking.status}
+          extraAction={booking.status === "failed" ? (
+            <button
+              type="button"
+              className="button button--outline"
+              onClick={() => {
+                selectRoom(booking.selection);
+                saveGuests(booking.guests);
+                // Retrying the unchanged offer retains its explicitly recorded review.
+                acknowledgePolicy(booking.policyAcknowledged === true);
+                navigate(booking.policyAcknowledged ? "/booking/payment" : "/booking/summary");
+              }}
+            >
+              {t("Retry simulation", "إعادة المحاكاة")}
+            </button>
+          ) : undefined}
+        />
       )}
     </Workspace>
   );
@@ -639,6 +638,7 @@ export function VoucherPage() {
               <Icon name="printer" aria-hidden="true" />
               {t("Print voucher", "طباعة القسيمة")}
             </button>
+            <p className="voucher-toolbar__hint">{t("To save a PDF, choose “Save as PDF” in the print dialog.", "لحفظ ملف PDF، اختر «حفظ بتنسيق PDF» في نافذة الطباعة.")}</p>
           </div>
           <AccommodationVoucher booking={booking} hotel={hotel} />
         </>

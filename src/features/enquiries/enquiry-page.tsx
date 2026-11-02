@@ -1,5 +1,5 @@
 import { ChauffeurEnquiryPage, chauffeurSubjects } from "@/features/car-rental/chauffeur-enquiry";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,6 +16,11 @@ import { demoAuth, subscribeDemoSession } from "@/features/auth/demo-auth";
 import { SiteFooter } from "@/features/home/components/site-footer";
 import { getCountryCallingCode } from "libphonenumber-js/max";
 import { contactPhone, phoneCountries, validPhoneCountry } from "@/features/agency-registration/lib/phone";
+import { statePreviewEnabled } from "@/components/ui/system-state";
+import { useDemo } from "@/features/demo/demo-provider";
+import { GroupQuotationWizard } from "@/features/group-requests/group-quotation-wizard";
+import { GroupRequestFailed, GroupRequestSaved, GroupRequestSaving } from "@/features/group-requests/group-request-status";
+import type { NewGroupRequest } from "@/features/group-requests/group-request-types";
 
 const whatsappUrl = "https://wa.me/201070724143";
 const contactEmail = "royal.travel@royalvacation.online";
@@ -26,12 +31,25 @@ export function EnquiryPage({ group = false }: { group?: boolean }) {
   const demoSessionActive = useSyncExternalStore(subscribeDemoSession, demoAuth.isActive, () => false);
   const [params] = useSearchParams();
   if (!group && chauffeurSubjects.includes(params.get("subject") ?? "")) return <ChauffeurEnquiryPage />;
-  return <GeneralEnquiryPage group={group} publicVisitor={!demoSessionActive && !group} />;
+  if (group) return <GroupEnquiryPage />;
+  return <GeneralEnquiryPage group={false} publicVisitor={!demoSessionActive} />;
 }
-function GeneralEnquiryPage({ group, publicVisitor }: { group: boolean; publicVisitor: boolean }) {
+/* Group quotation sits behind the session gate, so the demo store is always available here. */
+function GroupEnquiryPage() {
+  const { createGroupRequest } = useDemo();
+  return <GeneralEnquiryPage group publicVisitor={false} saveGroupRequest={createGroupRequest} />;
+}
+/** Long enough to read the saving panel instead of a flash. The outcome never depends on it. */
+const SAVING_DISPLAY_MS = 700;
+function GeneralEnquiryPage({ group, publicVisitor, saveGroupRequest }: { group: boolean; publicVisitor: boolean; saveGroupRequest?: (input: NewGroupRequest) => string | null }) {
   const { t, locale } = useLocale();
   const [params] = useSearchParams();
   const [preview, setPreview] = useState(false);
+  // Developer state preview only: the failed panel has no way to occur for a signed-in demo session.
+  const [saveState, setSaveState] = useState<"form" | "saving" | "saved" | "failed">(() => statePreviewEnabled && params.get("preview") === "failed" ? "failed" : "form");
+  const [savedReference, setSavedReference] = useState("");
+  const saveTimer = useRef(0);
+  useEffect(() => () => window.clearTimeout(saveTimer.current), []);
   const schema = z.object({
     name: z.string().trim().min(2, t("Enter your name.", "أدخل اسمك.")).max(100),
     email: z.email(t("Enter a valid email.", "أدخل بريدًا إلكترونيًا صحيحًا.")),
@@ -70,23 +88,32 @@ function GeneralEnquiryPage({ group, publicVisitor }: { group: boolean; publicVi
     "private-chauffeur": t("Private chauffeur enquiry", "استفسار سائق خاص"),
     "vip-transport": t("VIP transportation enquiry", "استفسار نقل كبار الشخصيات"),
   };
-  const { register, handleSubmit, getValues, formState: { errors, isSubmitting } } = useForm<Values>({
+  const form = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: { name:"", email:"", phone:"", phoneCountry:"EG", agency:"", subject:group ? t("Group quotation request", "طلب عرض سعر للمجموعات") : subjects[params.get("subject") ?? ""] ?? "", message:"", destination:"", start:"", end:"", passengers:"", rooms:"", service:"both" },
   });
+  const { register, handleSubmit, getValues, formState: { errors, isSubmitting } } = form;
   const countryNames = new Intl.DisplayNames([locale], { type: "region" });
   const title = group ? t("Group quotation", "عرض سعر للمجموعات") : t("Contact Us", "تواصل معنا");
   const fields: { key: keyof Values; label: string; type?: string; required?: boolean; autoComplete?: string }[] = [
-    { key:"name", label:group ? t("Name", "الاسم") : t("Full Name", "الاسم الكامل"), required:true, autoComplete:"name" }, { key:"email", label:group ? t("Email", "البريد الإلكتروني") : t("Email Address", "البريد الإلكتروني"), type:"email", required:true, autoComplete:"email" },
-    { key:"agency", label:group ? t("Agency / company", "الوكالة / الشركة") : t("Agency / Company Name (optional)", "اسم الوكالة / الشركة (اختياري)"), required:group, autoComplete:"organization" }, { key:"subject", label:t("Subject", "الموضوع"), required:true },
-    ...(group ? [
-      { key:"destination" as const, label:t("Destination / route", "الوجهة / المسار"), required:true },
-      { key:"passengers" as const, label:t("Passengers", "المسافرون"), type:"number", required:true },
-      { key:"start" as const, label:t("Departure date", "تاريخ المغادرة"), type:"date", required:true },
-      { key:"end" as const, label:t("End date", "تاريخ النهاية"), type:"date", required:true },
-      { key:"rooms" as const, label:t("Rooms needed (optional)", "الغرف المطلوبة (اختياري)"), type:"number" },
-    ] : []),
+    { key:"name", label:t("Full Name", "الاسم الكامل"), required:true, autoComplete:"name" }, { key:"email", label:t("Email Address", "البريد الإلكتروني"), type:"email", required:true, autoComplete:"email" },
+    { key:"agency", label:t("Agency / Company Name (optional)", "اسم الوكالة / الشركة (اختياري)"), autoComplete:"organization" }, { key:"subject", label:t("Subject", "الموضوع"), required:true },
   ];
+  const saveRequest = () => {
+    if (!saveGroupRequest || saveState === "saving") return;
+    setSaveState("saving");
+    window.scrollTo(0, 0);
+    saveTimer.current = window.setTimeout(() => {
+      const values = getValues();
+      const reference = saveGroupRequest({
+        name: values.name.trim(), email: values.email, agency: values.agency.trim(), subject: values.subject.trim(), destination: values.destination.trim(),
+        start: values.start, end: values.end, passengers: Number(values.passengers), rooms: values.rooms ? Number(values.rooms) : undefined,
+        service: values.service, message: values.message.trim(),
+      });
+      setSavedReference(reference ?? "");
+      setSaveState(reference ? "saved" : "failed");
+    }, SAVING_DISPLAY_MS);
+  };
   /** The prepared enquiry as plain text, for the visitor to send from their own app. */
   const enquiryText = () => {
     const values = getValues();
@@ -113,8 +140,14 @@ function GeneralEnquiryPage({ group, publicVisitor }: { group: boolean; publicVi
       </>}
       {group && <p className={styles.eyebrow}>{t("ROYAL VACATION · AGENCY ENQUIRIES", "رويال فاكيشن · استفسارات الوكالات")}</p>}
       {group && <><h1>{title}</h1><p className={styles.intro}>{t("Bring your group’s travel requirements together in one clear request preview.", "اجمع متطلبات سفر مجموعتك في معاينة طلب واحدة واضحة.")}</p></>}
+      {saveState === "saving" && <GroupRequestSaving />}
+      {saveState === "saved" && <GroupRequestSaved reference={savedReference} />}
+      {saveState === "failed" && <GroupRequestFailed onRetry={() => { setSaveState("form"); setPreview(true); }} />}
+      {/* The form stays mounted while saving, so nothing typed is lost. */}
+      <div hidden={saveState !== "form"}>
+      {group ? <GroupQuotationWizard form={form} preview={preview} onPreviewChange={setPreview} onSave={saveRequest} /> : (
       <div className={styles.grid}>
-        {!group && <aside className={contact.information}>
+        <aside className={contact.information}>
           <h2>{t("Contact Information", "معلومات التواصل")}</h2>
           <p>{t("Connect with Royal Vacation for your agency’s next journey.", "تواصل مع رويال فاكيشن من أجل رحلة وكالتك القادمة.")}</p>
           <ul className={contact.actions}>
@@ -125,45 +158,39 @@ function GeneralEnquiryPage({ group, publicVisitor }: { group: boolean; publicVi
             <Link to="/group-quotation">{t("Planning a group journey?", "تخطط لرحلة جماعية؟")} <Icon name="arrowRight" /></Link>
             <Link to="/tickets">{t("My Tickets", "تذاكري")} <Icon name="arrowRight" /></Link>
           </div>}
-        </aside>}
+        </aside>
 
         <form noValidate className={styles.form} onChange={() => setPreview(false)} onSubmit={handleSubmit(async () => { await Promise.resolve(); setPreview(true); }, () => setPreview(false))}>
-          {!group && <h2 className={contact.formTitle}>{t("Prepare your enquiry", "جهّز استفسارك")}</h2>}
+          <h2 className={contact.formTitle}>{t("Prepare your enquiry", "جهّز استفسارك")}</h2>
           <p className={styles.notice}>{t("This form prepares a local preview only. It does not send your message.", "يجهز هذا النموذج معاينة محلية فقط، ولا يرسل رسالتك.")}</p>
           <div className={styles.fields}>{fields.map(field => <FormField key={field.key} id={"enquiry-" + field.key} label={field.label} required={field.required} error={errors[field.key]?.message}>
-            <div className={!group ? contact.inputWrap : undefined}>
-            {!group && <Icon name={field.key === "email" ? "mail" : field.key === "name" ? "user" : field.key === "agency" ? "building" : "document"} />}
-            <input placeholder={group ? undefined : field.key === "name" ? t("Enter your full name", "أدخل اسمك الكامل") : field.key === "email" ? t("Enter your email address", "أدخل بريدك الإلكتروني") : field.key === "agency" ? t("Your agency or company", "اسم الوكالة أو الشركة") : t("What can we help with?", "كيف يمكننا مساعدتك؟")} id={"enquiry-" + field.key} className="input" type={field.type ?? "text"} autoComplete={field.autoComplete} required={field.required} min={field.type === "number" ? 1 : undefined} step={field.type === "number" ? 1 : undefined} dir={field.type === "email" ? "ltr" : undefined} aria-invalid={!!errors[field.key]} aria-describedby={errors[field.key] ? "enquiry-" + field.key + "-error" : undefined} {...register(field.key)} />
+            <div className={contact.inputWrap}>
+            <Icon name={field.key === "email" ? "mail" : field.key === "name" ? "user" : field.key === "agency" ? "building" : "document"} />
+            <input placeholder={field.key === "name" ? t("Enter your full name", "أدخل اسمك الكامل") : field.key === "email" ? t("Enter your email address", "أدخل بريدك الإلكتروني") : field.key === "agency" ? t("Your agency or company", "اسم الوكالة أو الشركة") : t("What can we help with?", "كيف يمكننا مساعدتك؟")} id={"enquiry-" + field.key} className="input" type={field.type ?? "text"} autoComplete={field.autoComplete} required={field.required} dir={field.type === "email" ? "ltr" : undefined} aria-invalid={!!errors[field.key]} aria-describedby={errors[field.key] ? "enquiry-" + field.key + "-error" : undefined} {...register(field.key)} />
             </div>
           </FormField>)}</div>
-          {!group && <FormField id="enquiry-phone" label={t("Phone Number", "رقم الهاتف")} required error={errors.phone?.message}>
+          <FormField id="enquiry-phone" label={t("Phone Number", "رقم الهاتف")} required error={errors.phone?.message}>
             <div className={contact.phoneEntry} dir="ltr">
               <select id="enquiry-phone-country" className="input" aria-label={t("Country dialing code", "رمز اتصال الدولة")} aria-invalid={!!errors.phoneCountry} {...register("phoneCountry")}>
                 {phoneCountries.map(country => <option key={country} value={country}>{countryNames.of(country)} (+{getCountryCallingCode(country)})</option>)}
               </select>
               <input id="enquiry-phone" className="input" type="tel" autoComplete="tel-national" required placeholder={t("Phone number", "رقم الهاتف")} aria-invalid={!!errors.phone} aria-describedby={errors.phone ? "enquiry-phone-error" : undefined} {...register("phone")} />
             </div>
-          </FormField>}
-          {group && <FormField id="enquiry-service" label={t("Requested services", "الخدمات المطلوبة")}><select id="enquiry-service" className="input" {...register("service")}><option value="both">{t("Hotels and transportation", "فنادق ونقل")}</option><option value="hotels">{t("Hotels", "فنادق")}</option><option value="transport">{t("Transportation", "نقل")}</option></select></FormField>}
-          <FormField id="enquiry-message" label={group ? t("Message / requirements", "الرسالة / المتطلبات") : t("Message", "الرسالة")} required error={errors.message?.message}>
-            <textarea placeholder={group ? undefined : t("Write your message here…", "اكتب رسالتك هنا…")} id="enquiry-message" className="input" rows={5} required maxLength={2000} aria-invalid={!!errors.message} aria-describedby={errors.message ? "enquiry-message-error" : undefined} {...register("message")} />
           </FormField>
-          <button className={`button button--primary ${!group ? contact.send : ""}`} disabled={isSubmitting} type="submit">{isSubmitting ? t("Preparing preview…", "تجهيز المعاينة…") : group ? t("Preview request", "معاينة الطلب") : t("Prepare enquiry", "تجهيز الاستفسار")}{!group && <Icon name="arrowRight" />}</button>
-          {preview && <section className={styles.preview} role="status"><h2>{t("Local preview ready — not sent", "المعاينة المحلية جاهزة — لم تُرسل")}</h2><p>{getValues("subject")}</p><p>{getValues("message")}</p>{group ? <p>{t("Delivery is unavailable until an approved contact service is connected. No response time or price is promised.", "الإرسال غير متاح حتى ربط خدمة تواصل معتمدة. لا يوجد وعد بمدة رد أو سعر.")}</p> : <>
+          <FormField id="enquiry-message" label={t("Message", "الرسالة")} required error={errors.message?.message}>
+            <textarea placeholder={t("Write your message here…", "اكتب رسالتك هنا…")} id="enquiry-message" className="input" rows={5} required maxLength={2000} aria-invalid={!!errors.message} aria-describedby={errors.message ? "enquiry-message-error" : undefined} {...register("message")} />
+          </FormField>
+          <button className={`button button--primary ${contact.send}`} disabled={isSubmitting} type="submit">{isSubmitting ? t("Preparing preview…", "تجهيز المعاينة…") : t("Prepare enquiry", "تجهيز الاستفسار")}<Icon name="arrowRight" /></button>
+          {preview && <section className={styles.preview} role="status"><h2>{t("Local preview ready — not sent", "المعاينة المحلية جاهزة — لم تُرسل")}</h2><p>{getValues("subject")}</p><p>{getValues("message")}</p><>
             <div className={contact.sendActions}>
               <a className="button button--outline" href={`${whatsappUrl}?text=${encodeURIComponent(enquiryText())}`} target="_blank" rel="noopener noreferrer"><Icon name="whatsapp" />{t("Send via WhatsApp", "إرسال عبر واتساب")}</a>
               <a className="button button--outline" href={`mailto:${contactEmail}?subject=${encodeURIComponent(getValues("subject"))}&body=${encodeURIComponent(enquiryText())}`}><Icon name="mail" />{t("Send via Email", "إرسال عبر البريد الإلكتروني")}</a>
             </div>
             <p>{t("Each option opens your own app with this enquiry filled in. You must complete sending there. This website does not send or store your enquiry and cannot confirm delivery. No response time or price is promised.", "يفتح كل خيار تطبيقك الخاص وبه هذا الاستفسار جاهزًا، وعليك إكمال الإرسال من هناك. لا يرسل هذا الموقع استفسارك ولا يخزنه ولا يمكنه تأكيد وصوله. لا يوجد وعد بمدة رد أو سعر.")}</p>
-          </>}</section>}
+          </></section>}
         </form>
-        {group && <aside className={styles.aside}>
-          <h2>{t("For travel professionals", "لمحترفي السفر")}</h2>
-          <p>{t("Include your destination, travel dates and service requirements. Please do not enter payment details or identity documents.", "اذكر الوجهة وتواريخ السفر والخدمات المطلوبة. لا تدخل بيانات دفع أو مستندات هوية.")}</p>
-          <Link to={group ? "/contact" : "/group-quotation"}>{group ? t("General agency enquiry", "استفسار عام للوكالة") : t("Plan a group quotation", "جهز طلب عرض سعر لمجموعة")}</Link>
-          <Link to="/search">{t("Explore hotels", "استكشف الفنادق")}</Link>
-          <Link to="/car-rental">{t("Explore car rentals", "استكشف تأجير السيارات")}</Link>
-        </aside>}
+      </div>
+      )}
       </div>
     </section>
     </CatalogShell>{!group && <SiteFooter />}</>;

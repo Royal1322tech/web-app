@@ -1,4 +1,6 @@
 import { demoAuth, subscribeDemoSession } from "@/features/auth/demo-auth";
+import { sampleGroupRequests } from "@/features/group-requests/group-requests.fixture";
+import type { GroupRequest, NewGroupRequest } from "@/features/group-requests/group-request-types";
 import {
   rentalTotal,
   rentalSchema,
@@ -13,6 +15,7 @@ import type { HotelSearchCriteria } from "@/features/home/schemas/hotel-search.s
 import { localToday } from "@/features/home/schemas/hotel-search.schema";
 import { samplePriceBreakdown } from "@/features/hotels/lib/sample-stay";
 import { demoProfile, demoNotifications, initialBookings } from "./fixtures";
+import { snapshotCancellationPolicy } from "./cancellation-assessment";
 import { demoUserIds } from "@/features/auth/demo-auth";
 import { sampleTickets } from "@/features/tickets/tickets.fixture";
 import { findOwnedTicket, ownedTickets, resolveBookingAccess } from "@/features/tickets/ticket-access";
@@ -68,8 +71,15 @@ interface DemoContextValue {
   tickets: SupportTicket[];
   /** Records a local preview ticket for an owned, recorded booking. Nothing is sent. */
   createTicket: (input: NewTicketInput) => string | null;
+  /** Records a session-only demonstration booking with the outcome the viewer chose. Nothing is sent anywhere. */
+  simulateBooking: (outcome: DemoBookingOutcome) => string | null;
+  groupRequests: readonly GroupRequest[];
+  /** Saves a clearly local record in this session. Nothing is sent anywhere. */
+  createGroupRequest: (input: NewGroupRequest) => string | null;
   addTicketMessage: (reference: string, body: string) => boolean;
 }
+export type DemoBookingOutcome = "confirmed" | "pending" | "failed";
+
 const DemoContext = createContext<DemoContextValue | null>(null);
 export function totalFor(selection: DemoSelection) {
   return (
@@ -105,6 +115,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState(demoProfile);
   const [notifications, setNotifications] = useState(demoNotifications);
   const [allTickets, setAllTickets] = useState<SupportTicket[]>(() => [...sampleTickets]);
+  const [allGroupRequests, setAllGroupRequests] = useState<GroupRequest[]>(() => [...sampleGroupRequests]);
   const currentUserId = demoSessionActive ? demoUserIds.current : null;
   const value: DemoContextValue = {
     rentalPolicyAcknowledged,
@@ -293,6 +304,44 @@ export function DemoProvider({ children }: { children: ReactNode }) {
           origin: "local-preview",
           messages: [{ id: crypto.randomUUID(), author: "owner", body: input.description, at: now, attachment: input.attachment }],
         },
+        ...current,
+      ]);
+      return reference;
+    },
+    simulateBooking: (outcome) => {
+      if (!selection || !guests || !policyAcknowledged || !paymentDetailsPrepared || !currentUserId) return null;
+      const now = new Date().toISOString();
+      const id = `DEMO-LOCAL-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
+      setRecords((current) => [
+        {
+          id,
+          hotelId: selection.hotelId,
+          status: outcome,
+          bookedAt: localToday(),
+          checkIn: selection.criteria.checkIn,
+          checkOut: selection.criteria.checkOut,
+          traveller: guests.leadName,
+          owner: "mine",
+          ownerId: currentUserId,
+          agencyReference: guests.reference,
+          cancellationFee: false,
+          selection,
+          policyAcknowledged: true,
+          cancellationPolicySnapshot: snapshotCancellationPolicy(selection.rate.cancellationPolicy),
+          guests,
+          total: totalFor(selection),
+          timeline: [{ label: `Demo simulation: ${outcome}`, at: now }],
+        },
+        ...current,
+      ]);
+      return id;
+    },
+    groupRequests: allGroupRequests.filter((request) => request.ownerId === currentUserId),
+    createGroupRequest: (input) => {
+      if (!currentUserId) return null;
+      const reference = `GRP-LOCAL-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
+      setAllGroupRequests((current) => [
+        { ...input, reference, ownerId: currentUserId, status: "saved_locally", createdAt: new Date().toISOString(), origin: "local-preview" },
         ...current,
       ]);
       return reference;

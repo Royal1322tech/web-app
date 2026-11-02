@@ -70,7 +70,7 @@ export function SystemState({
   );
 }
 /* Developer-only: shown by `vite dev` or a build with VITE_ENABLE_STATE_PREVIEW=true. */
-const statePreviewEnabled =
+export const statePreviewEnabled =
   import.meta.env.DEV || import.meta.env.VITE_ENABLE_STATE_PREVIEW === "true";
 
 /** Explicit demonstration controls, not invented network requests or artificial loading. */
