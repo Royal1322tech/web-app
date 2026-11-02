@@ -101,10 +101,12 @@ test.describe("car rental", () => {
   test.describe("hero carousel", () => {
     const activeSrc = (page: Page) => page.locator('.rental-hero__slide[data-active="true"] img').getAttribute("src");
 
-    test("crossfades by itself with no controls, using images distinct from the cards", async ({ page }) => {
+    test("crossfades by itself with one pause control, using images distinct from the cards", async ({ page }) => {
       await visit(page, "/car-rental");
       const hero = page.locator(".rental-hero--carousel");
-      await expect(hero.locator("button, a")).toHaveCount(0);
+      await expect(hero.locator("a")).toHaveCount(0);
+      await expect(hero.locator("button")).toHaveCount(1);
+      await expect(hero.getByRole("button", { name: "Pause image rotation" })).toBeVisible();
       await expect(hero.locator(".rental-hero__slide")).toHaveCount(4);
       await expect(hero.getByRole("heading", { level: 1 })).toHaveText("Car Rental for your clients");
       const before = await hero.boundingBox();
@@ -154,9 +156,9 @@ test.describe("car rental", () => {
     });
   });
 
-  test("Search vehicles has AA contrast", async ({ page }) => {
+  test("Search vehicles is the Royal Blue primary button with AA contrast", async ({ page }) => {
     await visit(page, "/car-rental");
-    await expect(page.getByRole("button", { name: "Search vehicles" })).toHaveCSS("background-color", "rgb(158, 108, 41)");
+    await expect(page.getByRole("button", { name: "Search vehicles" })).toHaveCSS("background-color", "rgb(14, 77, 146)");
   });
 
   for (const [width, locale] of [[1440, "en"], [390, "ar"]] as const) {

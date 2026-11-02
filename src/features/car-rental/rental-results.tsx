@@ -83,7 +83,7 @@ export function RentalSearchPage() {
           {vehicles.map(vehicle => <article className="rental-horizontal-card rental-card" key={vehicle.id}>
             <VehiclePhoto vehicle={vehicle} />
             <div className="rental-vehicle-copy"><span className="rental-service-badge"><Icon name="car" />{t("Self-Drive", "قيادة ذاتية")}</span><h2>{vehicleName(vehicle, locale)}</h2><VehicleFacts vehicle={vehicle} /><p>{t("Choose the space that suits your journey.", "اختر المساحة التي تناسب رحلتك.")}</p></div>
-            <div className="rental-card-price"><small>{t("Daily rate", "السعر اليومي")}</small><strong><bdi>{money(vehicle.daily)}</bdi></strong><span>{t("per day · USD", "لكل يوم · دولار")}</span><Link className="rental-gold-button" to={`/car-rental/vehicles/${vehicle.id}?${rentalQuery(criteria)}`}>{t("View vehicle", "عرض السيارة")}<Icon name="arrowRight" /></Link>{!vehicle.available && <small>{t("Unavailable", "غير متاحة")}</small>}</div>
+            <div className="rental-card-price"><small>{t("Daily rate", "السعر اليومي")}</small><strong><bdi>{money(vehicle.daily)}</bdi></strong><span>{t("per day · USD", "لكل يوم · دولار")}</span><Link className="rental-primary-button" to={`/car-rental/vehicles/${vehicle.id}?${rentalQuery(criteria)}`}>{t("View vehicle", "عرض السيارة")}<Icon name="arrowRight" /></Link>{!vehicle.available && <small>{t("Unavailable", "غير متاحة")}</small>}</div>
           </article>)}
           {!vehicles.length && <SystemState title={t("No matching vehicles", "لا توجد سيارات مطابقة")} description={t("Try another category or transmission.", "جرّب فئة أو ناقل حركة آخر.")}><button className="button button--outline" onClick={reset}>{t("Clear filters", "مسح التصفية")}</button></SystemState>}
         </section>

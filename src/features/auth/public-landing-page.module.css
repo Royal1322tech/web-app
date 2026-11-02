@@ -14,7 +14,7 @@
 .hero::before { position:absolute; z-index:-1; inset:0; background:radial-gradient(ellipse at center,#ffffff08,transparent 58%); content:""; pointer-events:none; }
 .eyebrow { margin:0 0 16px; color:#f1cd8b; font-size:12px; font-weight:800; letter-spacing:.15em; }
 .loginCard { width:100%; max-width:460px; justify-self:center; padding:clamp(24px,2.5vw,32px); border:1px solid #ffffffb8; border-top:3px solid var(--accent-hover); border-radius:var(--rounded-2xl); background:var(--surface); color:#172333; box-shadow:0 2px 6px #06142a24,0 28px 64px #06142a4d; scroll-margin-block-start:120px; }
-.cardEyebrow { margin:0 0 7px!important; color:#147884!important; font-size:11px; font-weight:800; letter-spacing:.13em; }
+.cardEyebrow { margin:0 0 7px!important; color:#147884!important; font-size:12px; font-weight:800; letter-spacing:.13em; }
 .loginCard h1 { margin:0; color:#102d52; font-size:clamp(25px,2.4vw,29px); line-height:1.2; }
 .loginCard > p:not(.cardEyebrow) { margin:5px 0 0; color:#536273; }
 .loginCard :global(.login-form) { gap:12px; margin-block-start:16px; }
@@ -22,7 +22,7 @@
 .loginCard :global(.login-form > .button) { width:100%; min-height:48px; margin:0; }
 .loginCard :global(.login-form__registration) { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:4px 6px; margin-block-start:2px; padding-block-start:13px; border-block-start:1px solid #e4e9ee; color:#536273; font-size:14px; line-height:1.5; text-align:center; }
 .loginCard :global(.login-form__registration .text-button) { align-self:auto; min-height:auto; margin:0; font-size:14px; }
-.loginCard :global(.login-form .fine-print) { margin:0; color:#596978; font-size:11px; line-height:1.45; text-align:center; }
+.loginCard :global(.login-form .fine-print) { margin:0; color:#596978; font-size:12px; line-height:1.45; text-align:center; }
 /* Option A: premium centred login. One calm glow focuses the card; layout and centring are unchanged. */
 .hero { background:radial-gradient(ellipse 46% 62% at 50% 46%,#1b6f7c66 0,transparent 72%),linear-gradient(160deg,#061629 0%,#0a2340 55%,#0b3a4f 100%); }
 .hero::before { background:radial-gradient(circle at 50% 46%,transparent 0 238px,#ffffff0d 239px 240px,transparent 241px 318px,#ffffff08 319px 320px,transparent 321px); }

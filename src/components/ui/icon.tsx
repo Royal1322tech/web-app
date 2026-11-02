@@ -52,6 +52,8 @@ const paths = {
   check: "m5 12 4 4L19 6",
   signOut: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9",
   play: "M8 5.5v13l10.5-6.5Z",
+  playFilled: "M8 5.5v13l10.5-6.5Z",
+  pauseFilled: "M7 5h3.5v14H7Zm6.5 0H17v14h-3.5Z",
   pause: "M9 5v14m6-14v14",
 } as const;
 

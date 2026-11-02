@@ -31,7 +31,7 @@ export function TicketBookingSummary({ booking, heading }: { booking: TicketBook
   return (
     <section className="workspace-card ticket-booking" aria-labelledby={headingId}>
       {booking.image && (
-        <ResponsiveImage className="ticket-booking__image" src={booking.image.src} alt="" width={booking.image.width} height={booking.image.height} sizes="340px" />
+        <ResponsiveImage className="ticket-booking__image" src={booking.image.src} alt="" width={booking.image.width} height={booking.image.height} sizes="(max-width: 1100px) 720px, 340px" />
       )}
       <div className="ticket-booking__body">
         <p className="ticket-booking__type">

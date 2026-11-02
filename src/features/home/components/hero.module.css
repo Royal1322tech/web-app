@@ -4,12 +4,12 @@
 .slides { z-index:-3; }
 .slide { opacity:0; transition:opacity 800ms ease; overflow:hidden; }
 .slide[data-active="true"] { opacity:1; }
-.slide img { width:100%; height:100%; object-fit:cover; object-position:center; transform:scale(1.015); }
-.slide:first-child img { object-position:65% center; }
-.slide[data-active="true"] img { animation:cinematic-drift 4.8s ease-out both; }
+.slide img { width:100%; height:100%; object-fit:cover; object-position:var(--slide-position,center); transform:scale(1.015); }
+.slide[data-active="true"] img { animation:cinematic-drift 5.3s ease-out both; }
 .slide[data-motion="false"] img { animation-play-state:paused; }
-.overlay { z-index:-1; background:linear-gradient(90deg,#061b32e8,#061b329e 55%,#061b3240),linear-gradient(0deg,#061b32aa,transparent 70%); }
-:global([dir="rtl"]) .overlay { background:linear-gradient(270deg,#061b32e8,#061b329e 55%,#061b3240),linear-gradient(0deg,#061b32aa,transparent 70%); }
+/* No copy sits on the imagery, so the tint only settles the photos and keeps the toggle legible. */
+.overlay { z-index:-1; background:linear-gradient(180deg,#061b3259,transparent 32%),linear-gradient(0deg,#061b3259,transparent 28%),#061b3214; }
+.toggle { position:absolute; inset-block-end:16px; inset-inline-end:clamp(16px,4vw,40px); z-index:4; }
 .headerWrap { padding-top:16px; position:relative; z-index:5; }
 .headerWrap > header { position:relative; inset:auto; }
 .hero [data-hero-flight] { z-index:-2; top:120px; height:90px; --plane-width:140px; clip-path:none; }
@@ -18,8 +18,7 @@
  .hero { min-height:340px; }
  .headerWrap { padding-top:12px; }
  .hero [data-hero-flight] { top:80px; height:66px; --plane-width:80px; }
- .slide:first-child img { object-position:73% center; }
- .slide:nth-child(3) img { object-position:53% center; }
+ .slide img { object-position:center; }
 }
 @media(prefers-reduced-motion:reduce) { .slide { transition:none; } .slide img { animation:none; transform:none; } }
 

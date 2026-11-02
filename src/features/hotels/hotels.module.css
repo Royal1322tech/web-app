@@ -60,6 +60,11 @@
   background: white;
   color: #27363d;
 }
+/* Same specificity as the base rule above, so invalid fields always show the shared error border. */
+.shell input:not([type="checkbox"]):not([type="radio"])[aria-invalid="true"],
+.shell select[aria-invalid="true"] {
+  border-color: var(--error);
+}
 .shell input[type="checkbox"],
 .shell input[type="radio"] {
   accent-color: var(--brand);
@@ -335,8 +340,10 @@
   text-align: center;
   margin-block: 24px;
 }
-.empty a {
-  margin-top: 16px;
+.empty a,
+.empty button {
+  display: block;
+  margin: 16px auto 0;
 }
 .compareBar {
   position: sticky;
@@ -626,7 +633,7 @@
   color: white;
   padding: 4px 8px;
   border-radius: 6px;
-  font-size: 11px;
+  font-size: 12px;
 }
 .sectionHeading {
   display: flex;
@@ -722,7 +729,7 @@
   width: 48px;
   flex: 0 0 48px;
   text-align: end;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
 }
 .plotColumn {
@@ -746,7 +753,7 @@
   min-height: 38px;
   justify-content: center;
   border-radius: 12px;
-  font-size: 9px;
+  font-size: 11px;
 }
 .chartDate[data-available="false"] {
   border: 1px solid #d1e2e7;
@@ -761,7 +768,7 @@
   justify-content: center;
   gap: 16px;
   flex-wrap: wrap;
-  font-size: 11px;
+  font-size: 12px;
   color: #60747d;
 }
 .chartLegend span {
@@ -826,7 +833,7 @@
   border: 0;
   padding: 0;
   background: transparent;
-  font-size: 10px;
+  font-size: 12px;
   color: #4b5d67;
 }
 @media (min-width: 600px) {
@@ -1449,13 +1456,13 @@
 .hotelRating { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; margin-block:8px; font-size:12px; }
 .starClassification,.reviewScore { display:inline-flex; align-items:center; gap:5px; }
 .starClassification > span { color:#9a6a14; letter-spacing:1px; font-size:15px; }
-.hotelRating small { color:#536579; font-size:11px; }
+.hotelRating small { color:#536579; font-size:12px; }
 .reviewScore { color:var(--navy); font-weight:700; }
 .reviewScore svg { width:15px; height:15px; color:#9a6a14; fill:#9a6a14; }
 .unrated { color:#66768a; }
-.demoInventory { display:inline-flex; width:max-content; align-items:center; min-height:24px; padding:3px 8px; border:1px solid var(--demo-border); border-radius:var(--rounded-pill); color:var(--demo-fg); background:var(--demo-bg); font-size:11px; font-weight:700; }
+.demoInventory { display:inline-flex; width:max-content; align-items:center; min-height:24px; padding:3px 8px; border:1px solid var(--demo-border); border-radius:var(--rounded-pill); color:var(--demo-fg); background:var(--demo-bg); font-size:12px; font-weight:700; }
 .boardBadges { display:flex; flex-wrap:wrap; gap:5px; margin:8px 0; padding:0; list-style:none; }
-.boardBadges li { padding:3px 7px; border:1px solid #d8e4e8; border-radius:999px; color:#36536b; background:#f6f9fa; font-size:11px; }
+.boardBadges li { padding:3px 7px; border:1px solid #d8e4e8; border-radius:999px; color:#36536b; background:#f6f9fa; font-size:12px; }
 .bookingCard { padding:12px; }
 .bookingCard .cardBody { align-items:center; }
 .bookingCard .cover { aspect-ratio:4 / 3; overflow:hidden; border-radius:10px; background:#edf2f4; }
@@ -1467,9 +1474,9 @@
 .bookingMetaTop { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; }
 .bookingMetaTop > div:first-child { display:grid; gap:2px; }
 .bookingMetaTop > div:first-child > strong { color:var(--navy); font-size:15px; }
-.bookingMetaTop small { color:#536579; font-size:11px; }
+.bookingMetaTop small { color:#536579; font-size:12px; }
 .bookingStatus { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
-.localStatus { color:#536579; font-size:11px; }
+.localStatus { color:#536579; font-size:12px; }
 .bookingDates { display:flex; flex-wrap:wrap; align-items:baseline; gap:5px; margin:0; }
 .bookingDates > span:first-child { margin-inline-end:4px; color:#536579; }
 .bookingMetadata details { font-size:13px; }
@@ -1728,4 +1735,22 @@
   .viewSwitch button { flex: 1; min-height: 40px; }
   .resultsTools label { width: 100%; }
   .resultsTools select { flex: 1; min-width: 0; }
+}
+
+/* Below tablet width the stay form folds into a summary so results come first. */
+.searchSummary { display:none; }
+@media (max-width: 799px) {
+  .collapsibleSearch { margin-block-end:14px; }
+  .searchSummary { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px; border:1px solid var(--border); border-radius:12px; background:var(--surface); box-shadow:var(--elevation-1); }
+  .searchSummary p { display:flex; flex-wrap:wrap; align-items:center; gap:2px 10px; min-width:0; margin:0; color:var(--muted); font-size:13px; }
+  .searchSummary strong { display:inline-flex; align-items:center; gap:5px; width:100%; color:var(--navy); font-size:14px; }
+  .searchSummary strong svg { width:16px; height:16px; flex:none; }
+  .searchSummary button { display:inline-flex; align-items:center; gap:6px; flex:none; min-height:44px; padding-inline:12px; white-space:nowrap; }
+  .searchSummary button svg { width:16px; height:16px; }
+  .collapsibleSearch[data-open="false"] .searchPanel { display:none; }
+  .collapsibleSearch[data-open="true"] .searchPanel { margin-block-start:10px; }
+  /* Comfortable touch height for the shared catalog fields. */
+  .shell input:not([type="checkbox"]):not([type="radio"]),
+  .shell select { min-height:44px; }
+  .hotelName { display:inline-block; min-height:24px; }
 }

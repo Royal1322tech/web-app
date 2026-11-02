@@ -385,7 +385,7 @@
 .roomCounters small {
   display: block;
   color: #647077;
-  font-size: 11px;
+  font-size: 12px;
 }
 .counter {
   display: flex;
@@ -438,7 +438,7 @@
   font-weight: 600;
 }
 .provisional {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.6;
   color: #56656a;
   margin-block-start: 16px;
@@ -519,7 +519,7 @@
   padding: 4px 10px;
   background: #a93858;
   color: white;
-  font-size: 10px;
+  font-size: 12px;
   border-radius: 20px;
   margin-block: 14px 12px;
 }
@@ -532,7 +532,7 @@
   font-size: 15px;
 }
 .smallCopy {
-  font-size: 11px;
+  font-size: 12px;
   color: #5b656b;
   margin-block-start: 8px;
 }
@@ -578,7 +578,7 @@
   padding: 0;
 }
 .amenities li {
-  font-size: 11px;
+  font-size: 12px;
   color: #006e82;
   background: #edf7f8;
   border-radius: 5px;
@@ -1164,7 +1164,7 @@
   color: white;
 }
 .heroCopy .eyebrow {
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 3px;
   font-weight: 600;
   color: #f5d6ab;
@@ -1219,7 +1219,7 @@
   display: flex;
   gap: 22px;
   flex-wrap: wrap;
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 1.3px;
   color: var(--subtle);
   margin-top: 40px;
@@ -1234,7 +1234,7 @@
   bottom: 110px;
   color: white;
   display: grid;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 1px;
   gap: 10px;
 }
@@ -1386,7 +1386,7 @@
     letter-spacing: -1.6px;
   }
   .heroCopy .eyebrow {
-    font-size: 9px;
+    font-size: 12px;
     letter-spacing: 1.5px;
   }
   .heroCopy > p:not(.eyebrow) {
@@ -1533,7 +1533,7 @@
     gap: 24px;
   }
   .heroProof {
-    font-size: 9px;
+    font-size: 12px;
     letter-spacing: 0.8px;
   }
   .hero {
@@ -1576,7 +1576,7 @@
 }
 .footerCta h2 { margin: 0; color: #fff; font-size: clamp(22px, 2.5vw, 30px); line-height: 1.2; }
 .footerCta p { margin: 7px 0 0; color: #dce8f3; font-size: 15px; line-height: 1.6; }
-.footerCta .footerEyebrow { margin: 0 0 8px; color: #f1cd8b; font-size: 11px; font-weight: 800; letter-spacing: .13em; }
+.footerCta .footerEyebrow { margin: 0 0 8px; color: #f1cd8b; font-size: 12px; font-weight: 800; letter-spacing: .13em; }
 .footerCtaButton {
   display: inline-flex;
   flex: 0 0 auto;

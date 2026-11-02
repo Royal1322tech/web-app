@@ -2,7 +2,7 @@ import { useParams, useLocation } from "react-router-dom";
 import { hotels } from "@/features/hotels/data/hotels.fixture";
 import { HotelDetails } from "@/features/hotels/components/hotel-details";
 import { useLocale } from "@/features/localization/locale-provider";
-import { NotFound } from "@/app/router";
+import { NotFound } from "@/app/not-found-page";
 
 export default function HotelPage() {
   const { hotelId } = useParams();

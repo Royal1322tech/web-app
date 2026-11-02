@@ -43,7 +43,7 @@ export function RentalDriverPage() {
           <label className="rental-check"><input type="checkbox" {...register("acknowledged")} />{t("These are fictional driver details", "هذه بيانات سائق وهمية")}</label>
           {errors.acknowledged && <p role="alert" className="field-error">{t(errors.acknowledged.message!, "أكد أن البيانات وهمية.")}</p>}
         </section>
-        <div className="rental-form-actions"><Link className="button button--outline" to="/car-rental/summary"><Icon name="back" />{t("Back to Vehicle Details", "العودة لتفاصيل السيارة")}</Link><button className="rental-gold-button">{t("Continue to review booking", "المتابعة لمراجعة الحجز")}<Icon name="arrowRight" /></button></div>
+        <div className="rental-form-actions"><Link className="button button--outline" to="/car-rental/summary"><Icon name="back" />{t("Back to Vehicle Details", "العودة لتفاصيل السيارة")}</Link><button className="rental-primary-button">{t("Continue to review booking", "المتابعة لمراجعة الحجز")}<Icon name="arrowRight" /></button></div>
       </form>
       <RentalSummary selection={rentalSelection} />
     </div>}

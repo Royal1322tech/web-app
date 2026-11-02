@@ -12,7 +12,7 @@ export function RentalReviewPage() {
   const { rentalSelection, rentalDriver, rentalPolicyAcknowledged, acknowledgeRentalPolicy } = useDemo();
   if (rentalSelection && !rentalDriver) return <Navigate to="/car-rental/driver" replace />;
   const vehicle = demoVehicles.find(v => v.id === rentalSelection?.vehicleId);
-  const continueAction = rentalPolicyAcknowledged ? <Link className="rental-gold-button" to="/car-rental/payment">{t("Continue to rental payment preview", "المتابعة لمعاينة دفع التأجير")}<Icon name="arrowRight" /></Link> : <button className="rental-gold-button" disabled>{t("Continue to rental payment preview", "المتابعة لمعاينة دفع التأجير")}<Icon name="arrowRight" /></button>;
+  const continueAction = rentalPolicyAcknowledged ? <Link className="rental-primary-button" to="/car-rental/payment">{t("Continue to rental payment preview", "المتابعة لمعاينة دفع التأجير")}<Icon name="arrowRight" /></Link> : <button className="rental-primary-button" disabled>{t("Continue to rental payment preview", "المتابعة لمعاينة دفع التأجير")}<Icon name="arrowRight" /></button>;
   return <RentalShell title={t("Almost There!", "اقتربنا من الانتهاء!")}>
     {!rentalSelection || !rentalDriver || !vehicle ? <MissingSelection /> : <div className="rental-booking-layout">
       <div className="rental-panel rental-review-sections">

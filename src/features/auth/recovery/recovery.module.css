@@ -26,6 +26,8 @@
   margin-top: 32px;
 }
 .help {
+  display: inline-block;
+  min-height: 24px;
   color: var(--brand-teal);
   text-decoration: underline;
   font-size: 14px;

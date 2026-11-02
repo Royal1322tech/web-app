@@ -49,7 +49,7 @@ export function VehicleDetailsPage() {
           </section>
         </div>
         <RentalSummary selection={{ vehicleId: vehicle.id, criteria: parsed.data }} action={
-          <button className="rental-gold-button" disabled={!vehicle.available} onClick={() => {
+          <button className="rental-primary-button" disabled={!vehicle.available} onClick={() => {
             selectRental({ vehicleId: vehicle.id, criteria: parsed.data });
             navigate("/car-rental/summary");
           }}>{vehicle.available ? t("Select vehicle", "اختر السيارة") : t("Unavailable", "غير متاحة")}<Icon name="arrowRight" /></button>

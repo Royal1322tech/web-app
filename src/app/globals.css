@@ -395,7 +395,7 @@ h2 {
   border-radius: 50%;
   background: var(--error);
   color: #fff;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: var(--weight-heavy);
   line-height: 1;
 }
@@ -458,7 +458,7 @@ h2 {
   list-style: none;
 }
 .step {
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.45;
   font-weight: 600;
   color: #666;
@@ -479,7 +479,7 @@ h2 {
   border: 1px solid #d9dce0;
   border-radius: 50%;
   color: #666;
-  font-size: 10px;
+  font-size: 12px;
 }
 .step-number svg {
   width: 15px;
@@ -744,7 +744,7 @@ h2 {
     margin-block: 30px 24px;
   }
   .step {
-    font-size: 9px;
+    font-size: 12px;
   }
   .step-track {
     gap: 4px;
@@ -1101,4 +1101,40 @@ button.submission-disabled:disabled {
 @media (max-width: 480px) {
   .company-logo__box--filled { align-items: flex-start; }
   .company-logo__actions .button { flex: 1 1 auto; min-height: 44px; }
+}
+
+/* Chromium focuses a date field's inner segments, so the field itself carries the visible ring. */
+input[type="date"]:focus-within {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+/* An address or number field stays left-to-right when typed in, but its Arabic hint follows the page. */
+[dir="rtl"] input[dir="ltr"]:placeholder-shown { direction: rtl; }
+
+/* Pause and play for an auto-rotating hero. */
+.hero-rotation-toggle { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid #ffffff66; border-radius: 50%; background: #061b32a6; color: #fff; cursor: pointer; backdrop-filter: blur(6px); transition: background-color var(--duration-fast) ease; }
+.hero-rotation-toggle:hover { background: #061b32e0; }
+.hero-rotation-toggle:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.hero-rotation-toggle svg { width: 18px; height: 18px; }
+
+/* Shared photo header for content pages. */
+.page-hero { position: relative; isolation: isolate; display: flex; align-items: center; overflow: hidden; min-height: clamp(190px, 22vw, 280px); margin-block-end: var(--space-6); border-radius: var(--rounded-xl); background: var(--navy); color: #fff; }
+.page-hero__image { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; }
+.page-hero::before { position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, #061b32f0 0%, #061b32c4 48%, #061b3238 100%); content: ""; }
+[dir="rtl"] .page-hero::before { background: linear-gradient(270deg, #061b32f0 0%, #061b32c4 48%, #061b3238 100%); }
+.page-hero__copy { max-width: 640px; padding: var(--space-8) clamp(20px, 5vw, 56px); }
+.page-hero__copy > p { margin-block-end: var(--space-2); color: var(--light-gold); font-size: 12px; font-weight: var(--weight-heavy); letter-spacing: .14em; }
+.page-hero__copy h1 { color: #fff; font-size: clamp(30px, 4vw, 46px); font-weight: var(--weight-heavy); line-height: 1.12; }
+.page-hero__copy > span { display: block; margin-block-start: var(--space-3); color: #e6eef6; font-size: clamp(15px, 1.4vw, 17px); line-height: 1.55; }
+
+/* Not found. */
+.not-found { display: grid; justify-items: center; gap: var(--space-3); max-width: 560px; margin: clamp(32px, 8vw, 88px) auto; padding-inline: var(--space-4); text-align: center; }
+.not-found__code { color: #945714; font-size: 14px; font-weight: var(--weight-heavy); letter-spacing: .2em; }
+.not-found h1 { font-size: clamp(30px, 4vw, 42px); font-weight: var(--weight-heavy); }
+.not-found > p:not(.not-found__code) { color: var(--muted); line-height: 1.6; }
+.not-found__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); margin-block-start: var(--space-3); }
+
+/* Touch: standalone text links keep at least the 24px WCAG target. Zero specificity, so a component's own layout always wins. */
+@media (max-width: 799px) {
+  :where(.text-button, .hotel-location__source, main a:not([class]), nav[aria-label="Registration account navigation"] a) { display: inline-block; min-height: 24px; line-height: 24px; }
 }

@@ -6,7 +6,6 @@ import {
 import { useEffect, useRef } from "react";
 import {
   createBrowserRouter,
-  Link,
   Navigate,
   Outlet,
   ScrollRestoration,
@@ -62,16 +61,6 @@ function RouteError() {
       <h1>Unable to load this page</h1>
       <p>Please refresh and try again.</p>
       <a href="/">Return home</a>
-    </main>
-  );
-}
-
-export function NotFound() {
-  return (
-    <main className="registration-page">
-      <title>Page not found | Royal Vacation</title>
-      <h1>Page not found</h1>
-      <Link to="/">Return home</Link>
     </main>
   );
 }
@@ -335,7 +324,7 @@ export const router = createBrowserRouter([
             .RentalBookingDetailsPage,
         }),
       },
-      { path: "*", Component: NotFound },
+      { path: "*", lazy: async () => ({ Component: (await import("./not-found-page")).NotFound }) },
     ],
   },
 ]);

@@ -9,6 +9,7 @@ import { hotels } from "../data/hotels.fixture";
 import { defaultFilters, filterHotels } from "../lib/filter-hotels";
 import type { HotelSort } from "../types";
 import { CatalogShell } from "./catalog-shell";
+import { CollapsibleSearch } from "./collapsible-search";
 import { HotelFiltersPanel } from "./hotel-filters";
 import { HotelResultCard } from "./hotel-result-card";
 import { Comparison } from "./comparison";
@@ -23,15 +24,18 @@ export function SearchResults() {
       key={query.toString()}
       query={query}
       onSearch={(criteria) => setQuery(stayQuery(criteria))}
+      onReset={() => setQuery(new URLSearchParams())}
     />
   );
 }
 function SearchResultsContent({
   query,
   onSearch,
+  onReset,
 }: {
   query: Pick<URLSearchParams, "get">;
   onSearch: (criteria: HotelSearchCriteria) => void;
+  onReset: () => void;
 }) {
   const { t } = useLocale();
   const [criteria] = useState(() => readStayQuery(query));
@@ -65,7 +69,9 @@ function SearchResultsContent({
   return (
     <CatalogShell title={t("Search", "بحث")}>
       <h1>{t("Hotel Search Results", "نتائج البحث عن الفنادق")}</h1>
-      <HotelSearchForm compact initialValues={criteria} onSearch={onSearch} />
+      <CollapsibleSearch criteria={criteria}>
+        {(close) => <HotelSearchForm compact initialValues={criteria} onSearch={(next) => { close(); onSearch(next); }} />}
+      </CollapsibleSearch>
       <button
         className={`${styles.secondary} ${styles.mobileFilters}`}
         aria-expanded={open}
@@ -171,12 +177,25 @@ function SearchResultsContent({
               </div>
             )}
             {!result.length && (
-              <p className={styles.empty}>
-                {t(
-                  "No hotels match these filters. Try resetting the filters.",
-                  "لا توجد فنادق تطابق عوامل التصفية. جرّب إعادة ضبطها.",
-                )}
-              </p>
+              <div className={styles.empty}>
+                <p>
+                  {t(
+                    "No hotels match these filters. Try resetting the filters.",
+                    "لا توجد فنادق تطابق عوامل التصفية. جرّب إعادة ضبطها.",
+                  )}
+                </p>
+                <button
+                  type="button"
+                  className={styles.primary}
+                  onClick={() => {
+                    setFilters({ ...defaultFilters });
+                    // Filters alone cannot help when the destination itself has no hotels.
+                    if (!filterHotels(hotels, defaultFilters, criteria?.destination || "", baseSort).length) onReset();
+                  }}
+                >
+                  {t("Reset Search", "إعادة ضبط البحث")}
+                </button>
+              </div>
             )}
           </div>
         </div>

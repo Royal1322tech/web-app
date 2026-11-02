@@ -198,11 +198,11 @@
 .rental-card-price { display: grid; align-content: center; text-align: end; gap: 6px; border-inline-start: 1px solid #e7edf2; padding-inline-start: 12px; }
 .rental-card-price > strong { color: #082a4c; font-size: 24px; line-height: 1.2; }
 .rental-card-price > small, .rental-card-price > span { font-size: 12px; color: #536579; }
-.rental-gold-button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 12px 16px; min-height: 44px; border: 1px solid #a3712a; border-radius: 7px; background: linear-gradient(115deg,#bd8a42,#9a6320); color: #fff !important; text-decoration: none; font-weight: 600; font-size: 14px; line-height: 1.4; text-align: center; cursor: pointer; }
-.rental-gold-button svg { width: 18px; height: 18px; flex-shrink: 0; }
-.rental-gold-button:hover { background: #86551c; }
-.rental-gold-button:disabled { opacity: .55; cursor: not-allowed; }
-.rental-card-price .rental-gold-button { font-size: 12px; padding: 10px 8px; margin-top: 8px; }
+.rental-primary-button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 12px 16px; min-height: 44px; border: 1px solid var(--primary); border-radius: 7px; background: var(--primary); color: #fff !important; text-decoration: none; font-weight: 600; font-size: 14px; line-height: 1.4; text-align: center; cursor: pointer; }
+.rental-primary-button svg { width: 18px; height: 18px; flex-shrink: 0; }
+.rental-primary-button:hover { background: var(--primary-hover); }
+.rental-primary-button:disabled { opacity: .55; cursor: not-allowed; }
+.rental-card-price .rental-primary-button { font-size: 12px; padding: 10px 8px; margin-top: 8px; }
 .rental-trip-sidebar { display: grid; gap: 16px; }
 .rental-trip-sidebar h2 { margin: 0 0 18px; font-size: 17px; }
 .rental-route { display: grid; gap: 22px; }
@@ -294,7 +294,7 @@
 .rental-review-policy { background: #fbf7ef; border: 1px solid #e9dfcd; border-radius: 8px; padding: 12px; font-size: 13px; }
 .rental-review-policy summary { font-weight: 600; color: #79551e; }
 .rental-review-policy p { color: #536579; font-size: 13px; line-height: 1.6; }
-[dir=rtl] .rental-gold-button svg, [dir=rtl] .rental-edit svg, [dir=rtl] .rental-assistance a svg, [dir=rtl] .rental-cinematic-copy > a svg { rotate: 180deg; }
+[dir=rtl] .rental-primary-button svg, [dir=rtl] .rental-edit svg, [dir=rtl] .rental-assistance a svg, [dir=rtl] .rental-cinematic-copy > a svg { rotate: 180deg; }
 [dir=rtl] .rental-cinematic-vehicle::after { background: linear-gradient(270deg,#021a2eed,#021a2e80 50%,#021a2e00); }
 @media (max-width: 1199px) {
   .rental-reference-results { grid-template-columns: 185px minmax(0,1fr); }
@@ -317,15 +317,15 @@
   .rental-reference-shell .rental-hero--compact { min-height: 210px; }
   .rental-reference-shell .rental-hero:has(.rental-progress) { min-height: 290px; }
   .rental-reference-shell .rental-progress { inset: auto 16px 16px; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
-  .rental-reference-shell .rental-progress li { font-size: 11px; gap: 6px; }
-  .rental-reference-shell .rental-progress span { width: 24px; height: 24px; min-height: 24px; font-size: 11px; flex-shrink: 0; }
+  .rental-reference-shell .rental-progress li { font-size: 12px; gap: 6px; }
+  .rental-reference-shell .rental-progress span { width: 24px; height: 24px; min-height: 24px; font-size: 12px; flex-shrink: 0; }
   .rental-horizontal-card { grid-template-columns: minmax(0,1fr); padding: 12px; }
   .rental-horizontal-card .rental-vehicle-photo { height: 180px; }
   .rental-horizontal-card .rental-facts { display: flex; flex-wrap: wrap; }
   .rental-card-price { border-inline-start: 0; border-top: 1px solid #e7edf2; padding: 12px 0 0; text-align: start; grid-template-columns: 1fr auto; }
   .rental-card-price > strong { grid-row: 2; }
   .rental-card-price > span { grid-row: 3; }
-  .rental-card-price .rental-gold-button { grid-column: 2; grid-row: 1/4; align-self: center; margin: 0; }
+  .rental-card-price .rental-primary-button { grid-column: 2; grid-row: 1/4; align-self: center; margin: 0; }
   .rental-trip-strip { padding: 14px; gap: 14px; }
   .rental-trip-strip > div { flex: 1 1 40%; font-size: 12px; }
   .rental-trip-strip > div:nth-child(3) { flex-basis: 100%; }
@@ -350,9 +350,7 @@
 .rental-integrated-search { position: relative; margin: -34px 24px 0; z-index: 2; border-radius: 12px; box-shadow: 0 10px 30px #06274718; background: white; border: 1px solid #dfe7ee; overflow: hidden; }
 .rental-integrated-search .rental-criteria { border: 0; box-shadow: none; border-radius: 0; padding: 20px; }
 .rental-integrated-search .workspace-fields { grid-template-columns: repeat(4,minmax(0,1fr)); gap: 14px; }
-/* The smallest darkening of the gold that gives white text AA contrast (4.53:1). */
-.rental-integrated-search .rental-criteria > button { justify-self: end; background: #9e6c29; }
-.rental-integrated-search .rental-criteria > button:hover { background: #87521d; }
+.rental-integrated-search .rental-criteria > button { justify-self: end; }
 .rental-service-context { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; }
 .rental-service-context p { font-size: 13px; color: #536579; }
 .rental-enquiry-summary { padding: 14px; }
@@ -368,10 +366,9 @@
   .rental-integrated-search .workspace-fields { grid-template-columns: minmax(0,1fr); }
   .rental-integrated-search .rental-criteria { padding: 16px; }
 }
-.rental-gold-button { background: linear-gradient(115deg,#9e6826,#87521d); border-color: #87521d; }
 .rental-reference-shell .rental-progress span { flex: 0 0 30px; }
 @media (max-width: 600px) { .rental-reference-shell .rental-progress span { flex-basis: 24px; } }
-.rental-enquiry-summary > .rental-gold-button { display: flex; width: 100%; margin-block: 16px 10px; }
+.rental-enquiry-summary > .rental-primary-button { display: flex; width: 100%; margin-block: 16px 10px; }
 .rental-enquiry-summary > a { display: block; margin-top: 12px; }
 
 /* Batch B: the local rental links read as a distinct row below the banner. */
@@ -423,13 +420,22 @@
   .rental-landing .rental-integrated-search .rental-criteria { padding: var(--space-4); }
 }
 
+/* On phones the copy spans the full width, so the scrim runs top to bottom instead of from one side. */
+@media (max-width: 800px) {
+  .rental-landing .rental-hero::after, [dir=rtl] .rental-landing .rental-hero::after { background: linear-gradient(180deg, #031b32cc 0%, #031b32a0 62%, #031b3280 100%); }
+}
+
 /* Car Rental hero carousel: stacked slides crossfade inside a fixed frame, so nothing shifts. */
 /* Outranks the older ".rental-hero > div" copy padding at every width. */
 .rental-hero > .rental-hero__slide { max-width: none; padding: 0; }
-.rental-hero__slide { position: absolute; inset: 0; z-index: -2; opacity: 0; transition: opacity 900ms ease; }
+.rental-hero__slide { position: absolute; inset: 0; z-index: -2; overflow: hidden; opacity: 0; transition: opacity 800ms ease; }
 .rental-hero__slide[data-active="true"] { opacity: 1; }
-.rental-hero__slide img { display: block; width: 100%; height: 100%; object-fit: cover; }
-@media (prefers-reduced-motion: reduce) { .rental-hero__slide { transition: none; } }
+.rental-hero__slide img { display: block; width: 100%; height: 100%; object-fit: cover; transform: scale(1.01); }
+.rental-hero__slide[data-active="true"] img { animation: rental-drift 4.8s ease-out both; }
+.rental-hero__slide[data-motion="false"] img { animation-play-state: paused; }
+@keyframes rental-drift { from { transform: scale(1.01); } to { transform: scale(1.04); } }
+.rental-hero__toggle { position: absolute; inset-block-start: 14px; inset-inline-end: 14px; z-index: 2; }
+@media (prefers-reduced-motion: reduce) { .rental-hero__slide { transition: none; } .rental-hero__slide img { animation: none; transform: none; } }
 @media (max-width: 800px) {
   .rental-landing .rental-hero-copy { padding-block-end: 72px; }
 }

@@ -11,6 +11,7 @@ import { useLocale } from "@/features/localization/locale-provider";
 import type { HotelListing } from "../types";
 import { amenityLabels } from "../data/hotels.fixture";
 import { CatalogShell } from "./catalog-shell";
+import { CollapsibleSearch } from "./collapsible-search";
 import { SectionHeading } from "./section-heading";
 import { Icon } from "@/components/ui/icon";
 import { HotelGallery } from "./hotel-gallery";
@@ -39,12 +40,16 @@ export function HotelDetails({ hotel }: { hotel: HotelListing }) {
   return (
     <CatalogShell title={hotelDisplayName(hotel.name[locale])} detail>
       <section className={styles.roomSearch} aria-label={t("Search your stay", "ابحث عن إقامتك")}>
-        <HotelSearchForm
-          compact
-          fixedDestination
-          initialValues={criteria}
-          onSearch={setCriteria}
-        />
+        <CollapsibleSearch criteria={criteria} showDestination={false}>
+          {(close) => (
+            <HotelSearchForm
+              compact
+              fixedDestination
+              initialValues={criteria}
+              onSearch={(next) => { close(); setCriteria(next); }}
+            />
+          )}
+        </CollapsibleSearch>
       </section>
       <HotelGallery hotel={hotel} />
       <div className={styles.detailIntro}>

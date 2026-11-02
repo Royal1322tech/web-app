@@ -1,6 +1,7 @@
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useLocale } from "@/features/localization/locale-provider";
 import { Icon } from "@/components/ui/icon";
+import { ResponsiveImage } from "@/components/ui/responsive-image";
 import { RentalHeroCarousel } from "./rental-hero-carousel";
 import { RentalCriteriaForm } from "./rental-flow";
 import { rentalQuery } from "./rental-model";
@@ -24,7 +25,7 @@ export function RentalLanding() {
       <div className="rental-intro"><p className="rental-kicker">{t("ROYAL VACATION · FOR TRAVEL PROFESSIONALS", "رويال فاكيشن · لمحترفي السفر")}</p><h2 id="rental-services-title">{t("Ground transport for every itinerary", "نقل بري لكل برنامج رحلة")}</h2><p>{t("Browse self-drive vehicles at illustrative daily rates, or prepare an enquiry for chauffeur and transfer services.", "تصفح سيارات القيادة الذاتية بأسعار يومية توضيحية، أو جهز استفسارًا لخدمات السائق والانتقالات.")}</p></div>
       <div className="rental-service-cards">
         {services.map((service) => <Link key={service.to} to={service.to} className="rental-service-card">
-          <img src={service.image} alt="" width="640" height="400" loading="lazy" decoding="async" />
+          <ResponsiveImage src={service.image} alt="" width={640} height={400} sizes="(max-width: 800px) min(92vw, 520px), 420px" />
           <span className="rental-service-card__body"><strong>{t(service.en, service.ar)}</strong><small>{t(service.description, service.descriptionAr)}</small><span className="rental-service-card__action">{t(service.action, service.actionAr)}<Icon name="arrowRight" /></span></span>
         </Link>)}
       </div>

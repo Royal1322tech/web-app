@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
-import { useMediaEnvironment } from "@/components/motion/use-media-environment";
+import { useRef } from "react";
+import { RotationToggle } from "@/components/motion/rotation-toggle";
+import { useHeroRotation } from "@/components/motion/use-hero-rotation";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
 import { useLocale } from "@/features/localization/locale-provider";
 
-const INTERVAL_MS = 5000;
+const INTERVAL_MS = 4000;
 const slides = [
   { src: "/images/rental/luxury-arrival.webp", width: 1536, height: 1024, position: "center 57%" },
   { src: "/images/rental/hero-open-road.jpg", width: 2200, height: 1467, position: "center 55%" },
@@ -12,33 +13,20 @@ const slides = [
 ] as const;
 
 /**
- * Car Rental hero with a decorative background that crossfades every five seconds. It has no
- * controls. It rests while the page is hidden or offscreen, and stays on the first image with
- * reduced motion. Only the shown and next images are requested.
+ * Car Rental hero with a decorative background that crossfades every four seconds, with one
+ * pause control. Timing and image loading live in useHeroRotation.
  */
 export function RentalHeroCarousel({ title }: { title: string }) {
   const { t } = useLocale();
   const root = useRef<HTMLElement>(null);
-  const { canAnimate } = useMediaEnvironment(root);
-  const [index, setIndex] = useState(0);
-  const [seen, setSeen] = useState<ReadonlySet<number>>(() => new Set([0]));
-  const next = (index + 1) % slides.length;
-
-  useEffect(() => {
-    if (!canAnimate) return;
-    const timer = window.setTimeout(() => {
-      setSeen((current) => new Set(current).add(next));
-      setIndex(next);
-    }, INTERVAL_MS);
-    return () => window.clearTimeout(timer);
-  }, [canAnimate, next]);
+  const { index, running, paused, reduced, togglePaused, isLoaded } = useHeroRotation(root, { count: slides.length, intervalMs: INTERVAL_MS });
 
   return (
     <section ref={root} className="rental-hero rental-hero--carousel" aria-labelledby="rental-hero-title">
       {slides.map((slide, position) => (
-        <div key={slide.src} className="rental-hero__slide" data-active={position === index} aria-hidden="true">
-          {(seen.has(position) || (canAnimate && position === next)) && (
-            <ResponsiveImage src={slide.src} alt="" width={slide.width} height={slide.height} sizes="(max-width: 1320px) 100vw, 1280px" eager={position === 0} style={{ objectPosition: slide.position }} />
+        <div key={slide.src} className="rental-hero__slide" data-slide={position} data-active={position === index} data-motion={running} aria-hidden="true">
+          {isLoaded(position) && (
+            <ResponsiveImage src={slide.src} alt="" width={slide.width} height={slide.height} sizes="(max-width: 1320px) 100vw, 1280px" eager={position === 0} loading="eager" style={{ objectPosition: slide.position }} />
           )}
         </div>
       ))}
@@ -47,6 +35,7 @@ export function RentalHeroCarousel({ title }: { title: string }) {
         <h1 id="rental-hero-title">{title}</h1>
         <p>{t("A considered journey, from arrival to departure.", "رحلة مدروسة من الوصول إلى المغادرة.")}</p>
       </div>
+      <RotationToggle className="rental-hero__toggle" paused={paused} reduced={reduced} onToggle={togglePaused} />
     </section>
   );
 }

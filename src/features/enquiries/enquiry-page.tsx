@@ -10,12 +10,15 @@ import { FormField } from "@/components/ui/form-field";
 import styles from "./enquiry.module.css";
 import contact from "./contact-page.module.css";
 import { Icon } from "@/components/ui/icon";
-import { ResponsiveImage } from "@/components/ui/responsive-image";
+import { PageHero } from "@/components/ui/page-hero";
 import { useSyncExternalStore } from "react";
 import { demoAuth, subscribeDemoSession } from "@/features/auth/demo-auth";
 import { SiteFooter } from "@/features/home/components/site-footer";
 import { getCountryCallingCode } from "libphonenumber-js/max";
 import { contactPhone, phoneCountries, validPhoneCountry } from "@/features/agency-registration/lib/phone";
+
+const whatsappUrl = "https://wa.me/201070724143";
+const contactEmail = "royal.travel@royalvacation.online";
 
 /* The complaint form (./complaint-page) is kept for the planned Ticket page and is
  * intentionally not routed until its eligibility rules and route are approved. */
@@ -73,9 +76,9 @@ function GeneralEnquiryPage({ group, publicVisitor }: { group: boolean; publicVi
   });
   const countryNames = new Intl.DisplayNames([locale], { type: "region" });
   const title = group ? t("Group quotation", "عرض سعر للمجموعات") : t("Contact Us", "تواصل معنا");
-  const fields: { key: keyof Values; label: string; type?: string; required?: boolean }[] = [
-    { key:"name", label:group ? t("Name", "الاسم") : t("Full Name", "الاسم الكامل"), required:true }, { key:"email", label:group ? t("Email", "البريد الإلكتروني") : t("Email Address", "البريد الإلكتروني"), type:"email", required:true },
-    { key:"agency", label:group ? t("Agency / company", "الوكالة / الشركة") : t("Agency / Company Name (optional)", "اسم الوكالة / الشركة (اختياري)"), required:group }, { key:"subject", label:t("Subject", "الموضوع"), required:true },
+  const fields: { key: keyof Values; label: string; type?: string; required?: boolean; autoComplete?: string }[] = [
+    { key:"name", label:group ? t("Name", "الاسم") : t("Full Name", "الاسم الكامل"), required:true, autoComplete:"name" }, { key:"email", label:group ? t("Email", "البريد الإلكتروني") : t("Email Address", "البريد الإلكتروني"), type:"email", required:true, autoComplete:"email" },
+    { key:"agency", label:group ? t("Agency / company", "الوكالة / الشركة") : t("Agency / Company Name (optional)", "اسم الوكالة / الشركة (اختياري)"), required:group, autoComplete:"organization" }, { key:"subject", label:t("Subject", "الموضوع"), required:true },
     ...(group ? [
       { key:"destination" as const, label:t("Destination / route", "الوجهة / المسار"), required:true },
       { key:"passengers" as const, label:t("Passengers", "المسافرون"), type:"number", required:true },
@@ -84,33 +87,53 @@ function GeneralEnquiryPage({ group, publicVisitor }: { group: boolean; publicVi
       { key:"rooms" as const, label:t("Rooms needed (optional)", "الغرف المطلوبة (اختياري)"), type:"number" },
     ] : []),
   ];
+  /** The prepared enquiry as plain text, for the visitor to send from their own app. */
+  const enquiryText = () => {
+    const values = getValues();
+    return [
+      `${t("Name", "الاسم")}: ${values.name}`,
+      `${t("Email", "البريد الإلكتروني")}: ${values.email}`,
+      ...(values.agency.trim() ? [`${t("Agency / Company", "الوكالة / الشركة")}: ${values.agency.trim()}`] : []),
+      `${t("Phone", "الهاتف")}: +${validPhoneCountry(values.phoneCountry) ? getCountryCallingCode(values.phoneCountry) : ""} ${values.phone}`,
+      `${t("Subject", "الموضوع")}: ${values.subject}`,
+      "",
+      values.message,
+    ].join("\n");
+  };
   return <><CatalogShell title={title} publicHeader={publicVisitor}><title>{`${title} | Royal Vacation`}</title>
     <section className={`${styles.page} ${!group ? contact.page : ""}`}>
-      {!group && <header className={contact.hero}>
-        <p>{t("ROYAL VACATION · TRAVEL PARTNERS", "رويال فاكيشن · شركاء السفر")}</p>
-        <h1>{t("Contact Us", "تواصل معنا")}</h1>
-        <span>{t("We're here to help you connect with Royal Vacation.", "نحن هنا لمساعدتك على التواصل مع رويال فاكيشن.")}</span>
-      </header>}
+      {!group && <>
+        <PageHero eyebrow={t("ROYAL VACATION · TRAVEL PARTNERS", "رويال فاكيشن · شركاء السفر")} title={t("Contact Us", "تواصل معنا")} image={{ src: "/images/home/cinematic/coastal-resort.png", width: 1672, height: 941 }} position="center 60%">
+          {t("We're here to help you connect with Royal Vacation.", "نحن هنا لمساعدتك على التواصل مع رويال فاكيشن.")}
+        </PageHero>
+        <nav className={contact.quickActions} aria-label={t("Contact directly", "تواصل مباشرة")}>
+          <a className="button button--outline" href={whatsappUrl} target="_blank" rel="noopener noreferrer"><Icon name="whatsapp" />{t("WhatsApp", "واتساب")}</a>
+          <a className="button button--outline" href={`mailto:${contactEmail}`}><Icon name="mail" />{t("Email", "البريد الإلكتروني")}</a>
+        </nav>
+      </>}
       {group && <p className={styles.eyebrow}>{t("ROYAL VACATION · AGENCY ENQUIRIES", "رويال فاكيشن · استفسارات الوكالات")}</p>}
       {group && <><h1>{title}</h1><p className={styles.intro}>{t("Bring your group’s travel requirements together in one clear request preview.", "اجمع متطلبات سفر مجموعتك في معاينة طلب واحدة واضحة.")}</p></>}
       <div className={styles.grid}>
         {!group && <aside className={contact.information}>
-          <ResponsiveImage className={contact.photo} src="/images/home/cinematic/coastal-resort.png" alt="" width={1672} height={941} sizes="(max-width:799px) 90vw, 480px" />
           <h2>{t("Contact Information", "معلومات التواصل")}</h2>
           <p>{t("Connect with Royal Vacation for your agency’s next journey.", "تواصل مع رويال فاكيشن من أجل رحلة وكالتك القادمة.")}</p>
-          <dl>
-            <div><dt><span className={contact.icon}><Icon name="whatsapp" /></span>{t("WhatsApp", "واتساب")}</dt><dd><a href="https://wa.me/201070724143" target="_blank" rel="noopener noreferrer"><bdi>+20 01070724143</bdi></a></dd></div>
-            <div><dt><span className={contact.icon}><Icon name="mail" /></span>{t("Email Address", "البريد الإلكتروني")}</dt><dd><a href="mailto:royal.travel@royalvacation.online"><bdi>royal.travel@royalvacation.online</bdi></a></dd></div>
-          </dl>
-          {!publicVisitor && <Link to="/group-quotation">{t("Planning a group journey?", "تخطط لرحلة جماعية؟")} <Icon name="arrowRight" /></Link>}
+          <ul className={contact.actions}>
+            <li><a href={whatsappUrl} target="_blank" rel="noopener noreferrer"><span className={contact.icon}><Icon name="whatsapp" /></span><span className={contact.actionText}><strong>{t("WhatsApp", "واتساب")}</strong><bdi>+20 01070724143</bdi></span><Icon name="arrowRight" /></a></li>
+            <li><a href={`mailto:${contactEmail}`}><span className={contact.icon}><Icon name="mail" /></span><span className={contact.actionText}><strong>{t("Email Address", "البريد الإلكتروني")}</strong><bdi>{contactEmail}</bdi></span><Icon name="arrowRight" /></a></li>
+          </ul>
+          {!publicVisitor && <div className={contact.links}>
+            <Link to="/group-quotation">{t("Planning a group journey?", "تخطط لرحلة جماعية؟")} <Icon name="arrowRight" /></Link>
+            <Link to="/tickets">{t("My Tickets", "تذاكري")} <Icon name="arrowRight" /></Link>
+          </div>}
         </aside>}
 
         <form noValidate className={styles.form} onChange={() => setPreview(false)} onSubmit={handleSubmit(async () => { await Promise.resolve(); setPreview(true); }, () => setPreview(false))}>
+          {!group && <h2 className={contact.formTitle}>{t("Prepare your enquiry", "جهّز استفسارك")}</h2>}
           <p className={styles.notice}>{t("This form prepares a local preview only. It does not send your message.", "يجهز هذا النموذج معاينة محلية فقط، ولا يرسل رسالتك.")}</p>
           <div className={styles.fields}>{fields.map(field => <FormField key={field.key} id={"enquiry-" + field.key} label={field.label} required={field.required} error={errors[field.key]?.message}>
             <div className={!group ? contact.inputWrap : undefined}>
             {!group && <Icon name={field.key === "email" ? "mail" : field.key === "name" ? "user" : field.key === "agency" ? "building" : "document"} />}
-            <input placeholder={group ? undefined : field.key === "name" ? t("Enter your full name", "أدخل اسمك الكامل") : field.key === "email" ? t("Enter your email address", "أدخل بريدك الإلكتروني") : field.key === "agency" ? t("Your agency or company", "اسم الوكالة أو الشركة") : t("What can we help with?", "كيف يمكننا مساعدتك؟")} id={"enquiry-" + field.key} className="input" type={field.type ?? "text"} required={field.required} min={field.type === "number" ? 1 : undefined} step={field.type === "number" ? 1 : undefined} dir={field.type === "email" ? "ltr" : undefined} aria-invalid={!!errors[field.key]} aria-describedby={errors[field.key] ? "enquiry-" + field.key + "-error" : undefined} {...register(field.key)} />
+            <input placeholder={group ? undefined : field.key === "name" ? t("Enter your full name", "أدخل اسمك الكامل") : field.key === "email" ? t("Enter your email address", "أدخل بريدك الإلكتروني") : field.key === "agency" ? t("Your agency or company", "اسم الوكالة أو الشركة") : t("What can we help with?", "كيف يمكننا مساعدتك؟")} id={"enquiry-" + field.key} className="input" type={field.type ?? "text"} autoComplete={field.autoComplete} required={field.required} min={field.type === "number" ? 1 : undefined} step={field.type === "number" ? 1 : undefined} dir={field.type === "email" ? "ltr" : undefined} aria-invalid={!!errors[field.key]} aria-describedby={errors[field.key] ? "enquiry-" + field.key + "-error" : undefined} {...register(field.key)} />
             </div>
           </FormField>)}</div>
           {!group && <FormField id="enquiry-phone" label={t("Phone Number", "رقم الهاتف")} required error={errors.phone?.message}>
@@ -126,7 +149,13 @@ function GeneralEnquiryPage({ group, publicVisitor }: { group: boolean; publicVi
             <textarea placeholder={group ? undefined : t("Write your message here…", "اكتب رسالتك هنا…")} id="enquiry-message" className="input" rows={5} required maxLength={2000} aria-invalid={!!errors.message} aria-describedby={errors.message ? "enquiry-message-error" : undefined} {...register("message")} />
           </FormField>
           <button className={`button button--primary ${!group ? contact.send : ""}`} disabled={isSubmitting} type="submit">{isSubmitting ? t("Preparing preview…", "تجهيز المعاينة…") : group ? t("Preview request", "معاينة الطلب") : t("Prepare enquiry", "تجهيز الاستفسار")}{!group && <Icon name="arrowRight" />}</button>
-          {preview && <section className={styles.preview} role="status"><h2>{t("Local preview ready — not sent", "المعاينة المحلية جاهزة — لم تُرسل")}</h2><p>{getValues("subject")}</p><p>{getValues("message")}</p><p>{t("Delivery is unavailable until an approved contact service is connected. No response time or price is promised.", "الإرسال غير متاح حتى ربط خدمة تواصل معتمدة. لا يوجد وعد بمدة رد أو سعر.")}</p></section>}
+          {preview && <section className={styles.preview} role="status"><h2>{t("Local preview ready — not sent", "المعاينة المحلية جاهزة — لم تُرسل")}</h2><p>{getValues("subject")}</p><p>{getValues("message")}</p>{group ? <p>{t("Delivery is unavailable until an approved contact service is connected. No response time or price is promised.", "الإرسال غير متاح حتى ربط خدمة تواصل معتمدة. لا يوجد وعد بمدة رد أو سعر.")}</p> : <>
+            <div className={contact.sendActions}>
+              <a className="button button--outline" href={`${whatsappUrl}?text=${encodeURIComponent(enquiryText())}`} target="_blank" rel="noopener noreferrer"><Icon name="whatsapp" />{t("Send via WhatsApp", "إرسال عبر واتساب")}</a>
+              <a className="button button--outline" href={`mailto:${contactEmail}?subject=${encodeURIComponent(getValues("subject"))}&body=${encodeURIComponent(enquiryText())}`}><Icon name="mail" />{t("Send via Email", "إرسال عبر البريد الإلكتروني")}</a>
+            </div>
+            <p>{t("Each option opens your own app with this enquiry filled in. You must complete sending there. This website does not send or store your enquiry and cannot confirm delivery. No response time or price is promised.", "يفتح كل خيار تطبيقك الخاص وبه هذا الاستفسار جاهزًا، وعليك إكمال الإرسال من هناك. لا يرسل هذا الموقع استفسارك ولا يخزنه ولا يمكنه تأكيد وصوله. لا يوجد وعد بمدة رد أو سعر.")}</p>
+          </>}</section>}
         </form>
         {group && <aside className={styles.aside}>
           <h2>{t("For travel professionals", "لمحترفي السفر")}</h2>

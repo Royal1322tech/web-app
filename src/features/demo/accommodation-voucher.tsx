@@ -103,7 +103,8 @@ export function AccommodationVoucher({ booking, hotel }: { booking: DemoBooking;
 
       <section className="voucher__section" aria-labelledby="voucher-rooms">
         <h3 id="voucher-rooms">{t("Room details", "تفاصيل الغرف")}</h3>
-        <div className="voucher__table-wrap">
+        {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrollable region must be reachable by keyboard. */}
+        <div className="voucher__table-wrap" role="region" tabIndex={0} aria-labelledby="voucher-rooms">
           <table className="voucher__table">
             <thead>
               <tr>
@@ -138,7 +139,8 @@ export function AccommodationVoucher({ booking, hotel }: { booking: DemoBooking;
 
       <section className="voucher__section" aria-labelledby="voucher-travellers">
         <h3 id="voucher-travellers">{t("Travellers", "المسافرون")}</h3>
-        <div className="voucher__table-wrap">
+        {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrollable region must be reachable by keyboard. */}
+        <div className="voucher__table-wrap" role="region" tabIndex={0} aria-labelledby="voucher-travellers">
           <table className="voucher__table">
             <thead>
               <tr>
