@@ -100,6 +100,7 @@ export const router = createBrowserRouter([
         lazy: page(() => import("@/pages/welcome"), "Welcome", "مرحبًا"),
       },
       { path: "login", lazy: page(() => import("@/pages/login"), "Partner Sign In", "تسجيل دخول الشركاء") },
+      { path: "login/verify-otp", lazy: page(() => import("@/pages/login-verify-otp"), "Login Verification", "تأكيد تسجيل الدخول") },
       {
         path: "forgot-password",
         lazy: page(() => import("@/pages/forgot-password"), "Forgot Password", "نسيت كلمة المرور"),

@@ -1,4 +1,6 @@
-import { demoAuth, subscribeDemoSession } from "@/features/auth/demo-auth";
+import { demoAuth } from "@/features/auth/demo-auth";
+import { b2bSession, subscribeB2BSession } from "@/features/auth/api/b2b-session";
+import { b2bAuthApi } from "@/features/auth/api/b2b-auth";
 import { sampleGroupRequests } from "@/features/group-requests/group-requests.fixture";
 import type { GroupRequest, NewGroupRequest } from "@/features/group-requests/group-request-types";
 import {
@@ -100,7 +102,7 @@ export function defaultCriteria(destination: string): HotelSearchCriteria {
   };
 }
 export function DemoProvider({ children }: { children: ReactNode }) {
-  const demoSessionActive = useSyncExternalStore(subscribeDemoSession, demoAuth.isActive, () => false);
+  const demoSessionActive = useSyncExternalStore(subscribeB2BSession, b2bSession.hasToken, () => false);
   const [rentalSelection, setRentalSelection] =
     useState<RentalSelection | null>(null);
   const [rentalPolicyAcknowledged, setRentalPolicyAcknowledged] = useState(false);
@@ -135,7 +137,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     },
     saveRentalDriver: driver => { setRentalDriver(driver); setRentalPolicyAcknowledged(false); },
     createRental: (status) => {
-      const ownerId = demoAuth.currentUserId();
+      const ownerId = b2bSession.hasToken() ? demoUserIds.current : null;
       if (!ownerId || !rentalSelection || !rentalDriver || !rentalPolicyAcknowledged) return null;
       const id = `RENTAL-DEMO-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
       setRentals((current) => [
@@ -190,9 +192,16 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       );
     },
     demoSessionActive,
-    signIn: demoAuth.signIn,
+    signIn: (_email: string, _password: string) => false,
     signOut: () => {
+      const token = b2bSession.getToken();
+      b2bSession.clear();
       demoAuth.signOut();
+      if (token) {
+        void b2bAuthApi.logout(token).catch(() => {
+          // Local session is already cleared; server logout may need retry.
+        });
+      }
       setRentalSelection(null);
       setRentalDriver(null);
       setRentals([]);

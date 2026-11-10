@@ -8,7 +8,7 @@ import { localToday } from "@/features/home/schemas/hotel-search.schema";
 import { Icon } from "@/components/ui/icon";
 import { RentalShell } from "./rental-layout";
 import { NumberedHeading } from "./rental-passenger";
-import { demoAuth, subscribeDemoSession } from "@/features/auth/demo-auth";
+import { b2bSession, subscribeB2BSession } from "@/features/auth/api/b2b-session";
 
 export const chauffeurSubjects = ["airport-transfers", "car-with-driver", "private-chauffeur", "vip-transport"];
 const schema = z.object({
@@ -23,7 +23,7 @@ const schema = z.object({
 type Values = z.infer<typeof schema>;
 export function ChauffeurEnquiryPage() {
   const { t } = useLocale();
-  const demoSessionActive = useSyncExternalStore(subscribeDemoSession, demoAuth.isActive, () => false);
+  const demoSessionActive = useSyncExternalStore(subscribeB2BSession, b2bSession.hasToken, () => false);
   const [params] = useSearchParams();
   const [stage, setStage] = useState<"details" | "review" | "preview">("details");
   const airport = params.get("subject") === "airport-transfers";

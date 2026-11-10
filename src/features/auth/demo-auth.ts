@@ -38,7 +38,7 @@ export function safeDemoReturnTo(state: unknown): string {
 }
 
 export function isPublicAuthPath(path: string): boolean {
-  return /^\/(welcome|login|forgot-password|verify-otp|reset-password)\/?$/.test(path)
+  return /^\/(welcome|login(?:\/verify-otp)?|forgot-password|verify-otp|reset-password)\/?$/.test(path)
     || /^\/contact\/?$/.test(path)
     || /^\/register\/agency(?:\/(company|contact|documents|review))?\/?$/.test(path);
 }

@@ -1,21 +1,24 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Icon } from "@/components/ui/icon";
 import { useLocale } from "@/features/localization/locale-provider";
-import { demoAuth } from "../demo-auth";
+import { b2bAuthApi } from "../api/b2b-auth";
 
 export function LoginForm() {
   const { t } = useLocale();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [notice, setNotice] = useState("");
   const [fieldErrors, setFieldErrors] = useState<{ username?: string; password?: string }>({});
   const usernameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const values = new FormData(form);
@@ -34,10 +37,20 @@ export function LoginForm() {
       passwordRef.current?.focus();
       return;
     }
+    const companyId = searchParams.get("company_id") ?? "";
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(companyId)) {
+      setNotice(t("A valid company login link is required.", "يلزم استخدام رابط تسجيل دخول صحيح خاص بالشركة."));
+      return;
+    }
+    setSubmitting(true);
     try {
-      if (!demoAuth.signIn(username, password)) setNotice(t("Incorrect email or password. Please try again.", "البريد الإلكتروني أو كلمة المرور غير صحيحة. حاول مرة أخرى."));
+      const result = await b2bAuthApi.login(username, password, companyId);
+      sessionStorage.setItem("royal.b2b.login.challenge", result.challenge_id);
+      navigate("/login/verify-otp");
     } catch {
-      setNotice(t("Session storage is unavailable. Allow browser storage and try again.", "تخزين الجلسة غير متاح. اسمح بتخزين المتصفح ثم حاول مرة أخرى."));
+      setNotice(t("Sign in failed. Please check your details and try again.", "تعذر تسجيل الدخول. تحقق من بياناتك وحاول مرة أخرى."));
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -95,16 +108,13 @@ export function LoginForm() {
       <Link to="/forgot-password" className="text-button login-form__forgot">
         {t("Forgot My Password?", "هل نسيت كلمة المرور؟")}
       </Link>
-      <Button type="submit">
+      <Button type="submit" disabled={submitting}>
         {t("Sign In", "تسجيل الدخول")}
       </Button>
       <div className="login-form__registration">
         <span>{t("Don't have an account?", "ليس لديك حساب؟")}</span>
         <Link to="/register/agency" className="text-button">{t("Register with us", "سجل معنا")}</Link>
       </div>
-      <p className="fine-print">
-        {t("Frontend preview only. Authentication is not verified by a server.", "معاينة للواجهة فقط. لا يتحقق خادم من تسجيل الدخول.")}
-      </p>
       <div role="status" aria-live="polite">
         {notice && <p className="availability-notice">{notice}</p>}
       </div>

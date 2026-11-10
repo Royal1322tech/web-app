@@ -12,7 +12,7 @@ import contact from "./contact-page.module.css";
 import { Icon } from "@/components/ui/icon";
 import { PageHero } from "@/components/ui/page-hero";
 import { useSyncExternalStore } from "react";
-import { demoAuth, subscribeDemoSession } from "@/features/auth/demo-auth";
+import { b2bSession, subscribeB2BSession } from "@/features/auth/api/b2b-session";
 import { SiteFooter } from "@/features/home/components/site-footer";
 import { getCountryCallingCode } from "libphonenumber-js/max";
 import { contactPhone, phoneCountries, validPhoneCountry } from "@/features/agency-registration/lib/phone";
@@ -28,7 +28,7 @@ const contactEmail = "royal.travel@royalvacation.online";
 /* The complaint form (./complaint-page) is kept for the planned Ticket page and is
  * intentionally not routed until its eligibility rules and route are approved. */
 export function EnquiryPage({ group = false }: { group?: boolean }) {
-  const demoSessionActive = useSyncExternalStore(subscribeDemoSession, demoAuth.isActive, () => false);
+  const demoSessionActive = useSyncExternalStore(subscribeB2BSession, b2bSession.hasToken, () => false);
   const [params] = useSearchParams();
   if (!group && chauffeurSubjects.includes(params.get("subject") ?? "")) return <ChauffeurEnquiryPage />;
   if (group) return <GroupEnquiryPage />;
