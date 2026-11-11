@@ -15,6 +15,12 @@ jobs:
   ci:
     name: CI
     runs-on: ubuntu-latest
+    # Chromium and its system libraries come preinstalled in the official Playwright image, so CI
+    # never downloads Ubuntu packages (the runners' package mirrors have failed DNS lookups).
+    # Keep the tag equal to the @playwright/test version in package-lock.json.
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.0-noble
+      options: --ipc=host
 
     steps:
       - name: Checkout
@@ -38,8 +44,16 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Install browser for regression checks
-        run: npx playwright install --with-deps chromium
+      - name: Verify Playwright matches the CI image
+        shell: bash
+        run: |
+          set -euo pipefail
+          LOCKED=$(node -p "require('@playwright/test/package.json').version")
+          if [[ "$LOCKED" != "1.64.0" ]]; then
+            echo "ERROR: @playwright/test is $LOCKED but the CI image is v1.64.0; update the container tag"
+            exit 1
+          fi
+          echo "PASS: Playwright $LOCKED matches the CI image"
 
       - name: Browser regression checks
         run: npm run test:e2e
