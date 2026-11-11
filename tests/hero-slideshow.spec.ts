@@ -7,7 +7,7 @@ for (const width of [375, 1440]) {
     await visit(page, '/');
     const hero = page.getByRole('region', { name: 'Royal Vacation agency platform', exact: true });
     const slides = hero.locator('[data-active]');
-    await expect(slides).toHaveCount(6);
+    await expect(slides).toHaveCount(4);
     await expect(hero.getByRole('button', { name: /slideshow|Show slide/ })).toHaveCount(0);
     await expect(hero.getByRole('button', { name: 'Pause image rotation' })).toBeVisible();
     await expect(hero.getByRole('group', { name: 'Hero slideshow' })).toHaveCount(0);

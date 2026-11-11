@@ -1665,3 +1665,139 @@
   .footerContent nav { gap: 2px; }
 }
 @media (prefers-reduced-motion: reduce) { .footerCtaButton, .footerContent nav a, .footerContent nav a > svg:last-child { transition: none; } }
+
+/* ── Premium homepage search ─────────────────────────────────────────────────────────────────
+ * Scoped to .searchSection, which only the homepage renders; the compact search used on the
+ * search, hotel and booking pages keeps its own styles. The card rises into the hero by
+ * --hero-overlap (also read by hero.module.css), so the tabs sit on the photograph.
+ */
+.home { --hero-overlap: 84px; }
+.home > main > .searchSection {
+  margin-block-start: calc(-1 * var(--hero-overlap));
+  padding-top: 0;
+}
+.searchSection .tabs {
+  gap: 4px;
+  padding: 6px 6px 0;
+  background: #ffffffed;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -10px 28px -16px #061b3266;
+  backdrop-filter: blur(10px);
+}
+.searchSection .tabs :is(span, a) {
+  min-height: 46px;
+  padding: 10px 18px;
+  border-radius: 12px 12px 0 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+.searchSection .tabs svg { width: 18px; height: 18px; }
+.searchSection .tabs a { color: var(--navy); }
+.searchSection .tabs a:hover { background: var(--subtle); color: var(--royal); }
+.searchSection .tabs a:focus-visible { outline: 2px solid var(--royal); outline-offset: -2px; }
+.searchSection .searchForm {
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid #dfe6ee;
+  border-radius: 20px;
+  border-start-start-radius: 0;
+  box-shadow: 0 32px 64px -30px #0b25455c, 0 10px 24px -14px #0b25452b;
+}
+.searchSection .searchField {
+  padding-inline-end: 0;
+  border-inline-end: 0;
+}
+.searchSection .searchForm .searchField label,
+.searchSection .fieldLabel {
+  min-height: 20px;
+  margin-block-end: 8px;
+  color: #3d4f66;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 20px;
+  letter-spacing: 0.01em;
+}
+.searchSection .searchField label svg,
+.searchSection .fieldLabel svg { width: 16px; height: 16px; color: var(--royal); }
+.searchSection :is(.searchField input, .searchField select, .guestTrigger) {
+  height: 52px;
+  min-height: 52px;
+  padding: 0 14px;
+  border: 1px solid #d3dce6;
+  border-radius: 12px;
+  background-color: #f8fafc;
+  color: var(--navy);
+  font-size: 15px;
+  font-weight: 500;
+  transition: border-color var(--duration-fast) ease, box-shadow var(--duration-fast) ease, background-color var(--duration-fast) ease;
+}
+.searchSection .searchField select {
+  appearance: none;
+  padding-inline-end: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2352647a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  cursor: pointer;
+}
+:global([dir="rtl"]) .searchSection .searchField select { background-position: left 14px center; }
+.searchSection .guestTrigger { cursor: pointer; }
+.searchSection :is(.searchField input, .searchField select, .guestTrigger):hover {
+  border-color: #9fb3c8;
+  background-color: #fff;
+}
+.searchSection :is(.searchField input, .searchField select, .guestTrigger):focus-visible,
+.searchSection :is(.searchField input, .searchField select):focus {
+  outline: none;
+  border-color: var(--royal);
+  background-color: #fff;
+  box-shadow: 0 0 0 3px #0e4d9238;
+}
+.searchSection :is(.searchField input, .searchField select)[aria-invalid="true"] {
+  border-color: #b42336;
+  background-color: #fffafa;
+}
+.searchSection .searchForm > .primaryButton {
+  grid-column: 1 / -1;
+  min-height: 52px;
+  margin-block-start: 4px;
+  padding: 0 26px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 0 8px 18px -10px #0e4d9299;
+}
+.searchSection .searchForm > .primaryButton:hover { transform: translateY(-1px); box-shadow: 0 12px 22px -12px #0e4d92b3; }
+.searchSection .searchForm > .primaryButton:focus-visible { outline: 3px solid #0e4d9259; outline-offset: 3px; }
+.searchSection .searchForm > .primaryButton svg { width: 18px; height: 18px; }
+
+/* Tablet: destination on its own row, dates paired, then nationality with guests. */
+@media (min-width: 600px) and (max-width: 1099px) {
+  .home { --hero-overlap: 76px; }
+  .searchSection .searchForm { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 18px; padding: 22px; }
+  .searchSection .searchForm > .searchField:first-child { grid-column: 1 / -1; }
+}
+/* Wide tablets and small laptops: three balanced columns with the action beside the guests. */
+@media (min-width: 840px) and (max-width: 1099px) {
+  .searchSection .searchForm { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .searchSection .searchForm > .searchField:first-child { grid-column: auto; }
+  .searchSection .searchForm > .primaryButton { grid-column: auto; margin-block-start: 28px; }
+}
+/* Desktop: one row, with the destination given the most room. */
+@media (min-width: 1100px) {
+  .searchSection .searchForm {
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.05fr) minmax(0, 1.3fr) auto;
+    align-items: start;
+    gap: 14px;
+    padding: 26px 26px 24px;
+  }
+  .searchSection .searchForm > .primaryButton { grid-column: auto; margin-block-start: 28px; }
+}
+@media (max-width: 599px) {
+  .home { --hero-overlap: 52px; }
+  .searchSection .searchForm { padding: 18px; gap: 14px; }
+  .searchSection .tabs :is(span, a) { min-height: 46px; padding: 10px 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .searchSection :is(.searchField input, .searchField select, .guestTrigger) { transition: none; }
+  .searchSection .searchForm > .primaryButton:hover { transform: none; }
+}

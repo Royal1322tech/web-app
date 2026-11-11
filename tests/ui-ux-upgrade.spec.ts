@@ -17,11 +17,11 @@ async function measureInterval(page: Page, slides: string) {
 }
 
 test.describe("hero carousels", () => {
-  test("Home shows 6 distinct images about every 4500ms, loads only what it needs and can pause", async ({ page }) => {
+  test("Home shows 4 distinct images about every 4500ms, loads only what it needs and can pause", async ({ page }) => {
     await visit(page, "/");
     const slides = "[data-slide]";
-    await expect(page.locator(slides)).toHaveCount(6);
-    // The first image and at most the next one: never all six.
+    await expect(page.locator(slides)).toHaveCount(4);
+    // The first image and at most the next one: never all four.
     expect(await page.locator(`${slides} img`).count()).toBeLessThanOrEqual(2);
     const interval = await measureInterval(page, slides);
     expect(interval).toBeGreaterThan(4200);

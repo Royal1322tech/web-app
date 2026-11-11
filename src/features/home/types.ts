@@ -20,3 +20,11 @@ export interface HeroContent {
   width: number;
   height: number;
 }
+
+export interface HeroSlide {
+  src: string;
+  width: number;
+  height: number;
+  /** CSS object-position for wide viewports; phones use the generated phone crop. */
+  position: string;
+}

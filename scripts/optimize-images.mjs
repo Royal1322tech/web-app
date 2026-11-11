@@ -11,6 +11,10 @@ const manifest = {};
 // wide file that is mostly cropped away. The value is the subject's horizontal position (0 to 1).
 const phoneCrops = {
   "/images/home/flight/hero-clean.png": 0.76,
+  "/images/home/hero/maldives-ai.png": 0.68,
+  "/images/home/hero/dubai-ai.png": 0.56,
+  "/images/home/hero/santorini-ai.png": 0.7,
+  "/images/home/hero/switzerland-ai.png": 0.64,
   "/images/welcome/resort-aerial.jpg": 0.55,
   "/images/home/cinematic/coastal-resort.png": 0.62,
   "/images/services/apartment-rentals.jpg": 0.32,

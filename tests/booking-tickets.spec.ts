@@ -36,6 +36,8 @@ async function recordRental(page: Page, outcome: "confirmed" | "pending" | "fail
 }
 
 test("the owner reports a hotel issue that is linked automatically and kept as a local preview", async ({ page }) => {
+  // DEMO-1004 stays 1–4 Nov 2026. Fix the date so it is "upcoming", where "Change to booking details" is offered.
+  await page.clock.setFixedTime(new Date("2026-10-21T10:00:00"));
   const writes = trackWrites(page);
   await visit(page, "/bookings/DEMO-1004");
   await page.getByRole("link", { name: "Report an issue", exact: true }).click();

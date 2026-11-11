@@ -1,7 +1,7 @@
 import { Reveal } from "@/components/motion/reveal";
 import { Text } from "@/features/localization/locale-provider";
 import { SiteFooter } from "./site-footer";
-import { homeHero } from "../data/home-content";
+import { homeHeroSlides } from "../data/home-content";
 import { collectionHotels } from "../data/hotels.fixture";
 import { ProductsServices, PlatformStrengths } from "./platform-sections";
 import { Hero } from "./hero";
@@ -18,7 +18,7 @@ export function HomeScreen() {
         <Text en="Skip to hotel search" />
       </a>
       <main>
-        <Hero content={homeHero} />
+        <Hero slides={homeHeroSlides} />
         <HotelSearchForm />
         <Reveal>
           <FeaturedDeals />

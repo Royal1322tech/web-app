@@ -6,7 +6,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 // First hero image per route. `sizes` matches the rendered image, so the browser reuses this request.
 const heroes = {
-  "/": { src: "/images/home/flight/hero-clean.png", sizes: "100vw", session: true },
+  "/": { src: "/images/home/hero/maldives-ai.png", sizes: "100vw", session: true },
   "/car-rental": { src: "/images/rental/luxury-arrival.webp", sizes: "(max-width: 1320px) 100vw, 1280px", session: true },
   "/contact": { src: "/images/home/cinematic/coastal-resort.png", sizes: "100vw", session: false },
 };

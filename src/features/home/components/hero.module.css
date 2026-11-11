@@ -1,25 +1,124 @@
-/* Above the search section (z-index 2) so header menus can extend past the hero. */
-.hero { position:relative; z-index:3; isolation:isolate; background:var(--navy); color:white; overflow:visible; min-height:570px; }
-.slides,.slide,.overlay { position:absolute; inset:0; pointer-events:none; }
-.slides { z-index:-3; }
-.slide { opacity:0; transition:opacity 800ms ease; overflow:hidden; }
-.slide[data-active="true"] { opacity:1; }
-.slide img { width:100%; height:100%; object-fit:cover; object-position:var(--slide-position,center); transform:scale(1.015); }
-.slide[data-active="true"] img { animation:cinematic-drift 5.3s ease-out both; }
-.slide[data-motion="false"] img { animation-play-state:paused; }
-/* No copy sits on the imagery, so the tint only settles the photos and keeps the toggle legible. */
-.overlay { z-index:-1; background:linear-gradient(180deg,#061b3259,transparent 32%),linear-gradient(0deg,#061b3259,transparent 28%),#061b3214; }
-.toggle { position:absolute; inset-block-end:16px; inset-inline-end:clamp(16px,4vw,40px); z-index:4; }
-.headerWrap { padding-top:16px; position:relative; z-index:5; }
-.headerWrap > header { position:relative; inset:auto; }
-.hero [data-hero-flight] { z-index:-2; top:120px; height:90px; --plane-width:140px; clip-path:none; }
-@keyframes cinematic-drift { from { transform:scale(1.015); } to { transform:scale(1.055); } }
-@media(max-width:599px) {
- .hero { min-height:340px; }
- .headerWrap { padding-top:12px; }
- .hero [data-hero-flight] { top:80px; height:66px; --plane-width:80px; }
- .slide img { object-position:center; }
+/*
+ * The hero is not its own stacking context: the search card overlaps its lower edge (z-index 2 in
+ * home.module.css) and must sit above the photographs, while the header (z-index 30) stays above
+ * the search card so its menus can extend over it.
+ */
+.hero {
+  /* --hero-overlap is set on the homepage so the search card can rise into the hero by the same amount. */
+  --overlap: var(--hero-overlap, 0px);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 620px;
+  padding-block-end: var(--overlap);
+  background: var(--navy);
+  color: #fff;
+  overflow: visible;
 }
-@media(prefers-reduced-motion:reduce) { .slide { transition:none; } .slide img { animation:none; transform:none; } }
+.slides,
+.slide,
+.overlay { position: absolute; inset: 0; pointer-events: none; }
+.slides { z-index: 0; overflow: hidden; }
+.slide { opacity: 0; transition: opacity 800ms ease; overflow: hidden; }
+.slide[data-active="true"] { opacity: 1; }
+.slide img { width: 100%; height: 100%; object-fit: cover; object-position: var(--slide-position, center); transform: scale(1.015); }
+.slide[data-active="true"] img { animation: cinematic-drift 5.3s ease-out both; }
+.slide[data-motion="false"] img { animation-play-state: paused; }
+/* Depth and legibility: a soft top band under the header and a deeper base under the copy. */
+.overlay {
+  z-index: 2;
+  background:
+    linear-gradient(180deg, #061b3266 0%, #061b3200 26%),
+    linear-gradient(0deg, #061b32e0 0%, #061b3288 24%, #061b3200 58%),
+    linear-gradient(90deg, #061b3299 0%, #061b3240 38%, #061b3200 62%);
+}
+/* The copy starts on the inline-start side, so the side shade follows the reading direction. */
+:global([dir="rtl"]) .overlay {
+  background:
+    linear-gradient(180deg, #061b3266 0%, #061b3200 26%),
+    linear-gradient(0deg, #061b32e0 0%, #061b3288 24%, #061b3200 58%),
+    linear-gradient(270deg, #061b3299 0%, #061b3240 38%, #061b3200 62%);
+}
+.headerWrap { position: relative; z-index: 30; padding-top: 16px; }
+.headerWrap > header { position: relative; inset: auto; }
 
-@media(min-width:600px) and (max-width:1199px) { .hero [data-hero-flight] { top:85px; height:76px; --plane-width:100px; } }
+.copy {
+  position: relative;
+  z-index: 3;
+  width: var(--page-width);
+  margin: auto auto 0;
+  padding-block: 40px 28px;
+  /* Lines the copy up with the search fields below it. */
+  padding-inline: 26px;
+}
+.copy > * { max-width: 640px; }
+.eyebrow {
+  margin: 0 0 12px;
+  color: var(--light-gold);
+  font-size: 12px;
+  font-weight: var(--weight-heavy);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.tagline {
+  margin: 0;
+  font-size: clamp(34px, 4.2vw, 58px);
+  font-weight: var(--weight-heavy);
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  text-shadow: 0 2px 24px #061b3259;
+}
+.tagline span { display: block; color: var(--light-gold); }
+.lede {
+  margin: 14px 0 0;
+  color: #ffffffe6;
+  font-size: 18px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+:global([dir="rtl"]) .eyebrow { letter-spacing: 0; }
+:global([dir="rtl"]) .tagline { letter-spacing: 0; line-height: 1.25; }
+
+/* The pause control, aligned with the bottom of the copy. */
+.meta {
+  position: absolute;
+  z-index: 3;
+  inset-block-end: calc(var(--overlap) + 28px);
+  inset-inline-end: max(24px, (100% - 1280px) / 2);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.toggle { flex: none; margin-inline-start: auto; }
+
+@keyframes cinematic-drift { from { transform: scale(1.015); } to { transform: scale(1.055); } }
+
+/* Tablet: the header collapses to one row, so the copy can sit higher. */
+@media (min-width: 600px) and (max-width: 1199px) {
+  .hero { min-height: 560px; }
+  .copy { padding-inline: 22px; }
+  .copy > * { max-width: 560px; }
+}
+/* Phones: the control sits in its own row under the copy instead of floating beside it. */
+@media (max-width: 599px) {
+  .hero { min-height: 0; }
+  .headerWrap { padding-top: 12px; }
+  .slide img { object-position: center; }
+  .copy { padding-block: 92px 6px; padding-inline: 18px; }
+  .eyebrow { display: none; }
+  .tagline { font-size: clamp(28px, 8.2vw, 34px); }
+  .lede { margin-top: 10px; font-size: 15px; line-height: 1.55; }
+  .meta {
+    position: relative;
+    inset: auto;
+    width: var(--page-width);
+    margin: 0 auto 14px;
+    padding-inline: 18px;
+    justify-content: space-between;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slide { transition: none; }
+  .slide img { animation: none; transform: none; }
+}
