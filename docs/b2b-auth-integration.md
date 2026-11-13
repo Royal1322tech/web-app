@@ -89,9 +89,9 @@ Every response is checked against a schema. A malformed reply, including a 2xx s
 
 ## Password recovery in API mode
 
-`/forgot-password`, `/verify-otp` and `/reset-password` show "Password recovery isn't available online yet" with a Contact link, because no recovery API exists.
+`/forgot-password`, `/verify-otp` and `/reset-password` show the original recovery screens, with a note at the top: "Password recovery isn't available online yet. These screens are a preview: no email is sent and no code is checked." It links to Contact. The screens make no API calls, because no recovery API exists. The API collection has no endpoint to request a reset code, verify one, or set a new password.
 
-The 4-digit code screen at `/verify-otp` belongs to the password-recovery demo. It is not the login code and is never used for real sign-in. The real login code step is part of the login page.
+The 4-digit code screen at `/verify-otp` belongs to the password-recovery preview. It is not the login code and is never connected to `POST /api/v1/b2b/auth/verify-otp`. That endpoint only accepts a challenge from a successful login, and it issues a sign-in token, not a reset token. The real login code step is part of the login page.
 
 ## Real local testing (historical)
 

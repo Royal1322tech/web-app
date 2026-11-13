@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { apiAuthEnabled } from "@/features/auth/auth-config";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
 import { Text, useLocale } from "@/features/localization/locale-provider";
@@ -21,7 +22,7 @@ const publicServices: ServiceCard[] = [
   { en:"Private Chauffeur", ar:"سائق خاص", description:"Prepare an itinerary enquiry for private chauffeur services.", descriptionAr:"جهز استفسار برنامج رحلة لخدمة السائق الخاص.", icon:"user", image:"/images/services/private-chauffeur.jpg", to:"/contact?subject=private-chauffeur" },
 ];
 const strengths: { en:string; ar:string; description:string; descriptionAr:string; icon:IconName }[] = [
-  { en:"Easy & Quick Registration", ar:"تسجيل سهل وسريع", description:"A guided four-step agency form keeps company, contact and document details organized. Real submission is not connected.", descriptionAr:"نموذج إرشادي من أربع خطوات ينظم بيانات الوكالة والتواصل والمستندات. الإرسال الفعلي غير متصل.", icon:"document" },
+  { en:"Easy & Quick Registration", ar:"تسجيل سهل وسريع", description: apiAuthEnabled ? "A guided four-step agency form keeps company, contact and document details organized. Royal Vacation reviews every registration before sign-in is enabled." : "A guided four-step agency form keeps company, contact and document details organized. Real submission is not connected.", descriptionAr: apiAuthEnabled ? "نموذج إرشادي من أربع خطوات ينظم بيانات الوكالة والتواصل والمستندات. تراجع رويال فاكيشن كل تسجيل قبل تفعيل تسجيل الدخول." : "نموذج إرشادي من أربع خطوات ينظم بيانات الوكالة والتواصل والمستندات. الإرسال الفعلي غير متصل.", icon:"document" },
   { en:"Booking Updates & Reports", ar:"تحديثات وتقارير الحجوزات", description:"Review booking timelines and transaction records. Live updates and reporting require backend integration.", descriptionAr:"راجع الجداول الزمنية للحجوزات وسجلات المعاملات. تتطلب التحديثات والتقارير المباشرة الربط بالخادم.", icon:"calendar" },
   { en:"Clear Booking Journey", ar:"رحلة حجز واضحة", description:"Review booking conditions, status updates and voucher details at each step.", descriptionAr:"راجع شروط الحجز وتحديثات الحالة وتفاصيل القسيمة في كل خطوة.", icon:"shield" },
   { en:"Dedicated Support", ar:"دعم مخصص", description:"Prepare a structured enquiry for your agency. Contact delivery and support hours are not yet configured.", descriptionAr:"جهز استفسارًا منظمًا لوكالتك. إرسال الرسائل ومواعيد الدعم لم تُحدد بعد.", icon:"mail" },

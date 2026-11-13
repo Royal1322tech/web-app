@@ -1,7 +1,8 @@
-.page { max-width:1440px; margin:0 auto; color:#172333; background:#fff; }
+.page,.header { --header-offset:12px; --header-height:72px; }
+.page { --header-space:calc(var(--header-offset) + var(--header-height)); max-width:1440px; margin:0 auto; color:#172333; background:#fff; }
 .skip { position:absolute; z-index:100; inset-block-start:8px; inset-inline-start:8px; transform:translateY(-180%); padding:12px 16px; background:#fff; border:2px solid var(--brand); border-radius:8px; }
 .skip:focus { transform:none; }
-.header { position:sticky; z-index:30; inset-block-start:0; display:flex; align-items:center; justify-content:space-between; gap:24px; width:var(--page-width); margin:12px auto 0; padding:12px 18px; border:1px solid #dbe4ec; border-radius:16px; background:#fffffff2; box-shadow:0 8px 26px #102c4214; backdrop-filter:blur(16px); }
+.header { position:sticky; z-index:30; inset-block-start:0; display:flex; align-items:center; justify-content:space-between; gap:24px; box-sizing:border-box; width:var(--page-width); block-size:var(--header-height); margin:var(--header-offset) auto 0; padding:0 18px; border:1px solid #dbe4ec; border-radius:16px; background:#fffffff2; box-shadow:0 8px 26px #102c4214; backdrop-filter:blur(16px); }
 .headerCompact { margin-block-end:16px; }
 .header > a { flex:none; text-decoration:none; }
 .header :global(.brand-emblem) { width:46px; height:46px; }
@@ -10,7 +11,7 @@
 .navigation > a:hover,.navigation > a:focus-visible { color:#087e8b; }
 .navigation > a[aria-current="page"] { color:#087e8b; text-decoration:underline; text-decoration-color:#d8ae63; text-decoration-thickness:2px; text-underline-offset:5px; }
 .menuButton { display:none; width:44px; height:44px; align-items:center; justify-content:center; border:1px solid #dbe4ec; border-radius:10px; background:#fff; color:#102d52; }
-.hero { position:relative; isolation:isolate; display:grid; grid-template-columns:minmax(0,1fr); place-items:center; min-height:470px; padding:36px clamp(20px,5vw,72px); overflow:hidden; color:#fff; background:radial-gradient(ellipse at 78% 3%,#18727b 0,transparent 35%),radial-gradient(ellipse at 10% 100%,#113c65 0,transparent 48%),linear-gradient(118deg,#071a35,#0b2947 62%,#0b5261); }
+.hero { position:relative; isolation:isolate; display:grid; grid-template-columns:minmax(0,1fr); place-items:center; --hero-min:470px; --hero-pad-block:36px; margin-block-start:calc(-1 * var(--header-space)); min-height:calc(var(--hero-min) + var(--header-space)); padding:calc(var(--header-space) + var(--hero-pad-block)) clamp(20px,5vw,72px) var(--hero-pad-block); overflow:hidden; color:#fff; background:radial-gradient(ellipse at 78% 3%,#18727b 0,transparent 35%),radial-gradient(ellipse at 10% 100%,#113c65 0,transparent 48%),linear-gradient(118deg,#071a35,#0b2947 62%,#0b5261); }
 .hero::before { position:absolute; z-index:-1; inset:0; background:radial-gradient(ellipse at center,#ffffff08,transparent 58%); content:""; pointer-events:none; }
 .eyebrow { margin:0 0 16px; color:#f1cd8b; font-size:12px; font-weight:800; letter-spacing:.15em; }
 .loginCard { width:100%; max-width:460px; justify-self:center; padding:clamp(24px,2.5vw,32px); border:1px solid #ffffffb8; border-top:3px solid var(--accent-hover); border-radius:var(--rounded-2xl); background:var(--surface); color:#172333; box-shadow:0 2px 6px #06142a24,0 28px 64px #06142a4d; scroll-margin-block-start:120px; }
@@ -54,16 +55,17 @@
  .menuButton { display:flex; }
  .navigation { display:none; flex-basis:100%; flex-wrap:wrap; justify-content:center; padding-block-start:10px; border-block-start:1px solid #e3e9ef; }
  .navigationOpen { display:flex; }
- .hero { min-height:450px; padding-inline:34px; }
+ .hero { --hero-min:450px; padding-inline:34px; }
 }
 @media(max-width:700px) {
- .header { inset-block-start:8px; margin-block-start:8px; padding:8px 12px; }
+ .page,.header { --header-offset:8px; --header-height:62px; }
+ .header { inset-block-start:8px; padding-inline:12px; }
  .headerCompact { margin-block-end:12px; }
  .header :global(.brand-emblem) { width:38px; height:38px; }
  .navigation { display:none; align-items:stretch; flex-direction:column; gap:2px; }
  .navigationOpen { display:flex; }
  .navigation > a { justify-content:center; white-space:normal; text-align:center; }
- .hero { display:grid; min-height:0; padding:24px 20px; }
+ .hero { display:grid; --hero-min:0px; --hero-pad-block:24px; padding-inline:20px; }
  .hero::before { display:none; }
  .loginCard { max-width:480px; padding:22px 20px; }
  .videoSection { display:flex; flex-direction:column; align-items:stretch; padding:52px var(--page-gutter); }
@@ -72,16 +74,49 @@
  .ctaActions a { white-space:normal; text-align:center; }
 }
 @media(min-width:701px) and (max-width:980px) {
- .hero { min-height:450px; padding-block:28px; }
+ .hero { --hero-min:450px; --hero-pad-block:28px; }
  .loginCard { padding:24px 22px; }
 }
 @media(max-height:760px) and (min-width:701px) {
- .hero { min-height:0; padding-block:28px; }
+ .hero { --hero-min:0px; --hero-pad-block:28px; }
  .loginCard { padding-block:22px; }
 }
 @media(max-height:640px) and (min-width:701px) {
- .hero { padding-block:20px; }
+ .hero { --hero-pad-block:20px; }
  .loginCard { padding:18px 22px; }
  .loginCard :global(.login-form) { gap:9px; margin-block-start:12px; }
 }
 @media(prefers-reduced-motion:reduce) { .page * { scroll-behavior:auto!important; transition:none!important; } }
+
+/* ── Refinements (2026-11): header over the hero, responsive navbar, card details ── */
+/* Over the dark hero a translucent bar reads grey, so it is solid white. */
+.header { border-color: #ffffffb3; background: #fff; box-shadow: 0 10px 30px #04102433; }
+.navigation > a { font-size: 15px; }
+
+/* Company ID and supporting links */
+.loginCard :global(.login-form .login-form__field-help) { margin-block-start: 6px; text-align: start; }
+.loginCard :global(#company-id) { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; letter-spacing: .01em; }
+.loginCard :global(.login-form .login-form__forgot) { display: inline-flex; align-items: center; min-height: 32px; font-size: 14px; text-underline-offset: 3px; }
+.loginCard :global(.login-form__registration .text-button) { text-underline-offset: 3px; }
+
+/* Tablets: the links fit beside the logo, so they stay inline instead of hiding behind a menu. */
+@media (min-width: 760px) and (max-width: 980px) {
+  .header { flex-wrap: nowrap; gap: 16px; padding-inline: 14px; }
+  .menuButton { display: none; }
+  .navigation { display: flex; flex-basis: auto; flex-wrap: nowrap; justify-content: flex-end; gap: 14px; padding: 0; border: 0; }
+  .navigation > a { font-size: 14px; }
+}
+/* Phones and small tablets: the menu opens as a panel under the bar and never pushes the page down. */
+@media (max-width: 759px) {
+  .header { flex-wrap: nowrap; }
+  .menuButton { display: flex; }
+  .navigation { position: absolute; inset-block-start: calc(100% + 8px); inset-inline: 0; display: none; flex-direction: column; align-items: stretch; gap: 2px; padding: 8px; border: 1px solid #dbe4ec; border-radius: 16px; background: #fff; box-shadow: 0 18px 40px #102c4229; }
+  .navigationOpen { display: flex; }
+  .navigation > a { justify-content: flex-start; min-height: 48px; padding: 0 14px; border-radius: 10px; font-size: 16px; text-align: start; white-space: normal; }
+  .navigation > a:hover, .navigation > a:focus-visible { background: var(--subtle); }
+  .navigation > :last-child { margin-block-start: 6px; padding: 10px 6px 4px; border-block-start: 1px solid #e3e9ef; }
+}
+/* A full company ID (36 characters) fits the field on small phones. */
+@media (max-width: 420px) {
+  .loginCard :global(#company-id) { font-size: 12.5px; letter-spacing: 0; }
+}

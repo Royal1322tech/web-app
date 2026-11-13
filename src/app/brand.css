@@ -154,6 +154,10 @@
 .route-entrance {
   animation: route-in 0.35s var(--ease) both;
 }
+/* Pages whose top edge is a full-bleed band appear in place (the router skips its slide for them too). */
+.route-entrance:has(> [data-route-entrance="none"]) {
+  animation: none;
+}
 .inline-loading {
   display: inline-flex;
   align-items: center;

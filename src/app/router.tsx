@@ -21,6 +21,8 @@ function Root() {
   const content = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // A page whose top edge is a full-bleed band opts out: sliding it would uncover a strip above it.
+    if (content.current?.querySelector(':scope > [data-route-entrance="none"]')) return;
     const animation = content.current?.animate(
       [{ transform: "translateY(6px)" }, { transform: "translateY(0)" }],
       { duration: 260, easing: "ease-out" },

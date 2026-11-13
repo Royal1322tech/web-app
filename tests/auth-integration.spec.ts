@@ -134,6 +134,22 @@ test.describe("API mode", () => {
     await expect(page.locator(".api-status-notice").getByRole("button", { name: "تحقق مرة أخرى" })).toBeVisible();
   });
 
+  test("the company ID field and its help text line up and fit small phones", async ({ page }) => {
+    await mockApi(page, {});
+    for (const width of [320, 390, 430, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/login");
+      const field = (await page.locator("#company-id").boundingBox())!;
+      const help = (await page.locator("#company-id-help").boundingBox())!;
+      expect(Math.abs(help.x - field.x), `${width}px`).toBeLessThanOrEqual(1);
+      // From standard phone widths up, a full 36-character ID is visible without scrolling the field.
+      if (width >= 390) {
+        await page.locator("#company-id").fill("8f14e45f-ceea-467a-9575-3c4b1f0b5c1a");
+        expect(await page.locator("#company-id").evaluate((input) => input.scrollWidth - input.clientWidth), `${width}px`).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+
   test("a reachable API shows no service notice", async ({ page }) => {
     const api = await mockApi(page, {});
     await page.goto("/login");
@@ -356,17 +372,32 @@ test.describe("API mode", () => {
     });
   }
 
-  for (const path of ["/forgot-password", "/verify-otp", "/reset-password"]) {
-    test(`password recovery at ${path} is clearly unavailable and never runs the demo`, async ({ page }) => {
+  for (const [path, inputs] of [["/forgot-password", 2], ["/verify-otp", 4], ["/reset-password", 2]] as const) {
+    test(`password recovery at ${path} shows the original screen as a preview and never calls the API`, async ({ page }) => {
       const api = await mockApi(page, {});
       await page.goto(path);
-      await expect(page.getByRole("status")).toContainText("Password recovery isn't available online yet.");
-      await expect(page.getByRole("link", { name: "Contact Royal Vacation" })).toHaveAttribute("href", "/contact");
-      await expect(page.locator("main")).not.toContainText(/demo/i);
-      await expect(page.locator("input")).toHaveCount(0);
+      const note = page.getByRole("note");
+      await expect(note).toContainText("Password recovery isn't available online yet. These screens are a preview: no email is sent and no code is checked.");
+      await expect(note.getByRole("link", { name: "Contact Royal Vacation to reset your password" })).toHaveAttribute("href", "/contact");
+      // The original recovery form is restored, not replaced.
+      await expect(page.locator("main input")).toHaveCount(inputs);
+      await page.locator("main form button[type=submit]").click();
       expect(api.calls).toEqual([]);
+      expect(api.unexpected).toEqual([]);
     });
   }
+
+  test("the restored 4-digit recovery code screen is a preview in Arabic too", async ({ page }) => {
+    const api = await mockApi(page, {});
+    await page.goto("/verify-otp");
+    await page.locator("main select").first().selectOption("ar");
+    await expect(page.getByRole("note")).toContainText("استعادة كلمة المرور غير متاحة عبر الإنترنت بعد");
+    for (const [index, digit] of ["1", "2", "3", "4"].entries()) await page.getByLabel(`الرقم ${index + 1} من ٤`).fill(digit);
+    await page.getByRole("button", { name: "تأكيد" }).click();
+    await expect(page.locator("main [role=status]").last()).toHaveText("التحقق غير متصل بعد. لم يتم إرسال أي رمز أو التحقق منه.");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+    expect(api.calls).toEqual([]);
+  });
 
   test("profile and agency pages show the account from /me, and nothing pretends to be live", async ({ page }) => {
     await mockApi(page, { "POST /b2b/auth/login": ok.login, "POST /b2b/auth/verify-otp": ok.verify, "GET /b2b/me": ok.me });

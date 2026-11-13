@@ -1331,6 +1331,45 @@ input[type="date"]:focus-within {
   .registration-page .registration-content { padding: 16px 16px 28px; }
 }
 
+/* ── Agency registration: phones ────────────────────────────────────── */
+.registration-progress__caption { display: none; }
+@media (max-width: 719px) {
+  .registration-page .registration-header__bar { margin-block-end: 14px; }
+  .registration-page .registration-header h1 { font-size: clamp(22px, 6.2vw, 26px); line-height: 1.25; text-wrap: balance; }
+  .registration-page .registration-header p { font-size: 14px; }
+  .registration-page .registration-header .fine-print { font-size: 12.5px; }
+
+  /* Four evenly spaced steps on one line, with the current step named underneath. */
+  .registration-page .registration-progress { margin: 22px 0 10px; }
+  .registration-page .step .step-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .registration-page .step-number { width: 34px; height: 34px; font-size: 12px; }
+  .registration-page .step-line { inset-inline-start: calc(50% + 21px); width: calc(100% - 42px); }
+  .registration-progress__caption { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 2px 8px; margin: 0 0 18px; color: var(--muted); font-size: 13px; text-align: center; }
+  .registration-progress__caption strong { color: var(--navy); font-size: 14px; font-weight: var(--weight-heavy); }
+
+  .registration-page .registration-section,
+  .registration-page .registration-password { padding: 18px 16px; border-radius: 16px; }
+  .registration-page .section-heading { margin-block-end: 18px; }
+  .registration-page .section-heading h2,
+  .registration-page .registration-password__head h2 { font-size: 18px; }
+  .registration-page .section-heading .icon-badge,
+  .registration-page .registration-password__head .icon-badge { width: 40px; height: 40px; border-radius: 12px; }
+  .registration-page .registration-fields { row-gap: 18px; }
+  .registration-page .review-grid { gap: 14px; }
+  .registration-page .review-card { padding: 14px; border-radius: 14px; }
+
+  /* Back stays compact so the main action keeps its label on one line. */
+  .registration-page .registration-actions { gap: 12px; margin-block-start: 22px; }
+  .registration-page .registration-actions .button--outline { flex: 0 0 auto; min-width: 104px; padding-inline: 16px; }
+  .registration-page .registration-actions .button--primary { flex: 1 1 auto; min-width: 0; }
+  .registration-page .registration-password__rules { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  .registration-page .registration-password__rules li { padding: 7px 10px; font-size: 12.5px; }
+}
+@media (max-width: 359px) {
+  .registration-page .registration-password__rules { grid-template-columns: minmax(0, 1fr); }
+  .registration-page .registration-actions .button--outline { min-width: 0; }
+}
+
 /* Real login code: the digit boxes of the original verification screen. */
 .login-otp__group { margin: 0; padding: 0; border: 0; min-width: 0; }
 .login-otp__digits { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin-block: 4px 4px; }

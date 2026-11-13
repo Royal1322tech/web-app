@@ -13,6 +13,12 @@ const links: { route: "/car-rental" | "/search" | "/agency" | "/login"; icon: Ic
   { route: "/login", icon: "user", en: "Partner Access", ar: "دخول الشركاء" },
 ];
 
+/* Store names only, never the stores' logos: those are licensed for apps that are already listed. */
+const stores = [
+  { name: "App Store", en: "Coming to the", ar: "سيتوفر على" },
+  { name: "Google Play", en: "Coming to", ar: "سيتوفر على" },
+] as const;
+
 export function SiteFooter() {
   const { t } = useLocale();
   const signedIn = useAppSessionActive();
@@ -63,10 +69,26 @@ export function SiteFooter() {
         </section>
 
         <section className={styles.footerApps} aria-labelledby="footer-apps-title">
-          <h3 id="footer-apps-title">{t("Mobile Experience", "تجربة الهاتف المحمول")}</h3>
-          <span className={styles.comingSoon}>{t("Coming Soon", "قريبًا")}</span>
-          <p><Text en="Our iOS and Android apps are in development." ar="تطبيقاتنا لنظامي iOS وAndroid قيد التطوير." /></p>
-          <span className={styles.platforms} aria-label={t("iOS and Android", "iOS وAndroid")}>iOS <span aria-hidden="true">·</span> Android</span>
+          <div className={styles.appsHeading}>
+            <h3 id="footer-apps-title">{t("Get the Royal Vacation App", "احصل على تطبيق رويال فاكيشن")}</h3>
+            <span className={styles.comingSoon}>{t("Coming Soon", "قريبًا")}</span>
+          </div>
+          <p><Text en="Plan, book and follow every client journey from your phone. Our iOS and Android apps are on the way." ar="خطط واحجز وتابع كل رحلة لعملائك من هاتفك. تطبيقاتنا على iOS و Android في الطريق." /></p>
+          {/* Not links: there are no store listings yet. Official store badges replace these once the apps are published. */}
+          <ul className={styles.storeBadges} aria-label={t("App stores, not available yet", "متاجر التطبيقات، غير متاحة بعد")}>
+            {stores.map(({ name, en, ar }) => (
+              <li key={name} className={styles.storeBadge}>
+                <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="6.5" y="2.5" width="11" height="19" rx="2.5" />
+                  <path d="M10.5 5.5h3M12 9.5v6m-2.5-2.5L12 15.5l2.5-2.5" />
+                </svg>
+                <span>
+                  <small>{t(en, ar)}</small>
+                  <strong><bdi>{name}</bdi></strong>
+                </span>
+              </li>
+            ))}
+          </ul>
         </section>
       </div>
 

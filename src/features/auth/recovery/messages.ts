@@ -1,5 +1,8 @@
 import { useLocale } from "@/features/localization/locale-provider";
 const arabic: Record<string, string> = {
+  "Password recovery isn't available online yet. These screens are a preview: no email is sent and no code is checked.":
+    "استعادة كلمة المرور غير متاحة عبر الإنترنت بعد. هذه الشاشات للمعاينة فقط: لا يُرسل أي بريد ولا يُتحقق من أي رمز.",
+  "Contact Royal Vacation to reset your password": "تواصل مع رويال فاكيشن لإعادة تعيين كلمة المرور",
   "Continue to verification demo": "المتابعة لمعاينة التحقق",
   "Continue to reset demo": "المتابعة لمعاينة إعادة التعيين",
   "Return to sign in": "العودة لتسجيل الدخول",

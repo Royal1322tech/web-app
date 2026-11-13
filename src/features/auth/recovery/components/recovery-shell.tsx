@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
+import { apiAuthEnabled } from "@/features/auth/auth-config";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { BrandLogo } from "@/components/brand-logo";
 import { useRecoveryText } from "../messages";
@@ -39,6 +41,13 @@ export function RecoveryShell({
           </label>
         </div>
         <h1>{text(title)}</h1>
+        {/* Real sign-in builds: there is no password recovery API yet, so the original screens are a preview. */}
+        {apiAuthEnabled && (
+          <div className={`availability-notice ${styles.preview}`} role="note">
+            <p>{text("Password recovery isn't available online yet. These screens are a preview: no email is sent and no code is checked.")}</p>
+            <Link to="/contact">{text("Contact Royal Vacation to reset your password")}</Link>
+          </div>
+        )}
         {children}
       </div>
     </AuthShell>

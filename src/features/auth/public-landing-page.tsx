@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Icon } from "@/components/ui/icon";
 import { useLocale } from "@/features/localization/locale-provider";
+import { apiAuthEnabled } from "./auth-config";
 import { LoginForm } from "./components/login-form";
 import { PublicLandingHeader } from "./public-landing-header";
 import { ProductsServices, PlatformStrengths } from "@/features/home/components/platform-sections";
@@ -11,7 +12,8 @@ export function PublicLandingPage() {
   const { t, locale } = useLocale();
 
   return (
-    <div className={styles.page} lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}>
+    // The hero is this page's top edge, so it opts out of the shared route slide (see router.tsx).
+    <div className={styles.page} lang={locale} dir={locale === "ar" ? "rtl" : "ltr"} data-route-entrance="none">
       <a className={styles.skip} href="#login">{t("Skip to sign in", "انتقل إلى تسجيل الدخول")}</a>
       <PublicLandingHeader />
 
@@ -44,7 +46,9 @@ export function PublicLandingPage() {
           <div>
             <p className={styles.eyebrow}>{t("PARTNER WITH ROYAL VACATION", "كن شريكًا لرويال فاكيشن")}</p>
             <h2 id="partner-cta-title">{t("Grow with Royal Vacation", "انمُ مع رويال فاكيشن")}</h2>
-            <p>{t("Create an agency profile and explore the partner workspace. Registration is currently a local preview.", "أنشئ ملف وكالة واستكشف مساحة الشركاء. التسجيل حاليًا معاينة محلية.")}</p>
+            <p>{apiAuthEnabled
+              ? t("Create an agency profile and explore the partner workspace. Royal Vacation reviews every registration before sign-in is enabled.", "أنشئ ملف وكالة واستكشف مساحة الشركاء. تراجع رويال فاكيشن كل تسجيل قبل تفعيل تسجيل الدخول.")
+              : t("Create an agency profile and explore the partner workspace. Registration is currently a local preview.", "أنشئ ملف وكالة واستكشف مساحة الشركاء. التسجيل حاليًا معاينة محلية.")}</p>
           </div>
           <div className={styles.ctaActions}>
             <Link to="/register/agency/company">{t("Register your agency", "سجل وكالتك")}<Icon name="arrowRight" /></Link>

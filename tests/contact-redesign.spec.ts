@@ -37,7 +37,7 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
 
       await visit(page, "/");
       const apps = page.locator('footer section[aria-labelledby="footer-apps-title"]');
-      await expect(apps.getByRole("heading", { name: locale === "en" ? "Mobile Experience" : "تجربة الهاتف المحمول" })).toBeVisible();
+      await expect(apps.getByRole("heading", { name: locale === "en" ? "Get the Royal Vacation App" : "احصل على تطبيق رويال فاكيشن" })).toBeVisible();
       await expect(apps.getByText(locale === "en" ? "Coming Soon" : "قريبًا", { exact: true })).toBeVisible();
       await expect(apps.locator("a, img")).toHaveCount(0);
       await visit(page, "/contact");

@@ -15,7 +15,9 @@ export function RegistrationProgress({
   currentStep: 1 | 2 | 3 | 4 | 5;
 }) {
   const { t } = useLocale();
+  const current = currentStep <= 4 ? currentStep : null;
   return (
+    <>
     <ol className="registration-progress" aria-label={t("Registration progress")}>
       {steps.map((label, index) => {
         const done = index + 1 < currentStep;
@@ -38,5 +40,13 @@ export function RegistrationProgress({
         );
       })}
     </ol>
+    {/* Phones show one caption instead of a label under each step; the list above stays the accessible version. */}
+    {current && (
+      <p className="registration-progress__caption" aria-hidden="true">
+        <span>{t(`Step ${current} of 4`, `الخطوة ${current} من 4`)}</span>
+        <strong>{t(steps[current - 1])}</strong>
+      </p>
+    )}
+    </>
   );
 }

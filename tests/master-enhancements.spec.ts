@@ -48,7 +48,11 @@ for (const width of [375, 768, 1440]) {
     const hero = await page.locator("section[class*=hero]").boundingBox();
     const card = await page.locator("#login").boundingBox();
     expect(Math.abs((hero!.x + hero!.width / 2) - (card!.x + card!.width / 2))).toBeLessThanOrEqual(1);
-    expect(hero!.height).toBeLessThan(660);
+    // The hero extends to the top of the page behind the floating header; the first view below the
+    // header stays compact.
+    const header = (await page.locator("header").first().boundingBox())!;
+    expect(hero!.y).toBeLessThanOrEqual(0.5);
+    expect(hero!.y + hero!.height - (header.y + header.height)).toBeLessThan(660);
     await expect(page.locator("header .brand-logo")).toBeVisible();
     await expect(page.locator("#login .brand-logo")).toHaveCount(0);
     await expect(page.getByLabel("Email", { exact: true })).toBeVisible();
@@ -66,7 +70,8 @@ for (const width of [375, 768, 1440]) {
     await expect(video.locator("source")).toHaveAttribute("src", "/videos/royal-promo.mp4");
     await expect(video.locator("track")).toHaveAttribute("src", "/videos/royal-promo.en.vtt");
     expect(mediaRequests).toEqual([]);
-    if (width < 981) {
+    // Below 760px the links sit behind a menu button; from 760px they fit inline beside the logo.
+    if (width < 760) {
       await page.getByRole("button", { name: "Open navigation" }).click();
       await expect(page.locator("header > a[href='/login']")).toBeVisible();
       await expect(page.locator("#public-navigation").getByRole("link", { name: "Home", exact: true })).toHaveCount(0);
@@ -78,6 +83,8 @@ for (const width of [375, 768, 1440]) {
         await page.getByRole("button", { name: "Close navigation" }).click();
       }
     } else {
+      await expect(page.getByRole("button", { name: "Open navigation" })).toBeHidden();
+      await expect(page.locator("#public-navigation").getByRole("link", { name: "Our Products" })).toBeVisible();
       await expect(page.locator("header > a[href='/login']")).toBeVisible();
       await expect(page.locator("#public-navigation").getByRole("link", { name: "Home", exact: true })).toHaveCount(0);
       await expect(page.getByRole("link", { name: "Partner With Us", exact: true })).toHaveCount(0);

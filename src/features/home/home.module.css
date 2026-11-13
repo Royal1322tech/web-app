@@ -1640,11 +1640,18 @@
 .footerContacts a:hover { color: #ffdda1; }
 .footerContacts svg { flex: 0 0 20px; color: #e4b86a; }
 .footerContacts bdi { min-width: 0; overflow-wrap: anywhere; }
-.footerApps { min-width: 0; }
-.footerApps p { margin: 10px 0; color: #dce8f3; font-size: 14px; line-height: 1.65; }
-.comingSoon { display: inline-flex; align-items: center; min-height: 28px; padding: 4px 10px; border: 1px solid #f1cd8b70; border-radius: 999px; color: #ffdda1; background: #f1cd8b14; font-size: 12px; font-weight: 700; }
-.platforms { color: #c8d6e2; font-size: 12px; letter-spacing: .04em; }
-.platforms span { padding-inline: 5px; color: #e4b86a; }
+/* Mobile apps: a quiet panel with store badges that stay inert until the apps are listed. */
+.footerApps { min-width: 0; padding: 18px; border: 1px solid #ffffff1f; border-radius: 16px; background: linear-gradient(160deg, #ffffff0f, #ffffff05); }
+.appsHeading { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.footerContent .appsHeading h3 { margin: 0; line-height: 1.35; }
+.footerApps p { margin: 10px 0 16px; color: #dce8f3; font-size: 14px; line-height: 1.65; }
+.comingSoon { display: inline-flex; align-items: center; min-height: 28px; padding: 4px 10px; border: 1px solid #f1cd8b70; border-radius: 999px; color: #ffdda1; background: #f1cd8b14; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.storeBadges { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.storeBadge { display: flex; flex: 1 1 158px; align-items: center; gap: 10px; min-width: 0; max-width: 220px; min-height: 50px; padding: 8px 14px 8px 12px; border: 1px solid #ffffff3d; border-radius: 10px; background: #030d1c; color: #fff; cursor: default; user-select: none; }
+.storeBadge svg { flex: none; width: 24px; height: 24px; color: #ffdda1; }
+.storeBadge > span { display: grid; min-width: 0; }
+.storeBadge small { color: #c8d6e2; font-size: 11px; line-height: 1.25; }
+.storeBadge strong { color: #fff; font-size: 16px; font-weight: 700; line-height: 1.25; letter-spacing: .005em; white-space: nowrap; }
 .footerBottom {
   position: relative;
   z-index: 1;
@@ -1658,11 +1665,15 @@
 }
 .footerWave { position: absolute; inset: auto 0 0; width: 100%; height: 120px; pointer-events: none; }
 @media (min-width: 768px) and (max-width: 1100px) { .footerContent { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 36px; } }
+/* Laptops: the apps panel is the widest content, so it spans the brand column's share. */
+@media (min-width: 1101px) and (max-width: 1279px) { .footerContent { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.2fr); gap: 28px; } }
 @media (max-width: 767px) {
   .footerCta { align-items: stretch; flex-direction: column; gap: 18px; padding-block: 28px; }
   .footerCtaButton { width: 100%; }
   .footerContent { grid-template-columns: minmax(0, 1fr); gap: 24px; padding-block: 28px 24px; }
   .footerContent nav { gap: 2px; }
+  .footerApps { padding: 16px; }
+  .storeBadge { max-width: none; }
 }
 @media (prefers-reduced-motion: reduce) { .footerCtaButton, .footerContent nav a, .footerContent nav a > svg:last-child { transition: none; } }
 
