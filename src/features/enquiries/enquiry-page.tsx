@@ -1,4 +1,5 @@
 import { ChauffeurEnquiryPage, chauffeurSubjects } from "@/features/car-rental/chauffeur-enquiry";
+import { useAppSessionActive } from "@/features/auth/app-session";
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -11,8 +12,7 @@ import styles from "./enquiry.module.css";
 import contact from "./contact-page.module.css";
 import { Icon } from "@/components/ui/icon";
 import { PageHero } from "@/components/ui/page-hero";
-import { useSyncExternalStore } from "react";
-import { demoAuth, subscribeDemoSession } from "@/features/auth/demo-auth";
+import {  } from "react";
 import { SiteFooter } from "@/features/home/components/site-footer";
 import { getCountryCallingCode } from "libphonenumber-js/max";
 import { contactPhone, phoneCountries, validPhoneCountry } from "@/features/agency-registration/lib/phone";
@@ -28,7 +28,7 @@ const contactEmail = "royal.travel@royalvacation.online";
 /* The complaint form (./complaint-page) is kept for the planned Ticket page and is
  * intentionally not routed until its eligibility rules and route are approved. */
 export function EnquiryPage({ group = false }: { group?: boolean }) {
-  const demoSessionActive = useSyncExternalStore(subscribeDemoSession, demoAuth.isActive, () => false);
+  const demoSessionActive = useAppSessionActive();
   const [params] = useSearchParams();
   if (!group && chauffeurSubjects.includes(params.get("subject") ?? "")) return <ChauffeurEnquiryPage />;
   if (group) return <GroupEnquiryPage />;

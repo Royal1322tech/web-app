@@ -1,5 +1,7 @@
 node_modules/
 dist/
+# Extra builds used only by the authentication tests.
+dist-auth-*/
 
 .env*
 !.env.example

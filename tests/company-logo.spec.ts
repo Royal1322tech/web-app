@@ -12,7 +12,7 @@ const image = async (format: "png" | "jpeg" | "webp", width = 40, height = 20) =
 const input = (page: Page) => page.locator("#company-logo");
 const error = (page: Page) => page.locator("#company-logo-error");
 const preview = (page: Page) => page.locator(".company-logo__frame img");
-const next = (page: Page) => page.getByRole("button", { name: "Next", exact: true }).click();
+const next = (page: Page) => page.getByRole("button", { name: /^(Next|التالي)$/ }).click();
 
 async function fillCompanyWithoutLogo(page: Page) {
   await page.getByLabel("Name of Company").fill("Logo Test Agency");

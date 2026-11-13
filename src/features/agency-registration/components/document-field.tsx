@@ -67,8 +67,8 @@ export function DocumentField({
           }}
         />
         <span aria-hidden="true">
-          <Icon name="upload" />
-          {selectedFile ? replaceLabel : uploadLabel}
+          <span className="document-picker__icon"><Icon name={selectedFile ? "document" : "upload"} /></span>
+          <strong>{selectedFile ? replaceLabel : uploadLabel}</strong>
         </span>
       </div>
       <p className="document-help" id={`${id}-help`}>
@@ -81,7 +81,7 @@ export function DocumentField({
       >
         {selectedFile && (
           <span>
-            <Icon name="document" />
+            <Icon name="check" />
             <bdi>{selectedFile.name}</bdi>
           </span>
         )}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { apiAuthEnabled } from "@/features/auth/auth-config";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,10 +24,9 @@ export function AgencyPage() {
             </p>
             <h2>{profile.name}</h2>
             <span className="status-badge">
-              {t(
-                "Local session",
-                "جلسة تجريبية · دون مصادقة فعلية",
-              )}
+              {apiAuthEnabled
+                ? t("Signed in to your company account", "مسجل الدخول إلى حساب شركتك")
+                : t("Local session", "جلسة تجريبية · دون مصادقة فعلية")}
             </span>
             <dl className="summary-dl">
               {[
@@ -39,7 +39,7 @@ export function AgencyPage() {
                 <div key={label}>
                   <dt>{label}</dt>
                   <dd>
-                    <bdi>{value}</bdi>
+                    <bdi>{value || t("Not provided", "غير متوفر")}</bdi>
                   </dd>
                 </div>
               ))}
@@ -103,6 +103,21 @@ const profileSchema = z.object({
   country: z.string().trim().min(2, "Enter a country."),
 });
 export function EditAgencyPage() {
+  const { t } = useLocale();
+  if (apiAuthEnabled) {
+    return (
+      <Workspace title={t("Edit agency profile", "تعديل ملف الوكالة")}>
+        <section className="workspace-card">
+          <p className="availability-notice" role="status">{t("Company details can't be edited online yet. Please contact Royal Vacation to change them.", "لا يمكن تعديل بيانات الشركة عبر الإنترنت بعد. يرجى التواصل مع رويال فاكيشن لتغييرها.")}</p>
+          <div className="workspace-actions"><Link className="button button--outline" to="/agency">{t("Back to agency profile", "العودة إلى ملف الوكالة")}</Link><Link className="button button--primary" to="/contact">{t("Contact Royal Vacation", "تواصل مع رويال فاكيشن")}</Link></div>
+        </section>
+      </Workspace>
+    );
+  }
+  return <DemoEditAgencyPage />;
+}
+
+function DemoEditAgencyPage() {
   const { t } = useLocale();
   const { profile, saveProfile } = useDemo();
   const [saved, setSaved] = useState(false);

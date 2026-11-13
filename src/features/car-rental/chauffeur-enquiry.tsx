@@ -1,4 +1,5 @@
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
+import { useAppSessionActive } from "@/features/auth/app-session";
 import { Link, useSearchParams } from "react-router-dom";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,7 +9,6 @@ import { localToday } from "@/features/home/schemas/hotel-search.schema";
 import { Icon } from "@/components/ui/icon";
 import { RentalShell } from "./rental-layout";
 import { NumberedHeading } from "./rental-passenger";
-import { demoAuth, subscribeDemoSession } from "@/features/auth/demo-auth";
 
 export const chauffeurSubjects = ["airport-transfers", "car-with-driver", "private-chauffeur", "vip-transport"];
 const schema = z.object({
@@ -23,7 +23,7 @@ const schema = z.object({
 type Values = z.infer<typeof schema>;
 export function ChauffeurEnquiryPage() {
   const { t } = useLocale();
-  const demoSessionActive = useSyncExternalStore(subscribeDemoSession, demoAuth.isActive, () => false);
+  const demoSessionActive = useAppSessionActive();
   const [params] = useSearchParams();
   const [stage, setStage] = useState<"details" | "review" | "preview">("details");
   const airport = params.get("subject") === "airport-transfers";

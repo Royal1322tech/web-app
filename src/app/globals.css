@@ -408,6 +408,8 @@ h2 {
   border-inline-start: 3px solid var(--brand);
   border-radius: 5px;
 }
+.api-status-notice { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.api-status-notice p { flex: 1 1 260px; margin: 0; }
 
 .registration-page {
   min-height: 100svh;
@@ -1138,3 +1140,202 @@ input[type="date"]:focus-within {
 @media (max-width: 799px) {
   :where(.text-button, .hotel-location__source, main a:not([class]), nav[aria-label="Registration account navigation"] a) { display: inline-block; min-height: 24px; line-height: 24px; }
 }
+
+/* Real sign-in: one-time code step. */
+.login-otp__intro { display: grid; gap: 4px; }
+.login-otp__intro h2 { font-size: 20px; font-weight: var(--weight-heavy); }
+.login-otp__intro p { color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
+.login-otp .login-otp__code { height: 56px; font-size: 24px; letter-spacing: .4em; text-align: center; }
+.login-otp__expiry { color: var(--muted); font-size: 14px; }
+.login-otp__expiry.is-expired { color: var(--error); font-weight: var(--weight-semibold); }
+.login-otp__back { display: inline-flex; align-items: center; gap: 6px; justify-self: start; min-height: 44px; }
+.login-otp__back svg { width: 16px; height: 16px; }
+[dir="rtl"] .login-otp__back svg { rotate: 180deg; }
+.session-unavailable__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); margin-block-start: var(--space-4); }
+.login-form .login-form__field-help { margin-block-start: 6px; text-align: start; }
+
+/* Real sign-in builds: pages still showing sample data say so. */
+.api-data-notice { margin: 0; padding: 8px var(--space-4); background: var(--demo-bg); color: var(--demo-fg); font-size: 13px; font-weight: var(--weight-semibold); text-align: center; }
+
+/* Real registration: password step and result. */
+.registration-password, .registration-result { display: grid; gap: var(--space-4); max-width: 760px; margin: var(--space-6) auto 0; padding: var(--space-5); border: 1px solid var(--border); border-radius: var(--rounded-lg); background: var(--surface); }
+.registration-password h2, .registration-result h2 { font-size: 20px; font-weight: var(--weight-heavy); }
+.registration-password__fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+.registration-password__rules { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 0; list-style: none; color: var(--muted); font-size: 13px; }
+.registration-password__rules li::before { margin-inline-end: 4px; content: "○"; }
+.registration-password__rules li[data-met="true"] { color: var(--success); }
+.registration-password__rules li[data-met="true"]::before { content: "✓"; }
+.registration-password__failure ul { margin: 6px 0 0; padding-inline-start: 18px; }
+.registration-result dl { display: grid; gap: 8px; margin: 0; }
+.registration-result dd { margin: 0; font-weight: var(--weight-heavy); overflow-wrap: anywhere; }
+@media (max-width: 599px) { .registration-password__fields { grid-template-columns: minmax(0, 1fr); } }
+
+/* ── Agency registration: premium layout ─────────────────────────────── */
+.registration-page.registration-page { align-items: flex-start; padding: clamp(16px, 3vw, 40px) clamp(12px, 3vw, 32px); background: radial-gradient(circle at 12% 0%, #e3eef9 0, transparent 42%), linear-gradient(180deg, #f5f8fc, #edf2f7); }
+.registration-page .registration-frame { display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); max-width: 1240px; padding: 0; overflow: hidden; border-radius: 28px; background: var(--surface); box-shadow: 0 24px 60px #0b25451a; }
+.registration-page .registration-aside { position: relative; isolation: isolate; display: flex; align-items: flex-end; min-height: 100%; padding: 40px 32px; color: #fff; }
+.registration-page .registration-aside__image { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; }
+.registration-page .registration-aside::before { position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, #061b3259 0%, #061b32cc 45%, #061b32f2 100%); content: ""; }
+.registration-page .registration-aside__copy { position: sticky; bottom: 40px; display: grid; gap: 14px; }
+.registration-page .registration-aside__eyebrow { color: var(--light-gold); font-size: 12px; font-weight: var(--weight-heavy); letter-spacing: .14em; }
+.registration-page .registration-aside h2 { color: #fff; font-size: 26px; line-height: 1.25; }
+.registration-page .registration-aside ul { display: grid; gap: 12px; margin: 6px 0 0; padding: 0; list-style: none; }
+.registration-page .registration-aside li { display: flex; align-items: center; gap: 12px; font-weight: var(--weight-semibold); }
+.registration-page .registration-aside li span { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 50%; background: #ffffff1f; color: var(--light-gold); }
+.registration-page .registration-aside li svg { width: 18px; height: 18px; }
+[dir="rtl"] .registration-page .registration-aside__eyebrow { letter-spacing: 0; }
+
+.registration-page .registration-content { min-width: 0; padding: clamp(20px, 3vw, 40px) clamp(18px, 3.4vw, 48px) clamp(24px, 3vw, 40px); border-radius: 0; }
+.registration-page .registration-header { display: grid; gap: 6px; text-align: start; }
+.registration-page .registration-header__bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-block-end: 18px; }
+.registration-page .registration-header .brand-logo { margin: 0; }
+.registration-page .registration-header h1 { font-size: clamp(24px, 2.6vw, 32px); font-weight: var(--weight-heavy); line-height: 1.2; }
+.registration-page .registration-header p { margin: 0; font-size: 15px; }
+.registration-page .registration-header .fine-print { font-size: 13px; }
+.registration-page .registration-account-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-block-start: 4px; font-size: 14px; font-weight: var(--weight-semibold); }
+.registration-page .registration-account-nav a { display: inline-flex; align-items: center; min-height: 32px; color: var(--primary); }
+.registration-page .registration-back { display: none; }
+
+/* Step progress */
+.registration-page .registration-progress { gap: 0; margin: 28px 0 24px; }
+.registration-page .step { position: relative; display: grid; justify-items: center; gap: 8px; color: var(--muted); font-size: 13px; text-align: center; }
+.registration-page .step-track { position: relative; justify-content: center; width: 100%; margin: 0; }
+.registration-page .step-number { position: relative; z-index: 1; width: 40px; height: 40px; border: 2px solid var(--border); background: var(--surface); color: var(--muted); font-size: 13px; font-weight: var(--weight-heavy); transition: background-color .25s ease, border-color .25s ease, color .25s ease; }
+.registration-page .step-line { position: absolute; inset-block-start: 50%; inset-inline-start: calc(50% + 24px); width: calc(100% - 48px); height: 2px; border-radius: 2px; background: var(--border); }
+.registration-page .step:last-child .step-line { display: none; }
+.registration-page .step[data-state="done"] .step-number { border-color: var(--primary); background: var(--primary); color: #fff; }
+.registration-page .step[data-state="done"] .step-line { background: var(--primary); }
+.registration-page .step[data-state="current"] .step-number { border-color: var(--primary); background: var(--primary); color: #fff; box-shadow: 0 0 0 5px color-mix(in srgb, var(--gold) 38%, transparent); }
+.registration-page .step[data-state="current"] { color: var(--navy); font-weight: var(--weight-heavy); }
+.registration-page .step-number svg { width: 18px; height: 18px; stroke-width: 2.6; }
+
+/* Sections and fields */
+.registration-page .registration-section { padding: clamp(18px, 2.4vw, 28px); border: 1px solid var(--border); border-radius: 18px; background: var(--surface); }
+.registration-page .section-heading { margin-block-end: 22px; }
+.registration-page .section-heading h2 { font-size: 20px; font-weight: var(--weight-heavy); }
+.registration-page .section-heading p { color: var(--muted); font-size: 14px; }
+.registration-page .section-heading .icon-badge { flex: none; width: 46px; height: 46px; border-radius: 14px; background: color-mix(in srgb, var(--primary) 10%, var(--surface)); color: var(--primary); }
+.registration-page .registration-fields { column-gap: 24px; row-gap: 22px; }
+.registration-page .registration-fields label, .registration-page .business-type legend { color: var(--navy); font-size: 14px; font-weight: var(--weight-bold); }
+.registration-page .registration-fields .input, .registration-page .registration-password .input { height: 48px; border-color: #d9e2ec; border-radius: 12px; background: #fbfcfe; transition: border-color .2s ease, box-shadow .2s ease; }
+.registration-page .registration-fields .input:hover, .registration-page .registration-password .input:hover { border-color: #b7c6d6; }
+.registration-page .registration-fields .input:focus-visible, .registration-page .registration-password .input:focus-visible { border-color: var(--primary); box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 14%, transparent); outline: none; }
+.registration-page .registration-fields .input[aria-invalid="true"], .registration-page .registration-password .input[aria-invalid="true"] { border-color: var(--error); background: #fffafb; }
+
+/* Business type and document cards */
+.registration-page .business-type__option { min-height: 56px; border-radius: 12px; }
+.registration-page .document-picker { display: grid; place-items: center; min-height: 104px; border: 1.5px dashed #b8c7d7; border-radius: 14px; background: #f8fbfe; transition: border-color .2s ease, background-color .2s ease; }
+.registration-page .document-picker:hover, .registration-page .document-picker:focus-within { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 6%, var(--surface)); }
+.registration-page .document-picker--invalid { border-color: var(--error); background: #fffafb; }
+.registration-page .document-picker > span { display: grid; justify-items: center; gap: 8px; color: var(--primary); }
+.registration-page .document-picker__icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: color-mix(in srgb, var(--primary) 12%, var(--surface)); }
+.registration-page .document-picker__icon svg { width: 20px; height: 20px; }
+.registration-page .document-selection > span { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; max-width: 100%; margin-block-start: 8px; padding: 6px 12px; border-radius: 999px; background: var(--success-bg); color: var(--success); font-size: 13px; font-weight: var(--weight-semibold); }
+.registration-page .document-selection bdi { color: var(--navy); overflow-wrap: anywhere; }
+.registration-page .document-selection small { color: var(--muted); font-weight: var(--weight-regular); }
+.registration-page .document-remove { min-height: 32px; margin-block-start: 6px; padding: 4px 12px; border: 1px solid #e3c3ca; border-radius: 999px; color: var(--error); text-decoration: none; }
+
+/* Actions */
+.registration-page .registration-actions { align-items: center; margin-block-start: 28px; }
+.registration-page .registration-actions .button { gap: 8px; min-height: 50px; }
+.registration-page .registration-actions .button--primary { min-width: 200px; }
+.registration-page .registration-actions .button svg { width: 18px; height: 18px; }
+[dir="rtl"] .registration-page .registration-actions .button svg, [dir="rtl"] .registration-success__cta svg { rotate: 180deg; }
+
+/* Review */
+.registration-page .review-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.registration-page .review-card { min-width: 0; padding: 20px; border: 1px solid var(--border); border-radius: 16px; background: #fbfcfe; }
+.registration-page .review-card--wide { grid-column: 1 / -1; }
+.registration-page .review-card__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-block-end: 14px; }
+.registration-page .review-card h3 { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 16px; font-weight: var(--weight-heavy); }
+.registration-page .review-card__edit { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 4px 12px; border-radius: 999px; color: var(--primary); font-size: 13px; font-weight: var(--weight-bold); text-decoration: none; }
+.registration-page .review-card__edit:hover { background: var(--subtle); }
+.registration-page .review-card__edit svg { width: 15px; height: 15px; }
+.registration-page .review-card dl { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
+.registration-page .review-card--wide dl { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); column-gap: 24px; }
+.registration-page .review-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; padding: 10px 0; border-block-end: 1px solid var(--border); text-align: start; }
+.registration-page .review-row dt { color: var(--muted); font-size: 13px; }
+.registration-page .review-row dd { margin: 0; color: var(--navy); font-size: 15px; font-weight: var(--weight-semibold); text-align: start; overflow-wrap: anywhere; }
+.registration-page .review-documents li { align-items: center; gap: 10px; padding: 10px 0; }
+.registration-page .review-documents strong { color: var(--navy); overflow-wrap: anywhere; }
+.registration-page .review-logo { margin-block-end: 6px; }
+
+/* Password */
+.registration-page .registration-password { display: grid; gap: 18px; max-width: none; margin: 22px 0 0; padding: clamp(18px, 2.4vw, 28px); border: 1px solid var(--border); border-radius: 18px; background: var(--surface); }
+.registration-page .registration-password__head { display: flex; align-items: center; gap: 12px; }
+.registration-page .registration-password__head .icon-badge { flex: none; width: 46px; height: 46px; border-radius: 14px; background: color-mix(in srgb, var(--primary) 10%, var(--surface)); color: var(--primary); }
+.registration-page .registration-password__head h2 { font-size: 20px; font-weight: var(--weight-heavy); }
+.registration-page .registration-password__head p { color: var(--muted); font-size: 14px; }
+.registration-page .registration-password__files { display: flex; align-items: flex-start; gap: 10px; margin: 0; }
+.registration-page .registration-password__files svg { flex: none; width: 18px; height: 18px; margin-block-start: 2px; }
+.registration-page .registration-password__rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; }
+.registration-page .registration-password__rules li { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; background: var(--background); color: var(--muted); font-size: 13px; transition: background-color .2s ease, color .2s ease; }
+.registration-page .registration-password__rules li::before { content: none; }
+.registration-page .registration-password__rules li svg { flex: none; width: 15px; height: 15px; }
+.registration-page .registration-password__rules li[data-met="true"] { background: var(--success-bg); color: var(--success); font-weight: var(--weight-semibold); }
+.registration-page .registration-password .registration-actions { margin-block-start: 6px; }
+
+/* Success, shown only after the API confirms the registration */
+.registration-success { display: grid; justify-items: center; gap: 18px; max-width: 640px; margin: 8px auto 0; padding: clamp(24px, 4vw, 44px) clamp(18px, 4vw, 40px); border: 1px solid var(--border); border-radius: 22px; background: linear-gradient(180deg, #eef6ff 0%, var(--surface) 46%); text-align: center; box-shadow: 0 18px 44px #0b25451a; }
+.registration-success__mark { position: relative; width: 104px; height: 104px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--primary) 14%, transparent) 0%, transparent 70%); }
+.registration-success__mark svg { width: 100%; height: 100%; overflow: visible; }
+.registration-success__ring { fill: var(--primary); stroke: color-mix(in srgb, var(--gold) 70%, transparent); stroke-width: 2; transform-origin: 32px 32px; }
+.registration-success__check { fill: none; stroke: #fff; stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; stroke-dashoffset: 0; }
+.registration-success__message { display: grid; gap: 8px; }
+.registration-success__message h2 { font-size: clamp(24px, 3vw, 32px); font-weight: var(--weight-heavy); outline: none; }
+.registration-success__message p { max-width: 520px; color: var(--muted); }
+.registration-success__status { display: inline-flex; align-items: center; gap: 8px; margin: 0; padding: 8px 16px; border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent); border-radius: 999px; background: var(--warning-bg); color: var(--warning); font-weight: var(--weight-heavy); }
+.registration-success__status svg { width: 18px; height: 18px; }
+.registration-success__id { display: grid; gap: 8px; width: 100%; padding: 16px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); text-align: start; }
+.registration-success__id > span { color: var(--muted); font-size: 13px; font-weight: var(--weight-semibold); }
+.registration-success__id-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.registration-success__id code { flex: 1 1 260px; min-width: 0; padding: 10px 12px; border-radius: 10px; background: var(--background); color: var(--navy); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 15px; font-weight: 700; overflow-wrap: anywhere; user-select: all; }
+.registration-success__id .button { gap: 6px; min-height: 44px; }
+.registration-success__id .button svg { width: 16px; height: 16px; }
+.registration-success__copy-status { min-height: 18px; margin: 0; color: var(--success); font-size: 13px; font-weight: var(--weight-semibold); }
+.registration-success__hint { margin: 0; color: var(--muted); font-size: 13px; }
+.registration-success__cta { display: grid; justify-items: center; gap: 8px; }
+.registration-success__cta .button { gap: 8px; min-width: 220px; min-height: 50px; transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease; }
+.registration-success__cta .button:hover { transform: translateY(-1px); box-shadow: 0 10px 22px #0e4d9233; }
+.registration-success__cta svg { width: 18px; height: 18px; }
+.registration-success__cta p { color: var(--muted); font-size: 13px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .registration-success__mark { animation: registration-pop 520ms cubic-bezier(.2, .9, .3, 1.2) both; }
+  .registration-success__check { stroke-dashoffset: 40; animation: registration-draw 420ms 280ms ease-out forwards; }
+  .registration-success__message { animation: registration-rise 520ms 400ms ease-out both; }
+  .registration-success__status { animation: registration-rise 480ms 700ms ease-out both; }
+  .registration-success__id { animation: registration-rise 480ms 900ms ease-out both; }
+  .registration-success__cta { animation: registration-rise 480ms 1100ms ease-out both; }
+}
+@keyframes registration-pop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: scale(1); } }
+@keyframes registration-draw { to { stroke-dashoffset: 0; } }
+@keyframes registration-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 1099px) {
+  .registration-page .registration-frame { grid-template-columns: minmax(0, 1fr); max-width: 880px; }
+  .registration-page .registration-aside { display: none; }
+}
+@media (max-width: 719px) {
+  .registration-page .review-grid, .registration-page .registration-fields, .registration-page .registration-password__fields { grid-template-columns: minmax(0, 1fr); }
+  .registration-page .step-label { font-size: 12px; }
+  .registration-page .step:not([data-state="current"]) .step-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .registration-page .step-number { width: 36px; height: 36px; }
+  .registration-page .step-line { inset-inline-start: calc(50% + 22px); width: calc(100% - 44px); }
+  .registration-page .registration-actions .button { flex: 1 1 0; min-width: 0; }
+  .registration-page .registration-actions--next .button { flex: 1 1 100%; }
+}
+@media (max-width: 640px) {
+  .registration-page.registration-page { padding: 0; background: var(--surface); }
+  .registration-page .registration-frame { border-radius: 0; box-shadow: none; }
+  .registration-page .registration-content { padding: 16px 16px 28px; }
+}
+
+/* Real login code: the digit boxes of the original verification screen. */
+.login-otp__group { margin: 0; padding: 0; border: 0; min-width: 0; }
+.login-otp__digits { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin-block: 4px 4px; }
+.login-otp__digits input { width: 100%; min-width: 0; height: 64px; border: 1px solid #e5e5e5; border-radius: 12px; background: #f7f7f7; color: var(--navy); font-size: 26px; font-weight: var(--weight-bold); text-align: center; }
+.login-otp__digits input:focus-visible { border-color: var(--primary); outline: 3px solid var(--brand-teal); outline-offset: 3px; }
+.login-otp__digits input[aria-invalid="true"] { border-color: var(--error); }
+.login-otp__group:disabled .login-otp__digits input { opacity: .55; cursor: not-allowed; }
+@media (max-width: 420px) { .login-otp__digits { gap: 8px; } .login-otp__digits input { height: 54px; font-size: 22px; } }

@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
-import { useSyncExternalStore } from "react";
+import { useAppSessionActive } from "@/features/auth/app-session";
+import {  } from "react";
 import { BrandLogo } from "@/components/brand-logo";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Text, useLocale } from "@/features/localization/locale-provider";
-import { demoAuth, subscribeDemoSession } from "@/features/auth/demo-auth";
 import styles from "../home.module.css";
 
 const links: { route: "/car-rental" | "/search" | "/agency" | "/login"; icon: IconName; en: string; ar: string }[] = [
@@ -15,7 +15,7 @@ const links: { route: "/car-rental" | "/search" | "/agency" | "/login"; icon: Ic
 
 export function SiteFooter() {
   const { t } = useLocale();
-  const signedIn = useSyncExternalStore(subscribeDemoSession, demoAuth.isActive, () => false);
+  const signedIn = useAppSessionActive();
   const hotelRoute = signedIn ? "/search" : "/login";
   const year = new Date().getFullYear();
 

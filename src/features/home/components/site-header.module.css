@@ -40,4 +40,9 @@
 .icons .profileTrigger:focus-visible { outline:2px solid var(--brand-teal); outline-offset:2px; }
 .icons .accountPanel a { width:100%; height:auto; }
 @media (prefers-reduced-motion: reduce) { .icons .profileTrigger, .icons > a, .navigation a, .navigation a::after { transition:none; } }
+
+/* Real sign-in: who is signed in, and for which company. */
+.accountIdentity { display:grid; gap:2px; margin:0 0 6px; padding:4px 12px 10px; border-block-end:1px solid var(--border); overflow-wrap:anywhere; }
+.accountIdentity strong { color:var(--navy); font-size:14px; }
+.accountIdentity span { color:var(--muted); font-size:13px; }
 .navigation a[aria-current]:hover::after { background:var(--gold); }

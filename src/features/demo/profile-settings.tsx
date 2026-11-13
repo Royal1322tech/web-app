@@ -20,7 +20,7 @@ export function ProfilePage() {
         {[[t("Full name", "الاسم الكامل"), profile.contact], [t("Email", "البريد الإلكتروني"), profile.email], [t("Phone", "الهاتف"), profile.phone]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd><bdi>{value}</bdi></dd></div>)}
       </dl></section>
       <section className="workspace-card"><h2 className="profile-card-title"><span aria-hidden="true"><Icon name="building" /></span>{t("Agency information", "معلومات الوكالة")}</h2><dl className="profile-fields">
-        {[[t("Agency", "الوكالة"), profile.name], [t("Country", "الدولة"), profile.country], [t("Address", "العنوان"), profile.address]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+        {[[t("Agency", "الوكالة"), profile.name], [t("Country", "الدولة"), profile.country], [t("Address", "العنوان"), profile.address]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value || t("Not provided", "غير متوفر")}</dd></div>)}
       </dl><Link to="/agency">{t("View agency details", "عرض تفاصيل الوكالة")}</Link></section>
     </div>
     <section className="workspace-card"><h2>{t("Your workspace at a glance", "مساحة عملك بنظرة سريعة")}</h2><div className="profile-shortcuts">

@@ -7,6 +7,7 @@ import { TravelPreferences } from "@/features/preferences/travel-preferences";
 import { Popover } from "@/components/ui/popover";
 import { LanguageSelector } from "@/features/localization/language-selector";
 import { Icon } from "@/components/ui/icon";
+import { useB2BSession } from "@/features/auth/b2b-session";
 import styles from "./site-header.module.css";
 
 export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
@@ -14,6 +15,13 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
   const { pathname, key: navigationKey } = useLocation();
   const navigate = useNavigate();
   const { demoSessionActive, signOut } = useDemo();
+  const b2b = useB2BSession();
+  const identity = b2b.status === "active" ? b2b.identity : null;
+  const endSession = () => {
+    const pending = signOut();
+    close();
+    void pending.then((result) => navigate(result === "confirmed" ? "/welcome" : "/login", { replace: true, state: result === "confirmed" ? undefined : { notice: "logout-unconfirmed" } }));
+  };
   const [menuOpen, setMenuOpen] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
   const close = () => setMenuOpen(false);
@@ -43,6 +51,7 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
           <Link to="/notifications" onClick={close} aria-label={t("Notifications", "الإشعارات")} title={t("Notifications", "الإشعارات")}><Icon name="bell" /></Link>
           <Link to="/booking/summary" onClick={close} aria-label={t("Booking summary", "ملخص الحجز")} title={t("Booking summary", "ملخص الحجز")}><Icon name="cart" /></Link>
           {demoSessionActive ? <Popover key={navigationKey} triggerClassName={styles.profileTrigger} panelClassName={styles.accountPanel} label={t("Account menu", "قائمة الحساب")} trigger={<Icon name="personFilled" />}>
+          {identity && <p className={styles.accountIdentity}><strong>{identity.user.name}</strong><span>{identity.company.name}</span></p>}
           {[
             ["/profile", t("My Profile", "ملفي الشخصي")],
             ["/bookings", t("My Bookings", "حجوزاتي")], ["/car-rental/bookings", t("My Rentals", "تأجيراتي")], ["/tickets", t("My Tickets", "تذاكري")],
@@ -50,7 +59,7 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
             ["/wallet", t("Wallet", "المحفظة")], ["/transactions", t("Transactions", "المعاملات")],
             ["/account/settings", t("Account Settings", "إعدادات الحساب")],
           ].map(([href, label]) => <Link key={href} to={href} onClick={close}>{label}</Link>)}
-          <button type="button" onClick={() => { signOut(); close(); navigate("/welcome", { replace: true }); }}>{t("Sign Out", "تسجيل الخروج")}</button>
+          <button type="button" onClick={endSession}>{t("Sign Out", "تسجيل الخروج")}</button>
         </Popover> : <Link to="/welcome" onClick={close} aria-label={t("Agency account", "حساب الوكالة")}><Icon name="personFilled" /></Link>}
         </div>
         {!demoSessionActive && <div className={styles.guest}>

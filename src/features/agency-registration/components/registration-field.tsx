@@ -4,6 +4,7 @@ import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import type { RegistrationValues } from "../schemas/registration.schema";
+import { useLocale } from "@/features/localization/locale-provider";
 
 type RegistrationFieldProps = {
   name: FieldPathByValue<RegistrationValues, string>;
@@ -27,6 +28,7 @@ export function RegistrationField({
   placeholder,
   ...inputProps
 }: RegistrationFieldProps) {
+  const { t } = useLocale();
   const { register, getFieldState, formState } =
     useFormContext<RegistrationValues>();
   const { error } = getFieldState(name, formState);
@@ -40,14 +42,14 @@ export function RegistrationField({
   };
 
   return (
-    <FormField id={id} label={label} required error={error?.message}>
+    <FormField id={id} label={t(label)} required error={error?.message ? t(error.message) : undefined}>
       {options ? (
         <Select
           {...commonProps}
           icon={inputProps.icon}
           autoComplete={inputProps.autoComplete}
         >
-          <option value="">{placeholder}</option>
+          <option value="">{placeholder ? t(placeholder) : ""}</option>
           {options.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -55,7 +57,7 @@ export function RegistrationField({
           ))}
         </Select>
       ) : (
-        <Input {...commonProps} {...inputProps} placeholder={placeholder} />
+        <Input {...commonProps} {...inputProps} placeholder={placeholder ? t(placeholder) : undefined} />
       )}
     </FormField>
   );

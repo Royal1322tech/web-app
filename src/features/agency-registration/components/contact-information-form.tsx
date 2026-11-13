@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useFormContext } from "react-hook-form";
 import { Button, buttonClass } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
 import { type RegistrationValues } from "../schemas/registration.schema";
 import { countries } from "../data/countries";
 import { useLocale } from "@/features/localization/locale-provider";
@@ -25,7 +26,9 @@ export function ContactInformationForm() {
       navigate("/register/agency/documents");
   }
 
-  if (!canAccess) return <p role="status">Returning to Company Information…</p>;
+  if (!canAccess) return <p role="status">{t("Returning to Company Information…")}</p>;
+  const regionNames = new Intl.DisplayNames([locale], { type: "region" });
+  const nationalityOptions = countries.map((country) => ({ value: country.value, label: locale === "ar" ? regionNames.of(country.value) ?? country.label : country.label }));
 
   return (
     <>
@@ -54,7 +57,7 @@ export function ContactInformationForm() {
             label="Nationality"
             placeholder="Select citizenship country"
             icon="globe"
-            options={countries}
+            options={nationalityOptions}
           />
           <RegistrationField
             name="contact.idNumber"
@@ -92,10 +95,10 @@ export function ContactInformationForm() {
             to="/register/agency/company"
             className={buttonClass("outline")}
           >
-            Back
+            <Icon name="back" />{t("Back")}
           </Link>
           <Button type="submit" disabled={isValidating}>
-            Next
+            {t("Next")}<Icon name="arrowRight" />
           </Button>
         </div>
       </form>

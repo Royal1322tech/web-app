@@ -1,4 +1,7 @@
-import { demoAuth, subscribeDemoSession } from "@/features/auth/demo-auth";
+import { demoAuth } from "@/features/auth/demo-auth";
+import { appSession, useAppSessionActive } from "@/features/auth/app-session";
+import { useB2BSession } from "@/features/auth/b2b-session";
+import type { B2BIdentity } from "@/features/auth/b2b-auth-api";
 import { sampleGroupRequests } from "@/features/group-requests/group-requests.fixture";
 import type { GroupRequest, NewGroupRequest } from "@/features/group-requests/group-request-types";
 import {
@@ -10,7 +13,7 @@ import {
   type RentalRecord,
   type RentalStatus,
 } from "@/features/car-rental/rental-model";
-import { createContext, useContext, useState, useSyncExternalStore, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import type { HotelSearchCriteria } from "@/features/home/schemas/hotel-search.schema";
 import { localToday } from "@/features/home/schemas/hotel-search.schema";
 import { samplePriceBreakdown } from "@/features/hotels/lib/sample-stay";
@@ -41,7 +44,8 @@ interface DemoContextValue {
   modifyRental: (id: string, selection: RentalSelection) => void;
   demoSessionActive: boolean;
   signIn: (email: string, password: string) => boolean;
-  signOut: () => void;
+  /** Clears local state. Resolves "unconfirmed" when the server could not confirm a real sign-out. */
+  signOut: () => Promise<"confirmed" | "unconfirmed">;
   selection: DemoSelection | null;
   policyAcknowledged: boolean;
   paymentMethod: PaymentMethod | null;
@@ -99,8 +103,22 @@ export function defaultCriteria(destination: string): HotelSearchCriteria {
     rooms: [{ adults: 2, childAges: [] }],
   };
 }
+/** The account's own details from GET /b2b/me. The API returns no phone number. */
+function profileFromIdentity(identity: B2BIdentity): AgencyProfile {
+  const country = identity.company.countryCode ? new Intl.DisplayNames(["en"], { type: "region" }).of(identity.company.countryCode) ?? identity.company.countryCode : "";
+  return {
+    name: identity.company.name,
+    contact: identity.user.name,
+    email: identity.user.email,
+    phone: "",
+    address: [identity.company.address, identity.company.city].filter(Boolean).join(", "),
+    country,
+  };
+}
+
 export function DemoProvider({ children }: { children: ReactNode }) {
-  const demoSessionActive = useSyncExternalStore(subscribeDemoSession, demoAuth.isActive, () => false);
+  const demoSessionActive = useAppSessionActive();
+  const b2b = useB2BSession();
   const [rentalSelection, setRentalSelection] =
     useState<RentalSelection | null>(null);
   const [rentalPolicyAcknowledged, setRentalPolicyAcknowledged] = useState(false);
@@ -135,7 +153,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     },
     saveRentalDriver: driver => { setRentalDriver(driver); setRentalPolicyAcknowledged(false); },
     createRental: (status) => {
-      const ownerId = demoAuth.currentUserId();
+      const ownerId = appSession.currentUserId();
       if (!ownerId || !rentalSelection || !rentalDriver || !rentalPolicyAcknowledged) return null;
       const id = `RENTAL-DEMO-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
       setRentals((current) => [
@@ -192,7 +210,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     demoSessionActive,
     signIn: demoAuth.signIn,
     signOut: () => {
-      demoAuth.signOut();
+      const result = appSession.signOut();
       setRentalSelection(null);
       setRentalDriver(null);
       setRentals([]);
@@ -205,6 +223,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       setRecords(initialBookings());
       setProfile(demoProfile);
       setNotifications(demoNotifications);
+      return result;
     },
     selection,
     policyAcknowledged,
@@ -218,7 +237,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     preparePaymentDetails: () => setPaymentDetailsPrepared(true),
     guests,
     records,
-    profile,
+    profile: b2b.status === "active" ? profileFromIdentity(b2b.identity) : profile,
     notifications,
     selectRoom: (next) => {
       setSelection(next);

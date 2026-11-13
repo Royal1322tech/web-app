@@ -6,8 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Icon } from "@/components/ui/icon";
 import { useLocale } from "@/features/localization/locale-provider";
 import { demoAuth } from "../demo-auth";
+import { apiAuthEnabled } from "../auth-config";
+import { ApiLoginForm } from "./api-login-form";
 
 export function LoginForm() {
+  return apiAuthEnabled ? <ApiLoginForm /> : <DemoLoginForm />;
+}
+
+function DemoLoginForm() {
   const { t } = useLocale();
   const [showPassword, setShowPassword] = useState(false);
   const [notice, setNotice] = useState("");

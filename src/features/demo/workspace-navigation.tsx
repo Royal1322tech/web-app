@@ -80,8 +80,7 @@ export function WorkspaceNavigation() {
               className="workspace-nav__sign-out"
               type="button"
               onClick={() => {
-                signOut();
-                navigate("/welcome", { replace: true });
+                void signOut().then((result) => navigate(result === "confirmed" ? "/welcome" : "/login", { replace: true, state: result === "confirmed" ? undefined : { notice: "logout-unconfirmed" } }));
               }}
             >
               <Icon name="signOut" />

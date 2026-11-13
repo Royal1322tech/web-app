@@ -2,9 +2,10 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useFormContext, useWatch } from "react-hook-form";
 import { Button, buttonClass } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
 import { useLocale } from "@/features/localization/locale-provider";
 import { businessTypes, requiredDocumentsFor } from "../data/business-types";
-import { registrationDocuments } from "../data/documents";
+import { documentHelp, registrationDocuments } from "../data/documents";
 import { useRegistrationStepGuard } from "../hooks/use-registration-step-guard";
 import type { RegistrationValues } from "../schemas/registration.schema";
 import { DocumentField } from "./document-field";
@@ -34,7 +35,7 @@ export function UploadDocumentsForm() {
   }
 
   if (!canAccess)
-    return <p role="status">Returning to the first incomplete step…</p>;
+    return <p role="status">{t("Returning to the first incomplete step…")}</p>;
 
   return (
     <>
@@ -96,7 +97,12 @@ export function UploadDocumentsForm() {
               key={document.name}
               path={`documents.${document.name}`}
               id={`document-${document.name}`}
-              label={document.label}
+              label={t(document.label)}
+              help={t(documentHelp)}
+              uploadLabel={t("Upload Document")}
+              replaceLabel={t("Replace Document")}
+              removeLabel={t("Remove")}
+              translate={(message) => t(message)}
             />
           ))}
           {!businessType && (
@@ -110,10 +116,10 @@ export function UploadDocumentsForm() {
             to="/register/agency/contact"
             className={buttonClass("outline")}
           >
-            Back
+            <Icon name="back" />{t("Back")}
           </Link>
           <Button type="submit" disabled={formState.isValidating}>
-            Next
+            {t("Next")}<Icon name="arrowRight" />
           </Button>
         </div>
       </form>

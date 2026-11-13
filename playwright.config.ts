@@ -11,12 +11,27 @@ export default defineConfig({
   },
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
-    : {
-        command: "npm run build && npm run preview -- --host 127.0.0.1 --port 4173 --strictPort",
-        url: "http://127.0.0.1:4173",
-        reuseExistingServer: false,
-        timeout: 120000,
-        // Browser checks exercise the developer-only interface state previews.
-        env: { VITE_ENABLE_STATE_PREVIEW: "true" },
-      },
+    : [
+        {
+          command: "npm run build && npm run preview -- --host 127.0.0.1 --port 4173 --strictPort",
+          url: "http://127.0.0.1:4173",
+          reuseExistingServer: false,
+          timeout: 120000,
+          // Browser checks exercise the developer-only interface state previews.
+          // The demo build stays in demo mode even though .env.production enables real sign-in.
+          env: { VITE_ENABLE_STATE_PREVIEW: "true", VITE_AUTH_MODE: "demo", VITE_AUTH_COMPANY_ID_ENTRY: "" },
+        },
+        // Real-sign-in builds for tests/auth-integration.spec.ts. The API base is a reserved test
+        // domain that never resolves, and every request to it is answered by the test's mocks.
+        ...[
+          { port: 4174, outDir: "dist-auth-api", companyIdEntry: "true" },
+          { port: 4175, outDir: "dist-auth-blocked", companyIdEntry: "" },
+        ].map(({ port, outDir, companyIdEntry }) => ({
+          command: `npx vite build --outDir ${outDir} --emptyOutDir && npx vite preview --outDir ${outDir} --host 127.0.0.1 --port ${port} --strictPort`,
+          url: `http://127.0.0.1:${port}`,
+          reuseExistingServer: false,
+          timeout: 120000,
+          env: { VITE_AUTH_MODE: "api", VITE_AUTH_COMPANY_ID_ENTRY: companyIdEntry, VITE_API_BASE_URL: "https://api.royal.test" },
+        })),
+      ],
 });

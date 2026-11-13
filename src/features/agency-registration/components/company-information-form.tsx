@@ -9,9 +9,11 @@ import { CompanyLogoField } from "./company-logo-field";
 import { RegistrationField } from "./registration-field";
 import { RegistrationProgress } from "./registration-progress";
 import { RegistrationSection } from "./registration-section";
+import { useLocale } from "@/features/localization/locale-provider";
 
 export function CompanyInformationForm() {
   const navigate = useNavigate();
+  const { t } = useLocale();
   const {
     trigger,
     formState: { isValidating },
@@ -27,7 +29,7 @@ export function CompanyInformationForm() {
       <Link
         to="/welcome"
         className="back-link registration-back"
-        aria-label="Back to welcome"
+        aria-label={t("Back to welcome")}
       >
         <Icon name="back" />
       </Link>
@@ -79,7 +81,7 @@ export function CompanyInformationForm() {
         </RegistrationSection>
         <div className="registration-actions registration-actions--next">
           <Button type="submit" disabled={isValidating}>
-            Next
+            {t("Next")}<Icon name="arrowRight" />
           </Button>
         </div>
       </form>

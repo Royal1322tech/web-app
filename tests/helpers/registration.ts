@@ -29,14 +29,14 @@ export async function chooseOption(page: Page, id: string, search: string) {
 
 /** Completes Step 1 (Company Information) with Egypt / Alexandria and continues. */
 export async function fillCompanyStep(page: Page, { name, registration }: { name: string; registration: string }) {
-  await page.getByLabel("Name of Company").fill(name);
-  await page.getByLabel("Number of Employees").fill("12");
+  await page.getByLabel(/Name of Company|اسم الشركة/).fill(name);
+  await page.getByLabel(/Number of Employees|عدد الموظفين/).fill("12");
   await chooseOption(page, "company-country", "Egypt");
   await chooseOption(page, "company-city", "Alexandria");
-  await page.getByLabel("Commercial Registration Number").fill(registration);
-  await page.getByLabel("Address of Company").fill("Alexandria");
+  await page.getByLabel(/Commercial Registration Number|رقم السجل التجاري/).fill(registration);
+  await page.getByLabel(/Address of Company|عنوان الشركة/).fill("Alexandria");
   await attachCompanyLogo(page);
-  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await page.getByRole("button", { name: /^(Next|التالي)$/ }).click();
 }
 
 export async function attachIdDocument(page: Page, name = "id.pdf") {
