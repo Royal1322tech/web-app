@@ -12,6 +12,8 @@ export function PublicLandingHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const closeMenu = () => setMenuOpen(false);
   const onLanding = pathname === "/login";
+  // The sign-in code step shares the landing layout: the bar floats over its hero.
+  const overHero = onLanding || pathname === "/login/verify-otp";
   const header = useRef<HTMLElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
 
@@ -35,7 +37,7 @@ export function PublicLandingHeader() {
   }, [menuOpen]);
 
   return (
-    <header ref={header} className={`${styles.header} ${onLanding ? "" : styles.headerCompact}`}>
+    <header ref={header} className={`${styles.header} ${overHero ? "" : styles.headerCompact}`}>
       <Link to="/login" aria-label={t("Royal Vacation home", "الرئيسية — رويال فاكيشن")} onClick={closeMenu}>
         <BrandLogo withName />
       </Link>

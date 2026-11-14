@@ -55,11 +55,12 @@ async function submitCredentials(page: Page, values: { email?: string; password?
 test("login, emailed code, /me, logout and revocation work against the real backend", async ({ page }) => {
   await page.goto("/login");
   await submitCredentials(page);
-  await expect(page.getByRole("heading", { name: "Enter your verification code" })).toBeVisible();
+  await expect(page).toHaveURL(/\/login\/verify-otp$/);
+  await expect(page.getByRole("heading", { name: "Email Verification", level: 1 })).toBeVisible();
   const code = await receivedCode(page);
 
   await page.locator("#login-code").fill(code);
-  await page.getByRole("button", { name: "Verify and sign in" }).click();
+  await page.getByRole("button", { name: "Verify", exact: true }).click();
   await expect(page).toHaveURL(/\/$/, { timeout: 15000 });
 
   const token: string = JSON.parse((await page.evaluate((key) => sessionStorage.getItem(key), SESSION_KEY))!).token;
@@ -87,8 +88,8 @@ test("an incorrect code is rejected by the backend", async ({ page }) => {
   await submitCredentials(page);
   const code = await receivedCode(page);
   await page.locator("#login-code").fill(code === "000000" ? "111111" : "000000");
-  await page.getByRole("button", { name: "Verify and sign in" }).click();
-  await expect(page.locator("#login-code-error")).toHaveText("That code is incorrect or has expired.");
+  await page.getByRole("button", { name: "Verify", exact: true }).click();
+  await expect(page.locator("#login-code-error")).toHaveText("That code is incorrect or has expired. Check the latest email and try again.");
   expect(await page.evaluate((key) => sessionStorage.getItem(key), SESSION_KEY)).toBeNull();
 });
 
@@ -112,7 +113,7 @@ test("a network failure during verification is reported and nothing is stored", 
   const code = await receivedCode(page);
   await context.setOffline(true);
   await page.locator("#login-code").fill(code);
-  await page.getByRole("button", { name: "Verify and sign in" }).click();
+  await page.getByRole("button", { name: "Verify", exact: true }).click();
   await expect(page.getByRole("alert")).toHaveText("We couldn't reach the sign-in service. Check your connection and try again.");
   await context.setOffline(false);
   expect(await page.evaluate((key) => sessionStorage.getItem(key), SESSION_KEY)).toBeNull();
@@ -129,7 +130,7 @@ test("Arabic, RTL, on a phone: the real flow signs in", async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
   const code = await receivedCode(page);
   await page.locator("#login-code").fill(code);
-  await page.getByRole("button", { name: "تحقق وسجّل الدخول" }).click();
+  await page.getByRole("button", { name: "تأكيد", exact: true }).click();
   await expect(page).toHaveURL(/\/$/, { timeout: 15000 });
 });
 
@@ -138,7 +139,7 @@ test("the profile page shows the real account from /me", async ({ page }) => {
   await submitCredentials(page);
   const code = await receivedCode(page);
   await page.locator("#login-code").fill(code);
-  await page.getByRole("button", { name: "Verify and sign in" }).click();
+  await page.getByRole("button", { name: "Verify", exact: true }).click();
   await expect(page).toHaveURL(/\/$/, { timeout: 15000 });
   const token: string = JSON.parse((await page.evaluate((key) => sessionStorage.getItem(key), SESSION_KEY))!).token;
   const me = (await (await page.request.get(`${api}/api/v1/b2b/me`, { headers: { Accept: "application/json", Authorization: `Bearer ${token}` } })).json()).data;

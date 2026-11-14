@@ -64,7 +64,9 @@ Every response is checked against a schema. A malformed reply, including a 2xx s
 | Contracts | `src/features/auth/b2b-auth-api.ts` (zod parsers) |
 | Session store | `src/features/auth/b2b-session.ts` |
 | Demo/API switch used by the app | `src/features/auth/app-session.ts` |
-| Login and code steps | `src/features/auth/components/api-login-form.tsx` |
+| Login (credentials) | `src/features/auth/components/api-login-form.tsx` |
+| Code step, `/login/verify-otp` | `src/features/auth/components/login-otp-page.tsx` |
+| Challenge hand-over between the two | `src/features/auth/login-challenge.ts` |
 | Server unreachable | `src/features/auth/components/session-unavailable.tsx` |
 
 ## Tests
@@ -91,7 +93,16 @@ Every response is checked against a schema. A malformed reply, including a 2xx s
 
 `/forgot-password`, `/verify-otp` and `/reset-password` show the original recovery screens, with a note at the top: "Password recovery isn't available online yet. These screens are a preview: no email is sent and no code is checked." It links to Contact. The screens make no API calls, because no recovery API exists. The API collection has no endpoint to request a reset code, verify one, or set a new password.
 
-The 4-digit code screen at `/verify-otp` belongs to the password-recovery preview. It is not the login code and is never connected to `POST /api/v1/b2b/auth/verify-otp`. That endpoint only accepts a challenge from a successful login, and it issues a sign-in token, not a reset token. The real login code step is part of the login page.
+The 4-digit code screen at `/verify-otp` belongs to the password-recovery preview. It is not the login code and is never connected to `POST /api/v1/b2b/auth/verify-otp`. That endpoint only accepts a challenge from a successful login, and it issues a sign-in token, not a reset token. The real login code step is its own page, `/login/verify-otp`.
+
+## Login code step (`/login/verify-otp`)
+
+After `POST /b2b/auth/login` returns `{challenge_id, expires_in}`, the login form saves the challenge ID, the email and the absolute expiry time (from `expires_in`) in sessionStorage. It never saves the password. It then navigates to `/login/verify-otp`. That page sends `{challenge_id, otp, channel: "website"}` to `POST /b2b/auth/verify-otp` and passes the issued token to `b2bSession.establish()`, which loads `GET /b2b/me`. The session gate then sends the user on to where they were going.
+
+- Nothing about the challenge is in the URL. A refresh keeps the same challenge and countdown.
+- The used challenge is cleared after verification and when the user goes back to sign in.
+- Opening the page with no challenge explains how to get a new code. In demo builds the route redirects to `/login`.
+- There is no resend button, because the API has no resend endpoint. Users go back to sign in to get a new code.
 
 ## Real local testing (historical)
 

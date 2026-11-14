@@ -33,7 +33,8 @@ export function DemoSessionGate() {
     }
   }
   if (demoSessionActive) {
-    if (/^\/login\/?$/.test(location.pathname)) return <Navigate to={safeDemoReturnTo(location.state)} replace />;
+    // Signed in: /login and its code step send the user on to where they were going.
+    if (/^\/login(\/verify-otp)?\/?$/.test(location.pathname)) return <Navigate to={safeDemoReturnTo(location.state)} replace />;
     if (/^\/welcome\/?$/.test(location.pathname)) return <Navigate to="/" replace />;
     return <Suspense fallback={<PageLoadingState />}><AuthenticatedDemoProvider>{apiAuthEnabled && <ApiDataNotice />}<Outlet /></AuthenticatedDemoProvider></Suspense>;
   }

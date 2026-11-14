@@ -68,9 +68,12 @@ async function fillCredentials(page: Page, { email = "Laila@Example.com", passwo
 
 async function signIn(page: Page) {
   await fillCredentials(page);
+  await expect(page).toHaveURL(/\/login\/verify-otp$/);
   await page.locator("#login-code").fill("123456");
-  await page.getByRole("button", { name: "Verify and sign in" }).click();
+  await page.getByRole("button", { name: "Verify", exact: true }).click();
 }
+
+const CHALLENGE_KEY = "royal-travel.login-challenge.v1";
 
 const storage = (page: Page) => page.evaluate(() => ({ session: { ...sessionStorage }, local: { ...localStorage } }));
 
@@ -87,6 +90,16 @@ test.describe("demo mode is the default", () => {
     await expect(page).not.toHaveURL(/\/login/);
     expect((await storage(page)).session["royal-vacation.demo-auth.v1"]).toBe("active");
     expect((await storage(page)).session[SESSION_KEY]).toBeUndefined();
+    expect(apiCalls).toEqual([]);
+  });
+
+  test("the sign-in code page doesn't exist in demo mode and never calls the API", async ({ page }) => {
+    const apiCalls: string[] = [];
+    page.on("request", (request) => { if (/api\.royal\.test|staging-api\.royalis\.tech/.test(request.url())) apiCalls.push(request.url()); });
+    await page.goto("/login/verify-otp");
+    await expect(page).toHaveURL(/\/login$/);
+    await expect(page.getByText("Frontend preview only. Authentication is not verified by a server.")).toBeVisible();
+    await expect(page.locator("#login-code")).toHaveCount(0);
     expect(apiCalls).toEqual([]);
   });
 });
@@ -165,7 +178,10 @@ test.describe("API mode", () => {
     await expect(page.getByText("We'll email you a one-time code to finish signing in.")).toBeVisible();
     await fillCredentials(page);
 
-    await expect(page.getByRole("heading", { name: "Enter your verification code" })).toBeVisible();
+    // The code step is its own page; nothing about the challenge is in the URL.
+    await expect(page).toHaveURL(/\/login\/verify-otp$/);
+    await expect(page.getByRole("heading", { name: "Email Verification", level: 1 })).toBeVisible();
+    await expect(page.getByText("Enter the verification code sent to your email.")).toBeVisible();
     await expect(page.locator("#login-code")).toBeFocused();
     // The code field starts empty: nothing typed on the previous step carries over.
     await expect(page.locator("#login-code")).toHaveValue("");
@@ -179,7 +195,7 @@ test.describe("API mode", () => {
 
     // Arabic-Indic digits are accepted and sent as ASCII.
     await page.locator("#login-code").fill("١٢٣٤٥٦");
-    await page.getByRole("button", { name: "Verify and sign in" }).click();
+    await page.getByRole("button", { name: "Verify", exact: true }).click();
     await expect(page).toHaveURL(/127\.0\.0\.1:4174\/$/);
 
     const [verify] = api.called("POST /b2b/auth/verify-otp");
@@ -194,6 +210,8 @@ test.describe("API mode", () => {
     expect(JSON.stringify(saved)).not.toContain("123456");
     expect(JSON.stringify(saved.local)).not.toContain(TOKEN);
     expect(saved.session["royal-vacation.demo-auth.v1"]).toBeUndefined();
+    // The used challenge is gone once the session exists.
+    expect(saved.session[CHALLENGE_KEY]).toBeUndefined();
 
     await page.getByRole("button", { name: "Account menu" }).click();
     await expect(page.getByText("Laila Hassan")).toBeVisible();
@@ -226,7 +244,8 @@ test.describe("API mode", () => {
       await fillCredentials(page);
       if (message) await expect(page.getByRole("status")).toHaveText(message);
       else await expect(page.locator("#company-id-error")).toHaveText("Check the company ID.");
-      await expect(page.getByRole("heading", { name: "Enter your verification code" })).toHaveCount(0);
+      await expect(page).toHaveURL(/\/login$/);
+      await expect(page.getByRole("heading", { name: "Email Verification" })).toHaveCount(0);
       // Raw server wording never reaches the page.
       await expect(page.locator("main")).not.toContainText(/must be a valid UUID|Too Many Attempts\.|Unauthenticated\./);
     });
@@ -249,16 +268,16 @@ test.describe("API mode", () => {
     await fillCredentials(page);
     const code = page.locator("#login-code");
     await code.fill("123");
-    await page.getByRole("button", { name: "Verify and sign in" }).click();
-    await expect(page.locator("#login-code-error")).toHaveText("Enter the 6-digit code.");
+    await page.getByRole("button", { name: "Verify", exact: true }).click();
+    await expect(page.locator("#login-code-error")).toHaveText("Enter all 6 digits of the code.");
     await code.fill("000000");
-    await page.getByRole("button", { name: "Verify and sign in" }).click();
-    await expect(page.locator("#login-code-error")).toHaveText("That code is incorrect or has expired.");
+    await page.getByRole("button", { name: "Verify", exact: true }).click();
+    await expect(page.locator("#login-code-error")).toHaveText("That code is incorrect or has expired. Check the latest email and try again.");
     await expect(code).toHaveAttribute("aria-invalid", "true");
     await expect(code).toBeFocused();
     reply = { status: 403, json: { message: "Company access is no longer active." } };
     await code.fill("123456");
-    await page.getByRole("button", { name: "Verify and sign in" }).click();
+    await page.getByRole("button", { name: "Verify", exact: true }).click();
     await expect(page.getByRole("alert")).toHaveText("Your company access is no longer active.");
     expect(await page.evaluate((key) => sessionStorage.getItem(key), SESSION_KEY)).toBeNull();
   });
@@ -267,12 +286,13 @@ test.describe("API mode", () => {
     await mockApi(page, { "POST /b2b/auth/login": () => ({ json: { challenge_id: CHALLENGE, expires_in: 2 } }) });
     await page.goto("/login");
     await fillCredentials(page);
-    await expect(page.locator("#login-code-expiry")).toHaveText("This code has expired. Go back and sign in again to get a new code.", { timeout: 5000 });
-    await expect(page.getByRole("button", { name: "Verify and sign in" })).toBeDisabled();
+    await expect(page.locator("#login-code-expiry")).toHaveText("This code has expired. Go back to sign in to get a new code.", { timeout: 5000 });
+    await expect(page.getByRole("button", { name: "Verify", exact: true })).toBeDisabled();
     await expect(page.locator("#login-code")).toBeDisabled();
-    await page.getByRole("button", { name: "Back to sign in" }).click();
+    await page.getByRole("button", { name: "Back to Sign In" }).click();
+    await expect(page).toHaveURL(/\/login$/);
     await expect(page.getByLabel("Password", { exact: true })).toHaveValue("");
-    await expect(page.getByLabel("Email", { exact: true })).toBeFocused();
+    expect(await page.evaluate((key) => sessionStorage.getItem(key), CHALLENGE_KEY)).toBeNull();
   });
 
   test("a profile for a different company is rejected and nothing is kept", async ({ page }) => {
@@ -360,14 +380,17 @@ test.describe("API mode", () => {
       expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze()).violations).toEqual([]);
       await fillCredentials(page);
       expect(api.called("POST /b2b/auth/login")[0].request.headers()["x-locale"]).toBe("ar");
-      await expect(page.getByRole("heading", { name: "أدخل رمز التحقق" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "تأكيد البريد الإلكتروني", level: 1 })).toBeVisible();
+      await expect(page.getByText("أدخل رمز التحقق المرسل إلى بريدك الإلكتروني.")).toBeVisible();
       await expect(page.locator("#login-code-expiry")).toContainText("تنتهي صلاحية الرمز خلال");
+      // The digits keep their left-to-right order in Arabic.
+      await expect(page.locator(".login-otp__digits")).toHaveAttribute("dir", "ltr");
       await page.locator("#login-code").fill("000000");
-      await page.getByRole("button", { name: "تحقق وسجّل الدخول" }).click();
-      await expect(page.locator("#login-code-error")).toHaveText("هذا الرمز غير صحيح أو انتهت صلاحيته.");
+      await page.getByRole("button", { name: "تأكيد", exact: true }).click();
+      await expect(page.locator("#login-code-error")).toHaveText("هذا الرمز غير صحيح أو انتهت صلاحيته. تحقق من أحدث رسالة وحاول مرة أخرى.");
       expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze()).violations).toEqual([]);
       expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
-      const submit = await page.getByRole("button", { name: "تحقق وسجّل الدخول" }).boundingBox();
+      const submit = await page.getByRole("button", { name: "تأكيد", exact: true }).boundingBox();
       expect(submit!.height).toBeGreaterThanOrEqual(44);
     });
   }
@@ -566,7 +589,7 @@ test.describe("API mode", () => {
     await expect(boxes.nth(2)).toBeFocused();
     await boxes.nth(0).fill("123456");
     for (let index = 0; index < 6; index += 1) await expect(boxes.nth(index)).toHaveValue(String(index + 1));
-    await page.getByRole("button", { name: "Verify and sign in" }).click();
+    await page.getByRole("button", { name: "Verify", exact: true }).click();
     await expect(page).toHaveURL(/4174\/$/);
   });
 
@@ -599,4 +622,159 @@ test.describe("API mode", () => {
     await page.keyboard.press("Enter");
     await expect(page).toHaveURL(/4174\/$/);
   });
+});
+
+test.describe("API mode: the Email Verification page", () => {
+  test.use({ baseURL: "http://127.0.0.1:4174" });
+
+  const loginReply = (expiresIn = 300): Reply => ({ json: { message: "OTP verification required.", challenge_id: CHALLENGE, expires_in: expiresIn } });
+  const expirySeconds = async (page: Page) => {
+    const [minutes, seconds] = (await page.locator("#login-code-expiry bdi").innerText()).split(":").map(Number);
+    return minutes * 60 + seconds;
+  };
+
+  test("the challenge survives a refresh and the countdown keeps running from the API's expires_in", async ({ page }) => {
+    const api = await mockApi(page, { "POST /b2b/auth/login": () => loginReply(240), "POST /b2b/auth/verify-otp": ok.verify, "GET /b2b/me": ok.me });
+    await page.goto("/login");
+    await fillCredentials(page);
+    await expect(page).toHaveURL(/\/login\/verify-otp$/);
+    // 240 seconds from the API, not a fixed five minutes.
+    expect(await expirySeconds(page)).toBeLessThanOrEqual(240);
+    expect(await expirySeconds(page)).toBeGreaterThan(234);
+    // Nothing about the challenge or the email travels in the URL.
+    expect(page.url()).not.toContain(CHALLENGE);
+    expect(decodeURIComponent(page.url()).toLowerCase()).not.toContain("laila");
+
+    await page.waitForTimeout(2200);
+    const before = await expirySeconds(page);
+    await page.reload();
+    await expect(page.getByText("Laila@Example.com")).toBeVisible();
+    const after = await expirySeconds(page);
+    // The timer continues; a refresh never restarts it.
+    expect(after).toBeLessThanOrEqual(before);
+    expect(after).toBeLessThan(239);
+
+    const saved = await storage(page);
+    expect(JSON.parse(saved.session[CHALLENGE_KEY])).toEqual({ challengeId: CHALLENGE, email: "Laila@Example.com", expiresAt: expect.any(Number) });
+    expect(JSON.stringify(saved)).not.toContain("Correct-Horse-9!");
+
+    // The restored challenge still verifies with the ID the login returned.
+    await page.locator("#login-code").fill("123456");
+    await page.getByRole("button", { name: "Verify", exact: true }).click();
+    await expect(page).toHaveURL(/4174\/$/);
+    expect(api.called("POST /b2b/auth/verify-otp")[0].request.postDataJSON()).toEqual({ challenge_id: CHALLENGE, otp: "123456", channel: "website" });
+  });
+
+  test("opening the page directly, with no challenge, explains and sends nothing", async ({ page }) => {
+    const api = await mockApi(page, {});
+    await page.goto("/login/verify-otp");
+    await expect(page.getByRole("heading", { name: "Email Verification", level: 1 })).toBeVisible();
+    await expect(page.getByRole("status")).toContainText("There's no sign-in waiting for a code on this device");
+    await expect(page.locator("#login-code")).toHaveCount(0);
+    await page.getByRole("link", { name: "Back to Sign In" }).click();
+    await expect(page).toHaveURL(/\/login$/);
+    expect(api.calls).toEqual([]);
+  });
+
+  test("a damaged or foreign stored challenge is ignored", async ({ page }) => {
+    await page.addInitScript((key) => sessionStorage.setItem(key, JSON.stringify({ challengeId: "not-a-uuid", email: "x@example.com", expiresAt: Date.now() + 60000 })), CHALLENGE_KEY);
+    const api = await mockApi(page, {});
+    await page.goto("/login/verify-otp");
+    await expect(page.locator("#login-code")).toHaveCount(0);
+    expect(api.calls).toEqual([]);
+  });
+
+  test("browser Back returns to the credentials, and a verification is sent only once", async ({ page }) => {
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const api = await mockApi(page, { "POST /b2b/auth/login": () => loginReply(), "POST /b2b/auth/verify-otp": async () => { await gate; return ok.verify(); }, "GET /b2b/me": ok.me });
+    await page.goto("/login");
+    await fillCredentials(page);
+    await expect(page).toHaveURL(/\/login\/verify-otp$/);
+    await page.goBack();
+    await expect(page).toHaveURL(/\/login$/);
+    await expect(page.getByLabel("Company ID", { exact: true })).toBeVisible();
+    await page.goForward();
+    await expect(page.locator("#login-code")).toBeVisible();
+
+    await page.locator("#login-code").fill("123456");
+    const verify = page.getByRole("button", { name: "Verify", exact: true });
+    await verify.click();
+    await expect(page.getByRole("button", { name: "Verifying…" })).toBeDisabled();
+    await page.locator("form").first().evaluate((form: HTMLFormElement) => { form.requestSubmit(); form.requestSubmit(); });
+    release();
+    await expect(page).toHaveURL(/4174\/$/);
+    expect(api.called("POST /b2b/auth/verify-otp")).toHaveLength(1);
+  });
+
+  test("a profile that can't load yet keeps the user here with Try again", async ({ page }) => {
+    let meReply: Reply = { abort: true };
+    await mockApi(page, { "POST /b2b/auth/login": () => loginReply(), "POST /b2b/auth/verify-otp": ok.verify, "GET /b2b/me": () => meReply });
+    await page.goto("/login");
+    await signIn(page);
+    await expect(page.getByRole("alert")).toHaveText("You're signed in, but we couldn't load your account. Try again.");
+    meReply = ok.me();
+    await page.getByRole("button", { name: "Try loading your account again" }).click();
+    await expect(page).toHaveURL(/4174\/$/);
+  });
+
+  test("a signed-in user who opens the code page is sent on", async ({ page }) => {
+    await mockApi(page, { "POST /b2b/auth/login": () => loginReply(), "POST /b2b/auth/verify-otp": ok.verify, "GET /b2b/me": ok.me });
+    await page.goto("/login");
+    await signIn(page);
+    await expect(page).toHaveURL(/4174\/$/);
+    await page.goto("/login/verify-otp");
+    await expect(page).toHaveURL(/4174\/$/);
+  });
+
+  test("the password-recovery code screen stays separate and never calls the login endpoint", async ({ page }) => {
+    const api = await mockApi(page, {});
+    await page.goto("/verify-otp");
+    await expect(page.getByRole("heading", { name: "Enter the 4-digit verification code" })).toBeVisible();
+    await expect(page.locator("main input")).toHaveCount(4);
+    await expect(page.getByRole("note")).toContainText("Password recovery isn't available online yet.");
+    expect(api.calls).toEqual([]);
+  });
+
+  for (const locale of ["en", "ar"] as const) {
+    test(`the page fits every width without clipping the code boxes in ${locale}`, async ({ page }) => {
+      await page.addInitScript((value) => localStorage.setItem("royal-vacation.locale", value), locale);
+      await mockApi(page, { "POST /b2b/auth/login": () => loginReply() });
+      await page.goto("/login");
+      await fillCredentials(page);
+      await expect(page).toHaveURL(/\/login\/verify-otp$/);
+      for (const width of [320, 360, 390, 430, 768, 1024, 1440, 1920]) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.reload();
+        await page.locator("#login-code").waitFor();
+        await expect(page.locator("html")).toHaveAttribute("dir", locale === "ar" ? "rtl" : "ltr");
+        const layout = await page.evaluate(() => {
+          const card = document.getElementById("verify")!.getBoundingClientRect();
+          const boxes = [...document.querySelectorAll(".login-otp__digits input")].map((input) => input.getBoundingClientRect());
+          const hero = document.querySelector("main > section")!.getBoundingClientRect();
+          const header = document.querySelector("header")!.getBoundingClientRect();
+          return {
+            overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+            inside: boxes.every((box) => box.left >= card.left && box.right <= card.right),
+            minWidth: Math.min(...boxes.map((box) => box.width)),
+            leftToRight: boxes.every((box, index) => index === 0 || box.left > boxes[index - 1].left),
+            heroTop: hero.top,
+            cardBelowHeader: card.top > header.bottom,
+          };
+        });
+        expect(layout.overflow, `${width}px`).toBeLessThanOrEqual(1);
+        expect(layout.inside, `${width}px`).toBe(true);
+        expect(layout.minWidth, `${width}px`).toBeGreaterThanOrEqual(36);
+        // Digit 1 is always on the left, also in Arabic.
+        expect(layout.leftToRight, `${width}px`).toBe(true);
+        expect(layout.heroTop, `${width}px`).toBeLessThanOrEqual(0.5);
+        expect(layout.cardBelowHeader, `${width}px`).toBe(true);
+        const verify = (await page.getByRole("button", { name: locale === "en" ? "Verify" : "تأكيد", exact: true }).boundingBox())!;
+        expect(verify.height, `${width}px`).toBeGreaterThanOrEqual(44);
+        if (width === 390 || width === 1440) {
+          expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze()).violations, `${width}px`).toEqual([]);
+        }
+      }
+    });
+  }
 });

@@ -34,6 +34,7 @@ function Root() {
       "/forgot-password",
       "/verify-otp",
       "/reset-password",
+      "/login/verify-otp",
     ].includes(pathname);
     if (!privatePage) return;
     const meta = document.createElement("meta");
@@ -102,6 +103,8 @@ export const router = createBrowserRouter([
         lazy: page(() => import("@/pages/welcome"), "Welcome", "مرحبًا"),
       },
       { path: "login", lazy: page(() => import("@/pages/login"), "Partner Sign In", "تسجيل دخول الشركاء") },
+      // Real sign-in, step 2. Separate from the password-recovery screen at /verify-otp.
+      { path: "login/verify-otp", lazy: page(() => import("@/pages/login-verify-otp"), "Email Verification", "تأكيد البريد الإلكتروني") },
       {
         path: "forgot-password",
         lazy: page(() => import("@/pages/forgot-password"), "Forgot Password", "نسيت كلمة المرور"),
