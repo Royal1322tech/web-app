@@ -14,8 +14,13 @@ for(const width of [375,1440]) {
   expect((await card.boundingBox())!.width).toBeCloseTo(280, 1);
   expect((await card.locator('img').boundingBox())!.height).toBeCloseTo(135, 1);
   const x=()=>track.evaluate(el=>new DOMMatrixReadOnly(getComputedStyle(el).transform).m41);
-  const first=await x(); await page.waitForTimeout(1000); const second=await x();
-  expect(first-second).toBeGreaterThan(30); expect(first-second).toBeLessThan(50);
+  // Position and the page's clock are read together, so the speed check measures the animation itself
+  // rather than the test runner's round trips (which can add hundreds of ms on a busy CI runner).
+  const sample=()=>track.evaluate(el=>({x:new DOMMatrixReadOnly(getComputedStyle(el).transform).m41,t:performance.now()}));
+  const first=await sample(); await page.waitForTimeout(1000); const second=await sample();
+  const pxPerSecond=(first.x-second.x)/((second.t-first.t)/1000);
+  // The collection drifts left at 40px/s.
+  expect(pxPerSecond).toBeGreaterThan(30); expect(pxPerSecond).toBeLessThan(50);
   await viewport.hover(); const stopped=await x();await page.waitForTimeout(300);expect(Math.abs((await x())-stopped)).toBeLessThan(2);
   await page.mouse.move(0,0);
   await expect(track).toHaveCSS('animation-play-state','running');
