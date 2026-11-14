@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Icon } from "@/components/ui/icon";
 import { useLocale } from "@/features/localization/locale-provider";
 import { searchDestinations } from "@/features/hotels/data/destinations";
@@ -8,11 +9,12 @@ import { useDefaultHotelSearch } from "@/features/hotels/lib/default-hotel-searc
 import { stayQuery } from "@/features/hotels/lib/stay-query";
 import type { HotelSearchCriteria } from "../schemas/hotel-search.schema";
 import { HotelCarousel } from "./featured-deals";
+import { HotelCollectionShell, type CollectionItem } from "./hotel-collection";
 import styles from "../home.module.css";
 import live from "./live-home-hotels.module.css";
 
 const CAROUSEL_COUNT = 10;
-const GRID_COUNT = 8;
+const STRIP_COUNT = 8;
 
 function useDates() {
   const { locale } = useLocale();
@@ -97,46 +99,61 @@ function SeeAll({ criteria, total }: { criteria: HotelSearchCriteria; total: num
 }
 
 /**
- * The lower hotel section: more hotels from the same default search (never a "best" ranking), then
- * shortcuts that run a real search for each destination.
+ * "Stay At Best Hotels" with live data: the original illustration, heading, description, toolbar and
+ * left-sliding strip, filled with hotels from the same default search as the carousel above (no
+ * second request). The toolbar runs a real search for the chosen destination.
  */
 export function LiveHotelCollection() {
   const { t } = useLocale();
+  const navigate = useNavigate();
+  const date = useDates();
   const { state, criteria, destination } = useDefaultHotelSearch();
+  const [choice, setChoice] = useState(destination.id);
   const city = t(destination.name.en, destination.name.ar);
-  const more = state.status === "done" ? state.result.hotels.slice(CAROUSEL_COUNT, CAROUSEL_COUNT + GRID_COUNT) : [];
+  const hotels = state.status === "done" ? state.result.hotels : [];
+  // Hotels after the carousel's first ten; if there are none, the same hotels as above.
+  const more = hotels.slice(CAROUSEL_COUNT, CAROUSEL_COUNT + STRIP_COUNT);
+  const strip = more.length ? more : hotels.slice(0, STRIP_COUNT);
+
+  const items: CollectionItem[] = state.status === "done"
+    ? strip.map((hotel, index) => ({ key: `strip-${hotel.result_index ?? "x"}-${index}`, render: () => <LiveHotelCard hotel={hotel} result={state.result} variant="compact" /> }))
+    : state.status === "loading"
+      ? Array.from({ length: 4 }, (_, index) => ({ key: `skeleton-${index}`, render: () => <LiveHotelCardSkeleton variant="compact" /> }))
+      : [];
+
+  const note = (
+    <p className={styles.sampleNote} role="status" data-live-scope>
+      {state.status === "error"
+        ? t("Hotels couldn't be loaded right now. Use the search above to try again.", "تعذر تحميل الفنادق حاليًا. استخدم البحث أعلاه للمحاولة مرة أخرى.")
+        : state.status === "done" && strip.length === 0
+          ? t("No hotels found for these dates. Choose a destination to search.", "لم يتم العثور على فنادق لهذه التواريخ. اختر وجهة للبحث.")
+          : t(
+              `Available in ${city}, ${date(criteria.checkIn)} – ${date(criteria.checkOut)}, 2 adults · prices not yet verified`,
+              `المتاح في ${city}، ${date(criteria.checkIn)} – ${date(criteria.checkOut)}، شخصان بالغان · الأسعار غير مؤكدة بعد`,
+            )}
+    </p>
+  );
 
   return (
-    <section className={styles.section} aria-labelledby="collection-title" data-live-home="collection">
-      <div className={styles.sectionHeading}>
-        <h2 id="collection-title">{t("Explore more stays", "استكشف المزيد من الإقامات")}</h2>
-        <p>{more.length
-          ? t(`More hotels available in ${city} for the same dates, straight from live availability.`, `المزيد من الفنادق المتاحة في ${city} لنفس التواريخ، مباشرة من التوافر الفعلي.`)
-          : t("Search live availability in any of our destinations.", "ابحث في التوافر الفعلي في أي من وجهاتنا.")}</p>
-      </div>
-      {state.status === "loading" && (
-        <div className={live.grid} aria-hidden="true">{Array.from({ length: 4 }, (_, index) => <LiveHotelCardSkeleton key={index} variant="compact" />)}</div>
-      )}
-      {state.status === "done" && more.length > 0 && (
-        <ul className={live.grid} aria-label={t(`More hotels in ${city}`, `المزيد من الفنادق في ${city}`)}>
-          {more.map((hotel, index) => (
-            <li key={`more-${hotel.result_index ?? "x"}-${index}`}><LiveHotelCard hotel={hotel} result={state.result} variant="compact" /></li>
-          ))}
-        </ul>
-      )}
-      <nav className={live.destinations} aria-label={t("Search a destination", "ابحث في وجهة")}>
-        <h3>{t("Search a destination", "ابحث في وجهة")}</h3>
-        <ul>
-          {searchDestinations.map((place) => (
-            <li key={place.id}>
-              <Link to={`/search?${stayQuery({ ...criteria, destination: place.id })}`}>
-                <Icon name="pin" />
-                <span><strong>{t(place.name.en, place.name.ar)}</strong><small>{t(place.country.en, place.country.ar)}</small></span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    </section>
+    <div data-live-home="collection" data-search-state={state.status === "done" ? (strip.length ? "results" : "empty") : state.status === "error" ? state.failure : "loading"}>
+      <HotelCollectionShell
+        label={t(`Hotels in ${city}`, `فنادق في ${city}`)}
+        animate={state.status === "done"}
+        stripKey={state.status}
+        note={note}
+        items={items}
+        toolbar={
+          <form onSubmit={(event) => { event.preventDefault(); navigate(`/search?${stayQuery({ ...criteria, destination: choice })}`); }}>
+            <label htmlFor="hotel-city">
+              <span className="sr-only">{t("Destination", "الوجهة")}</span>
+              <select id="hotel-city" value={choice} onChange={(event) => setChoice(event.target.value)}>
+                {searchDestinations.map((place) => <option key={place.id} value={place.id}>{t(place.name.en, place.name.ar)}</option>)}
+              </select>
+            </label>
+            <button type="submit" className={styles.primaryButton}>{t("Search", "بحث")}</button>
+          </form>
+        }
+      />
+    </div>
   );
 }

@@ -1,26 +1,39 @@
 import { HotelIllustration } from "./hotel-illustration";
-import { useRef, useState } from "react";
+import { useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { Hotel } from "../types";
 import { HotelCard } from "./hotel-card";
 import { useLocale } from "@/features/localization/locale-provider";
 import styles from "../home.module.css";
 import marquee from "./hotel-collection.module.css";
 import { useMediaEnvironment } from "@/components/motion/use-media-environment";
-import type { CSSProperties } from "react";
 
 const SCROLL_SPEED_PX_PER_SECOND = 40;
 
-export function HotelCollection({ hotels }: { hotels: readonly Hotel[] }) {
+export interface CollectionItem {
+  key: string;
+  /** `duplicate` is true for the copies that keep the strip seamless; they are hidden from assistive technology. */
+  render: (duplicate: boolean) => ReactNode;
+}
+
+/**
+ * "Stay At Best Hotels": the illustration, heading, description, a toolbar, a status note and the
+ * strip of cards that slides to the left. Touch, hover and focus pause it; reduced motion stops it.
+ */
+export function HotelCollectionShell({ toolbar, note, items, animate = true, stripKey, label }: {
+  toolbar: ReactNode;
+  note: ReactNode;
+  items: readonly CollectionItem[];
+  /** False while placeholders are shown. */
+  animate?: boolean;
+  /** Changing it restarts the strip, e.g. after filtering. */
+  stripKey?: string;
+  label?: string;
+}) {
   const { t, locale } = useLocale();
-  const [city, setCity] = useState("");
-  const [selectedCity, setSelectedCity] = useState("");
-  const [filtered, setFiltered] = useState(false);
   const root = useRef<HTMLElement>(null);
   const { canAnimate, reduced } = useMediaEnvironment(root);
   const [touching, setTouching] = useState(false);
-  const visibleHotels = hotels.filter(
-    (hotel) => !selectedCity || hotel.city === selectedCity,
-  );
+  const count = Math.max(6, items.length * 2);
   return (
     <section ref={root} className={styles.section} aria-labelledby="collection-title">
       <HotelIllustration />
@@ -32,7 +45,52 @@ export function HotelCollection({ hotels }: { hotels: readonly Hotel[] }) {
           )}
         </p>
       </div>
-      <div className={styles.collectionToolbar}>
+      <div className={styles.collectionToolbar}>{toolbar}</div>
+      {note}
+      <div key={stripKey} className={marquee.viewport} data-collection-marquee data-running={animate && canAnimate && !touching} data-reduced={reduced || !animate}
+        onScroll={event => {
+          const viewport = event.currentTarget;
+          const offset = viewport.scrollLeft;
+          const animation = viewport.firstElementChild?.getAnimations()[0];
+          if (!offset || !animation || reduced) return;
+          const duration = Number(animation.effect?.getTiming().duration);
+          const distance = (viewport.firstElementChild?.scrollWidth ?? 0) / 2;
+          if (!duration || !distance) return;
+          animation.currentTime = (Number(animation.currentTime) + offset / distance * duration + duration) % duration;
+          viewport.scrollLeft = 0;
+        }}
+        onTouchStart={() => setTouching(true)} onTouchEnd={() => setTouching(false)} onTouchCancel={() => setTouching(false)}
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- Native keyboard scrolling pauses decorative motion.
+        role="region" aria-label={label ?? t("Hotel collection", "مجموعة الفنادق")} tabIndex={0}>
+        <div className={marquee.track} style={{ "--travel-duration": `${count * 296 / SCROLL_SPEED_PX_PER_SECOND}s` } as CSSProperties}>
+          {[0, 1].map(group => <div className={marquee.group} key={group} aria-hidden={group === 1 ? true : undefined}>
+            {Array.from({ length: count }, (_, index) => {
+              const item = items[index % items.length];
+              const duplicate = group === 1 || index >= items.length;
+              return item && <div className={marquee.card} dir={locale === "ar" ? "rtl" : "ltr"} key={`${item.key}-${index}`} aria-hidden={duplicate ? true : undefined}>
+                {item.render(duplicate)}
+              </div>;
+            })}
+          </div>)}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** The sample collection, used in demo builds: a city filter over the labelled sample hotels. */
+export function HotelCollection({ hotels }: { hotels: readonly Hotel[] }) {
+  const { t } = useLocale();
+  const [city, setCity] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+  const [filtered, setFiltered] = useState(false);
+  const visibleHotels = hotels.filter(
+    (hotel) => !selectedCity || hotel.city === selectedCity,
+  );
+  return (
+    <HotelCollectionShell
+      stripKey={selectedCity}
+      toolbar={
         <form
           onSubmit={(event) => {
             event.preventDefault();
@@ -59,41 +117,18 @@ export function HotelCollection({ hotels }: { hotels: readonly Hotel[] }) {
             {t("Search")}
           </button>
         </form>
-      </div>
-      <p className={styles.sampleNote} role="status">
-        {filtered
-          ? t(
-              `${visibleHotels.length} hotels shown. Rates are illustrative; availability requires supplier confirmation.`,
-              `${visibleHotels.length} فنادق معروضة. الأسعار توضيحية والتوافر يتطلب تأكيد المورد.`,
-            )
-          : t("Illustrative hotel listings · Availability requires supplier confirmation.", "فنادق توضيحية · التوافر يتطلب تأكيد المورد.")}
-      </p>
-      <div key={selectedCity} className={marquee.viewport} data-collection-marquee data-running={canAnimate && !touching} data-reduced={reduced}
-        onScroll={event => {
-          const viewport = event.currentTarget;
-          const offset = viewport.scrollLeft;
-          const animation = viewport.firstElementChild?.getAnimations()[0];
-          if (!offset || !animation || reduced) return;
-          const duration = Number(animation.effect?.getTiming().duration);
-          const distance = (viewport.firstElementChild?.scrollWidth ?? 0) / 2;
-          if (!duration || !distance) return;
-          animation.currentTime = (Number(animation.currentTime) + offset / distance * duration + duration) % duration;
-          viewport.scrollLeft = 0;
-        }}
-        onTouchStart={() => setTouching(true)} onTouchEnd={() => setTouching(false)} onTouchCancel={() => setTouching(false)}
-        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- Native keyboard scrolling pauses decorative motion.
-        role="region" aria-label={t("Hotel collection", "مجموعة الفنادق")} tabIndex={0}>
-        <div className={marquee.track} style={{ "--travel-duration": `${Math.max(6, visibleHotels.length * 2) * 296 / SCROLL_SPEED_PX_PER_SECOND}s` } as CSSProperties}>
-          {[0, 1].map(group => <div className={marquee.group} key={group} aria-hidden={group === 1 ? true : undefined}>
-            {Array.from({ length: Math.max(6, visibleHotels.length * 2) }, (_, index) => {
-              const hotel = visibleHotels[index % visibleHotels.length];
-              return hotel && <div className={marquee.card} dir={locale === "ar" ? "rtl" : "ltr"} key={`${hotel.id}-${index}`} aria-hidden={group === 1 || index >= visibleHotels.length ? true : undefined}>
-                <HotelCard hotel={hotel} duplicate={group === 1 || index >= visibleHotels.length} />
-              </div>;
-            })}
-          </div>)}
-        </div>
-      </div>
-    </section>
+      }
+      note={
+        <p className={styles.sampleNote} role="status">
+          {filtered
+            ? t(
+                `${visibleHotels.length} hotels shown. Rates are illustrative; availability requires supplier confirmation.`,
+                `${visibleHotels.length} فنادق معروضة. الأسعار توضيحية والتوافر يتطلب تأكيد المورد.`,
+              )
+            : t("Illustrative hotel listings · Availability requires supplier confirmation.", "فنادق توضيحية · التوافر يتطلب تأكيد المورد.")}
+        </p>
+      }
+      items={visibleHotels.map((hotel) => ({ key: hotel.id, render: (duplicate) => <HotelCard hotel={hotel} duplicate={duplicate} /> }))}
+    />
   );
 }

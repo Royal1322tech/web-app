@@ -505,11 +505,17 @@ test.describe("B2B hotel search: home page (mocked API)", () => {
 
     const collection = page.locator("[data-live-home=collection]");
     await collection.scrollIntoViewIfNeeded();
-    await expect(collection.getByRole("heading", { name: "Explore more stays" })).toBeVisible();
-    await expect(collection.locator("[data-live-hotel]")).toHaveCount(8);
-    await expect(collection.getByRole("heading", { name: "Test Hotel 11" })).toBeVisible();
-    await expect(collection.getByRole("navigation", { name: "Search a destination" }).getByRole("link")).toHaveCount(7);
-    await expect(page.getByText(/Stay At Best Hotels|Golden Rose Hotel|Illustrative|handpicked/)).toHaveCount(0);
+    // The original section: illustration, heading, description, toolbar and sliding strip.
+    await expect(collection.locator(".hotel-miniature")).toHaveCount(1);
+    await expect(collection.getByRole("heading", { name: "Stay At Best Hotels", level: 2 })).toBeVisible();
+    await expect(collection.getByText("Discover handpicked hotels tailored to your needs and budget")).toBeVisible();
+    // Real hotels 11–18 from the same reply; the copies that keep the strip seamless are hidden from assistive technology.
+    const visibleNames = await collection.locator(".hotel-miniature ~ * [data-live-hotel]:not([aria-hidden] [data-live-hotel]) h3").allInnerTexts();
+    expect(visibleNames.slice(0, 8)).toEqual(Array.from({ length: 8 }, (_, i) => `Test Hotel ${i + 11}`));
+    await expect(collection.locator("[data-collection-marquee]")).toHaveAttribute("data-running", "true");
+    await expect(collection.getByText(/Available in Dubai, .* 2 adults · prices not yet verified/)).toBeVisible();
+    await expect(collection.locator("#hotel-city option")).toHaveCount(7);
+    await expect(page.getByText(/Golden Rose Hotel|Illustrative/)).toHaveCount(0);
 
     // One request, shared by both sections: future dates, 3 nights, Dubai's coordinates.
     expect(api.searches).toHaveLength(1);
@@ -519,6 +525,51 @@ test.describe("B2B hotel search: home page (mocked API)", () => {
     expect(days(body.checkin)).toBeGreaterThanOrEqual(29);
     expect(days(body.checkout) - days(body.checkin)).toBe(3);
     expect(body).not.toHaveProperty("page");
+  });
+
+  test("Stay At Best Hotels slides to the left, pauses for touch, and its search opens real results", async ({ page }) => {
+    const api = await signedIn(page, (request) => preview({ total: 88, page: request.postDataJSON().page ?? 1 }));
+    await page.goto(APP + "/");
+    const strip = page.locator("[data-live-home=collection] [data-collection-marquee]");
+    await strip.scrollIntoViewIfNeeded();
+    await expect(strip).toHaveAttribute("data-running", "true");
+    const offset = () => strip.locator("> div").evaluate((track) => new DOMMatrix(getComputedStyle(track).transform).m41);
+    const start = await offset();
+    await page.waitForTimeout(1200);
+    expect(await offset()).toBeLessThan(start - 10); // moving toward the left
+    await strip.dispatchEvent("touchstart");
+    await expect(strip).toHaveAttribute("data-running", "false");
+    await strip.dispatchEvent("touchend");
+    await expect(strip).toHaveAttribute("data-running", "true");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+
+    await page.locator("#hotel-city").selectOption("paris");
+    await page.locator("[data-live-home=collection]").getByRole("button", { name: "Search" }).click();
+    await expect(page).toHaveURL(/\/search\?destination=paris/);
+    await expect(page.locator("[data-live-hotel]").first()).toBeVisible();
+    expect(api.searches.at(-1)!.postDataJSON()).toMatchObject({ latitude: 48.8566, longitude: 2.3522 });
+  });
+
+  test("Stay At Best Hotels holds still with reduced motion and still shows every hotel", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await signedIn(page, () => preview({ total: 18 }));
+    await page.goto(APP + "/");
+    const collection = page.locator("[data-live-home=collection]");
+    await collection.scrollIntoViewIfNeeded();
+    await expect(collection.locator("[data-collection-marquee]")).toHaveAttribute("data-reduced", "true");
+    const visible = collection.locator("[data-live-hotel]:visible");
+    await expect(visible).toHaveCount(8);
+    expect(await collection.locator("[data-collection-marquee] > div").evaluate((track) => getComputedStyle(track).animationName)).toBe("none");
+  });
+
+  test("a short result reuses the same hotels in the strip and sends no second request", async ({ page }) => {
+    const api = await signedIn(page, () => preview({ total: 4 }));
+    await page.goto(APP + "/");
+    const collection = page.locator("[data-live-home=collection]");
+    await collection.scrollIntoViewIfNeeded();
+    await expect(collection).toHaveAttribute("data-search-state", "results");
+    await expect(collection.getByRole("heading", { name: "Test Hotel 1", exact: true }).first()).toBeAttached();
+    expect(api.searches).toHaveLength(1);
   });
 
   test("signed in: a failed default search explains itself, retries, and shows no sample hotels", async ({ page }) => {
@@ -537,8 +588,8 @@ test.describe("B2B hotel search: home page (mocked API)", () => {
     const api = await signedIn(page, () => preview({ total: 12 }), "ar");
     await page.goto(APP + "/");
     await expect(page.locator("[data-live-home=featured]")).toHaveAttribute("data-search-state", "results");
-    await expect(page.getByText(/المتاح في دبي/)).toBeVisible();
-    await expect(page.getByRole("heading", { name: "استكشف المزيد من الإقامات" })).toBeVisible();
+    await expect(page.getByText(/المتاح في دبي/).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: "أقم في أفضل الفنادق" })).toBeVisible();
     expect(api.searches[0].postDataJSON().language).toBe("ar");
   });
 
