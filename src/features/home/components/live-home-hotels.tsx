@@ -139,7 +139,6 @@ export function LiveHotelCollection() {
       <HotelCollectionShell
         label={t(`Hotels in ${city}`, `فنادق في ${city}`)}
         animate={state.status === "done"}
-        stripKey={state.status}
         note={note}
         items={items}
         toolbar={

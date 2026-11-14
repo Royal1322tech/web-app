@@ -530,7 +530,12 @@ test.describe("B2B hotel search: home page (mocked API)", () => {
   test("Stay At Best Hotels slides to the left, pauses for touch, and its search opens real results", async ({ page }) => {
     const api = await signedIn(page, (request) => preview({ total: 88, page: request.postDataJSON().page ?? 1 }));
     await page.goto(APP + "/");
-    const strip = page.locator("[data-live-home=collection] [data-collection-marquee]");
+    const collection = page.locator("[data-live-home=collection]");
+    const strip = collection.locator("[data-collection-marquee]");
+    // The strip is one element from loading to loaded; it starts moving once the hotels arrive.
+    const before = await strip.elementHandle();
+    await expect(collection).toHaveAttribute("data-search-state", "results");
+    expect(await strip.evaluate((element, original) => element === original, before)).toBe(true);
     await strip.scrollIntoViewIfNeeded();
     await expect(strip).toHaveAttribute("data-running", "true");
     const offset = () => strip.locator("> div").evaluate((track) => new DOMMatrix(getComputedStyle(track).transform).m41);

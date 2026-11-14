@@ -25,7 +25,11 @@ export function HotelCollectionShell({ toolbar, note, items, animate = true, str
   items: readonly CollectionItem[];
   /** False while placeholders are shown. */
   animate?: boolean;
-  /** Changing it restarts the strip, e.g. after filtering. */
+  /**
+   * Changing it rebuilds the strip, e.g. after the demo city filter. Live data doesn't pass it: the strip
+   * stays the same element while hotels load, so focus, touch and scroll position survive, and the
+   * slide starts when placeholders give way to hotels.
+   */
   stripKey?: string;
   label?: string;
 }) {
