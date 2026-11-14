@@ -397,6 +397,9 @@
 .rental-services .rental-intro { padding: 0 var(--space-6) var(--space-8); }
 .rental-services .rental-intro h2 { margin-block: var(--space-2); color: var(--navy); font-size: clamp(24px, 2.6vw, 32px); font-weight: var(--weight-heavy); }
 .rental-service-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); }
+/* Two services: a balanced pair, centred, with wider images instead of an empty third column. */
+.rental-service-cards--two { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 960px; margin-inline: auto; }
+.rental-service-cards--two .rental-service-card > img { aspect-ratio: 16 / 9; }
 .rental-service-card { display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border); border-radius: var(--rounded-xl); background: var(--surface); color: var(--navy); text-decoration: none; box-shadow: var(--elevation-1); transition: transform var(--duration-fast) ease, box-shadow var(--duration-fast) ease, border-color var(--duration-fast) ease; }
 .rental-service-card:hover { border-color: #b68136; box-shadow: var(--elevation-3); transform: translateY(-3px); }
 .rental-service-card > img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; }

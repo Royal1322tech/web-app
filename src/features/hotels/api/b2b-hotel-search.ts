@@ -71,33 +71,94 @@ export function toB2BHotelSearchRequest(
 }
 
 /*
- * Success reply: its field layout is not confirmed for B2B. The specification names supplier
- * entitlement, `pricing_verified` and `booking_enabled` restrictions, but not where they sit in the
- * reply. Only an envelope of the family the hotel search API already uses
- * ({success: true, data: {hotels: [...], total}}) is accepted, and the hotel records stay unparsed, so
- * no hotel name, price, availability or booking action is read or shown. That respects the pricing
- * and booking flags by construction: nothing priced or bookable is displayed until the reply format,
- * including where those flags live, is confirmed.
+ * Success reply, as confirmed by the backend team (2026-11-14):
+ * {success: true, code: "HOTEL_SEARCH_PREVIEW", message, data: {hotels: [{result_index, name, address,
+ *  stars, image, rooms: [{room_name, meal_name, has_breakfast, bedding_type, selling_price,
+ *  booking_enabled}], pricing_status, booking_enabled}], total, page, per_page, currency,
+ *  supplier_currency, pricing_verified, booking_enabled}}
+ *
+ * The envelope and the paging numbers are required. Each hotel field is read on its own and becomes
+ * null when it is missing or has an unexpected type, so one odd record never hides the others and
+ * nothing is filled in. `result_index` is a position in this result set, not a hotel identifier.
+ * The server's `message` is not shown.
  */
+const text = z.string().trim().min(1).nullable().catch(null);
+const flag = z.boolean().nullable().catch(null);
+const roomSchema = z.object({
+  room_name: text,
+  meal_name: text,
+  has_breakfast: flag,
+  bedding_type: text,
+  /** A selling price is only shown once verified; until its format is confirmed, only a plain number is read. */
+  selling_price: z.number().finite().nonnegative().nullable().catch(null),
+  booking_enabled: flag,
+});
+const hotelSchema = z.object({
+  result_index: z.number().int().nonnegative().nullable().catch(null),
+  name: text,
+  address: text,
+  stars: z.number().min(0).max(5).nullable().catch(null),
+  image: z.string().trim().min(1).nullable().catch(null),
+  rooms: z.array(z.unknown()).catch([]).transform((rooms) => rooms.flatMap((room) => {
+    const parsed = roomSchema.safeParse(room);
+    return parsed.success ? [parsed.data] : [];
+  })),
+  pricing_status: text,
+  booking_enabled: flag,
+});
 const searchEnvelopeSchema = z.object({
   success: z.literal(true),
+  code: z.string().optional(),
   data: z.object({
     hotels: z.array(z.record(z.string(), z.unknown())),
     total: z.number().int().nonnegative(),
+    page: z.number().int().positive(),
+    per_page: z.number().int().positive(),
+    currency: z.string().regex(/^[A-Z]{3}$/).nullable().catch(null),
+    pricing_verified: z.boolean().catch(false),
+    booking_enabled: z.boolean().catch(false),
   }),
 });
 
+export type B2BRoom = z.infer<typeof roomSchema>;
+export type B2BHotel = z.infer<typeof hotelSchema>;
+
 export interface B2BHotelSearchResult {
+  hotels: B2BHotel[];
   total: number;
-  /** Hotel records as supplied, unparsed until their format is confirmed. */
-  hotels: Record<string, unknown>[];
+  page: number;
+  perPage: number;
+  /** Selling currency. Supplier currency is deliberately not kept. */
+  currency: string | null;
+  pricingVerified: boolean;
+  bookingEnabled: boolean;
 }
 
-export const parseB2BHotelSearch = (value: unknown): B2BHotelSearchResult => searchEnvelopeSchema.parse(value).data;
+export function parseB2BHotelSearch(value: unknown): B2BHotelSearchResult {
+  const { data } = searchEnvelopeSchema.parse(value);
+  return {
+    hotels: data.hotels.map((hotel) => hotelSchema.parse(hotel)),
+    total: data.total,
+    page: data.page,
+    perPage: data.per_page,
+    currency: data.currency,
+    pricingVerified: data.pricing_verified,
+    bookingEnabled: data.booking_enabled,
+  };
+}
+
+export const totalPages = (result: Pick<B2BHotelSearchResult, "total" | "perPage">) => Math.max(1, Math.ceil(result.total / result.perPage));
+
+/** Pagination fields, sent only together with the complete search body. */
+export interface B2BPageRequest { page: number; per_page: number }
 
 /** Sends the search with the company session's token. A 401 ends the session through the API client. */
-export function searchB2BHotels(request: B2BHotelSearchRequest, options: { token: string; signal?: AbortSignal; locale?: "en" | "ar" }): Promise<B2BHotelSearchResult> {
-  return apiRequest("api/v1/b2b/hotels/search", { method: "POST", body: request, timeoutMs: 60000, ...options, parse: parseB2BHotelSearch });
+export function searchB2BHotels(
+  request: B2BHotelSearchRequest,
+  options: { token: string; signal?: AbortSignal; locale?: "en" | "ar"; page?: B2BPageRequest },
+): Promise<B2BHotelSearchResult> {
+  const { page, ...rest } = options;
+  return apiRequest("api/v1/b2b/hotels/search", { method: "POST", body: page ? { ...request, ...page } : request, timeoutMs: 60000, ...rest, parse: parseB2BHotelSearch });
 }
 
 export type B2BSearchFailure =

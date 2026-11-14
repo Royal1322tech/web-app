@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { useMediaEnvironment } from "@/components/motion/use-media-environment";
 import { Text, useLocale } from "@/features/localization/locale-provider";
@@ -7,7 +7,25 @@ import { HotelCard } from "./hotel-card";
 import styles from "../home.module.css";
 import carousel from "./featured-deals.module.css";
 
+/** The sample carousel, used in demo builds. Live builds use the same carousel with API hotels. */
 export function FeaturedDeals() {
+  const { t } = useLocale();
+  return (
+    <HotelCarousel
+      note={<p className={styles.sampleNote}><Text en="Illustrative rates · Confirm availability with the supplier." ar="أسعار توضيحية · يرجى تأكيد التوافر مع المورد." /></p>}
+      slides={featuredHotels.map((hotel) => ({ key: hotel.id, node: <HotelCard hotel={hotel} compact /> }))}
+      label={t("Featured hotels", "فنادق مميزة")}
+    />
+  );
+}
+
+export function HotelCarousel({ note, slides, label, footer, busy = false }: {
+  note: ReactNode;
+  slides: readonly { key: string; node: ReactNode }[];
+  label: string;
+  footer?: ReactNode;
+  busy?: boolean;
+}) {
   const { locale, t } = useLocale();
   const root = useRef<HTMLElement>(null);
   const { canAnimate, reduced } = useMediaEnvironment(root);
@@ -38,7 +56,7 @@ export function FeaturedDeals() {
     <section ref={root} className={`${styles.section} ${carousel.section}`} aria-labelledby="deals-title">
       <div className={carousel.heading}>
         <div><h2 id="deals-title" className={styles.dealsTitle}><Text en="A world of stays. One workspace." ar="عالم من الإقامات. مساحة عمل واحدة." /></h2>
-          <p className={styles.sampleNote}><Text en="Illustrative rates · Confirm availability with the supplier." ar="أسعار توضيحية · يرجى تأكيد التوافر مع المورد." /></p></div>
+          {note}</div>
         <div className={carousel.controls}>
           <button type="button" onClick={() => move(-1)} aria-label={t("Previous featured hotel", "الفندق المميز السابق")}>‹</button>
           <button type="button" onClick={() => move(1)} aria-label={t("Next featured hotel", "الفندق المميز التالي")}>›</button>
@@ -46,17 +64,18 @@ export function FeaturedDeals() {
         </div>
       </div>
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex -- Named carousel region supports documented Arrow-key browsing alongside native navigation buttons. */}
-      <div className={carousel.viewport} ref={emblaRef} role="region" aria-roledescription={t("carousel", "عرض شرائح")} aria-label={t("Featured hotels", "فنادق مميزة")} tabIndex={0}
+      <div className={carousel.viewport} ref={emblaRef} role="region" aria-roledescription={t("carousel", "عرض شرائح")} aria-label={label} aria-busy={busy || undefined} tabIndex={0}
         onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
         onFocusCapture={() => setFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}
         onKeyDown={event => {
           if (event.key === "ArrowRight" || event.key === "ArrowLeft") { event.preventDefault(); move((event.key === "ArrowRight") !== (locale === "ar") ? 1 : -1); }
         }}>
         <div className={carousel.track}>
-          {featuredHotels.map((hotel, index) => <div key={hotel.id} className={carousel.slide} role="group" aria-roledescription={t("slide", "شريحة")} aria-label={`${index + 1} / ${featuredHotels.length}`} inert={!inView.includes(index)}><HotelCard hotel={hotel} compact /></div>)}
+          {slides.map((slide, index) => <div key={slide.key} className={carousel.slide} role="group" aria-roledescription={t("slide", "شريحة")} aria-label={`${index + 1} / ${slides.length}`} inert={!inView.includes(index)}>{slide.node}</div>)}
         </div>
       </div>
-      <p className={carousel.position} aria-live={paused ? "polite" : "off"}>{selected + 1} / {featuredHotels.length} · {t("Swipe to explore", "اسحب للاستكشاف")}</p>
+      {slides.length > 0 && <p className={carousel.position} aria-live={paused ? "polite" : "off"}>{selected + 1} / {slides.length} · {t("Swipe to explore", "اسحب للاستكشاف")}</p>}
+      {footer}
     </section>
   );
 }

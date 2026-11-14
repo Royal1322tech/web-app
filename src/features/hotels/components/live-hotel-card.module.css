@@ -1,0 +1,88 @@
+/* Live hotel card: real API data only. Navy text, royal-blue actions, a thin gold accent. */
+.card {
+  --card-gold: #b7731e;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--rounded-xl);
+  background: var(--surface);
+  color: var(--navy);
+  box-shadow: var(--elevation-1);
+  transition: box-shadow var(--duration-fast, .15s) ease, border-color var(--duration-fast, .15s) ease, transform var(--duration-fast, .15s) ease;
+}
+.card:not([data-skeleton]):hover { border-color: color-mix(in srgb, var(--card-gold) 45%, var(--border)); box-shadow: var(--elevation-3); }
+.card::before { content: ""; position: absolute; inset-block-start: 0; inset-inline: 0; z-index: 1; height: 3px; background: linear-gradient(90deg, var(--card-gold), color-mix(in srgb, var(--card-gold) 30%, transparent)); opacity: 0; transition: opacity .15s ease; }
+.card:hover::before { opacity: 1; }
+
+.media { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: #e9eef5; }
+.media img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.placeholder {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--space-2);
+  height: 100%;
+  background:
+    radial-gradient(circle at 80% 15%, color-mix(in srgb, var(--card-gold) 22%, transparent), transparent 45%),
+    linear-gradient(145deg, #0b2545, #123a6b);
+  color: #dbe6f3;
+  font-size: var(--font-size-sm);
+  font-weight: var(--weight-semibold);
+}
+.placeholder svg { width: 34px; height: 34px; color: #f0c78a; }
+
+.body { display: flex; flex: 1; flex-direction: column; gap: var(--space-2); padding: var(--space-4) var(--space-5) var(--space-3); }
+.stars { display: inline-flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--card-gold); }
+.stars > span:first-child { display: inline-flex; gap: 1px; }
+.stars svg { width: 14px; height: 14px; fill: currentColor; }
+.starText { color: var(--muted); font-size: var(--font-size-xs); font-weight: var(--weight-semibold); }
+.name { margin: 0; font-size: var(--font-size-lg); font-weight: var(--weight-bold); line-height: 1.3; overflow-wrap: anywhere; }
+.name[data-missing] { color: var(--muted); font-style: italic; font-weight: var(--weight-semibold); }
+.address { display: flex; align-items: flex-start; gap: 6px; margin: 0; color: var(--muted); font-size: var(--font-size-md); line-height: 1.45; overflow-wrap: anywhere; }
+.address svg { flex: none; width: 15px; height: 15px; margin-block-start: 2px; color: var(--brand-teal); }
+
+.facts { display: flex; flex-wrap: wrap; gap: 6px; margin: var(--space-1) 0 0; padding: 0; list-style: none; }
+.facts li { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: var(--rounded-pill); background: #f1f5fa; color: #34485f; font-size: var(--font-size-xs); font-weight: var(--weight-semibold); }
+.facts li[data-tone="positive"] { background: #e8f5ef; color: var(--success); }
+.facts svg { width: 13px; height: 13px; }
+
+.rooms { margin-block-start: var(--space-2); padding-block-start: var(--space-3); border-block-start: 1px dashed var(--border); }
+.rooms ul { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.rooms li { display: grid; gap: 2px; }
+.roomName { font-size: var(--font-size-md); font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
+.roomMeta { color: var(--muted); font-size: var(--font-size-sm); overflow-wrap: anywhere; }
+.rooms details { margin-block-start: var(--space-2); }
+.rooms details ul { margin-block-start: var(--space-2); }
+.rooms summary { display: inline-flex; align-items: center; min-height: 32px; color: var(--primary); font-size: var(--font-size-sm); font-weight: var(--weight-bold); cursor: pointer; }
+.rooms summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
+
+.footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-3); margin-block-start: auto; padding: var(--space-3) var(--space-5) var(--space-4); border-block-start: 1px solid #edf1f6; background: #fbfcfe; }
+.price { display: grid; gap: 1px; min-width: 0; }
+.price strong { font-size: var(--font-size-lg); font-weight: var(--weight-heavy); }
+.price small { color: var(--muted); font-size: var(--font-size-xs); }
+.price .noPrice { color: var(--navy); font-size: var(--font-size-md); font-weight: var(--weight-bold); }
+.status { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border: 1px solid #e3d4bf; border-radius: var(--rounded-pill); background: #fdf8f1; color: #7a4c12; font-size: var(--font-size-xs); font-weight: var(--weight-bold); white-space: nowrap; }
+.status[data-bookable] { border-color: #bfe0d1; background: #eef8f3; color: var(--success); }
+.status svg { width: 13px; height: 13px; }
+
+/* Compact (home carousels). */
+.card[data-variant="compact"] .body { padding: var(--space-3) var(--space-4) var(--space-2); }
+.card[data-variant="compact"] .name { font-size: var(--font-size-base); }
+.card[data-variant="compact"] .address span { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.card[data-variant="compact"] .footer { padding: var(--space-3) var(--space-4); }
+
+/* Skeleton. */
+.line { display: block; height: 12px; border-radius: 6px; }
+.lineLg { height: 18px; }
+.shimmer { background: linear-gradient(90deg, #edf1f6 25%, #f7f9fc 50%, #edf1f6 75%); background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite; }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .shimmer { animation: none; } .card { transition: none; } }
+
+@media (max-width: 380px) {
+  .body { padding-inline: var(--space-4); }
+  .footer { padding-inline: var(--space-4); }
+}

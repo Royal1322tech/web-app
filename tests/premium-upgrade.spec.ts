@@ -64,7 +64,8 @@ test.describe("car rental", () => {
     await expect(page.getByRole("heading", { name: "Self-Drive Rental", exact: true })).toHaveCount(0);
     await expect(page.getByLabel("Pickup location")).toBeVisible();
     const cards = page.locator(".rental-service-card");
-    await expect(cards.locator("strong")).toHaveText(["Self-Drive Rental", "Airport Transfers", "Private Chauffeur"]);
+    // Private Chauffeur opened the same enquiry as Airport Transfers, so only two services are listed.
+    await expect(cards.locator("strong")).toHaveText(["Self-Drive Rental", "Airport Transfers"]);
     await cards.filter({ hasText: "Airport Transfers" }).click();
     await expect(page).toHaveURL(/\/contact\?subject=airport-transfers$/);
     await expect(page.locator(".rental-service-badge").first()).toHaveText("Airport Transfers");
@@ -72,9 +73,7 @@ test.describe("car rental", () => {
     await expect(page.getByRole("alert").first()).toBeVisible();
     await page.getByRole("link", { name: "Back to Services" }).click();
     await expect(page).toHaveURL(/\/car-rental$/);
-    await page.locator(".rental-service-card").filter({ hasText: "Private Chauffeur" }).click();
-    await expect(page.locator(".rental-service-badge").first()).toHaveText("Private Chauffeur");
-    await visit(page, "/car-rental");
+    await expect(page.locator(".rental-service-card").filter({ hasText: "Private Chauffeur" })).toHaveCount(0);
     await page.locator(".rental-service-card").filter({ hasText: "Self-Drive Rental" }).click();
     await expect(page).toHaveURL(/\/car-rental\/search/);
     // Old links keep working.
@@ -162,11 +161,11 @@ test.describe("car rental", () => {
   });
 
   for (const [width, locale] of [[1440, "en"], [390, "ar"]] as const) {
-    test(`page has three service cards and no overflow at ${width}px ${locale}`, async ({ page }) => {
+    test(`page has two service cards and no overflow at ${width}px ${locale}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await page.addInitScript((value) => localStorage.setItem("royal-vacation.locale", value), locale);
       await visit(page, "/car-rental");
-      await expect(page.locator(".rental-service-card")).toHaveCount(3);
+      await expect(page.locator(".rental-service-card")).toHaveCount(2);
       await noOverflow(page);
     });
   }

@@ -59,41 +59,100 @@ How each field is filled:
 
 The mapper returns nothing, and no request is sent, when a value is missing or out of range.
 
-## Reply handling
+## Reply
+
+The success reply was confirmed by the backend team on 2026-11-14:
+
+```json
+{
+  "success": true,
+  "code": "HOTEL_SEARCH_PREVIEW",
+  "message": "Hotel availability preview. Prices are not yet verified.",
+  "data": {
+    "hotels": [{ "result_index": 0, "name": "…", "address": "…", "stars": 4, "image": null,
+      "rooms": [{ "room_name": "…", "meal_name": "breakfast", "has_breakfast": true, "bedding_type": null, "selling_price": null, "booking_enabled": false }],
+      "pricing_status": "unverified", "booking_enabled": false }],
+    "total": 88, "page": 1, "per_page": 20, "currency": "USD", "supplier_currency": "USD",
+    "pricing_verified": false, "booking_enabled": false
+  }
+}
+```
+
+`parseB2BHotelSearch` (`src/features/hotels/api/b2b-hotel-search.ts`) parses it:
+- **Required:** `success: true`, `data.hotels`, `total`, `page` and `per_page`. Anything else is treated as an unreadable reply.
+- **Per hotel:** each field is read on its own. A missing field, or one with an unexpected type, becomes `null` and is never filled in, so one odd record doesn't hide the others.
+- **Not kept:** `supplier_currency`, and the server's `message`, which is never shown.
+- **`result_index`:** a position in the result set, not a hotel ID.
+
+## Hotel cards
+
+`LiveHotelCard` (`src/features/hotels/components/live-hotel-card.tsx`) shows only what the reply contains:
+
+| Field | Shown as |
+|---|---|
+| `image` | A 16:10 photo when it is an `https` URL. A supplier `{size}` placeholder is filled with `640x400`. A missing, non-https or broken image shows a branded "No photo available" panel. |
+| `stars` | Gold stars and "4-star". This is the hotel's star classification, not a guest rating. Missing or 0 shows nothing. |
+| `name`, `address` | As sent. A missing name reads "Hotel name not provided"; a missing address is left out. |
+| `rooms` | The number of distinct room options (duplicates counted once), "Breakfast available" when any room has breakfast, and the first three rooms with meal and bedding. More rooms sit behind "Show N more". |
+| Price | Shown only when `pricing_verified` is true, the hotel's `pricing_status` is `"verified"`, a selling `currency` is given and a room has a numeric `selling_price`. Then "From" the lowest price; otherwise "Price unavailable". |
+| Booking | "Booking unavailable" unless both the search and the hotel set `booking_enabled`. Even then there is no booking button, only "Contact us to book", because no booking flow exists. |
+
+There are no review scores, amenities, discounts or details links.
+
+## Results page
+
+- **Summary:** "88 hotels in Dubai · Page 1 of 5", plus an availability-preview note while prices are unverified.
+- **States:** a skeleton grid while loading, an empty state, and the error states below.
+- **Filters:** name or address, minimum stars, and breakfast. They filter the loaded page only, and say so. There is no price filter while prices are unverified.
 
 | Reply | Screen | Retry |
 |---|---|---|
-| Waiting | "Searching hotels…" with a loading placeholder | n/a |
-| `{success: true, data: {hotels, total}}` with `total` 0 | "No hotels found" | No |
-| The same envelope with `total` > 0 | "N hotels found". Hotel details aren't shown yet (see below). | No |
-| 401 | The API client ends the session and returns to sign-in | No |
+| `total` 0 | "No hotels found" | No |
+| 401 | The session ends and returns to sign-in | No |
 | 403 | "Hotel search isn't enabled for your account" | No |
 | 422 | "Check your search" | No |
 | 429 | "Too many searches" | Yes |
 | `code: HOTEL_SUPPLIER_UNAVAILABLE` | "Hotel search is unavailable" | Yes |
 | `code: HOTEL_SEARCH_NOT_READY` | "Search results aren't ready" | Yes |
 | Network failure or 60-second timeout | Its own message | Yes |
-| Any other reply, including a 2xx in an unknown shape | "Results can't be displayed" | Yes |
+| 5xx or an unreadable reply | Its own message | Yes |
 
-Server wording is never shown. Sample hotels are never shown in this mode, including after a failure.
+Sample hotels are never shown in this mode, including after a failure.
 
-**Hotel cards are not rendered yet.** The fields of each hotel in a successful B2B reply are unknown, so no name, image, price, availability or booking button is read or invented. This also means no price is shown unless pricing is verified, and no booking is offered unless booking is enabled: nothing priced or bookable is displayed at all until the reply format is confirmed.
+## Pagination
 
-**Access:** the search page sits behind the session gate. Signed-out visitors go to sign-in and no search is sent. There is no public (B2C) search page.
+- **Page 1:** the confirmed search body exactly.
+- **Later pages:** the same full body plus `page` and `per_page` (from the first reply).
+- **Controls:** Previous and Next with "Page X of Y", from `ceil(total / per_page)`. Both buttons are disabled while a page loads, so replies can't arrive out of order.
+- **Cache:** pages already loaded are kept, so going back sends nothing.
+- **New criteria:** any change starts again at page 1.
+- **Not yet verified on staging:** whether the backend honours `page`. The frontend checks every reply. If a later page comes back with a different `page`, or a 422 on `page`/`per_page`, it says "Only the first page of results can be shown for this search" and stays on page 1, so it never repeats hotels or claims more pages.
+
+## Home page
+
+In builds with this mode, the two home hotel sections use one default search, shared by both sections and sent once per visit:
+- **Default search:** Dubai, check-in 30 days from today for 3 nights, 2 adults, the user's nationality, language and supported currency. It is kept apart from the user's own searches.
+- **"A world of stays":** the first 10 hotels in the existing carousel. The caption states the destination, dates and guests, and links to "See all N hotels".
+- **"Explore more stays":** this replaces "Stay At Best Hotels", because the default search is not a ranking. It shows the next 8 hotels, plus links that run a search for each destination.
+- **Errors:** a failed default search shows its message with Retry, and no sample hotels.
+
+**Signed-out visitors** see the public welcome screen with sign-in and registration choices. There is no public hotel endpoint (the API collection lists only auth, registration, B2C search and B2B search), so no hotel request is sent and no company token is ever embedded.
+
+**Access:** the search and home pages sit behind the session gate.
 
 ## Confirmed and unconfirmed
 
-Confirmed on staging (2026-11-14, without credentials):
-- The endpoint accepts POST only. GET returns 405.
-- Without a token, or with an invalid one, it returns 401 `{"message":"Unauthenticated."}`, before any validation.
-- CORS allows `https://staging.royalis.tech` with the `Authorization`, `Content-Type` and `X-Locale` headers. Local origins are not allowed.
+Confirmed:
+- **Endpoint and auth:** `POST` only, and a Sanctum Bearer token is required (401 without one).
+- **CORS:** the staging site is allowed.
+- **Reply shape:** as above.
 
-Needs a signed-in company account or the backend team:
-1. **Request validation:** the B2B rules. Does it use the same fields, formats and limits as above (residency case, radius range, currencies, rooms 1–9, adults 1–6, children 0–17 and at most 4)?
-2. **Success reply:** a real example. Each hotel's fields (ID, name, address, coordinates, images, rating), the price fields and currency, pagination, and where `pricing_verified` and `booking_enabled` appear.
-3. **Error codes:** supplier entitlement errors (status and `code`), plus the status used for `HOTEL_SEARCH_NOT_READY`.
-4. **Rate limit:** the B2B search limit per window.
-5. **Permission:** whether a company needs a specific permission (for example `hotels.view`), and what is returned without it.
+Still to confirm with a signed-in account:
+1. Whether `page` and `per_page` are accepted and honoured. The frontend detects either answer, as described above.
+2. The B2B validation rules (residency case, radius range, currencies, room and guest limits).
+3. The `selling_price` format once prices are verified. Only a plain number is read today.
+4. The `pricing_status` value for verified prices. `"verified"` is assumed and needs confirming.
+5. Error codes for supplier entitlement, and the status used for `HOTEL_SEARCH_NOT_READY`.
 
 ## Testing with a real staging account (local only)
 

@@ -9,6 +9,8 @@ import { HotelSearchForm } from "./hotel-search-form";
 import { FeaturedDeals } from "./featured-deals";
 import { PartnerBenefits } from "./partner-benefits";
 import { HotelCollection } from "./hotel-collection";
+import { LiveFeaturedHotels, LiveHotelCollection } from "./live-home-hotels";
+import { apiHotelSearchEnabled } from "@/features/hotels/hotel-search-config";
 import styles from "../home.module.css";
 
 export function HomeScreen() {
@@ -21,7 +23,8 @@ export function HomeScreen() {
         <Hero slides={homeHeroSlides} />
         <HotelSearchForm />
         <Reveal>
-          <FeaturedDeals />
+          {/* Live builds show hotels from the B2B search; demo builds keep the labelled samples. */}
+          {apiHotelSearchEnabled ? <LiveFeaturedHotels /> : <FeaturedDeals />}
         </Reveal>
         <Reveal>
           <PartnerBenefits />
@@ -29,7 +32,7 @@ export function HomeScreen() {
         <Reveal><ProductsServices /></Reveal>
         <Reveal><PlatformStrengths /></Reveal>
         <Reveal>
-          <HotelCollection hotels={collectionHotels} />
+          {apiHotelSearchEnabled ? <LiveHotelCollection /> : <HotelCollection hotels={collectionHotels} />}
         </Reveal>
       </main>
       <SiteFooter />
