@@ -48,6 +48,15 @@ test.describe("hero carousels", () => {
   test("Car Rental rotates about every 4000ms without shifting and can pause", async ({ page }) => {
     await visit(page, "/car-rental");
     const hero = page.locator(".rental-hero--carousel");
+    // Measure the resting layout: the route entrance can still be on its last sub-pixel frame here.
+    // Only animations on the hero or its ancestors can move it; the carousel's own slide fades are ignored.
+    await page.waitForFunction(() => {
+      const heroElement = document.querySelector(".rental-hero--carousel");
+      return !!heroElement && document.getAnimations().every((animation) => {
+        const target = (animation.effect as KeyframeEffect | null)?.target;
+        return animation.playState !== "running" || !(target instanceof Element && target.contains(heroElement));
+      });
+    });
     const before = await hero.boundingBox();
     const interval = await measureInterval(page, ".rental-hero__slide");
     expect(interval).toBeGreaterThan(3700);

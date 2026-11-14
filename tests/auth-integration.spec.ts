@@ -231,7 +231,7 @@ test.describe("API mode", () => {
 
   for (const [label, reply, message] of [
     ["invalid credentials", { status: 422, json: { message: "Invalid credentials or account not activated.", errors: { email: ["Invalid credentials or account not activated."] } } }, "Incorrect email or password, or the account isn't activated yet."],
-    ["an unapproved company", { status: 422, json: { message: "x", errors: { email: ["Company is not approved or account is inactive."] } } }, "This company isn't approved yet, or the account is inactive."],
+    ["an unapproved company", { status: 422, json: { message: "x", errors: { email: ["Company is not approved or account is inactive."] } } }, "We couldn't sign you in to this company. Check the Company ID from your registration. If it's correct, the company or your access to it isn't active yet."],
     ["an invalid company ID", { status: 422, json: { message: "x", errors: { company_id: ["The company id field must be a valid UUID."] } } }, null],
     ["too many attempts", { status: 429, json: { message: "Too Many Attempts." } }, "Too many attempts. Wait a minute, then try again."],
     ["a code that couldn't be sent", { status: 503, json: { message: "Unable to send verification code. Please try again later." } }, "We couldn't send the verification code. Please try again later."],
@@ -250,6 +250,32 @@ test.describe("API mode", () => {
       await expect(page.locator("main")).not.toContainText(/must be a valid UUID|Too Many Attempts\.|Unauthenticated\./);
     });
   }
+
+  test("a refused company login stores no challenge and sends no code, and is explained in Arabic too", async ({ page }) => {
+    const refused = { status: 422, json: { message: "Company is not approved or account is inactive.", errors: { email: ["Company is not approved or account is inactive."] } } };
+    const api = await mockApi(page, { "POST /b2b/auth/login": () => refused });
+    await page.goto("/login");
+    await fillCredentials(page);
+    await expect(page.getByRole("status")).toContainText("Check the Company ID");
+    expect(await page.evaluate(() => sessionStorage.getItem("royal-travel.login-challenge.v1"))).toBeNull();
+    expect(api.called("POST /b2b/auth/verify-otp")).toHaveLength(0);
+    await selectLanguage(page, "ar");
+    await fillCredentials(page);
+    await expect(page.getByRole("status")).toHaveText("تعذر تسجيل دخولك إلى هذه الشركة. تحقق من معرّف الشركة من تسجيلك. إذا كان صحيحًا، فإن الشركة أو صلاحية وصولك إليها غير مفعّلة بعد.");
+    await expect(page).toHaveURL(/\/login$/);
+  });
+
+  test("the company ID is sent in lower case and a successful login opens the code page with the API's challenge", async ({ page }) => {
+    const api = await mockApi(page, { "POST /b2b/auth/login": ok.login });
+    await page.goto("/login");
+    await fillCredentials(page, { company: COMPANY.toUpperCase() });
+    await expect(page).toHaveURL(/\/login\/verify-otp$/);
+    expect(api.called("POST /b2b/auth/login")[0].request.postDataJSON()).toMatchObject({ company_id: COMPANY, channel: "website" });
+    const stored = JSON.parse((await page.evaluate(() => sessionStorage.getItem("royal-travel.login-challenge.v1")))!);
+    expect(stored.challengeId).toBe(CHALLENGE);
+    expect(stored.expiresAt - Date.now()).toBeGreaterThan(290_000);
+    expect(JSON.stringify(stored)).not.toMatch(/password/i);
+  });
 
   test("client validation stops bad input before any request", async ({ page }) => {
     const api = await mockApi(page, {});

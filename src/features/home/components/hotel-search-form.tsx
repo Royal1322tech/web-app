@@ -14,7 +14,8 @@ import {
   type HotelSearchCriteria,
   type HotelSearchFormValues,
 } from "../schemas/hotel-search.schema";
-import { sampleDestinations } from "../data/hotels.fixture";
+import { searchDestinations } from "@/features/hotels/data/destinations";
+import { apiHotelSearchEnabled } from "@/features/hotels/hotel-search-config";
 import { RoomSelector } from "./room-selector";
 import styles from "../home.module.css";
 
@@ -140,17 +141,9 @@ export function HotelSearchForm({
                   <option value="">
                     {t("Select destination", "اختر الوجهة")}{" "}
                   </option>
-                  {sampleDestinations.map((city) => (
-                    <option key={city} value={city}>
-                      {t(
-                        city,
-                        {
-                          Alexandria: "الإسكندرية",
-                          Cairo: "القاهرة",
-                          Hurghada: "الغردقة",
-                          "Sharm El Sheikh": "شرم الشيخ",
-                        }[city],
-                      )}
+                  {searchDestinations.map((city) => (
+                    <option key={city.id} value={city.id}>
+                      {t(city.name.en, city.name.ar)}
                     </option>
                   ))}
                 </select>
@@ -236,7 +229,7 @@ export function HotelSearchForm({
           </form>
         </FormProvider>
         <div role="status" className={styles.searchNotice}>
-          {notice &&
+          {notice && !apiHotelSearchEnabled &&
             t(
               "Illustrative listings · confirm availability with the supplier.",
               "فنادق توضيحية · يرجى تأكيد التوافر مع المورد.",

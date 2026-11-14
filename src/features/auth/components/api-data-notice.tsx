@@ -1,8 +1,15 @@
 import { useLocation } from "react-router-dom";
 import { useLocale } from "@/features/localization/locale-provider";
+import { apiHotelSearchEnabled } from "@/features/hotels/hotel-search-config";
 
 /** Pages whose content comes from the signed-in account. Everything else still shows sample data. */
-const connected: Record<string, "live" | "partial"> = { "/profile": "live", "/agency": "partial", "/agency/edit": "partial" };
+const connected: Record<string, "live" | "partial"> = {
+  "/profile": "live",
+  "/agency": "partial",
+  "/agency/edit": "partial",
+  // Hotel search results come from the company hotel search API in builds that enable it.
+  ...(apiHotelSearchEnabled ? { "/search": "live" as const } : {}),
+};
 
 /** Real sign-in builds only: says plainly which pages aren't connected to the account yet. */
 export function ApiDataNotice() {

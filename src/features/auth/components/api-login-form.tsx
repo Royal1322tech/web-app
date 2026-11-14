@@ -50,7 +50,10 @@ export function ApiLoginForm() {
       const fields = error.fieldErrors;
       if (fields.company_id) return { errors: { companyId: t("Check the company ID.", "تحقق من معرّف الشركة.") } };
       const message = fields.email?.[0] ?? "";
-      if (/not approved|inactive/i.test(message)) return { notice: t("This company isn't approved yet, or the account is inactive.", "هذه الشركة غير معتمدة بعد، أو أن الحساب غير نشط.") };
+      // "Company is not approved or account is inactive." The backend sends this after the password
+      // check when the user has no active, approved membership in the submitted company. That
+      // includes a Company ID the user doesn't belong to, so the Company ID is named first.
+      if (/not approved|inactive/i.test(message)) return { notice: t("We couldn't sign you in to this company. Check the Company ID from your registration. If it's correct, the company or your access to it isn't active yet.", "تعذر تسجيل دخولك إلى هذه الشركة. تحقق من معرّف الشركة من تسجيلك. إذا كان صحيحًا، فإن الشركة أو صلاحية وصولك إليها غير مفعّلة بعد.") };
       return { notice: t("Incorrect email or password, or the account isn't activated yet.", "البريد الإلكتروني أو كلمة المرور غير صحيحة، أو أن الحساب غير مفعّل بعد.") };
     }
     if (error.kind === "forbidden") return { notice: t("Your company access is no longer active.", "لم يعد وصول شركتك نشطًا.") };
@@ -66,7 +69,8 @@ export function ApiLoginForm() {
     const values = new FormData(event.currentTarget);
     const email = values.get("username")?.toString().trim() ?? "";
     const password = values.get("password")?.toString() ?? "";
-    const companyId = values.get("companyId")?.toString().trim() ?? "";
+    // UUIDs are case-insensitive; the canonical lower-case form is sent.
+    const companyId = values.get("companyId")?.toString().trim().toLowerCase() ?? "";
     const next: Errors = {};
     if (!emailRef.current?.validity.valid) next.email = t("Enter a valid email.", "أدخل بريدًا إلكترونيًا صحيحًا.");
     if (!password) next.password = t("Enter your password.", "أدخل كلمة المرور.");

@@ -2,6 +2,7 @@ node_modules/
 dist/
 # Extra builds used only by the authentication tests.
 dist-auth-*/
+dist-hotel-api/
 
 .env*
 !.env.example

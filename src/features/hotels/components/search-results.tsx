@@ -16,9 +16,14 @@ import { Comparison } from "./comparison";
 import { EventDistance, HotelMapView } from "./hotel-map-view";
 import { eventDistanceKm, sortByEventDistance } from "../lib/event-proximity";
 import type { GeoPoint } from "../lib/geo";
+import { apiHotelSearchEnabled } from "../hotel-search-config";
+import { ApiSearchResults } from "./api-search-results";
 import styles from "../hotels.module.css";
 export function SearchResults() {
   const [query, setQuery] = useSearchParams();
+  if (apiHotelSearchEnabled) {
+    return <ApiSearchResultsContent key={query.toString()} query={query} onSearch={(criteria) => setQuery(stayQuery(criteria))} />;
+  }
   return (
     <SearchResultsContent
       key={query.toString()}
@@ -26,6 +31,22 @@ export function SearchResults() {
       onSearch={(criteria) => setQuery(stayQuery(criteria))}
       onReset={() => setQuery(new URLSearchParams())}
     />
+  );
+}
+/** API mode: the same page heading and search form, with live results instead of the sample catalogue. */
+function ApiSearchResultsContent({ query, onSearch }: { query: Pick<URLSearchParams, "get">; onSearch: (criteria: HotelSearchCriteria) => void }) {
+  const { t } = useLocale();
+  const [criteria] = useState(() => readStayQuery(query));
+  return (
+    <CatalogShell title={t("Search", "بحث")}>
+      <h1>{t("Hotel Search Results", "نتائج البحث عن الفنادق")}</h1>
+      <CollapsibleSearch criteria={criteria}>
+        {(close) => <HotelSearchForm compact initialValues={criteria} onSearch={(next) => { close(); onSearch(next); }} />}
+      </CollapsibleSearch>
+      <section id="api-hotel-results" aria-label={t("Hotel results", "نتائج الفنادق")}>
+        <ApiSearchResults criteria={criteria} />
+      </section>
+    </CatalogShell>
   );
 }
 function SearchResultsContent({

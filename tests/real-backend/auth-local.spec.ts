@@ -103,7 +103,7 @@ test("an incorrect password sends no email", async ({ page }) => {
 test("a company the user doesn't belong to is refused", async ({ page }) => {
   await page.goto("/login");
   await submitCredentials(page, { companyId: "00000000-0000-4000-8000-000000000000" });
-  await expect(page.getByRole("status")).toHaveText("This company isn't approved yet, or the account is inactive.");
+  await expect(page.getByRole("status")).toHaveText("We couldn't sign you in to this company. Check the Company ID from your registration. If it's correct, the company or your access to it isn't active yet.");
   expect((await (await page.request.get(`${mailpit}/api/v1/messages`)).json()).total).toBe(0);
 });
 
@@ -174,6 +174,6 @@ test("registration creates a pending company that can't sign in before approval"
   // A pending company is refused at sign-in, and no code is emailed.
   await page.goto("/login");
   await submitCredentials(page, { email: `registration.${unique}@royal-dev.test`, password: newPassword, companyId: newCompany });
-  await expect(page.getByRole("status")).toHaveText("This company isn't approved yet, or the account is inactive.");
+  await expect(page.getByRole("status")).toHaveText("We couldn't sign you in to this company. Check the Company ID from your registration. If it's correct, the company or your access to it isn't active yet.");
   expect((await (await page.request.get(`${mailpit}/api/v1/messages`)).json()).total).toBe(0);
 });

@@ -32,7 +32,7 @@ Source of truth for routes: the "Api-collection" Hoppscotch export (8 requests).
 | 5 | `POST /api/v1/b2b/auth/logout` | `{"message":"Unauthenticated."}` without a token | Connected in API mode |
 | 6 | `GET /api/v1/b2b/me` | `{"message":"Unauthenticated."}` without a token | Connected in API mode |
 | 7 | `POST /api/v1/b2c/hotels/search` | Required: `checkin`, `checkout` (`Y-m-d`, checkout after checkin); `latitude` (−90..90), `longitude` (−180..180); `residency` (2 characters); `guests` (array, one item per room: `adults` integer required, `children` array present) | Request mapper only (`src/features/hotels/api/b2c-hotel-search.ts`); not sent, because the response format is unknown |
-| 8 | `POST /api/v1/b2b/hotels/search` | `{"message":"Unauthenticated."}` without a token, so its validation rules can't be read | Not connected |
+| 8 | `POST /api/v1/b2b/hotels/search` | 401 `{"message":"Unauthenticated."}` without a token, so its validation rules can't be read | Connected behind `VITE_HOTEL_SEARCH_MODE=api` with the company Bearer token. The Geo Search body follows the B2B specification. Hotel cards wait for a confirmed reply format. See `docs/b2b-hotel-search.md`. |
 
 The response formats for login, verify-otp, me, logout and register come from backend source `8da6604`. None has been observed live, because no test account exists.
 

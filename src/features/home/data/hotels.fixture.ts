@@ -23,7 +23,6 @@ export const collectionHotels: readonly Hotel[] = [
   amenities: ["Pool", "Gym", "Food", "Spa"],
 }));
 
-export const sampleDestinations = ["Alexandria", "Cairo", "Hurghada", "Sharm El Sheikh"] as const;
 
 
 // Reuse existing distinct catalogue fixtures, plus one existing collection sample.
