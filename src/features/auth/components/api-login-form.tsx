@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,23 @@ export function ApiLoginForm() {
   const navigate = useNavigate();
   const session = useB2BSession();
   const [busy, setBusy] = useState(false);
+  // Set synchronously, before any re-render, so Enter and a click (or a double click) can never
+  // send a second login request while one is in flight. Failed logins are never retried.
+  const pending = useRef(false);
+  // A 429 cooldown, only when the server says how long it lasts (Retry-After). Unknown otherwise.
+  const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (cooldownUntil === null) return;
+    const timer = setInterval(() => {
+      const current = Date.now();
+      setNow(current);
+      if (current >= cooldownUntil) setCooldownUntil(null);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldownUntil]);
+  const cooldownSeconds = cooldownUntil === null ? 0 : Math.max(0, Math.ceil((cooldownUntil - now) / 1000));
+  const coolingDown = cooldownSeconds > 0;
   const [errors, setErrors] = useState<Errors>({});
   const [notice, setNotice] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -57,7 +74,7 @@ export function ApiLoginForm() {
       return { notice: t("Incorrect email or password, or the account isn't activated yet.", "البريد الإلكتروني أو كلمة المرور غير صحيحة، أو أن الحساب غير مفعّل بعد.") };
     }
     if (error.kind === "forbidden") return { notice: t("Your company access is no longer active.", "لم يعد وصول شركتك نشطًا.") };
-    if (error.kind === "rate_limited") return { notice: t("Too many attempts. Wait a minute, then try again.", "محاولات كثيرة. انتظر دقيقة ثم حاول مرة أخرى.") };
+    if (error.kind === "rate_limited") return { notice: t("Too many sign-in attempts. Please wait before trying again.", "تم تجاوز عدد محاولات تسجيل الدخول المسموح بها. يُرجى الانتظار قبل المحاولة مرة أخرى.") };
     if (error.kind === "unavailable") return { notice: t("We couldn't send the verification code. Please try again later.", "تعذر إرسال رمز التحقق. يرجى المحاولة لاحقًا.") };
     if (error.kind === "network" || error.kind === "timeout") return { notice: t("We couldn't reach the sign-in service. Check your connection and try again.", "تعذر الوصول إلى خدمة تسجيل الدخول. تحقق من اتصالك وحاول مرة أخرى.") };
     return { notice: t("The sign-in service returned an unexpected response. Please try again later.", "أعادت خدمة تسجيل الدخول استجابة غير متوقعة. يرجى المحاولة لاحقًا.") };
@@ -65,7 +82,7 @@ export function ApiLoginForm() {
 
   async function submitCredentials(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (blocked || busy) return;
+    if (blocked || pending.current || coolingDown) return;
     const values = new FormData(event.currentTarget);
     const email = values.get("username")?.toString().trim() ?? "";
     const password = values.get("password")?.toString() ?? "";
@@ -80,6 +97,7 @@ export function ApiLoginForm() {
     if (next.email) return emailRef.current?.focus();
     if (next.password) return passwordRef.current?.focus();
     if (next.companyId) return companyRef.current?.focus();
+    pending.current = true;
     setBusy(true);
     try {
       const issued = await requestLoginCode({ email, password, companyId });
@@ -93,7 +111,13 @@ export function ApiLoginForm() {
       setErrors(result.errors ?? {});
       setNotice(result.notice ?? "");
       if (result.errors?.companyId) companyRef.current?.focus();
+      if (error instanceof ApiError && error.kind === "rate_limited" && error.retryAfterSeconds) {
+        const until = Date.now() + error.retryAfterSeconds * 1000;
+        setNow(Date.now());
+        setCooldownUntil(until);
+      }
     } finally {
+      pending.current = false;
       setBusy(false);
     }
   }
@@ -136,7 +160,7 @@ export function ApiLoginForm() {
           {t("Partner sign-in is being connected. How companies are identified at sign-in hasn't been finalised yet, so sign-in is unavailable for now.", "يجري ربط تسجيل دخول الشركاء. لم يُحدَّد بعد كيفية تعريف الشركات عند تسجيل الدخول، لذا تسجيل الدخول غير متاح حاليًا.")}
         </p>
       )}
-      <Button type="submit" disabled={blocked || busy} aria-describedby={blocked ? "login-unavailable" : undefined}>
+      <Button type="submit" disabled={blocked || busy || coolingDown} aria-describedby={blocked ? "login-unavailable" : coolingDown ? "login-cooldown" : undefined}>
         {busy ? t("Signing in…", "جارٍ تسجيل الدخول…") : t("Sign In", "تسجيل الدخول")}
       </Button>
       <div className="login-form__registration">
@@ -146,6 +170,11 @@ export function ApiLoginForm() {
       <p className="fine-print">{t("We'll email you a one-time code to finish signing in.", "سنرسل إليك رمزًا لمرة واحدة عبر البريد الإلكتروني لإكمال تسجيل الدخول.")}</p>
       <div role="status" aria-live="polite">
         {(notice || statusNotice) && <p className="availability-notice">{notice || statusNotice}</p>}
+        {coolingDown && (
+          <p id="login-cooldown" className="fine-print" data-login-cooldown>
+            {t("You can try again in", "يمكنك المحاولة مرة أخرى بعد")} <bdi dir="ltr">{Math.floor(cooldownSeconds / 60)}:{String(cooldownSeconds % 60).padStart(2, "0")}</bdi>
+          </p>
+        )}
       </div>
     </form>
   );

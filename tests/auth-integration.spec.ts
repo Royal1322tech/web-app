@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type Request } from "@playwright/test";
 import { selectLanguage } from "./helpers/header";
+import { parseRetryAfter } from "../src/lib/api/client";
 import { attachIdDocument, fillCompanyStep, samplePdf } from "./helpers/registration";
 
 /*
@@ -14,7 +15,7 @@ const CHALLENGE = "c56a4180-65aa-42ec-a945-5fd21dec0538";
 const TOKEN = "12|mocked-sanctum-token";
 const SESSION_KEY = "royal-travel.b2b-session.v1";
 
-type Reply = { status?: number; json?: unknown; abort?: boolean };
+type Reply = { status?: number; json?: unknown; abort?: boolean; headers?: Record<string, string> };
 type Handler = (request: Request) => Reply | Promise<Reply>;
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Accept, Authorization, Content-Type, X-Locale", "Access-Control-Allow-Methods": "GET, POST, OPTIONS" };
 
@@ -54,7 +55,7 @@ async function mockApi(page: Page, handlers: Record<string, Handler>) {
     }
     const reply = await handler(request);
     if (reply.abort) return route.abort("connectionrefused");
-    return route.fulfill({ status: reply.status ?? 200, headers: cors, json: reply.json ?? {} });
+    return route.fulfill({ status: reply.status ?? 200, headers: { ...cors, ...reply.headers }, json: reply.json ?? {} });
   });
   return { calls, unexpected, called: (key: string) => calls.filter((call) => call.key === key) };
 }
@@ -233,7 +234,7 @@ test.describe("API mode", () => {
     ["invalid credentials", { status: 422, json: { message: "Invalid credentials or account not activated.", errors: { email: ["Invalid credentials or account not activated."] } } }, "Incorrect email or password, or the account isn't activated yet."],
     ["an unapproved company", { status: 422, json: { message: "x", errors: { email: ["Company is not approved or account is inactive."] } } }, "We couldn't sign you in to this company. Check the Company ID from your registration. If it's correct, the company or your access to it isn't active yet."],
     ["an invalid company ID", { status: 422, json: { message: "x", errors: { company_id: ["The company id field must be a valid UUID."] } } }, null],
-    ["too many attempts", { status: 429, json: { message: "Too Many Attempts." } }, "Too many attempts. Wait a minute, then try again."],
+    ["too many attempts", { status: 429, json: { message: "Too Many Attempts." } }, "Too many sign-in attempts. Please wait before trying again."],
     ["a code that couldn't be sent", { status: 503, json: { message: "Unable to send verification code. Please try again later." } }, "We couldn't send the verification code. Please try again later."],
     ["a network failure", { abort: true }, "We couldn't reach the sign-in service. Check your connection and try again."],
     ["a malformed success response", { status: 200, json: { message: "Unauthenticated." } }, "The sign-in service returned an unexpected response. Please try again later."],
@@ -275,6 +276,109 @@ test.describe("API mode", () => {
     expect(stored.challengeId).toBe(CHALLENGE);
     expect(stored.expiresAt - Date.now()).toBeGreaterThan(290_000);
     expect(JSON.stringify(stored)).not.toMatch(/password/i);
+  });
+
+  test.describe("sign-in requests and rate limiting", () => {
+    const tooMany = (headers?: Record<string, string>): Reply => ({ status: 429, json: { message: "Too Many Attempts." }, headers });
+    const message = "Too many sign-in attempts. Please wait before trying again.";
+
+    test("one click sends exactly one login request", async ({ page }) => {
+      const api = await mockApi(page, { "POST /b2b/auth/login": ok.login });
+      await page.goto("/login");
+      await fillCredentials(page);
+      await expect(page).toHaveURL(/\/login\/verify-otp$/);
+      expect(api.called("POST /b2b/auth/login")).toHaveLength(1);
+    });
+
+    test("a double click, and Enter followed by a click, still send one request", async ({ page }) => {
+      let release!: () => void;
+      const held = new Promise<void>((resolve) => { release = resolve; });
+      const api = await mockApi(page, { "POST /b2b/auth/login": async () => { await held; return ok.login(); } });
+      await page.goto("/login");
+      await page.getByLabel(/^Email$/).fill("laila@example.com");
+      await page.getByLabel(/^Password$/, { exact: true }).fill("Correct-Horse-9!");
+      await page.getByLabel(/^Company ID$/).fill(COMPANY);
+      const button = page.getByRole("button", { name: /^(Sign In|Signing in…)$/ });
+      // Enter and a click land together, then a double click while the first request is pending.
+      await page.getByLabel(/^Company ID$/).press("Enter");
+      await button.click({ force: true }).catch(() => undefined);
+      await button.dblclick({ force: true }).catch(() => undefined);
+      await expect(page.getByRole("button", { name: "Signing in…" })).toBeDisabled();
+      release();
+      await expect(page).toHaveURL(/\/login\/verify-otp$/);
+      expect(api.called("POST /b2b/auth/login")).toHaveLength(1);
+    });
+
+    test("a 429 is never retried automatically, and without Retry-After shows no countdown", async ({ page }) => {
+      const api = await mockApi(page, { "POST /b2b/auth/login": () => tooMany() });
+      await page.goto("/login");
+      await fillCredentials(page);
+      await expect(page.getByRole("status").getByText(message)).toBeVisible();
+      await expect(page.locator("[data-login-cooldown]")).toHaveCount(0);
+      await expect(page.getByRole("button", { name: "Sign In" })).toBeEnabled();
+      await page.waitForTimeout(2000);
+      expect(api.called("POST /b2b/auth/login")).toHaveLength(1);
+      await expect(page).toHaveURL(/\/login$/);
+    });
+
+    test("a readable Retry-After shows a countdown and blocks Sign In until it ends", async ({ page }) => {
+      await page.clock.install();
+      const api = await mockApi(page, { "POST /b2b/auth/login": () => (api.called("POST /b2b/auth/login").length === 1 ? tooMany({ "Retry-After": "65", "Access-Control-Expose-Headers": "Retry-After" }) : ok.login()) });
+      await page.goto("/login");
+      await fillCredentials(page);
+      await expect(page.getByRole("status").getByText(message)).toBeVisible();
+      await expect(page.locator("[data-login-cooldown]")).toContainText("1:05");
+      const signIn = page.getByRole("button", { name: "Sign In" });
+      await expect(signIn).toBeDisabled();
+      await page.getByLabel(/^Company ID$/).press("Enter");
+      expect(api.called("POST /b2b/auth/login")).toHaveLength(1);
+      await page.clock.runFor(30_000);
+      await expect(page.locator("[data-login-cooldown]")).toContainText("0:35");
+      await page.clock.runFor(36_000);
+      await expect(page.locator("[data-login-cooldown]")).toHaveCount(0);
+      await expect(signIn).toBeEnabled();
+      await signIn.click();
+      await expect(page).toHaveURL(/\/login\/verify-otp$/);
+      expect(api.called("POST /b2b/auth/login")).toHaveLength(2);
+    });
+
+    test("a Retry-After the browser can't read (not exposed by CORS) falls back to the generic message", async ({ page }) => {
+      await mockApi(page, { "POST /b2b/auth/login": () => tooMany({ "Retry-After": "60" }) });
+      await page.goto("/login");
+      await fillCredentials(page);
+      await expect(page.getByRole("status").getByText(message)).toBeVisible();
+      await expect(page.locator("[data-login-cooldown]")).toHaveCount(0);
+      await expect(page.getByRole("button", { name: "Sign In" })).toBeEnabled();
+    });
+
+    test("Arabic: the rate-limit message and countdown, right to left", async ({ page }) => {
+      await page.clock.install();
+      await mockApi(page, { "POST /b2b/auth/login": () => tooMany({ "Retry-After": "30", "Access-Control-Expose-Headers": "Retry-After" }) });
+      await page.goto("/login");
+      await selectLanguage(page, "ar");
+      await fillCredentials(page);
+      await expect(page.getByText("تم تجاوز عدد محاولات تسجيل الدخول المسموح بها. يُرجى الانتظار قبل المحاولة مرة أخرى.")).toBeVisible();
+      await expect(page.locator("[data-login-cooldown]")).toContainText("يمكنك المحاولة مرة أخرى بعد");
+      await expect(page.locator("[data-login-cooldown]")).toContainText("0:30");
+      await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+    });
+
+    for (const width of [320, 768, 1440]) {
+      test(`rate-limit message fits at ${width}px`, async ({ page }) => {
+        await page.setViewportSize({ width, height: 900 });
+        await mockApi(page, { "POST /b2b/auth/login": () => tooMany({ "Retry-After": "45", "Access-Control-Expose-Headers": "Retry-After" }) });
+        await page.goto("/login");
+        await fillCredentials(page);
+        await expect(page.locator("[data-login-cooldown]")).toBeVisible();
+        expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+      });
+    }
+  });
+
+  test("Retry-After parsing", () => {
+    expect(parseRetryAfter("65")).toBe(65);
+    expect(parseRetryAfter(new Date(Date.UTC(2030, 0, 1, 0, 1, 30)).toUTCString(), Date.UTC(2030, 0, 1, 0, 0, 0))).toBe(90);
+    for (const value of [null, "", "soon", "0", "-5", "99999"]) expect(parseRetryAfter(value)).toBeUndefined();
   });
 
   test("client validation stops bad input before any request", async ({ page }) => {

@@ -106,7 +106,6 @@ function SeeAll({ criteria, total }: { criteria: HotelSearchCriteria; total: num
 export function LiveHotelCollection() {
   const { t } = useLocale();
   const navigate = useNavigate();
-  const date = useDates();
   const { state, criteria, destination } = useDefaultHotelSearch();
   const [choice, setChoice] = useState(destination.id);
   const city = t(destination.name.en, destination.name.ar);
@@ -121,18 +120,14 @@ export function LiveHotelCollection() {
       ? Array.from({ length: 4 }, (_, index) => ({ key: `skeleton-${index}`, render: () => <LiveHotelCardSkeleton variant="compact" /> }))
       : [];
 
-  const note = (
-    <p className={styles.sampleNote} role="status" data-live-scope>
+  // No line under the toolbar while hotels load or show; only a problem is explained there.
+  const note = state.status === "error" || (state.status === "done" && strip.length === 0) ? (
+    <p className={styles.sampleNote} role="status">
       {state.status === "error"
         ? t("Hotels couldn't be loaded right now. Use the search above to try again.", "تعذر تحميل الفنادق حاليًا. استخدم البحث أعلاه للمحاولة مرة أخرى.")
-        : state.status === "done" && strip.length === 0
-          ? t("No hotels found for these dates. Choose a destination to search.", "لم يتم العثور على فنادق لهذه التواريخ. اختر وجهة للبحث.")
-          : t(
-              `Available in ${city}, ${date(criteria.checkIn)} – ${date(criteria.checkOut)}, 2 adults · prices not yet verified`,
-              `المتاح في ${city}، ${date(criteria.checkIn)} – ${date(criteria.checkOut)}، شخصان بالغان · الأسعار غير مؤكدة بعد`,
-            )}
+        : t("No hotels found for these dates. Choose a destination to search.", "لم يتم العثور على فنادق لهذه التواريخ. اختر وجهة للبحث.")}
     </p>
-  );
+  ) : null;
 
   return (
     <div data-live-home="collection" data-search-state={state.status === "done" ? (strip.length ? "results" : "empty") : state.status === "error" ? state.failure : "loading"}>

@@ -24,6 +24,12 @@ export class ApiError extends Error {
     public readonly fieldErrors: Readonly<Record<string, readonly string[]>> = {},
     /** Machine-readable `code` from the error body, such as HOTEL_SUPPLIER_UNAVAILABLE. */
     public readonly code?: string,
+    /**
+     * For a 429: seconds until the server accepts requests again, from its Retry-After header. Only
+     * set when the browser can read the header (cross-origin, the API must expose it); otherwise
+     * undefined, and the wait is unknown.
+     */
+    public readonly retryAfterSeconds?: number,
   ) {
     super(`API request failed: ${kind}${status ? ` (${status})` : ""}.`);
     this.name = "ApiError";
@@ -78,6 +84,14 @@ function errorCodeOf(data: unknown): string | undefined {
   return typeof code === "string" && /^[A-Z0-9_]{1,64}$/.test(code) ? code : undefined;
 }
 
+/** Retry-After as delay-seconds or an HTTP date; undefined when missing, unreadable or unreasonable. */
+export function parseRetryAfter(value: string | null, now = Date.now()): number | undefined {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  const seconds = /^\d+$/.test(trimmed) ? Number(trimmed) : Math.ceil((Date.parse(trimmed) - now) / 1000);
+  return Number.isFinite(seconds) && seconds > 0 && seconds <= 3600 ? seconds : undefined;
+}
+
 function errorKindFor(status: number): ApiErrorKind {
   if (status === 401) return "unauthorized";
   if (status === 403) return "forbidden";
@@ -130,7 +144,13 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions<T>)
 
   if (!response.ok) {
     if (response.status === 401 && options.token) unauthorizedHandler?.();
-    throw new ApiError(errorKindFor(response.status), response.status, response.status === 422 ? fieldErrorsOf(data) : {}, errorCodeOf(data));
+    throw new ApiError(
+      errorKindFor(response.status),
+      response.status,
+      response.status === 422 ? fieldErrorsOf(data) : {},
+      errorCodeOf(data),
+      response.status === 429 ? parseRetryAfter(response.headers.get("Retry-After")) : undefined,
+    );
   }
   if (data === undefined) throw new ApiError("invalid_response", response.status);
   try {

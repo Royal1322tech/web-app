@@ -513,7 +513,10 @@ test.describe("B2B hotel search: home page (mocked API)", () => {
     const visibleNames = await collection.locator(".hotel-miniature ~ * [data-live-hotel]:not([aria-hidden] [data-live-hotel]) h3").allInnerTexts();
     expect(visibleNames.slice(0, 8)).toEqual(Array.from({ length: 8 }, (_, i) => `Test Hotel ${i + 11}`));
     await expect(collection.locator("[data-collection-marquee]")).toHaveAttribute("data-running", "true");
-    await expect(collection.getByText(/Available in Dubai, .* 2 adults · prices not yet verified/)).toBeVisible();
+    // No information line under the toolbar; the cards keep their own price and booking notices.
+    await expect(collection.getByText(/Available in|prices not yet verified/)).toHaveCount(0);
+    await expect(collection.locator(".hotel-miniature ~ p, [role=status]").filter({ hasText: /Available/ })).toHaveCount(0);
+    await expect(collection.locator("[data-live-hotel]").first().getByText("Price unavailable")).toBeAttached();
     await expect(collection.locator("#hotel-city option")).toHaveCount(7);
     await expect(page.getByText(/Golden Rose Hotel|Illustrative/)).toHaveCount(0);
 
@@ -595,6 +598,7 @@ test.describe("B2B hotel search: home page (mocked API)", () => {
     await expect(page.locator("[data-live-home=featured]")).toHaveAttribute("data-search-state", "results");
     await expect(page.getByText(/المتاح في دبي/).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: "أقم في أفضل الفنادق" })).toBeVisible();
+    await expect(page.locator("[data-live-home=collection]").getByText(/المتاح في/)).toHaveCount(0);
     expect(api.searches[0].postDataJSON().language).toBe("ar");
   });
 

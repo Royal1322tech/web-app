@@ -48,6 +48,16 @@ Every response is checked against a schema. A malformed reply, including a 2xx s
 - **Error messages:** messages shown to users are the app's own, in English and Arabic. Server wording is never displayed.
 - **Business pages:** after a real sign-in, business pages still show the labelled demo data, because their APIs don't exist yet.
 
+## Sign-in rate limiting
+
+- **One request per sign-in:** each sign-in sends exactly one login request. A ref guard covers Enter, clicks and double clicks while one is pending, and the button is disabled. Failed logins, including 429, are never retried automatically.
+- **The message:** a 429 shows "Too many sign-in attempts. Please wait before trying again." Only a 429 from the server produces it.
+- **Countdown:** when the browser can read `Retry-After`, the form counts down and blocks Sign In until it ends. Today it can't, because the staging API sends no `Access-Control-Expose-Headers`. Cross-origin JavaScript therefore can't see `Retry-After` or `X-RateLimit-*`, so the generic message shows without a countdown.
+- **Backend limit, from the earlier source review:** 5 requests per minute **per IP**, shared by register, login and verify-otp. A normal sign-in uses 2, so a few retries in a minute reach the limit.
+- **For the backend team:**
+  - Add `Retry-After` (and optionally `X-RateLimit-Remaining`) to `exposed_headers` in the CORS config.
+  - Make sure Laravel trusts Cloudflare's proxy IPs, so the limit applies to each visitor rather than to a shared Cloudflare address.
+
 ## Session storage and its limits
 
 - **Where the token lives:** in memory, and in `sessionStorage` under `royal-travel.b2b-session.v1` as `{token, expiresAt, companyId}`. It survives a reload but not closing the tab.
