@@ -102,6 +102,10 @@ export function ApiLoginForm() {
       const issued = await loginWithPassword({ email, password, companyId });
       const established = await b2bSession.establish(issued);
       if (established.status !== "active") {
+        if (established.status === "signed-out" && established.reason === "company-mismatch") {
+          setNotice(t("We couldn't confirm your company access. Please sign in again.", "تعذر تأكيد وصول شركتك. يرجى تسجيل الدخول مرة أخرى."));
+          return;
+        }
         throw new Error("Unable to establish authenticated session");
       }
       navigate("/", { replace: true });
