@@ -531,7 +531,7 @@ test.describe("B2B hotel search: home page (mocked API)", () => {
   });
 
   test("Stay At Best Hotels slides to the left, pauses for touch, and its search opens real results", async ({ page }) => {
-    const api = await signedIn(page, (request) => preview({ total: 88, page: request.postDataJSON().page ?? 1 }));
+    await signedIn(page, (request) => preview({ total: 88, page: request.postDataJSON().page ?? 1 }));
     await page.goto(APP + "/");
     const collection = page.locator("[data-live-home=collection]");
     const strip = collection.locator("[data-collection-marquee]");
@@ -552,10 +552,13 @@ test.describe("B2B hotel search: home page (mocked API)", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
 
     await page.locator("#hotel-city").selectOption("paris");
+    // React Router 7 changes the URL before the new page has rendered, so the home page (with its own
+    // Dubai cards and request) can still be on screen. Wait for the search that the click causes.
+    const parisSearch = page.waitForRequest((request) => request.method() === "POST" && new URL(request.url()).pathname === "/api/v1/b2b/hotels/search");
     await page.locator("[data-live-home=collection]").getByRole("button", { name: "Search" }).click();
     await expect(page).toHaveURL(/\/search\?destination=paris/);
-    await expect(page.locator("[data-live-hotel]").first()).toBeVisible();
-    expect(api.searches.at(-1)!.postDataJSON()).toMatchObject({ latitude: 48.8566, longitude: 2.3522 });
+    expect((await parisSearch).postDataJSON()).toMatchObject({ latitude: 48.8566, longitude: 2.3522 });
+    await expect(page.locator("#api-hotel-results [data-live-hotel]").first()).toBeVisible();
   });
 
   test("Stay At Best Hotels holds still with reduced motion and still shows every hotel", async ({ page }) => {
