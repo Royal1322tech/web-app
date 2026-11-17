@@ -9,10 +9,6 @@ import { apiRequest } from "@/lib/api/client";
 
 const CHANNEL = "website";
 
-const challengeSchema = z.object({
-  challenge_id: z.uuid(),
-  expires_in: z.number().int().positive(),
-});
 
 const tokenSchema = z.object({
   token_type: z.literal("Bearer"),
