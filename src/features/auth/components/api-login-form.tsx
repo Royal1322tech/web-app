@@ -7,9 +7,8 @@ import { Icon } from "@/components/ui/icon";
 import { ApiError } from "@/lib/api/client";
 import { useLocale } from "@/features/localization/locale-provider";
 import { authConfig } from "../auth-config";
-import { requestLoginCode } from "../b2b-auth-api";
-import { useB2BSession } from "../b2b-session";
-import { loginChallenge } from "../login-challenge";
+import { loginWithPassword } from "../b2b-auth-api";
+import { b2bSession, useB2BSession } from "../b2b-session";
 import { ApiStatusNotice } from "./api-status-notice";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -18,8 +17,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 type Errors = { email?: string; password?: string; companyId?: string };
 
 /**
- * Sign-in against the Laravel B2B API, step 1: credentials. A valid login returns an OTP challenge
- * (no session yet); the emailed code is entered on /login/verify-otp.
+ * Sign-in against the Laravel B2B API using email and password. A valid login returns a token
+ * and the session is established after verifying the current user.
  */
 export function ApiLoginForm() {
   const { t } = useLocale();
@@ -100,12 +99,16 @@ export function ApiLoginForm() {
     pending.current = true;
     setBusy(true);
     try {
-      const issued = await requestLoginCode({ email, password, companyId });
-      // The expiry comes from the API's expires_in and is stored as an absolute time, so the
-      // countdown survives a refresh. The password is not kept anywhere.
-      loginChallenge.save({ challengeId: issued.challengeId, email, expiresAt: Date.now() + issued.expiresInSeconds * 1000 });
-      // Navigation state carries only where to go after sign-in, exactly as /login received it.
-      navigate("/login/verify-otp", { state: location.state });
+      const issued = await loginWithPassword({ email, password, companyId });
+      const established = await b2bSession.establish(issued);
+      if (established.status !== "active") {
+        if (established.status === "signed-out" && established.reason === "company-mismatch") {
+          setNotice(t("We couldn't confirm your company access. Please sign in again.", "تعذر تأكيد وصول شركتك. يرجى تسجيل الدخول مرة أخرى."));
+          return;
+        }
+        throw new Error("Unable to establish authenticated session");
+      }
+      navigate("/", { replace: true });
     } catch (error) {
       const result = describe(error);
       setErrors(result.errors ?? {});
@@ -167,7 +170,7 @@ export function ApiLoginForm() {
         <span>{t("Don't have an account?", "ليس لديك حساب؟")}</span>
         <Link to="/register/agency" className="text-button">{t("Register with us", "سجل معنا")}</Link>
       </div>
-      <p className="fine-print">{t("We'll email you a one-time code to finish signing in.", "سنرسل إليك رمزًا لمرة واحدة عبر البريد الإلكتروني لإكمال تسجيل الدخول.")}</p>
+      <p className="fine-print">{t("Sign in securely using your email and password.", "سجّل الدخول باستخدام بريدك الإلكتروني وكلمة المرور.")}</p>
       <div role="status" aria-live="polite">
         {(notice || statusNotice) && <p className="availability-notice">{notice || statusNotice}</p>}
         {coolingDown && (

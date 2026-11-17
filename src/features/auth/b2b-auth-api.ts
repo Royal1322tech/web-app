@@ -9,10 +9,6 @@ import { apiRequest } from "@/lib/api/client";
 
 const CHANNEL = "website";
 
-const challengeSchema = z.object({
-  challenge_id: z.uuid(),
-  expires_in: z.number().int().positive(),
-});
 
 const tokenSchema = z.object({
   token_type: z.literal("Bearer"),
@@ -58,14 +54,14 @@ export interface IssuedToken {
   companyId: string;
 }
 
-/** Step 1: checks credentials and company access, then emails a one-time code. */
-export async function requestLoginCode(input: { email: string; password: string; companyId: string }): Promise<LoginChallenge> {
+/** Login returns a Bearer token directly after account activation. */
+export async function loginWithPassword(input: { email: string; password: string; companyId: string }): Promise<IssuedToken> {
   const data = await apiRequest("api/v1/b2b/auth/login", {
     method: "POST",
     body: { email: input.email, password: input.password, company_id: input.companyId, channel: CHANNEL },
-    parse: (value) => challengeSchema.parse(value),
+    parse: (value) => tokenSchema.parse(value),
   });
-  return { challengeId: data.challenge_id, expiresInSeconds: data.expires_in };
+  return { token: data.access_token, expiresInSeconds: data.expires_in, companyId: data.company_id };
 }
 
 /** Step 2: exchanges the code for a token scoped to one company. */
