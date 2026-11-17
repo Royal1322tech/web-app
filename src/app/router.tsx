@@ -35,6 +35,7 @@ function Root() {
       "/verify-otp",
       "/reset-password",
       "/login/verify-otp",
+      "/activate-account",
     ].includes(pathname);
     if (!privatePage) return;
     const meta = document.createElement("meta");
@@ -105,6 +106,8 @@ export const router = createBrowserRouter([
       { path: "login", lazy: page(() => import("@/pages/login"), "Partner Sign In", "تسجيل دخول الشركاء") },
       // Real sign-in, step 2. Separate from the password-recovery screen at /verify-otp.
       { path: "login/verify-otp", lazy: page(() => import("@/pages/login-verify-otp"), "Email Verification", "تأكيد البريد الإلكتروني") },
+      // One-time account activation after admin approval. Public, and separate from sign-in and recovery.
+      { path: "activate-account", lazy: page(() => import("@/pages/activate-account"), "Activate Account", "تفعيل الحساب") },
       {
         path: "forgot-password",
         lazy: page(() => import("@/pages/forgot-password"), "Forgot Password", "نسيت كلمة المرور"),

@@ -12,8 +12,8 @@ export function PublicLandingHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const closeMenu = () => setMenuOpen(false);
   const onLanding = pathname === "/login";
-  // The sign-in code step shares the landing layout: the bar floats over its hero.
-  const overHero = onLanding || pathname === "/login/verify-otp";
+  // The sign-in code step and account activation share the landing layout: the bar floats over its hero.
+  const overHero = onLanding || pathname === "/login/verify-otp" || pathname === "/activate-account";
   const header = useRef<HTMLElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
 

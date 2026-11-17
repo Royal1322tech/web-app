@@ -74,6 +74,32 @@ export async function verifyLoginCode(input: { challengeId: string; code: string
   return { token: data.access_token, expiresInSeconds: data.expires_in, companyId: data.company_id };
 }
 
+/*
+ * Account activation: a one-time email check for a company owner after admin approval, before the
+ * first sign-in. It never issues a token or starts a session. Contract from the backend handoff
+ * (2026-11-17): verify replies {message, status: "active"}; resend's reply body isn't specified, so
+ * any 2xx is read as "the request was accepted", not as "the email was delivered".
+ */
+const activatedSchema = z.object({ status: z.literal("active") });
+
+/** Verifies the emailed activation code. Resolves only when the server says the account is active. */
+export async function verifyActivationCode(input: { email: string; companyId: string; code: string }): Promise<void> {
+  await apiRequest("api/v1/b2b/auth/verify-otp", {
+    method: "POST",
+    body: { email: input.email, company_id: input.companyId, otp: input.code },
+    parse: (value) => activatedSchema.parse(value),
+  });
+}
+
+/** Asks the server to send a new activation code. Says nothing about delivery. */
+export async function resendActivationCode(input: { email: string; companyId: string }): Promise<void> {
+  await apiRequest("api/v1/b2b/auth/resend-verification-otp", {
+    method: "POST",
+    body: { email: input.email, company_id: input.companyId },
+    parse: () => undefined,
+  });
+}
+
 export async function fetchCurrentUser(token: string): Promise<B2BIdentity> {
   const { data } = await apiRequest("api/v1/b2b/me", { token, parse: (value) => profileSchema.parse(value) });
   return {

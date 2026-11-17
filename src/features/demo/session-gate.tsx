@@ -32,6 +32,8 @@ export function DemoSessionGate() {
       return <Navigate to="/login" replace state={{ from: location.pathname + location.search + location.hash }} />;
     }
   }
+  // Account activation happens before the first sign-in and never uses or shows account data.
+  if (/^\/activate-account\/?$/.test(location.pathname)) return <Outlet />;
   if (demoSessionActive) {
     // Signed in: /login and its code step send the user on to where they were going.
     if (/^\/login(\/verify-otp)?\/?$/.test(location.pathname)) return <Navigate to={safeDemoReturnTo(location.state)} replace />;
