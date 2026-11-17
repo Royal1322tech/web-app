@@ -231,7 +231,7 @@ test.describe("API mode", () => {
     await page.goto("/login");
     await fillCredentials(page);
     await expect(page.getByRole("status")).toContainText("Check the Company ID");
-    expect(await page.evaluate(() => sessionStorage.getItem(SESSION_KEY))).toBeNull();
+    expect(await page.evaluate((key) => sessionStorage.getItem(key), SESSION_KEY)).toBeNull();
     expect(api.called("POST /b2b/auth/verify-otp")).toHaveLength(0);
     await selectLanguage(page, "ar");
     await fillCredentials(page);
@@ -373,7 +373,7 @@ test.describe("API mode", () => {
   test("a profile for a different company is rejected and nothing is kept", async ({ page }) => {
     await mockApi(page, { "POST /b2b/auth/login": ok.login, "GET /b2b/me": () => ({ json: profile(OTHER_COMPANY) }) });
     await page.goto("/login");
-    await signIn(page);
+    await fillCredentials(page);
     await expect(page.getByRole("status")).toHaveText("We couldn't confirm your company access. Please sign in again.");
     await expect(page).toHaveURL(/\/login/);
     expect(await page.evaluate((key) => sessionStorage.getItem(key), SESSION_KEY)).toBeNull();
@@ -688,7 +688,7 @@ test.describe("API mode: direct token login", () => {
     await page.reload();
     await expect(page).toHaveURL(/4174\/$/);
     expect(api.called("POST /b2b/auth/login")).toHaveLength(1);
-    expect(api.called("GET /b2b/me").length).toBeGreaterThanOrEqual(2);
+    await expect.poll(() => api.called("GET /b2b/me").length, { timeout: 10000 }).toBeGreaterThanOrEqual(2);
   });
 
   test("a signed-in user opening the legacy OTP page stays signed in", async ({ page }) => {
