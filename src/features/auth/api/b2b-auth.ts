@@ -2,8 +2,15 @@ import { apiBaseUrl, ApiError } from "@/lib/api/client";
 
 type LoginResponse = {
   message: string;
-  challenge_id: string;
+  token_type: "Bearer";
+  access_token: string;
   expires_in: number;
+  company_id: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+  };
 };
 
 type VerifyResponse = {

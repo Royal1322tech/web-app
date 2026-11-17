@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Icon } from "@/components/ui/icon";
 import { useLocale } from "@/features/localization/locale-provider";
 import { b2bAuthApi } from "../api/b2b-auth";
+import { b2bSession } from "../api/b2b-session";
 
 export function LoginForm() {
   const { t } = useLocale();
@@ -45,8 +46,12 @@ export function LoginForm() {
     setSubmitting(true);
     try {
       const result = await b2bAuthApi.login(username, password, companyId);
-      sessionStorage.setItem("royal.b2b.login.challenge", result.challenge_id);
-      navigate("/login/verify-otp");
+      if (!result.access_token || result.token_type !== "Bearer") {
+        throw new Error("Invalid login response");
+      }
+      b2bSession.setToken(result.access_token);
+      sessionStorage.removeItem("royal.b2b.login.challenge");
+      navigate("/", { replace: true });
     } catch {
       setNotice(t("Sign in failed. Please check your details and try again.", "تعذر تسجيل الدخول. تحقق من بياناتك وحاول مرة أخرى."));
     } finally {
