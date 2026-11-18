@@ -51,8 +51,6 @@ ROYAL_STAGING_EMAIL=… ROYAL_STAGING_PASSWORD=… ROYAL_STAGING_COMPANY_ID=… 
 | Routes | Public pages without a session, 404 when signed in, unknown pages when signed out, private pages after sign-out | `e2e-journeys`, `auth-integration` |
 | Rooms and prebook | Not on `main`. The tests exist only alongside the unreleased local work | — |
 
-## Known defect
+## Fixed defects with regression tests
 
-`e2e-journeys.spec.ts` has a `test.fail()` test labelled **KNOWN DEFECT**:
-- **What happens:** after Retry in "A world of stays", "Stay At Best Hotels" keeps showing its error, although the shared retry already returned hotels.
-- **When it's fixed:** the test will report "expected to fail, but passed". Remove `test.fail()` then.
+- **Home page Retry:** Retry in "A world of stays" didn't refresh "Stay At Best Hotels". Fixed with a shared retry counter in `useDefaultHotelSearch`. The `e2e-journeys` tests check that both sections reload together, with one request per Retry.

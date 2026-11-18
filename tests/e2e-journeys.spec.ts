@@ -110,10 +110,10 @@ test.describe("journey: sign in, browse hotels, sign out (mocked API)", () => {
     await expect(page.locator("[data-live-hotel]")).toHaveCount(0);
     expect(api.searches).toHaveLength(1);
 
-    // Retry sends exactly one new request and "A world of stays" recovers from it. (Stay At Best
-    // Hotels doesn't follow yet: see the known-defect test below.)
+    // Retry sends exactly one new request and both sections recover from it.
     await featured.getByRole("button", { name: "Retry" }).click();
     await expect(featured).toHaveAttribute("data-search-state", "results");
+    await expect(collection).toHaveAttribute("data-search-state", "results");
     await expect(featured.getByText("Dubai Test Hotel 1").first()).toBeVisible();
     expect(api.searches).toHaveLength(2);
 
@@ -152,18 +152,53 @@ test.describe("journey: sign in, browse hotels, sign out (mocked API)", () => {
     expect(api.unexpected).toEqual([]);
   });
 
-  test("KNOWN DEFECT: after Retry in A world of stays, Stay At Best Hotels still shows the error", async ({ page }) => {
-    test.info().annotations.push({ type: "issue", description: "useDefaultHotelSearch keeps a separate retry counter per section, so the shared retry result never reaches the other section. Remove test.fail() once fixed." });
-    test.fail();
+  test("Retry in A world of stays refreshes both home sections together with one request", async ({ page }) => {
     await withSession(page);
-    const api = await mockApi(page, (request, attempt) => (attempt === 1 ? NOT_READY : results(request, 12)));
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => { release = resolve; });
+    const api = await mockApi(page, async (request, attempt) => {
+      if (attempt === 1) return NOT_READY;
+      await held;
+      return results(request, 12);
+    });
     await page.goto(APP + "/");
     const featured = page.locator("[data-live-home=featured]");
+    const collection = page.locator("[data-live-home=collection]");
     await expect(featured).toHaveAttribute("data-search-state", "not_ready");
+    await expect(collection).toHaveAttribute("data-search-state", "not_ready");
+
+    await featured.getByRole("button", { name: "Retry" }).click();
+    // Both sections wait for the same new request.
+    await expect(featured).toHaveAttribute("data-search-state", "loading");
+    await expect(collection).toHaveAttribute("data-search-state", "loading");
+    await expect(collection.getByText("Hotels couldn't be loaded right now.")).toHaveCount(0);
+    release();
+    await expect(featured).toHaveAttribute("data-search-state", "results");
+    await expect(collection).toHaveAttribute("data-search-state", "results");
+    await expect(collection.locator("[data-live-hotel]").first()).toBeVisible();
+    await expect(collection.getByText("Dubai Test Hotel 11").first()).toBeVisible();
+    expect(api.searches).toHaveLength(2);
+    expect(api.searches[1].postDataJSON()).toEqual(api.searches[0].postDataJSON());
+  });
+
+  test("a Retry that fails again shows the error in both sections, with one request per Retry and no hotels", async ({ page }) => {
+    await withSession(page);
+    const api = await mockApi(page, (request, attempt) => (attempt < 3 ? NOT_READY : results(request, 12)));
+    await page.goto(APP + "/");
+    const featured = page.locator("[data-live-home=featured]");
+    const collection = page.locator("[data-live-home=collection]");
+    await expect(featured).toHaveAttribute("data-search-state", "not_ready");
+
+    await featured.getByRole("button", { name: "Retry" }).click();
+    await expect.poll(() => api.searches.length).toBe(2);
+    await expect(featured).toHaveAttribute("data-search-state", "not_ready");
+    await expect(collection).toHaveAttribute("data-search-state", "not_ready");
+    await expect(page.locator("[data-live-hotel]")).toHaveCount(0);
+
     await featured.getByRole("button", { name: "Retry" }).click();
     await expect(featured).toHaveAttribute("data-search-state", "results");
-    expect(api.searches).toHaveLength(2);
-    await expect(page.locator("[data-live-home=collection]")).toHaveAttribute("data-search-state", "results", { timeout: 3000 });
+    await expect(collection).toHaveAttribute("data-search-state", "results");
+    expect(api.searches).toHaveLength(3);
   });
 
   test("on a phone: sign in, search from the home form, and read results without sideways scrolling", async ({ page }) => {

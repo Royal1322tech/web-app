@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { b2bSession } from "@/features/auth/b2b-session";
 import type { HotelSearchCriteria } from "@/features/home/schemas/hotel-search.schema";
 import { useLocale } from "@/features/localization/locale-provider";
@@ -38,6 +38,16 @@ export type DefaultSearchState =
 // One request per distinct search body for this page visit, shared by every section that shows it.
 const cache = new Map<string, Promise<B2BHotelSearchResult>>();
 
+// The retry count is shared too: a Retry in any section moves every section showing the same search to
+// the same new attempt, so they all wait for, and show, the one new request.
+const attempts = new Map<string, number>();
+const attemptListeners = new Set<() => void>();
+const subscribeAttempts = (listener: () => void) => { attemptListeners.add(listener); return () => { attemptListeners.delete(listener); }; };
+function retrySearch(key: string) {
+  attempts.set(key, (attempts.get(key) ?? 0) + 1);
+  attemptListeners.forEach((listener) => listener());
+}
+
 /** Runs the default search once and shares the reply. A failed attempt is forgotten so Retry can send it again. */
 export function useDefaultHotelSearch(): { state: DefaultSearchState; criteria: HotelSearchCriteria; destination: SearchDestination; retry: () => void } {
   const { locale } = useLocale();
@@ -47,7 +57,7 @@ export function useDefaultHotelSearch(): { state: DefaultSearchState; criteria: 
   const currency = isB2BSearchCurrency(preferences.currency) ? preferences.currency : "USD";
   const request = toB2BHotelSearchRequest({ ...criteria, nationality: preferences.nationality }, destination.point, { language: locale === "ar" ? "ar" : "en", currency });
   const key = request ? JSON.stringify(request) : "";
-  const [attempt, setAttempt] = useState(0);
+  const attempt = useSyncExternalStore(subscribeAttempts, () => attempts.get(key) ?? 0);
   const [settled, setSettled] = useState<{ key: string; attempt: number; state: DefaultSearchState } | null>(null);
   const state: DefaultSearchState = !request
     ? { status: "error", failure: "validation" }
@@ -76,8 +86,8 @@ export function useDefaultHotelSearch(): { state: DefaultSearchState; criteria: 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, attempt]);
 
-  return { state, criteria: { ...criteria, nationality: preferences.nationality }, destination, retry: () => setAttempt((value) => value + 1) };
+  return { state, criteria: { ...criteria, nationality: preferences.nationality }, destination, retry: () => retrySearch(key) };
 }
 
 /** For tests: forget cached default searches. */
-export const resetDefaultHotelSearchCache = () => cache.clear();
+export const resetDefaultHotelSearchCache = () => { cache.clear(); attempts.clear(); };
