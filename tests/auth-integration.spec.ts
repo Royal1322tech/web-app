@@ -493,7 +493,9 @@ test.describe("API mode", () => {
     await page.goto("/login");
     await signIn(page);
     await expect(page).toHaveURL(/4174\/$/);
-    await expect(page.locator(".api-data-notice")).toHaveText("Sample data: this page isn't connected to your account yet.");
+    // No "sample data" banner above the page: it was removed at the owner's request.
+    await expect(page.locator(".api-data-notice")).toHaveCount(0);
+    await expect(page.getByText("Sample data: this page isn't connected to your account yet.")).toHaveCount(0);
 
     await page.goto("/profile");
     const main = page.locator("main");
@@ -511,7 +513,9 @@ test.describe("API mode", () => {
     await expect(page.locator("form")).toHaveCount(0);
 
     await page.goto("/bookings");
-    await expect(page.locator(".api-data-notice")).toHaveText("Sample data: this page isn't connected to your account yet.");
+    await expect(page.locator("main")).toBeVisible();
+    await expect(page.locator(".api-data-notice")).toHaveCount(0);
+    await expect(page.getByText(/Sample data: this page isn't connected/)).toHaveCount(0);
   });
 
   async function completeRegistration(page: Page) {
