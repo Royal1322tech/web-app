@@ -36,7 +36,7 @@ function Root() {
       "/reset-password",
       "/login/verify-otp",
       "/activate-account",
-    ].includes(pathname);
+    ].includes(pathname) || pathname.startsWith("/hotels/rooms/");
     if (!privatePage) return;
     const meta = document.createElement("meta");
     meta.name = "robots";
@@ -131,6 +131,11 @@ export const router = createBrowserRouter([
       {
         path: "bookings",
         lazy: page(() => import("@/pages/bookings"), "My Bookings", "حجوزاتي"),
+      },
+      {
+        // B2B rooms → price check → review for one hotel (signed-in, API builds only).
+        path: "hotels/rooms/:hid",
+        lazy: page(() => import("@/pages/hotel-rooms"), "Hotel Rooms", "غرف الفندق"),
       },
       {
         path: "hotels/:hotelId",

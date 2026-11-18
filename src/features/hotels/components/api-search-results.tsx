@@ -18,7 +18,9 @@ import {
 } from "../api/b2b-hotel-search";
 import { findDestination } from "../data/destinations";
 import { emptyPageFilters, filterPage, pageFiltersActive, type PageFilters } from "../lib/live-hotels";
-import { LiveHotelCard, LiveHotelCardSkeleton } from "./live-hotel-card";
+import { LiveHotelCard, LiveHotelCardSkeleton, type RoomsAction } from "./live-hotel-card";
+import { stayQuery } from "../lib/stay-query";
+import { roomsPath, type RoomsHotelSummary } from "../lib/rooms-route";
 import { searchFailureMessages } from "./search-failure-messages";
 import styles from "./api-search-results.module.css";
 
@@ -50,12 +52,12 @@ export function ApiSearchResults({ criteria }: { criteria?: HotelSearchCriteria 
         </p>
       )}
       {/* Keyed by the search body: changed criteria start again at page 1. */}
-      <SearchRun key={requestKey} request={request} destinationName={t(destination.name.en, destination.name.ar)} />
+      <SearchRun key={requestKey} request={request} destinationName={t(destination.name.en, destination.name.ar)} roomsQuery={stayQuery(criteria)} />
     </>
   );
 }
 
-function SearchRun({ request: initial, destinationName }: { request: B2BHotelSearchRequest; destinationName: string }) {
+function SearchRun({ request: initial, destinationName, roomsQuery }: { request: B2BHotelSearchRequest; destinationName: string; roomsQuery: string }) {
   const { t } = useLocale();
   const [request] = useState(initial);
   const [page, setPage] = useState(1);
@@ -168,7 +170,7 @@ function SearchRun({ request: initial, destinationName }: { request: B2BHotelSea
           {state.result.hotels.length === 0 ? (
             <SystemState title={t("This page has no hotels", "لا توجد فنادق في هذه الصفحة")} description={t("Go back to the previous page.", "ارجع إلى الصفحة السابقة.")} />
           ) : (
-            <HotelGrid result={state.result} filters={filters} onClear={() => setFilters(emptyPageFilters)} />
+            <HotelGrid result={state.result} filters={filters} onClear={() => setFilters(emptyPageFilters)} roomsQuery={roomsQuery} />
           )}
         </div>
       )}
@@ -188,7 +190,7 @@ function SearchRun({ request: initial, destinationName }: { request: B2BHotelSea
   );
 }
 
-function HotelGrid({ result, filters, onClear }: { result: B2BHotelSearchResult; filters: PageFilters; onClear: () => void }) {
+function HotelGrid({ result, filters, onClear, roomsQuery }: { result: B2BHotelSearchResult; filters: PageFilters; onClear: () => void; roomsQuery: string }) {
   const { t } = useLocale();
   const shown = filterPage(result.hotels, filters);
   return (
@@ -202,7 +204,7 @@ function HotelGrid({ result, filters, onClear }: { result: B2BHotelSearchResult;
       <ul className={styles.grid} aria-label={t("Hotels", "الفنادق")}>
         {shown.map((hotel, index) => (
           <li key={`${result.page}-${hotel.result_index ?? "x"}-${index}`}>
-            <LiveHotelCard hotel={hotel} result={result} eager={index < 3} />
+            <LiveHotelCard hotel={hotel} result={result} eager={index < 3} rooms={roomsActionFor(hotel, roomsQuery)} />
           </li>
         ))}
       </ul>
@@ -233,4 +235,11 @@ function PageFilterBar({ value, onChange }: { value: PageFilters; onChange: (nex
       </label>
     </fieldset>
   );
+}
+
+/** "View rooms" only for a hotel with a real hid. The URL carries the search criteria, never tokens. */
+function roomsActionFor(hotel: B2BHotelSearchResult["hotels"][number], query: string): RoomsAction {
+  if (!hotel.hid) return "unavailable";
+  const summary: RoomsHotelSummary = { hid: hotel.hid, name: hotel.name, address: hotel.address, stars: hotel.stars, image: hotel.image };
+  return { href: roomsPath(hotel.hid, query), state: { hotel: summary } };
 }

@@ -1,4 +1,5 @@
 import { useId, useState } from "react";
+import { Link } from "react-router-dom";
 import { Icon } from "@/components/ui/icon";
 import { useLocale } from "@/features/localization/locale-provider";
 import type { B2BHotel, B2BHotelSearchResult } from "../api/b2b-hotel-search";
@@ -12,7 +13,12 @@ type ResultFlags = Pick<B2BHotelSearchResult, "pricingVerified" | "bookingEnable
  * labelled as missing; nothing is filled in. There is no details link and no booking action, because
  * no details endpoint, stable hotel ID or booking flow exists yet.
  */
-export function LiveHotelCard({ hotel, result, variant = "full", eager = false }: {
+/** The rooms action: a link when the hotel has a real hid, a short note when it doesn't. */
+export type RoomsAction = { href: string; state: unknown } | "unavailable";
+
+export function LiveHotelCard({ hotel, result, variant = "full", eager = false, rooms }: {
+  /** Shown on the results page only. */
+  rooms?: RoomsAction;
   hotel: B2BHotel;
   result: ResultFlags;
   variant?: "full" | "compact";
@@ -98,6 +104,17 @@ export function LiveHotelCard({ hotel, result, variant = "full", eager = false }
             : <><Icon name="clock" />{t("Booking unavailable", "الحجز غير متاح")}</>}
         </span>
       </footer>
+      {rooms && (
+        <div className={styles.roomsAction}>
+          {rooms === "unavailable" ? (
+            <p className={styles.roomsUnavailable}>{t("Room rates aren't available for this hotel yet.", "أسعار الغرف غير متاحة لهذا الفندق بعد.")}</p>
+          ) : (
+            <Link to={rooms.href} state={rooms.state} className="button button--primary" aria-describedby={titleId}>
+              {t("View rooms", "عرض الغرف")}<Icon name="arrowRight" />
+            </Link>
+          )}
+        </div>
+      )}
     </article>
   );
 }

@@ -69,6 +69,13 @@
 .status[data-bookable] { border-color: #bfe0d1; background: #eef8f3; color: var(--success); }
 .status svg { width: 13px; height: 13px; }
 
+/* Rooms action (results page). */
+.roomsAction { padding: 0 var(--space-5) var(--space-4); background: #fbfcfe; }
+.roomsAction :global(.button) { display: flex; justify-content: center; gap: var(--space-2); width: 100%; min-height: 44px; }
+.roomsAction :global(.button) svg { width: 16px; height: 16px; }
+:global([dir="rtl"]) .roomsAction :global(.button) svg { rotate: 180deg; }
+.roomsUnavailable { margin: 0; color: var(--muted); font-size: var(--font-size-xs); }
+
 /* Compact (home carousels). */
 .card[data-variant="compact"] .body { padding: var(--space-3) var(--space-4) var(--space-2); }
 .card[data-variant="compact"] .name { font-size: var(--font-size-base); }

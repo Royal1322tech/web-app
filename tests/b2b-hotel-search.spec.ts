@@ -134,10 +134,13 @@ test.describe("B2B hotel search: mapping (no browser)", () => {
   test("accepts only the known envelope and never reads hotel fields; classifies failures", () => {
     const parsed = parseB2BHotelSearch(preview({ total: 88, hotels: [hotel(0), { result_index: 1, name: 42, stars: "five", rooms: "x", image: "" }] }).json);
     expect(parsed).toMatchObject({ total: 88, page: 1, perPage: 20, currency: "USD", pricingVerified: false, bookingEnabled: false });
-    expect(parsed.hotels[0]).toEqual({ result_index: 0, name: "Test Hotel 1", address: "1 Test Street", stars: 4, image: null, rooms: [{ room_name: "Junior Suite", meal_name: "breakfast", has_breakfast: true, bedding_type: null, selling_price: null, booking_enabled: false }], pricing_status: "unverified", booking_enabled: false });
+    expect(parsed.hotels[0]).toEqual({ result_index: 0, hid: null, name: "Test Hotel 1", address: "1 Test Street", stars: 4, image: null, rooms: [{ room_name: "Junior Suite", meal_name: "breakfast", has_breakfast: true, bedding_type: null, selling_price: null, booking_enabled: false }], pricing_status: "unverified", booking_enabled: false });
     // A malformed record keeps its place; each bad field becomes null rather than a guess.
-    expect(parsed.hotels[1]).toEqual({ result_index: 1, name: null, address: null, stars: null, image: null, rooms: [], pricing_status: null, booking_enabled: null });
+    expect(parsed.hotels[1]).toEqual({ result_index: 1, hid: null, name: null, address: null, stars: null, image: null, rooms: [], pricing_status: null, booking_enabled: null });
     expect(parsed).not.toHaveProperty("supplierCurrency");
+    // A positive integer hid is read; anything else becomes null and is never derived from result_index.
+    const withHid = parseB2BHotelSearch(preview({ total: 3, hotels: [hotel(0, { hid: 8675779 }), hotel(1, { hid: "8675779" }), hotel(2, { hid: 0 })] }).json);
+    expect(withHid.hotels.map((h) => h.hid)).toEqual([8675779, null, null]);
     for (const value of [supplierUnavailable.json, {}, { message: "Unauthenticated." }, { success: true }, { success: true, data: { hotels: "x", total: 0 } }, { success: true, data: { hotels: [], total: 0 } }]) expect(() => parseB2BHotelSearch(value)).toThrow();
     expect(classifyB2BSearchError(new ApiError("unavailable", 503, {}, "HOTEL_SUPPLIER_UNAVAILABLE"))).toBe("supplier_unavailable");
     expect(classifyB2BSearchError(new ApiError("server", 409, {}, "HOTEL_SEARCH_NOT_READY"))).toBe("not_ready");

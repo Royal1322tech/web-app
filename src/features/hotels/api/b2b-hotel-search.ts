@@ -95,6 +95,12 @@ const roomSchema = z.object({
 });
 const hotelSchema = z.object({
   result_index: z.number().int().nonnegative().nullable().catch(null),
+  /**
+   * The supplier hotel ID that the rooms endpoint takes (POST /b2b/hotels/{hid}/rooms). Not part of
+   * the confirmed search reply yet: read only when the backend sends a positive integer `hid`, and
+   * never derived from result_index or a list position.
+   */
+  hid: z.number().int().positive().nullable().optional().catch(null).transform((value) => value ?? null),
   name: text,
   address: text,
   stars: z.number().min(0).max(5).nullable().catch(null),
