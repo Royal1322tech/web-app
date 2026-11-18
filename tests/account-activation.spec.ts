@@ -219,6 +219,79 @@ test.describe("account activation (API mode)", () => {
     await expect(resendButton(page)).toBeDisabled();
   });
 
+  // Staging today: Retry-After is sent but CORS doesn't expose it, so the browser can't read it.
+  const hiddenRetryAfter = { "Retry-After": "1952", "Access-Control-Expose-Headers": "" };
+  const unreadable: [string, Record<string, string>][] = [["not exposed by CORS", hiddenRetryAfter], ["invalid", { "Retry-After": "soon" }], ["missing", {}]];
+  for (const [name, headers] of unreadable) {
+    test(`verify: 429 with a Retry-After that is ${name} shows no countdown, keeps Verify usable and never retries`, async ({ page }) => {
+      await page.clock.install();
+      const api = await mockApi(page, { [VERIFY]: () => ({ status: 429, json: { message: "Too Many Attempts." }, headers }) });
+      await page.goto(link({ email: EMAIL, company_id: COMPANY }));
+      await typeCode(page);
+      await verifyButton(page).click();
+      await expect(page.locator("[data-activation-notice=error]")).toHaveText("Too many attempts. Please wait a few minutes before trying again.");
+      await expect(page.locator("[data-activation-wait]")).toHaveCount(0);
+      await expect(page.getByText(/try again in \d|Available again in \d/)).toHaveCount(0);
+      await expect(verifyButton(page)).toBeEnabled();
+      // Two minutes later: still no countdown and no request the user didn't make.
+      await page.clock.fastForward("02:00");
+      await expect(page.locator("[data-activation-wait]")).toHaveCount(0);
+      expect(api.called(VERIFY)).toHaveLength(1);
+      // The user can try again; one click is still one request.
+      await typeCode(page);
+      await verifyButton(page).click();
+      await expect.poll(() => api.called(VERIFY).length).toBe(2);
+      await expect(verifyButton(page)).toBeEnabled();
+      expect(api.called(VERIFY)).toHaveLength(2);
+    });
+  }
+
+  test("verify: a readable Retry-After after an unknown one starts the real countdown", async ({ page }) => {
+    let reply: Reply = { status: 429, json: {}, headers: hiddenRetryAfter };
+    await mockApi(page, { [VERIFY]: () => reply });
+    await page.goto(link({ email: EMAIL, company_id: COMPANY }));
+    await typeCode(page);
+    await verifyButton(page).click();
+    await expect(page.locator("[data-activation-notice=error]")).toHaveText("Too many attempts. Please wait a few minutes before trying again.");
+    reply = { status: 429, json: {}, headers: { "Retry-After": "300" } };
+    await typeCode(page);
+    await verifyButton(page).click();
+    await expect(page.locator("[data-activation-notice=error]")).toHaveText("Too many attempts. Please wait before trying again.");
+    await expect(page.locator("[data-activation-wait=verify]")).toHaveText(/You can try again in (5:00|4:59)/);
+    await expect(verifyButton(page)).toBeDisabled();
+  });
+
+  test("resend: 429 without a readable Retry-After shows no countdown and leaves the button usable", async ({ page }) => {
+    const api = await mockApi(page, { [RESEND]: () => ({ status: 429, json: { message: "Too Many Attempts." }, headers: hiddenRetryAfter }) });
+    await page.goto(link({ email: EMAIL, company_id: COMPANY }));
+    await resendButton(page).click();
+    await expect(page.locator("[data-activation-notice=error]")).toHaveText("Too many code requests. Please wait a few minutes before asking for another code.");
+    await expect(page.locator("[data-activation-wait]")).toHaveCount(0);
+    await expect(resendButton(page)).toBeEnabled();
+    expect(api.called(RESEND)).toHaveLength(1);
+  });
+
+  test("Arabic: 429 without a readable Retry-After explains the unknown wait, right to left, with no countdown", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("royal-vacation.locale", "ar"));
+    await mockApi(page, { [VERIFY]: () => ({ status: 429, json: {}, headers: hiddenRetryAfter }) });
+    await page.goto(link({ email: EMAIL, company_id: COMPANY }));
+    await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+    await typeCode(page);
+    await verifyButton(page).click();
+    await expect(page.locator("[data-activation-notice=error]")).toHaveText("محاولات كثيرة. يرجى الانتظار بضع دقائق قبل المحاولة مرة أخرى.");
+    await expect(page.locator("[data-activation-wait]")).toHaveCount(0);
+  });
+
+  test("Arabic: 429 with Retry-After shows the countdown", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("royal-vacation.locale", "ar"));
+    await mockApi(page, { [VERIFY]: () => ({ status: 429, json: {}, headers: { "Retry-After": "90" } }) });
+    await page.goto(link({ email: EMAIL, company_id: COMPANY }));
+    await typeCode(page);
+    await verifyButton(page).click();
+    await expect(page.locator("[data-activation-notice=error]")).toHaveText("محاولات كثيرة. يرجى الانتظار قبل المحاولة مرة أخرى.");
+    await expect(page.locator("[data-activation-wait=verify]")).toContainText(/يمكنك المحاولة مرة أخرى بعد\s*1:(30|29)/);
+  });
+
   test("resend: 422 and server errors are explained without server wording", async ({ page }) => {
     let reply: Reply = { status: 422, json: { message: "x", errors: { email: ["The selected email is invalid."] } } };
     await mockApi(page, { [RESEND]: () => reply });

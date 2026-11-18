@@ -18,7 +18,7 @@ import styles from "./account-activation-page.module.css";
 const CODE_LENGTH = 6;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-/** The page's own pause between resend requests, used when the server doesn't say how long to wait. */
+/** The page's own pause after a successful resend request. It is never presented as the server's limit. */
 export const RESEND_COOLDOWN_SECONDS = 60;
 /** How long the success message stays before the page moves on to sign-in. */
 export const REDIRECT_DELAY_SECONDS = 5;
@@ -114,8 +114,12 @@ function AccountActivationScreen() {
     return { value, errors: checkDetails(value.email, value.companyId) };
   }
 
+  /**
+   * When a 429 says how long to wait. Only a Retry-After the browser can read (the API must expose it
+   * through CORS) gives a countdown; otherwise the wait is unknown and none is invented (0).
+   */
   function waitFor(failure: ApiError) {
-    return Date.now() + (failure.retryAfterSeconds ?? RESEND_COOLDOWN_SECONDS) * 1000;
+    return failure.retryAfterSeconds ? Date.now() + failure.retryAfterSeconds * 1000 : 0;
   }
 
   /** One message per failure. The server's own wording is never shown. */
@@ -134,9 +138,16 @@ function AccountActivationScreen() {
       return service(["Check the email and Company ID, then try again.", "تحقق من البريد الإلكتروني ومعرّف الشركة، ثم حاول مرة أخرى."]);
     }
     if (failure.kind === "rate_limited") {
-      return service(action === "verify"
-        ? ["Too many attempts. Please wait before trying again.", "محاولات كثيرة. يرجى الانتظار قبل المحاولة مرة أخرى."]
-        : ["Too many code requests. Please wait before asking for another code.", "طلبات رموز كثيرة. يرجى الانتظار قبل طلب رمز آخر."]);
+      // With a known wait the countdown below says how long; without one, the message says it is unknown.
+      const known = !!failure.retryAfterSeconds;
+      if (action === "verify") {
+        return service(known
+          ? ["Too many attempts. Please wait before trying again.", "محاولات كثيرة. يرجى الانتظار قبل المحاولة مرة أخرى."]
+          : ["Too many attempts. Please wait a few minutes before trying again.", "محاولات كثيرة. يرجى الانتظار بضع دقائق قبل المحاولة مرة أخرى."]);
+      }
+      return service(known
+        ? ["Too many code requests. Please wait before asking for another code.", "طلبات رموز كثيرة. يرجى الانتظار قبل طلب رمز آخر."]
+        : ["Too many code requests. Please wait a few minutes before asking for another code.", "طلبات رموز كثيرة. يرجى الانتظار بضع دقائق قبل طلب رمز آخر."]);
     }
     if (failure.kind === "network" || failure.kind === "timeout") return service(["We couldn't reach the activation service. Check your connection and try again.", "تعذر الوصول إلى خدمة التفعيل. تحقق من اتصالك وحاول مرة أخرى."]);
     if (failure.kind === "unavailable" || (failure.status ?? 0) >= 500) return service(["Account activation isn't available right now. Please try again later.", "تفعيل الحساب غير متاح حاليًا. يرجى المحاولة لاحقًا."]);
