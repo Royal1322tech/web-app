@@ -395,7 +395,7 @@ function RatesList({ rooms, now, onSelect, onRefresh, searchHref }: {
           <p className={styles.timer}><Icon name="clock" />{t("This rate list is valid for", "قائمة الأسعار صالحة لمدة")} <strong><Countdown seconds={remaining} /></strong></p>
         )}
       </div>
-      <p className={styles.note}>{t("Prices are provisional until the price check. Booking isn't available online yet.", "الأسعار مبدئية حتى التحقق من السعر. الحجز غير متاح عبر الإنترنت بعد.")}</p>
+      <p className={styles.note}>{t("Prices are provisional until the price check.", "الأسعار مبدئية حتى التحقق من السعر.")}</p>
       <ul className={styles.rates}>
         {rates.map((rate) => (
           <li key={rate.rate_index}>
@@ -580,7 +580,7 @@ function Review({ headingRef, step, now, onAccept, onChooseAnother, onRefresh, s
 
       <p className={styles.bookingNotice} role="note">
         <Icon name="info" />
-        <span>{t("This is a price check, not a reservation. You can save it as a booking draft; online booking and payment aren't available yet.", "هذا تحقق من السعر وليس حجزًا. يمكنك حفظه كمسودة حجز؛ الحجز والدفع عبر الإنترنت غير متاحين بعد.")}</span>
+        <span>{t("This is a price check, not a reservation. You can save it as a booking draft.", "هذا تحقق من السعر وليس حجزًا. يمكنك حفظه كمسودة حجز.")}</span>
       </p>
 
       <div className={styles.actions}>

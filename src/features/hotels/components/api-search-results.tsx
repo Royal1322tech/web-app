@@ -17,7 +17,8 @@ import {
   type B2BSearchFailure,
 } from "../api/b2b-hotel-search";
 import { findDestination } from "../data/destinations";
-import { emptyPageFilters, filterPage, pageFiltersActive, type PageFilters } from "../lib/live-hotels";
+import { emptyLiveFilters, filterLiveHotels, type LiveFilters } from "../lib/live-filters";
+import { LiveHotelFilters } from "./live-hotel-filters";
 import { LiveHotelCard, LiveHotelCardSkeleton, type RoomsAction } from "./live-hotel-card";
 import { stayQuery } from "../lib/stay-query";
 import { roomsPath, type RoomsHotelSummary } from "../lib/rooms-route";
@@ -46,11 +47,6 @@ export function ApiSearchResults({ criteria }: { criteria?: HotelSearchCriteria 
   }
   return (
     <>
-      {currency !== preferences.currency && (
-        <p className={styles.note} role="note">
-          {t(`Hotel search supports USD, EGP and SAR, so this search uses USD instead of ${preferences.currency}.`, `يدعم البحث عن الفنادق الدولار والجنيه المصري والريال السعودي، لذلك يستخدم هذا البحث الدولار بدلاً من ${preferences.currency}.`)}
-        </p>
-      )}
       {/* Keyed by the search body: changed criteria start again at page 1. */}
       <SearchRun key={requestKey} request={request} destinationName={t(destination.name.en, destination.name.ar)} roomsQuery={stayQuery(criteria)} />
     </>
@@ -66,7 +62,7 @@ function SearchRun({ request: initial, destinationName, roomsQuery }: { request:
   const [pages, setPages] = useState<ReadonlyMap<number, B2BHotelSearchResult>>(() => new Map());
   const [failure, setFailure] = useState<{ page: number; attempt: number; kind: B2BSearchFailure } | null>(null);
   const [pagingUnsupported, setPagingUnsupported] = useState(false);
-  const [filters, setFilters] = useState<PageFilters>(emptyPageFilters);
+  const [filters, setFilters] = useState<LiveFilters>(emptyLiveFilters);
   const [sort, setSort] = useState<PageSort>("recommended");
   const top = useRef<HTMLDivElement>(null);
   const firstLoad = useRef(true);
@@ -117,7 +113,7 @@ function SearchRun({ request: initial, destinationName, roomsQuery }: { request:
 
   const first = pages.get(1);
   const pageCount = first && !pagingUnsupported ? totalPages(first) : 1;
-  const goTo = (next: number) => { if (next >= 1 && next <= pageCount && next !== page) { setFilters(emptyPageFilters); setPage(next); } };
+  const goTo = (next: number) => { if (next >= 1 && next <= pageCount && next !== page) { setFilters(emptyLiveFilters); setPage(next); } };
   const retry = () => { setAttempt((value) => value + 1); };
 
   const summary = first && (
@@ -128,9 +124,6 @@ function SearchRun({ request: initial, destinationName, roomsQuery }: { request:
         </h2>
         {pageCount > 1 && <p className={styles.pageOf} aria-live="polite">{t(`Page ${page} of ${pageCount}`, `الصفحة ${page} من ${pageCount}`)}</p>}
       </div>
-      {!first.pricingVerified && (
-        <p className={styles.preview} role="note"><Icon name="info" /><span>{t("Availability preview: prices aren't verified yet and booking is unavailable.", "معاينة التوافر: لم يتم التحقق من الأسعار بعد والحجز غير متاح.")} {t("Rates show as Price on request.", "تظهر الأسعار كـ «السعر عند الطلب».")}</span></p>
-      )}
     </div>
   );
 
@@ -167,7 +160,7 @@ function SearchRun({ request: initial, destinationName, roomsQuery }: { request:
 
       {state.status === "done" && state.result.total > 0 && (
         <div data-search-state="results" className={styles.layout}>
-          <FilterSidebar value={filters} onChange={setFilters} onClear={() => setFilters(emptyPageFilters)} shown={filterPage(state.result.hotels, filters).length} total={state.result.hotels.length} />
+          <LiveHotelFilters result={state.result} value={filters} onChange={setFilters} shown={filterLiveHotels(state.result, filters).length} />
           <div className={styles.main}>
             {state.result.hotels.length === 0 ? (
               <SystemState title={t("This page has no hotels", "لا توجد فنادق في هذه الصفحة")} description={t("Go back to the previous page.", "ارجع إلى الصفحة السابقة.")} />
@@ -182,7 +175,6 @@ function SearchRun({ request: initial, destinationName, roomsQuery }: { request:
                       <option value="name">{t("Name: A to Z", "الاسم: أ إلى ي")}</option>
                     </select>
                   </label>
-                  <p className={styles.scopeNote}>{t("Filters and sorting apply to the hotels on this page.", "تنطبق التصفية والترتيب على فنادق هذه الصفحة.")}</p>
                 </div>
                 <HotelList result={state.result} filters={filters} sort={sort} roomsQuery={roomsQuery} />
               </>
@@ -222,9 +214,9 @@ function sortPage(hotels: B2BHotelSearchResult["hotels"], sort: PageSort) {
   }).map(({ hotel }) => hotel);
 }
 
-function HotelList({ result, filters, sort, roomsQuery }: { result: B2BHotelSearchResult; filters: PageFilters; sort: PageSort; roomsQuery: string }) {
+function HotelList({ result, filters, sort, roomsQuery }: { result: B2BHotelSearchResult; filters: LiveFilters; sort: PageSort; roomsQuery: string }) {
   const { t } = useLocale();
-  const shown = sortPage(filterPage(result.hotels, filters), sort);
+  const shown = sortPage(filterLiveHotels(result, filters), sort);
   if (shown.length === 0) {
     return <p className={styles.noMatch} data-search-state="no-match">{t("No hotels on this page match these filters.", "لا توجد فنادق في هذه الصفحة تطابق عوامل التصفية هذه.")}</p>;
   }
@@ -236,55 +228,6 @@ function HotelList({ result, filters, sort, roomsQuery }: { result: B2BHotelSear
         </li>
       ))}
     </ul>
-  );
-}
-
-/**
- * The filter sidebar (wide screens) or a collapsible panel behind a "Filters" button (narrower
- * screens): the same controls rendered once. Filters only narrow the hotels already loaded on this
- * page, and say so; there is no price filter while prices are unverified.
- */
-function FilterSidebar({ value, onChange, onClear, shown, total }: { value: PageFilters; onChange: (next: PageFilters) => void; onClear: () => void; shown: number; total: number }) {
-  const { t } = useLocale();
-  const [open, setOpen] = useState(false);
-  const active = pageFiltersActive(value);
-  const count = Number(Boolean(value.name.trim())) + Number(Boolean(value.minStars)) + Number(value.breakfastOnly);
-  return (
-    <aside className={styles.sidebar} aria-label={t("Filters", "التصفية")}>
-      <button type="button" className={styles.filterToggle} aria-expanded={open} aria-controls="api-hotel-filters" onClick={() => setOpen((current) => !current)}>
-        <Icon name="search" />{t("Filters", "التصفية")}{count > 0 && <span className={styles.badge}>{count}</span>}
-        <span className={styles.chevron} aria-hidden="true"><Icon name="chevron" /></span>
-      </button>
-      <div id="api-hotel-filters" className={styles.sidebarPanel} data-open={open || undefined}>
-        <fieldset className={styles.filters}>
-          <legend>{t("Filter this page", "تصفية هذه الصفحة")}</legend>
-          <label className={styles.searchField}>
-            <span>{t("Hotel name or address", "اسم الفندق أو العنوان")}</span>
-            <span className={styles.inputWrap}>
-              <Icon name="search" />
-              <input type="search" value={value.name} placeholder={t("Search this page", "ابحث في هذه الصفحة")} onChange={(event) => onChange({ ...value, name: event.target.value })} />
-            </span>
-          </label>
-          <label>
-            <span>{t("Stars", "النجوم")}</span>
-            <select value={value.minStars} onChange={(event) => onChange({ ...value, minStars: Number(event.target.value) })}>
-              <option value={0}>{t("Any", "الكل")}</option>
-              {[3, 4, 5].map((stars) => <option key={stars} value={stars}>{t(`${stars}+ stars`, `${stars}+ نجوم`)}</option>)}
-            </select>
-          </label>
-          <label className={styles.check}>
-            <input type="checkbox" checked={value.breakfastOnly} onChange={(event) => onChange({ ...value, breakfastOnly: event.target.checked })} />
-            <span>{t("Breakfast available", "الإفطار متاح")}</span>
-          </label>
-        </fieldset>
-        {active && (
-          <p className={styles.filterCount} role="status">
-            <span>{t(`${shown} of ${total} hotels on this page match`, `${shown} من ${total} فنادق في هذه الصفحة مطابقة`)}</span>
-            <button type="button" onClick={onClear}><Icon name="close" />{t("Clear filters", "مسح عوامل التصفية")}</button>
-          </p>
-        )}
-      </div>
-    </aside>
   );
 }
 

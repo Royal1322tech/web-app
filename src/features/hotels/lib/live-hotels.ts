@@ -75,24 +75,3 @@ export function mealLabel(meal: string, locale: "en" | "ar"): string {
   const spaced = meal.replace(/[-_]+/g, " ").trim();
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
-
-/**
- * Filters that work on the hotels of the page already loaded. They never claim to cover the whole
- * result set. A price filter is deliberately absent while prices are not verified.
- */
-export interface PageFilters {
-  name: string;
-  minStars: number;
-  breakfastOnly: boolean;
-}
-export const emptyPageFilters: PageFilters = { name: "", minStars: 0, breakfastOnly: false };
-
-export function filterPage(hotels: readonly B2BHotel[], filters: PageFilters): B2BHotel[] {
-  const name = filters.name.trim().toLocaleLowerCase();
-  return hotels.filter((hotel) =>
-    (!name || (hotel.name ?? "").toLocaleLowerCase().includes(name) || (hotel.address ?? "").toLocaleLowerCase().includes(name)) &&
-    (!filters.minStars || (hotel.stars ?? 0) >= filters.minStars) &&
-    (!filters.breakfastOnly || breakfastAvailability(hotel.rooms) === "some"));
-}
-
-export const pageFiltersActive = (filters: PageFilters) => Boolean(filters.name.trim() || filters.minStars || filters.breakfastOnly);

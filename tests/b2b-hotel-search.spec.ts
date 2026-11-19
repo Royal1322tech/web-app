@@ -244,14 +244,14 @@ test.describe("B2B hotel search: the search page (mocked API)", () => {
     await expect(page.locator("#destination")).toHaveValue("los-angeles");
   });
 
-  test("Arabic sends language ar; an unsupported preferred currency falls back to USD with a visible note", async ({ page }) => {
+  test("Arabic sends language ar; an unsupported preferred currency falls back to USD without a technical note", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("royal-vacation.travel-preferences", JSON.stringify({ currency: "AED", nationality: "EG" })));
     const api = await signedIn(page, () => results(0), "ar");
     await page.goto(searchUrl("paris"));
     await expect(state(page)).toHaveAttribute("data-search-state", "empty");
     expect(api.searches[0].postDataJSON()).toMatchObject({ language: "ar", currency: "USD", latitude: 48.8566, longitude: 2.3522 });
     expect(api.searches[0].headers()["x-locale"]).toBe("ar");
-    await expect(page.getByRole("note").filter({ hasText: "AED" })).toBeVisible();
+    await expect(page.getByText(/يدعم البحث عن الفنادق|supports USD/)).toHaveCount(0); // the fallback is silent
   });
 
   test("a supported preferred currency is sent as chosen", async ({ page }) => {
@@ -347,12 +347,12 @@ test.describe("B2B hotel search: hotel cards (mocked API)", () => {
     await expect(third.getByText("Room type not provided")).toBeVisible();
 
     for (const card of await cards.all()) {
-      // One concise state per card; the general notice above the results explains it once.
+      // One concise state per card, and no development-stage banner above the results.
       await expect(card.getByText("Price on request")).toBeVisible();
       await expect(card.getByText(/Booking unavailable|aren't verified/)).toHaveCount(0);
       await expect(card.locator("a, button")).toHaveCount(0); // no details link and no booking action
     }
-    await expect(page.getByText(/^Availability preview: prices aren't verified yet and booking is unavailable\./)).toBeVisible();
+    await expect(page.getByText(/Availability preview|prices aren't verified/)).toHaveCount(0); // no development-stage banner
     await expect(cards.getByText(/\b(reviews?|guest rating|amenities|discount)\b/i)).toHaveCount(0);
     await expect(page.getByText("Hotel availability preview. Prices are not yet verified.")).toHaveCount(0); // server wording stays hidden
   });
@@ -382,7 +382,7 @@ test.describe("B2B hotel search: hotel cards (mocked API)", () => {
     await page.goto(searchUrl("dubai"));
     await expect(page.locator("[data-live-hotel]").getByText("Price on request")).toBeVisible();
     await expect(page.getByText(/\$120/)).toHaveCount(0);
-    await expect(page.getByText(/^Availability preview: prices aren't verified yet and booking is unavailable\./)).toBeVisible();
+    await expect(page.getByText(/Availability preview|prices aren't verified/)).toHaveCount(0); // no development-stage banner
     await expect(page.getByText("Bookable · contact us to book")).toHaveCount(0);
   });
 });
@@ -482,20 +482,124 @@ test.describe("B2B hotel search: pagination (mocked API)", () => {
     await expect(page.getByRole("heading", { name: "Test Hotel 21" })).toBeVisible();
   });
 
-  test("filters work on the loaded page only and say so", async ({ page }) => {
-    const hotels = [hotel(0, { name: "Palm Court", stars: 5 }), hotel(1, { name: "City Inn", stars: 3, rooms: [{ room_name: "Room", meal_name: "nomeal", has_breakfast: false, bedding_type: null, selling_price: null, booking_enabled: false }] }), hotel(2, { name: "Palm Gardens", stars: 4 })];
-    await signedIn(page, () => preview({ total: 3, hotels }));
+  test("the complete filter sidebar: real filters narrow the page, others never hide hotels", async ({ page }) => {
+    const room = (meal: string | null, breakfast: boolean | null) => ({ room_name: "Room", meal_name: meal, has_breakfast: breakfast, bedding_type: null, selling_price: null, booking_enabled: false });
+    const hotels = [
+      hotel(0, { name: "Palm Court", stars: 5, address: "1 Palm Road, Jumeirah, Dubai", rooms: [room("breakfast", true), room("half-board", true)] }),
+      hotel(1, { name: "City Inn", stars: 3, address: "2 Main Street, Deira, Dubai", rooms: [room("nomeal", false)] }),
+      hotel(2, { name: "Palm Gardens", stars: 4, address: "3 Beach Road, Jumeirah, Dubai", rooms: [room("all-inclusive", true)] }),
+      hotel(3, { name: null, stars: null, address: null, rooms: [] }),
+    ];
+    await signedIn(page, () => preview({ total: 4, hotels }));
     await page.goto(searchUrl("dubai"));
-    const filters = page.getByRole("group", { name: "Filter this page" });
+    const cards = page.locator("[data-live-hotel]");
+    const filters = page.getByRole("group", { name: "Hotel filters" });
+    await expect(cards).toHaveCount(4);
+    // Every section of the original sidebar is present, in order.
+    await expect(filters.locator("summary > span:first-child")).toHaveText(["Hotel Name", "Area / Location", "Top product", "Board", "Category", "Customer Review", "Establishment profile", "Amenities", "Price (USD)", "Product packaging"]);
+
+    // Name or address.
     await filters.getByLabel("Hotel name or address").fill("palm");
-    await expect(page.locator("[data-live-hotel]")).toHaveCount(2);
-    await expect(page.getByText("2 of 3 hotels on this page match")).toBeVisible();
-    await filters.getByLabel("Stars").selectOption("5");
+    await expect(cards).toHaveCount(2);
+    await expect(page.getByText("2 of 4 hotels on this page match")).toBeVisible();
+    await filters.getByRole("button", { name: "Clear hotel name" }).click();
+    await expect(cards).toHaveCount(4);
+
+    // Areas come from the hotels' own addresses, never a fixed city list.
+    const area = filters.locator("details", { has: page.getByText("Area / Location", { exact: true }) });
+    await expect(area.getByRole("checkbox")).toHaveCount(2);
+    await expect(area.locator("label")).toHaveText([/Jumeirah\s*2/, /Deira\s*1/]);
+    await expect(filters.getByText(/Alexandria|Cairo|Hurghada|Sharm/)).toHaveCount(0);
+    await area.getByRole("checkbox", { name: /Deira/ }).check();
+    await expect(cards).toHaveCount(1);
+    await area.getByRole("checkbox", { name: /Deira/ }).uncheck();
+
+    // Board plans follow the real meal codes; plans no room offers are disabled.
+    const board = filters.locator("details", { has: page.getByText("Board", { exact: true }) });
+    await expect(board.getByRole("checkbox", { name: "Full Board" })).toBeDisabled();
+    await expect(board.getByRole("checkbox", { name: "Ultra All Inclusive" })).toBeDisabled();
+    await board.getByRole("checkbox", { name: "Half Board" }).check();
+    await expect(cards).toHaveCount(1);
+    await board.getByRole("checkbox", { name: "Room Only" }).check();
+    await expect(cards).toHaveCount(2);
+    await filters.getByRole("button", { name: "Reset filters" }).click();
+    await board.getByRole("checkbox", { name: "Breakfast available" }).check();
+    await expect(cards).toHaveCount(2);
+    await filters.getByRole("button", { name: "Reset filters" }).click();
+
+    // Category: star checkboxes; a hotel without a rating never matches.
+    await filters.getByRole("checkbox", { name: "5 stars" }).check();
+    await filters.getByRole("checkbox", { name: "3 stars" }).check();
+    await expect(cards).toHaveCount(2);
+    await filters.getByRole("button", { name: "Reset filters" }).click();
+    await expect(cards).toHaveCount(4);
+    await expect(filters.getByRole("button", { name: "Reset filters" })).toBeDisabled();
+
+    // Controls the search has no data for stay usable but never hide a hotel or change the count.
+    for (const title of ["Top product", "Customer Review", "Establishment profile", "Amenities", "Price (USD)", "Product packaging"]) {
+      const section = filters.locator("details", { has: page.getByText(title, { exact: true }) });
+      await expect(section.locator("summary")).toContainText("Coming soon");
+      await section.locator("summary").click();
+    }
+    await filters.getByRole("checkbox", { name: "Luxury Collection" }).first().check();
+    await filters.getByRole("radio", { name: "Very Good 4+" }).check();
+    await filters.getByRole("checkbox", { name: "Business Hotels" }).check();
+    await filters.getByRole("checkbox", { name: "Pool" }).check();
+    await expect(filters.getByRole("checkbox", { name: "Gym" })).toBeHidden();
+    await filters.getByRole("button", { name: "View More" }).click();
+    await filters.getByRole("checkbox", { name: "Gym" }).check();
+    await expect(filters.getByRole("button", { name: "View Less" })).toHaveAttribute("aria-expanded", "true");
+    await filters.getByLabel("Min.").fill("100");
+    await filters.getByLabel("Max.").fill("50");
+    await expect(filters.getByRole("alert")).toHaveText("Minimum must not exceed maximum.");
+    await filters.getByRole("radio", { name: "With Package" }).check();
+    await expect(cards).toHaveCount(4);
+    await expect(page.getByText(/hotels on this page match/)).toHaveCount(0);
+    expect(await page.locator("[aria-controls=api-hotel-filters]").evaluate((element) => element.textContent)).not.toMatch(/\d/);
+    await filters.getByRole("button", { name: "Reset filters" }).click();
+    await expect(filters.getByRole("checkbox", { name: "Pool" })).not.toBeChecked();
+    await expect(filters.getByLabel("Min.")).toHaveValue("");
+    await expect(filters.getByRole("radio", { name: "All", exact: true }).last()).toBeChecked();
+    // No price amount appears anywhere while prices are unverified.
+    await expect(page.locator("[data-price=verified]")).toHaveCount(0);
+  });
+
+  test("the price range filters only verified prices, and only when the page has them", async ({ page }) => {
+    const rooms = (price: number) => [{ room_name: "Room", meal_name: "nomeal", has_breakfast: false, bedding_type: null, selling_price: price, booking_enabled: true }];
+    const hotels = [
+      hotel(0, { name: "Low", pricing_status: "verified", rooms: rooms(90) }),
+      hotel(1, { name: "High", pricing_status: "verified", rooms: rooms(400) }),
+      hotel(2, { name: "On request", pricing_status: "unverified", rooms: rooms(120) }),
+    ];
+    await signedIn(page, () => preview({ total: 3, hotels, pricing_verified: true }));
+    await page.goto(searchUrl("dubai"));
+    const filters = page.getByRole("group", { name: "Hotel filters" });
+    const price = filters.locator("details", { has: page.getByText("Price (USD)", { exact: true }) });
+    await expect(price).toHaveAttribute("open", "");
+    await expect(price.locator("summary")).not.toContainText("Coming soon");
+    await price.getByLabel("Max.").fill("200");
     await expect(page.locator("[data-live-hotel]")).toHaveCount(1);
-    await page.getByRole("button", { name: "Clear filters" }).click();
-    await filters.getByLabel("Breakfast available").check();
-    await expect(page.locator("[data-live-hotel]")).toHaveCount(2);
-    await expect(filters.getByText(/price/i)).toHaveCount(0);
+    await expect(page.locator("[data-live-hotel] h3")).toHaveText("Low");
+    await expect(page.getByText("1 of 3 hotels on this page match")).toBeVisible();
+  });
+
+  test("phone and tablet: the sidebar opens from a Filters button and closes with Show hotels", async ({ page }) => {
+    await signedIn(page, () => preview({ total: 3 }));
+    for (const width of [375, 768]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(searchUrl("dubai"));
+      const toggle = page.getByRole("button", { name: /^Filters/ });
+      const panel = page.locator("#api-hotel-filters");
+      await expect(panel).toBeHidden();
+      await toggle.click();
+      await expect(toggle).toHaveAttribute("aria-expanded", "true");
+      await expect(panel.getByRole("group", { name: "Hotel filters" })).toBeVisible();
+      await panel.getByRole("checkbox", { name: "4 stars" }).check();
+      await expect(toggle.locator("span").first()).toHaveText("1");
+      await panel.getByRole("button", { name: "Show 3 hotels" }).click();
+      await expect(panel).toBeHidden();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+    }
   });
 
   test("sorting uses only values the API returned: stars or name, missing values last; filters can match nothing", async ({ page }) => {
@@ -505,9 +609,8 @@ test.describe("B2B hotel search: pagination (mocked API)", () => {
     const names = () => page.locator("#api-hotel-results [data-live-hotel] h3").allInnerTexts();
     await expect(page.locator("#api-hotel-results [data-live-hotel]")).toHaveCount(4);
     expect(await names()).toEqual(["Coral", "Hotel name not provided", "Atlas", "Bay"]);
-    // Sorting sits above the list and, like the filters, applies to this page only.
     const sort = page.getByLabel("Sort by");
-    await expect(page.getByText("Filters and sorting apply to the hotels on this page.")).toBeVisible();
+    await expect(page.getByText("Filters and sorting apply to the hotels on this page.")).toHaveCount(0);
     await sort.selectOption("stars");
     expect(await names()).toEqual(["Hotel name not provided", "Bay", "Coral", "Atlas"]);
     await sort.selectOption("name");
@@ -517,7 +620,7 @@ test.describe("B2B hotel search: pagination (mocked API)", () => {
     await page.getByLabel("Hotel name or address").fill("no such hotel");
     await expect(page.getByText("0 of 4 hotels on this page match")).toBeVisible();
     await expect(page.locator("[data-search-state=no-match]")).toHaveText("No hotels on this page match these filters.");
-    await page.getByRole("button", { name: "Clear filters" }).click();
+    await page.getByRole("button", { name: "Reset filters" }).click();
     await expect(page.locator("#api-hotel-results [data-live-hotel]")).toHaveCount(4);
   });
 });
