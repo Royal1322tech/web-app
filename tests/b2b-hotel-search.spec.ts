@@ -325,10 +325,12 @@ test.describe("B2B hotel search: hotel cards (mocked API)", () => {
     await expect(first.getByLabel("5-star hotel")).toBeVisible();
     await expect(first.getByText("4 room options")).toBeVisible(); // the duplicate offer is counted once
     await expect(first.getByText("Breakfast available")).toBeVisible();
+    // A compact summary: two room types, the rest behind "Show 2 more".
+    await expect(first.locator("[class*=rooms] > ul > li")).toHaveCount(2);
+    await first.getByText("Show 2 more").click();
     await expect(first.getByText("Deluxe King")).toBeVisible();
     await expect(first.getByText("Breakfast · King bed")).toBeVisible();
     await expect(first.getByText("Room only")).toBeVisible();
-    await first.getByText("Show 1 more").click();
     await expect(first.getByText("Full board")).toBeVisible();
     // The image failed to load (404), so the branded placeholder replaces it.
     await expect(first.locator("[data-image-missing]")).toBeVisible();
@@ -345,11 +347,12 @@ test.describe("B2B hotel search: hotel cards (mocked API)", () => {
     await expect(third.getByText("Room type not provided")).toBeVisible();
 
     for (const card of await cards.all()) {
-      await expect(card.getByText("Price unavailable")).toBeVisible();
-      await expect(card.getByText("Booking unavailable")).toBeVisible();
+      // One concise state per card; the general notice above the results explains it once.
+      await expect(card.getByText("Price on request")).toBeVisible();
+      await expect(card.getByText(/Booking unavailable|aren't verified/)).toHaveCount(0);
       await expect(card.locator("a, button")).toHaveCount(0); // no details link and no booking action
     }
-    await expect(page.getByText("Availability preview: prices aren't verified yet and booking is unavailable.")).toBeVisible();
+    await expect(page.getByText(/^Availability preview: prices aren't verified yet and booking is unavailable\./)).toBeVisible();
     await expect(cards.getByText(/\b(reviews?|guest rating|amenities|discount)\b/i)).toHaveCount(0);
     await expect(page.getByText("Hotel availability preview. Prices are not yet verified.")).toHaveCount(0); // server wording stays hidden
   });
@@ -366,10 +369,10 @@ test.describe("B2B hotel search: hotel cards (mocked API)", () => {
     const card = (name: string) => page.locator("[data-live-hotel]").filter({ has: page.getByRole("heading", { name, exact: true }) });
     await expect(card("Verified").getByText("$199.00")).toBeVisible();
     await expect(card("Verified").getByText("Bookable · contact us to book")).toBeVisible();
-    await expect(card("Unverified hotel").getByText("Price unavailable")).toBeVisible();
+    await expect(card("Unverified hotel").getByText("Price on request")).toBeVisible();
     await expect(card("Unverified hotel").getByText("$150")).toHaveCount(0);
-    await expect(card("No amount").getByText("Price unavailable")).toBeVisible();
-    await expect(card("No amount").getByText("Booking unavailable")).toBeVisible();
+    await expect(card("No amount").getByText("Price on request")).toBeVisible();
+    await expect(card("No amount").getByText("Bookable · contact us to book")).toHaveCount(0);
     await expect(page.getByText("Availability preview")).toHaveCount(0);
     await expect(page.locator("[data-live-hotel] a, [data-live-hotel] button")).toHaveCount(0);
   });
@@ -377,9 +380,10 @@ test.describe("B2B hotel search: hotel cards (mocked API)", () => {
   test("with pricing_verified false, even a numeric selling price is not shown", async ({ page }) => {
     await signedIn(page, () => preview({ total: 1, hotels: [hotel(0, { pricing_status: "verified", rooms: [{ room_name: "Room", meal_name: null, has_breakfast: null, bedding_type: null, selling_price: 120, booking_enabled: true }], booking_enabled: true })] }));
     await page.goto(searchUrl("dubai"));
-    await expect(page.locator("[data-live-hotel]").getByText("Price unavailable")).toBeVisible();
+    await expect(page.locator("[data-live-hotel]").getByText("Price on request")).toBeVisible();
     await expect(page.getByText(/\$120/)).toHaveCount(0);
-    await expect(page.getByText("Booking unavailable")).toBeVisible();
+    await expect(page.getByText(/^Availability preview: prices aren't verified yet and booking is unavailable\./)).toBeVisible();
+    await expect(page.getByText("Bookable · contact us to book")).toHaveCount(0);
   });
 });
 
@@ -493,6 +497,27 @@ test.describe("B2B hotel search: pagination (mocked API)", () => {
     await expect(page.locator("[data-live-hotel]")).toHaveCount(2);
     await expect(filters.getByText(/price/i)).toHaveCount(0);
   });
+
+  test("sorting uses only values the API returned: stars or name, missing values last; filters can match nothing", async ({ page }) => {
+    const hotels = [hotel(0, { name: "Coral", stars: 3 }), hotel(1, { name: null, stars: 5 }), hotel(2, { name: "Atlas", stars: null }), hotel(3, { name: "Bay", stars: 4 })];
+    await signedIn(page, () => preview({ total: 4, hotels }));
+    await page.goto(searchUrl("dubai"));
+    const names = () => page.locator("#api-hotel-results [data-live-hotel] h3").allInnerTexts();
+    await expect(page.locator("#api-hotel-results [data-live-hotel]")).toHaveCount(4);
+    expect(await names()).toEqual(["Coral", "Hotel name not provided", "Atlas", "Bay"]);
+    const sort = page.getByRole("group", { name: "Filter this page" }).getByLabel("Sort by");
+    await sort.selectOption("stars");
+    expect(await names()).toEqual(["Hotel name not provided", "Bay", "Coral", "Atlas"]);
+    await sort.selectOption("name");
+    expect(await names()).toEqual(["Atlas", "Bay", "Coral", "Hotel name not provided"]);
+    await sort.selectOption("recommended");
+    expect(await names()).toEqual(["Coral", "Hotel name not provided", "Atlas", "Bay"]);
+    await page.getByLabel("Hotel name or address").fill("no such hotel");
+    await expect(page.getByText("0 of 4 hotels on this page match")).toBeVisible();
+    await expect(page.locator("[data-search-state=no-match]")).toHaveText("No hotels on this page match these filters.");
+    await page.getByRole("button", { name: "Clear filters" }).click();
+    await expect(page.locator("#api-hotel-results [data-live-hotel]")).toHaveCount(4);
+  });
 });
 
 test.describe("B2B hotel search: home page (mocked API)", () => {
@@ -519,7 +544,7 @@ test.describe("B2B hotel search: home page (mocked API)", () => {
     // No information line under the toolbar; the cards keep their own price and booking notices.
     await expect(collection.getByText(/Available in|prices not yet verified/)).toHaveCount(0);
     await expect(collection.locator(".hotel-miniature ~ p, [role=status]").filter({ hasText: /Available/ })).toHaveCount(0);
-    await expect(collection.locator("[data-live-hotel]").first().getByText("Price unavailable")).toBeAttached();
+    await expect(collection.locator("[data-live-hotel]").first().getByText("Price on request")).toBeAttached();
     await expect(collection.locator("#hotel-city option")).toHaveCount(7);
     await expect(page.getByText(/Golden Rose Hotel|Illustrative/)).toHaveCount(0);
 

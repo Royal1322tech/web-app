@@ -7,20 +7,33 @@
 .pageOf { margin: 4px 0 0; color: var(--muted); font-size: var(--font-size-md); }
 .preview { display: inline-flex; align-items: flex-start; gap: var(--space-2); max-width: 520px; margin: 0; padding: var(--space-2) var(--space-3); border: 1px solid #ecdcc4; border-radius: var(--rounded-md); background: #fdf8f1; color: #6b440f; font-size: var(--font-size-sm); line-height: 1.45; }
 .preview svg { flex: none; width: 16px; height: 16px; margin-block-start: 1px; }
+@media (max-width: 640px) { .preview { max-width: none; } }
 .loadingText { margin: 0 0 var(--space-3); color: var(--muted); font-size: var(--font-size-md); }
 
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: var(--space-5); margin: 0; padding: 0; list-style: none; }
-.grid > li { min-width: 0; }
+/* 1 column on phones, 2 on tablets, 3 on laptops and wider. Items stretch so cards and actions align. */
+.grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-5); margin: 0; padding: 0; list-style: none; }
+.grid > li { display: flex; min-width: 0; }
+.grid > li > * { flex: 1; }
+@media (min-width: 640px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); } }
+@media (min-width: 1100px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); } }
+.noMatch { margin: 0; padding: var(--space-6) var(--space-4); border: 1px dashed var(--border); border-radius: var(--rounded-lg); color: var(--muted); font-size: var(--font-size-md); text-align: center; }
 
-.filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3) var(--space-4); margin: 0 0 var(--space-4); padding: var(--space-3) var(--space-4); border: 1px solid var(--border); border-radius: var(--rounded-lg); background: var(--surface); }
-.filters legend { float: inline-start; width: 100%; margin-block-end: var(--space-1); padding: 0; color: var(--navy); font-size: var(--font-size-sm); font-weight: var(--weight-bold); }
+/* Filter toolbar: one row on wide screens, a tidy two-column grid on tablets, stacked on phones. */
+.filters { display: grid; grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr)) auto; align-items: end; gap: var(--space-3) var(--space-4); margin: 0 0 var(--space-4); padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--rounded-lg); background: var(--surface); box-shadow: var(--elevation-1); }
+.filters legend { float: inline-start; grid-column: 1 / -1; width: 100%; margin-block-end: var(--space-1); padding: 0; color: var(--navy); font-size: var(--font-size-sm); font-weight: var(--weight-bold); }
 .filters label { display: grid; gap: 4px; min-width: 0; color: var(--muted); font-size: var(--font-size-xs); font-weight: var(--weight-semibold); }
-.filters label:first-of-type { flex: 1 1 220px; }
-.filters input[type="search"], .filters select { min-height: 40px; padding: 0 var(--space-3); border: 1px solid var(--border); border-radius: var(--rounded-sm); background: #fbfcfe; color: var(--navy); font: inherit; font-size: var(--font-size-md); }
-.filters .check { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 40px; color: var(--navy); font-size: var(--font-size-md); }
+.filters input[type="search"], .filters select { width: 100%; min-width: 0; min-height: 44px; padding: 0 var(--space-3); border: 1px solid var(--border); border-radius: var(--rounded-md); background: #fbfcfe; color: var(--navy); font: inherit; font-size: var(--font-size-md); }
+.filters input[type="search"]:focus-visible, .filters select:focus-visible { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent); }
+.inputWrap { position: relative; display: block; }
+.inputWrap svg { position: absolute; inset-block-start: 50%; inset-inline-start: 12px; width: 16px; height: 16px; color: var(--muted); translate: 0 -50%; pointer-events: none; }
+.filters .inputWrap input[type="search"] { box-sizing: border-box; height: 44px; padding-inline-start: 36px; }
+.filters .check { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; padding: 0 var(--space-3); border: 1px solid var(--border); border-radius: var(--rounded-pill); background: #fbfcfe; color: var(--navy); font-size: var(--font-size-md); white-space: nowrap; cursor: pointer; }
+.filters .check:has(input:checked) { border-color: color-mix(in srgb, var(--success) 40%, var(--border)); background: #eef8f3; }
 .filters .check input { width: 18px; height: 18px; accent-color: var(--primary); }
 .filterCount { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin: 0 0 var(--space-3); color: var(--muted); font-size: var(--font-size-md); }
-.filterCount button { min-height: 36px; padding: 0 var(--space-3); border: 1px solid var(--border); border-radius: var(--rounded-pill); background: var(--surface); color: var(--primary); font-weight: var(--weight-bold); cursor: pointer; }
+.filterCount button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 var(--space-4); border: 1px solid var(--border); border-radius: var(--rounded-pill); background: var(--surface); color: var(--primary); font: inherit; font-weight: var(--weight-bold); cursor: pointer; }
+.filterCount button svg { width: 14px; height: 14px; }
+@media (max-width: 1099px) { .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .searchField { grid-column: 1 / -1; } }
 
 .pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-3); padding-block: var(--space-2); }
 .pager span { min-width: 120px; color: var(--navy); font-size: var(--font-size-md); font-weight: var(--weight-bold); text-align: center; }
@@ -36,5 +49,6 @@
   .pager { justify-content: space-between; }
   .pager span { order: -1; width: 100%; }
   .pager button { flex: 1; justify-content: center; padding-inline: var(--space-3); }
-  .filters label:first-of-type { flex-basis: 100%; }
+  .filters { grid-template-columns: minmax(0, 1fr); padding: var(--space-3); }
+  .filters .check { justify-self: start; }
 }

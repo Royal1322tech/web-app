@@ -7,25 +7,33 @@
 :global([dir="rtl"]) .back svg { rotate: 180deg; }
 
 /* Header */
-.header { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-4) var(--space-6); align-items: start; padding-block-end: var(--space-6); border-block-end: 1px solid var(--border); }
-.headerImage { grid-row: span 2; width: 132px; aspect-ratio: 4 / 3; border-radius: var(--rounded-lg); object-fit: cover; }
-.headerText { display: grid; gap: var(--space-1); min-width: 0; }
-.header:not(:has(.headerImage)) .headerText, .header:not(:has(.headerImage)) .stay { grid-column: 1 / -1; }
+/* Hotel header: the same 16:10 frame and neutral placeholder as the search cards. */
+.header { display: grid; grid-template-columns: minmax(180px, 260px) minmax(0, 1fr); gap: var(--space-4) var(--space-6); align-items: start; padding: var(--space-5); border: 1px solid var(--border); border-radius: var(--rounded-xl); background: var(--surface); box-shadow: var(--elevation-1); }
+.headerImage { grid-row: span 2; width: 100%; aspect-ratio: 16 / 10; border-radius: var(--rounded-lg); object-fit: cover; background: #eef2f7; }
+.headerPlaceholder { display: grid; place-content: center; justify-items: center; gap: var(--space-2); background: linear-gradient(135deg, transparent 0 46%, color-mix(in srgb, var(--rv-gold) 7%, transparent) 46% 54%, transparent 54%) 0 0 / 22px 22px, linear-gradient(160deg, #f6f8fb, #e9eef5); color: #6c7c8f; font-size: var(--font-size-xs); font-weight: var(--weight-semibold); }
+.headerPlaceholder span { display: grid; place-items: center; width: 48px; height: 48px; border: 1px solid color-mix(in srgb, var(--rv-gold) 28%, #dfe6ee); border-radius: 50%; background: #fff; color: var(--rv-gold); }
+.headerPlaceholder svg { width: 22px; height: 22px; }
+.headerText { display: grid; gap: var(--space-2); min-width: 0; }
 .stars { margin: 0; color: var(--rv-gold); letter-spacing: 2px; }
 .title { margin: 0; color: var(--rv-navy); font-size: clamp(24px, 3vw, 32px); font-weight: var(--weight-heavy); line-height: 1.2; overflow-wrap: anywhere; }
 .address { display: flex; align-items: flex-start; gap: 6px; margin: 0; color: var(--muted); overflow-wrap: anywhere; }
 .address svg { flex: none; width: 16px; height: 16px; margin-block-start: 3px; color: var(--brand-teal); }
-.stay { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-6); margin: 0; }
-.stay > div { display: grid; gap: 2px; }
+/* Stay summary: equal cells that wrap cleanly at any width. */
+.stay { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: var(--space-2); margin: 0; }
+.stay > div { display: grid; gap: 2px; min-width: 0; padding: var(--space-2) var(--space-3); border-radius: var(--rounded-md); background: #f6f8fb; }
 .stay dt { color: var(--muted); font-size: var(--font-size-xs); font-weight: var(--weight-semibold); }
-.stay dd { margin: 0; font-size: var(--font-size-md); font-weight: var(--weight-bold); }
+.stay dd { margin: 0; overflow-wrap: anywhere; font-size: var(--font-size-md); font-weight: var(--weight-bold); }
 
 /* Steps */
 .flow { display: grid; gap: var(--space-5); min-width: 0; }
-.steps { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-6); margin: 0; padding: 0; list-style: none; }
-.steps li { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--muted); font-size: var(--font-size-md); font-weight: var(--weight-semibold); }
+/* Stepper: three equal steps joined by a line; the state comes from the flow, unchanged. */
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.steps li { position: relative; display: flex; align-items: center; gap: var(--space-2); min-width: 0; color: var(--muted); font-size: var(--font-size-md); font-weight: var(--weight-semibold); }
+.steps li > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.steps li:not(:last-child)::after { content: ""; flex: 1; min-width: 12px; height: 2px; border-radius: 2px; background: var(--border); }
+.steps li[data-state="done"]::after { background: var(--success); }
 .steps li[data-state="current"] { color: var(--rv-navy); }
-.stepMark { display: inline-grid; place-items: center; width: 28px; height: 28px; border: 2px solid currentColor; border-radius: 50%; font-size: var(--font-size-sm); }
+.stepMark { display: inline-grid; flex: none; place-items: center; width: 30px; height: 30px; border: 2px solid currentColor; border-radius: 50%; background: var(--surface); font-size: var(--font-size-sm); }
 .steps li[data-state="current"] .stepMark { border-color: var(--primary); background: var(--primary); color: #fff; }
 .steps li[data-state="done"] .stepMark { border-color: var(--success); background: var(--success); color: #fff; }
 .stepMark svg { width: 14px; height: 14px; }
@@ -39,8 +47,11 @@
 .timer strong { color: var(--rv-navy); font-variant-numeric: tabular-nums; }
 .note { margin: 0; color: var(--muted); font-size: var(--font-size-sm); }
 .rates { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
-.rate { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: var(--space-3) var(--space-6); padding: var(--space-4) var(--space-5); border: 1px solid var(--border); border-radius: var(--rounded-lg); background: var(--surface); }
-.rate[data-selectable="true"]:hover { border-color: color-mix(in srgb, var(--rv-gold) 45%, var(--border)); }
+/* Rate cards share the search cards' look: white, rounded, a gold accent when the rate can be chosen. */
+.rate { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(168px, auto); align-items: center; gap: var(--space-3) var(--space-6); padding: var(--space-4) var(--space-5); overflow: hidden; border: 1px solid var(--border); border-radius: var(--rounded-xl); background: var(--surface); box-shadow: var(--elevation-1); }
+.rate[data-selectable="true"]::before { content: ""; position: absolute; inset-block: 0; inset-inline-start: 0; width: 3px; background: var(--rv-gold); }
+.rate[data-selectable="true"]:hover { border-color: color-mix(in srgb, var(--rv-gold) 45%, var(--border)); box-shadow: var(--elevation-3); }
+.rate[data-selectable="false"] { background: #fbfcfe; }
 .rateInfo { display: grid; gap: var(--space-2); min-width: 0; }
 .rateInfo h3 { margin: 0; font-size: var(--font-size-base); font-weight: var(--weight-bold); overflow-wrap: anywhere; }
 .rateFacts { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
@@ -49,8 +60,10 @@
 .rateFacts svg { width: 13px; height: 13px; }
 .rateAction { display: grid; justify-items: end; gap: 4px; }
 .rateAction :global(.button) { min-height: 44px; white-space: nowrap; }
-.rateAction :global(.button:disabled) { opacity: .55; cursor: not-allowed; }
-.reason { margin: 0; color: var(--muted); font-size: var(--font-size-xs); text-align: end; }
+/* Disabled selection looks clearly unavailable, not just faded. */
+.rateAction :global(.button:disabled) { border-color: var(--border); background: #eef2f7; color: #6c7c8f; box-shadow: none; opacity: 1; cursor: not-allowed; }
+.reason { display: inline-flex; align-items: flex-start; justify-content: flex-end; gap: 5px; margin: 0; color: var(--muted); font-size: var(--font-size-xs); text-align: end; }
+.reason svg { flex: none; width: 13px; height: 13px; margin-block-start: 1px; }
 .rateSkeleton { grid-template-columns: 1fr; gap: var(--space-2); }
 .shimmer { display: block; border-radius: 6px; background: linear-gradient(90deg, #edf1f6 25%, #f7f9fc 50%, #edf1f6 75%); background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite; }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
@@ -131,8 +144,11 @@
 :is(.rate, .panel, .notice, .back, .ack) :focus-visible, .back:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 40%, transparent); outline-offset: 2px; }
 
 @media (max-width: 720px) {
-  .header { grid-template-columns: minmax(0, 1fr); }
-  .headerImage { grid-row: auto; width: 100%; max-height: 180px; }
+  .header { grid-template-columns: minmax(0, 1fr); padding: var(--space-4); }
+  .headerImage { grid-row: auto; width: 100%; }
+  .steps li { font-size: var(--font-size-sm); }
+  .steps li:not(:last-child)::after { display: none; }
+  .reason { justify-content: flex-start; }
   .rate { grid-template-columns: minmax(0, 1fr) auto; }
   .rateAction { grid-column: 1 / -1; justify-items: stretch; }
   .rateAction :global(.button) { width: 100%; }

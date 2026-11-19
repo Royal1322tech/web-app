@@ -95,7 +95,15 @@ function HotelHeader({ title, summary, criteria, request }: {
   const country = new Intl.DisplayNames([locale], { type: "region" }).of(request.residency.toUpperCase()) ?? request.residency.toUpperCase();
   return (
     <header className={styles.header}>
-      {image && <img className={styles.headerImage} src={image} alt="" referrerPolicy="no-referrer" />}
+      {image ? (
+        <img className={styles.headerImage} src={image} alt="" referrerPolicy="no-referrer" />
+      ) : (
+        // The same neutral "no photo" frame as the search cards: no stock image stands in for the hotel.
+        <div className={`${styles.headerImage} ${styles.headerPlaceholder}`} data-image-missing>
+          <span aria-hidden="true"><Icon name="building" /></span>
+          <small>{t("No photo provided", "لم تُقدَّم صورة")}</small>
+        </div>
+      )}
       <div className={styles.headerText}>
         {summary?.stars ? <p className={styles.stars} aria-label={t(`${summary.stars}-star hotel`, `فندق ${summary.stars} نجوم`)}><span aria-hidden="true">{"★".repeat(Math.round(summary.stars))}</span></p> : null}
         <h1 className={styles.title}><bdi>{title}</bdi></h1>
@@ -383,7 +391,8 @@ function RatesList({ rooms, now, onSelect, onRefresh, searchHref }: {
             <button type="button" className="button button--primary" onClick={onRefresh}>{t("Refresh rates", "تحديث الأسعار")}</button>
           </p>
         ) : (
-          <p className={styles.timer}><Icon name="clock" />{t("Rates held for", "الأسعار محجوزة لمدة")} <strong><Countdown seconds={remaining} /></strong></p>
+          // The rooms_token expires; the API doesn't promise to hold rates or availability.
+          <p className={styles.timer}><Icon name="clock" />{t("This rate list is valid for", "قائمة الأسعار صالحة لمدة")} <strong><Countdown seconds={remaining} /></strong></p>
         )}
       </div>
       <p className={styles.note}>{t("Prices are provisional until the price check. Booking isn't available online yet.", "الأسعار مبدئية حتى التحقق من السعر. الحجز غير متاح عبر الإنترنت بعد.")}</p>
@@ -402,13 +411,12 @@ function RateRow({ rate, disabled, onSelect }: { rate: RoomRate; disabled: boole
   const { t, locale } = useLocale();
   const reasonId = useId();
   const selectable = rateIsSelectable(rate);
+  // The price state is already shown in the price block; the reason says why selection is off.
   const reason = disabled
     ? t("Rates expired", "انتهت صلاحية الأسعار")
     : !rate.selectable
       ? t("This rate can't be selected", "لا يمكن اختيار هذا السعر")
-      : rate.price.price_on_request
-        ? t("Price on request", "السعر عند الطلب")
-        : t("Price not verified", "السعر غير مؤكد");
+      : t("Selectable once the price is confirmed", "يمكن اختياره بعد تأكيد السعر");
   return (
     <article className={styles.rate} data-rate-index={rate.rate_index} data-selectable={selectable && !disabled}>
       <div className={styles.rateInfo}>
@@ -432,7 +440,7 @@ function RateRow({ rate, disabled, onSelect }: { rate: RoomRate; disabled: boole
         >
           {t("Select room", "اختيار الغرفة")}
         </button>
-        {(!selectable || disabled) && <p id={reasonId} className={styles.reason}>{reason}</p>}
+        {(!selectable || disabled) && <p id={reasonId} className={styles.reason}><Icon name="info" />{reason}</p>}
       </div>
     </article>
   );
@@ -562,7 +570,8 @@ function Review({ headingRef, step, now, onAccept, onChooseAnother, onRefresh, s
           <button type="button" className="button button--primary" onClick={onRefresh}>{t("Refresh rates", "تحديث الأسعار")}</button>
         </p>
       ) : (
-        <p className={styles.timer}><Icon name="clock" />{t("Price held for", "السعر محجوز لمدة")} <strong><Countdown seconds={remaining} /></strong></p>
+        // The review_token expires; this isn't a price hold or a reservation.
+        <p className={styles.timer}><Icon name="clock" />{t("This price check is valid for", "التحقق من السعر صالح لمدة")} <strong><Countdown seconds={remaining} /></strong></p>
       )}
 
       {!expired && (!changed || step.accepted) && (

@@ -67,6 +67,7 @@ function SearchRun({ request: initial, destinationName, roomsQuery }: { request:
   const [failure, setFailure] = useState<{ page: number; attempt: number; kind: B2BSearchFailure } | null>(null);
   const [pagingUnsupported, setPagingUnsupported] = useState(false);
   const [filters, setFilters] = useState<PageFilters>(emptyPageFilters);
+  const [sort, setSort] = useState<PageSort>("recommended");
   const top = useRef<HTMLDivElement>(null);
   const firstLoad = useRef(true);
 
@@ -128,7 +129,7 @@ function SearchRun({ request: initial, destinationName, roomsQuery }: { request:
         {pageCount > 1 && <p className={styles.pageOf} aria-live="polite">{t(`Page ${page} of ${pageCount}`, `الصفحة ${page} من ${pageCount}`)}</p>}
       </div>
       {!first.pricingVerified && (
-        <p className={styles.preview}><Icon name="info" />{t("Availability preview: prices aren't verified yet and booking is unavailable.", "معاينة التوافر: لم يتم التحقق من الأسعار بعد والحجز غير متاح.")}</p>
+        <p className={styles.preview} role="note"><Icon name="info" /><span>{t("Availability preview: prices aren't verified yet and booking is unavailable.", "معاينة التوافر: لم يتم التحقق من الأسعار بعد والحجز غير متاح.")} {t("Rates show as Price on request.", "تظهر الأسعار كـ «السعر عند الطلب».")}</span></p>
       )}
     </div>
   );
@@ -166,11 +167,11 @@ function SearchRun({ request: initial, destinationName, roomsQuery }: { request:
 
       {state.status === "done" && state.result.total > 0 && (
         <div data-search-state="results">
-          <PageFilterBar value={filters} onChange={setFilters} />
+          <PageFilterBar value={filters} onChange={setFilters} sort={sort} onSort={setSort} />
           {state.result.hotels.length === 0 ? (
             <SystemState title={t("This page has no hotels", "لا توجد فنادق في هذه الصفحة")} description={t("Go back to the previous page.", "ارجع إلى الصفحة السابقة.")} />
           ) : (
-            <HotelGrid result={state.result} filters={filters} onClear={() => setFilters(emptyPageFilters)} roomsQuery={roomsQuery} />
+            <HotelGrid result={state.result} filters={filters} sort={sort} onClear={() => setFilters(emptyPageFilters)} roomsQuery={roomsQuery} />
           )}
         </div>
       )}
@@ -190,43 +191,74 @@ function SearchRun({ request: initial, destinationName, roomsQuery }: { request:
   );
 }
 
-function HotelGrid({ result, filters, onClear, roomsQuery }: { result: B2BHotelSearchResult; filters: PageFilters; onClear: () => void; roomsQuery: string }) {
+/** Sorting the loaded page by values the API actually returns. "Recommended" keeps the supplier's order. */
+type PageSort = "recommended" | "stars" | "name";
+
+function sortPage(hotels: B2BHotelSearchResult["hotels"], sort: PageSort) {
+  if (sort === "recommended") return hotels;
+  // Hotels without the value keep their order and go last: nothing is guessed.
+  return hotels.map((hotel, index) => ({ hotel, index })).sort((a, b) => {
+    if (sort === "stars") {
+      const x = a.hotel.stars ?? -1, y = b.hotel.stars ?? -1;
+      return y - x || a.index - b.index;
+    }
+    if (!a.hotel.name || !b.hotel.name) return (a.hotel.name ? 0 : 1) - (b.hotel.name ? 0 : 1) || a.index - b.index;
+    return a.hotel.name.localeCompare(b.hotel.name) || a.index - b.index;
+  }).map(({ hotel }) => hotel);
+}
+
+function HotelGrid({ result, filters, sort, onClear, roomsQuery }: { result: B2BHotelSearchResult; filters: PageFilters; sort: PageSort; onClear: () => void; roomsQuery: string }) {
   const { t } = useLocale();
-  const shown = filterPage(result.hotels, filters);
+  const shown = sortPage(filterPage(result.hotels, filters), sort);
   return (
     <>
       {pageFiltersActive(filters) && (
         <p className={styles.filterCount} role="status">
-          {t(`${shown.length} of ${result.hotels.length} hotels on this page match`, `${shown.length} من ${result.hotels.length} فنادق في هذه الصفحة مطابقة`)}
-          <button type="button" onClick={onClear}>{t("Clear filters", "مسح عوامل التصفية")}</button>
+          <span>{t(`${shown.length} of ${result.hotels.length} hotels on this page match`, `${shown.length} من ${result.hotels.length} فنادق في هذه الصفحة مطابقة`)}</span>
+          <button type="button" onClick={onClear}><Icon name="close" />{t("Clear filters", "مسح عوامل التصفية")}</button>
         </p>
       )}
-      <ul className={styles.grid} aria-label={t("Hotels", "الفنادق")}>
-        {shown.map((hotel, index) => (
-          <li key={`${result.page}-${hotel.result_index ?? "x"}-${index}`}>
-            <LiveHotelCard hotel={hotel} result={result} eager={index < 3} rooms={roomsActionFor(hotel, roomsQuery)} />
-          </li>
-        ))}
-      </ul>
+      {shown.length === 0 ? (
+        <p className={styles.noMatch} data-search-state="no-match">{t("No hotels on this page match these filters.", "لا توجد فنادق في هذه الصفحة تطابق عوامل التصفية هذه.")}</p>
+      ) : (
+        <ul className={styles.grid} aria-label={t("Hotels", "الفنادق")}>
+          {shown.map((hotel, index) => (
+            <li key={`${result.page}-${hotel.result_index ?? "x"}-${index}`}>
+              <LiveHotelCard hotel={hotel} result={result} eager={index < 3} rooms={roomsActionFor(hotel, roomsQuery)} />
+            </li>
+          ))}
+        </ul>
+      )}
     </>
   );
 }
 
 /** Filters for the hotels on the loaded page only; there is no price filter while prices are unverified. */
-function PageFilterBar({ value, onChange }: { value: PageFilters; onChange: (next: PageFilters) => void }) {
+function PageFilterBar({ value, onChange, sort, onSort }: { value: PageFilters; onChange: (next: PageFilters) => void; sort: PageSort; onSort: (next: PageSort) => void }) {
   const { t } = useLocale();
   return (
     <fieldset className={styles.filters}>
       <legend>{t("Filter this page", "تصفية هذه الصفحة")}</legend>
-      <label>
+      <label className={styles.searchField}>
         <span>{t("Hotel name or address", "اسم الفندق أو العنوان")}</span>
-        <input type="search" value={value.name} onChange={(event) => onChange({ ...value, name: event.target.value })} />
+        <span className={styles.inputWrap}>
+          <Icon name="search" />
+          <input type="search" value={value.name} placeholder={t("Search this page", "ابحث في هذه الصفحة")} onChange={(event) => onChange({ ...value, name: event.target.value })} />
+        </span>
       </label>
       <label>
         <span>{t("Stars", "النجوم")}</span>
         <select value={value.minStars} onChange={(event) => onChange({ ...value, minStars: Number(event.target.value) })}>
           <option value={0}>{t("Any", "الكل")}</option>
           {[3, 4, 5].map((stars) => <option key={stars} value={stars}>{t(`${stars}+ stars`, `${stars}+ نجوم`)}</option>)}
+        </select>
+      </label>
+      <label>
+        <span>{t("Sort by", "الترتيب حسب")}</span>
+        <select value={sort} onChange={(event) => onSort(event.target.value as PageSort)}>
+          <option value="recommended">{t("Recommended", "المقترح")}</option>
+          <option value="stars">{t("Star rating: high to low", "التصنيف: من الأعلى")}</option>
+          <option value="name">{t("Name: A to Z", "الاسم: أ إلى ي")}</option>
         </select>
       </label>
       <label className={styles.check}>

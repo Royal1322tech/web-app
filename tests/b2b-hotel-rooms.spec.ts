@@ -179,8 +179,10 @@ test.describe("rooms → price check → review (mocked API)", () => {
     await expect(row(0).getByRole("button", { name: "Select room" })).toBeEnabled();
     await expect(row(1).getByText("Price unavailable")).toBeVisible();
     await expect(row(1).getByRole("button", { name: "Select room" })).toBeDisabled();
-    await expect(row(1).getByText("Price not verified")).toBeVisible();
-    await expect(row(2).getByText("Price on request").first()).toBeVisible();
+    await expect(row(1).getByText("Selectable once the price is confirmed")).toBeVisible();
+    // The price state appears once per rate; the reason under the button doesn't repeat it.
+    await expect(row(2).getByText("Price on request")).toHaveCount(1);
+    await expect(row(2).getByText("Selectable once the price is confirmed")).toBeVisible();
     await expect(row(2).getByRole("button", { name: "Select room" })).toBeDisabled();
     await expect(row(3).getByText("Price unavailable")).toBeVisible();
     await expect(row(3).getByRole("button", { name: "Select room" })).toBeDisabled();
@@ -190,6 +192,9 @@ test.describe("rooms → price check → review (mocked API)", () => {
     await expect(row(5).getByRole("button", { name: "Select room" })).toBeEnabled();
     await expect(row(5).getByText("Room type not provided")).toBeVisible();
     await expect(page.locator("body")).not.toContainText("99.00");
+    // Token lifetimes are described as validity, never as a hold on rates or prices.
+    await expect(page.getByText(/This rate list is valid for/)).toBeVisible();
+    await expect(page.getByText(/held for/i)).toHaveCount(0);
   });
 
   test("a changed price must be accepted explicitly, with old and new amounts shown", async ({ page }) => {

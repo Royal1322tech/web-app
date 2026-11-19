@@ -44,7 +44,7 @@ Every reply is schema-checked. A rooms reply for a different `hotel_hid` is reje
 ## Tokens
 
 - **Memory only:** `rooms_token`, `selection_token` and `review_token` live in the page's memory. They are never written to localStorage, sessionStorage, cookies, the URL or logs, and are never shown.
-- **Expiry:** each token's lifetime comes from its own `expires_in_seconds`. Countdowns show "Rates held for" and "Price held for". An expired rates list can't be selected; an expired review asks for fresh rates.
+- **Expiry:** each token's lifetime comes from its own `expires_in_seconds`. Countdowns say "This rate list is valid for" and "This price check is valid for". They describe the tokens' validity only: the API doesn't promise to hold rates, prices or availability. An expired rates list can't be selected; an expired review asks for fresh rates.
 - **When they're dropped:**
   - changing the hotel, dates, guests, nationality, language or currency (the page rebuilds the flow)
   - leaving or reloading the page

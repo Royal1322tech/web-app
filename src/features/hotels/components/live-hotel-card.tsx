@@ -32,7 +32,8 @@ export function LiveHotelCard({ hotel, result, variant = "full", eager = false, 
   const options = roomOptions(hotel.rooms);
   const breakfast = breakfastAvailability(hotel.rooms);
   const stars = hotel.stars && hotel.stars > 0 ? hotel.stars : null;
-  const visibleRooms = variant === "full" ? 3 : 0;
+  // A short summary: at most two distinct room types, the rest behind "Show more".
+  const visibleRooms = variant === "full" ? 2 : 0;
   const name = hotel.name ?? t("Hotel name not provided", "لم يُذكر اسم الفندق");
   const lang = locale === "ar" ? "ar" : "en";
 
@@ -43,8 +44,8 @@ export function LiveHotelCard({ hotel, result, variant = "full", eager = false, 
           <img src={image} alt="" loading={eager ? "eager" : "lazy"} decoding="async" referrerPolicy="no-referrer" onError={() => setImageFailed(true)} />
         ) : (
           <div className={styles.placeholder} data-image-missing>
-            <Icon name="buildingFilled" />
-            <span>{t("No photo available", "لا تتوفر صورة")}</span>
+            <span className={styles.placeholderIcon} aria-hidden="true"><Icon name="building" /></span>
+            <span>{t("No photo provided", "لم تُقدَّم صورة")}</span>
           </div>
         )}
       </div>
@@ -85,24 +86,20 @@ export function LiveHotelCard({ hotel, result, variant = "full", eager = false, 
       </div>
 
       <footer className={styles.footer}>
-        <div className={styles.price}>
+        <div className={styles.price} data-price={price ? "verified" : "on-request"}>
           {price ? (
             <>
               <small>{t("From", "من")}</small>
               <strong><bdi>{new Intl.NumberFormat(locale, { style: "currency", currency: price.currency }).format(price.amount)}</bdi></strong>
             </>
           ) : (
-            <>
-              <strong className={styles.noPrice}>{t("Price unavailable", "السعر غير متاح")}</strong>
-              <small>{t("Prices aren't verified yet", "لم يتم التحقق من الأسعار بعد")}</small>
-            </>
+            // Unverified prices are never shown; one general notice above the results explains why.
+            <strong className={styles.noPrice}>{t("Price on request", "السعر عند الطلب")}</strong>
           )}
         </div>
-        <span className={styles.status} data-bookable={bookingAllowed(hotel, result) || undefined}>
-          {bookingAllowed(hotel, result)
-            ? <><Icon name="check" />{t("Bookable · contact us to book", "قابل للحجز · تواصل معنا للحجز")}</>
-            : <><Icon name="clock" />{t("Booking unavailable", "الحجز غير متاح")}</>}
-        </span>
+        {bookingAllowed(hotel, result) && (
+          <span className={styles.status} data-bookable><Icon name="check" />{t("Bookable · contact us to book", "قابل للحجز · تواصل معنا للحجز")}</span>
+        )}
       </footer>
       {rooms && (
         <div className={styles.roomsAction}>
