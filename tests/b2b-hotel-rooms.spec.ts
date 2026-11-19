@@ -6,7 +6,7 @@ import { ApiError } from "../src/lib/api/client";
 /*
  * Hotel rooms → select → prebook against MOCKED replies that follow the backend handoff contract.
  * Nothing here reaches staging: the build on port 4176 calls api.royal.test and every request is
- * answered below. On staging the three routes currently answer 404 "route not found".
+ * answered below. Real staging behaviour is checked separately (see docs/b2b-hotel-rooms.md).
  */
 const APP = "http://127.0.0.1:4176";
 const COMPANY = "8f14e45f-ceea-467a-9575-3c4b1f0b5c1a";
@@ -151,7 +151,9 @@ test.describe("rooms → price check → review (mocked API)", () => {
       expect(JSON.stringify(request.postDataJSON())).not.toContain("company_id");
       expect(request.headers()["authorization"]).toBe(`Bearer ${TOKEN}`);
     }
-    await expect(page.getByRole("button", { name: /book|pay|reserve|confirm booking/i })).toHaveCount(0);
+    // Only a booking DRAFT can be created here: no booking, payment or reservation action.
+    await expect(page.getByRole("button", { name: /^(book|pay|reserve)|book now|confirm booking/i })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Create booking draft" })).toBeVisible();
     await expect(page.getByRole("link", { name: /book now|pay/i })).toHaveCount(0);
     await expect(page.locator("body")).not.toContainText(/rooms-token|selection-token|review-token/);
     await expectNoTokensStored(page);

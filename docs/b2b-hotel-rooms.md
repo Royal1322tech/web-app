@@ -2,11 +2,18 @@
 
 A signed-in company user can open a hotel from the search results, see its room rates, choose one, and get a fresh price from the supplier. The last step is **review only**: final booking, payment and vouchers don't exist yet.
 
-**Status (2026-11-17):** built to the backend handoff contract and tested with mocked replies. On staging, all three routes answer 404 "route could not be found", so nothing has been checked against real replies.
+**Status (2026-11-19, checked against staging):**
+
+| Item | Status |
+|---|---|
+| Rooms, select and prebook routes | Deployed |
+| `hid` in search results | Every hotel has one, so **View rooms** appears |
+| Adults-only stays (`children: []`) | Accepted |
+| Pricing | **No rate has a verified price yet** (`verified: false`, price on request). So select, prebook and booking drafts can't be reached with real data until pricing is configured on the backend |
 
 ## Flow
 
-Search results → **View rooms** → `/hotels/rooms/:hid` → choose a room → price check → review.
+Search results → **View rooms** → `/hotels/rooms/:hid` → choose a room → price check → review → **booking draft**.
 
 - **View rooms** appears only on hotels whose search result carries a positive integer `hid`. Other hotels say "Room rates aren't available for this hotel yet." and send nothing. `result_index` and list positions are never used as IDs.
 - The URL carries only the stay (destination, nationality, dates, rooms). The hotel's name, address, stars and image travel in router state, for display only. **Tokens are never put in the URL.**
@@ -60,9 +67,35 @@ Every reply is schema-checked. A rooms reply for a different `hotel_hid` is reje
 
 Nothing ever claims a booking, reservation or payment. The review says: "This is a price check, not a reservation. Online booking and payment aren't available yet."
 
+## Booking draft
+
+On a confirmed, unexpired review, the guest details form saves a **booking draft**. It's sent with `POST /api/v1/b2b/bookings/draft`, and the code is in `src/features/hotels/api/b2b-booking-draft.ts`. A draft is not a reservation and takes no payment. The page never says "Booking Confirmed", "Payment Successful" or "Reservation Confirmed".
+
+**Contract:** validated against the deployed API, because the success body isn't documented.
+- **Body:** `{ review_token, guests: [{ first_name, last_name, guest_type: "adult" | "child", is_lead }] }`.
+- **Guests:** one entry per guest from the stay's occupancy, adults first, then children, room by room. Exactly one lead, who must be an adult (the first adult by default).
+- **No other guest fields:** room and age aren't part of the contract, so they aren't sent.
+- **Header:** `Idempotency-Key`, `draft_` plus 32 random hex characters. Without a valid key the API answers 422.
+- **Same key:** only for an unchanged retry after a network failure, a timeout, a 429 or a 5xx. Any change, or a failure that can't succeed on retry, gets a new key.
+- **Success:** any JSON object counts as success. The page shows **Booking Draft Created** and nothing from the reply.
+
+**Errors:**
+
+| Status | Screen |
+|---|---|
+| 401 | Session ends |
+| 403 | "Your account can't create booking drafts." |
+| 409 | Can't be drafted any more; offers Refresh rates |
+| 410 | The review expired; offers Refresh rates |
+| 422 | Shown next to the guest concerned |
+| 429 | The real `Retry-After` countdown when it's readable |
+| 5xx, network | Retry, with the same key |
+
+A guard and a disabled button send one request per click.
+
 ## Still needed from the backend
 
-1. **Deploy the three routes to staging.** All three currently return 404.
-2. **Add `hid` (a positive integer) to every hotel in the search reply** (`POST /b2b/hotels/search`, `data.hotels[]`). Without it, no hotel can open its rooms.
+1. **Configure pricing on staging** (Royal and company rules). Until then every rate is price-on-request, so select, prebook and drafts can't be tested with real data.
+2. **Document the booking draft success reply.** Until then, nothing from it is shown.
 3. **Confirm the formats:** that `selling_price` and `agency_purchase_price` are decimal strings, and which currencies the rooms reply can contain.
 4. **Rooms reply:** confirm whether it can include the hotel's name and address. The page currently relies on what the search result passed along, and shows "Hotel rooms" after a reload.

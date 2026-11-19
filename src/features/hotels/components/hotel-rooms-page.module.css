@@ -104,6 +104,28 @@
 .bookingNotice { display: flex; align-items: flex-start; gap: var(--space-2); margin: 0; padding: var(--space-3) var(--space-4); border-radius: var(--rounded-md); background: #f1f5fa; color: #34485f !important; font-size: var(--font-size-sm); }
 .bookingNotice svg { flex: none; width: 16px; height: 16px; margin-block-start: 2px; }
 .actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+
+/* Booking draft: guest details after a confirmed price check. */
+.draftForm { display: grid; gap: var(--space-4); padding-block-start: var(--space-4); border-block-start: 1px solid var(--border); }
+.draftForm h3, .draftDone h3 { margin: 0; font-size: var(--font-size-lg); }
+.draftRoom { display: grid; gap: var(--space-3); margin: 0; padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--rounded-lg); }
+.draftRoom legend { padding-inline: 6px; font-weight: var(--weight-bold); }
+.guestRow { display: grid; grid-template-columns: 110px minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; gap: var(--space-2) var(--space-3); }
+.guestLabel { margin: 0; padding-block-end: 12px; color: var(--muted); font-size: var(--font-size-sm); font-weight: var(--weight-semibold); }
+.guestField { display: grid; gap: 4px; min-width: 0; font-size: var(--font-size-sm); font-weight: var(--weight-semibold); }
+.guestField :global(.input) { min-height: 44px; }
+.guestField :global(.field-error) { margin: 0; font-weight: var(--weight-regular, 400); }
+.leadChoice { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: var(--font-size-sm); cursor: pointer; }
+.leadChoice input { width: 18px; height: 18px; accent-color: var(--primary); }
+.draftError { margin: 0; padding: var(--space-3) var(--space-4); border-radius: var(--rounded-md); background: #fff4f5; color: var(--error); font-weight: var(--weight-semibold); }
+.draftDone { display: grid; gap: var(--space-2); padding: var(--space-4) var(--space-5); border: 1px solid color-mix(in srgb, var(--success) 35%, var(--border)); border-radius: var(--rounded-lg); background: #f2faf6; }
+.draftDone h3 { display: inline-flex; align-items: center; gap: 8px; color: var(--success); outline: none; }
+.draftDone h3 svg { width: 20px; height: 20px; }
+.draftDone p { margin: 0; color: #34485f; }
+@media (max-width: 720px) {
+  .guestRow { grid-template-columns: minmax(0, 1fr); align-items: stretch; }
+  .guestLabel { padding-block-end: 0; }
+}
 .actions :global(.button) { min-height: 44px; }
 
 :is(.rate, .panel, .notice, .back, .ack) :focus-visible, .back:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 40%, transparent); outline-offset: 2px; }

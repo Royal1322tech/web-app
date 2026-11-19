@@ -103,14 +103,14 @@ export function defaultCriteria(destination: string): HotelSearchCriteria {
     rooms: [{ adults: 2, childAges: [] }],
   };
 }
-/** The account's own details from GET /b2b/me. The API returns no phone number. */
+/** The account's own details from GET /b2b/me. */
 function profileFromIdentity(identity: B2BIdentity): AgencyProfile {
   const country = identity.company.countryCode ? new Intl.DisplayNames(["en"], { type: "region" }).of(identity.company.countryCode) ?? identity.company.countryCode : "";
   return {
     name: identity.company.name,
     contact: identity.user.name,
     email: identity.user.email,
-    phone: "",
+    phone: identity.user.phone ?? "",
     address: [identity.company.address, identity.company.city].filter(Boolean).join(", "),
     country,
   };

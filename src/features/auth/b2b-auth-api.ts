@@ -20,7 +20,7 @@ const tokenSchema = z.object({
 
 const profileSchema = z.object({
   data: z.object({
-    user: z.object({ id: z.union([z.number(), z.string()]), name: z.string(), email: z.string() }),
+    user: z.object({ id: z.union([z.number(), z.string()]), name: z.string(), email: z.string(), phone: z.string().nullable().optional().catch(null) }),
     company: z.object({
       id: z.uuid(),
       name: z.string(),
@@ -38,7 +38,7 @@ const profileSchema = z.object({
 });
 
 export interface B2BIdentity {
-  user: { id: string; name: string; email: string };
+  user: { id: string; name: string; email: string; phone?: string };
   company: { id: string; name: string; legalName?: string; status: string; businessType?: string; countryCode?: string; city?: string; address?: string; currency?: string };
   membership: { role: string; status: string };
 }
@@ -103,7 +103,7 @@ export async function resendActivationCode(input: { email: string; companyId: st
 export async function fetchCurrentUser(token: string): Promise<B2BIdentity> {
   const { data } = await apiRequest("api/v1/b2b/me", { token, parse: (value) => profileSchema.parse(value) });
   return {
-    user: { id: String(data.user.id), name: data.user.name, email: data.user.email },
+    user: { id: String(data.user.id), name: data.user.name, email: data.user.email, phone: data.user.phone ?? undefined },
     company: {
       id: data.company.id,
       name: data.company.name,
@@ -117,6 +117,15 @@ export async function fetchCurrentUser(token: string): Promise<B2BIdentity> {
     },
     membership: { role: data.membership.role_code, status: data.membership.status },
   };
+}
+
+/**
+ * PATCH /api/v1/b2b/me: updates the signed-in user's own name and phone. The API accepts only these
+ * two fields (company details aren't editable here) and needs at least one. The reply body isn't relied
+ * on: callers reload the profile from GET /me afterwards.
+ */
+export async function updateCurrentUser(token: string, changes: { name?: string; phone?: string }): Promise<void> {
+  await apiRequest("api/v1/b2b/me", { method: "PATCH", token, body: changes, parse: () => undefined });
 }
 
 /** Revokes the token on the server. */

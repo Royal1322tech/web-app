@@ -61,6 +61,8 @@ export interface ApiRequestOptions<T> {
   locale?: "en" | "ar";
   timeoutMs?: number;
   signal?: AbortSignal;
+  /** Extra request headers, such as Idempotency-Key. They can't replace Accept, Content-Type or Authorization. */
+  headers?: Readonly<Record<string, string>>;
   parse: (data: unknown) => T;
 }
 
@@ -111,7 +113,7 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions<T>)
   const url = new URL(path.replace(/^\/+/, ""), base.href.endsWith("/") ? base : new URL(`${base.href}/`));
   if (url.origin !== base.origin) throw new ApiError("configuration");
 
-  const headers = new Headers({ Accept: "application/json", "X-Locale": options.locale ?? currentLocale() });
+  const headers = new Headers({ ...options.headers, Accept: "application/json", "X-Locale": options.locale ?? currentLocale() });
   if (options.body !== undefined) headers.set("Content-Type", "application/json");
   if (options.token) headers.set("Authorization", `Bearer ${options.token}`);
 

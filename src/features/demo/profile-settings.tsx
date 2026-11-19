@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { Icon } from "@/components/ui/icon";
 import { useLocale } from "@/features/localization/locale-provider";
 import { PreferenceFields } from "@/features/preferences/travel-preferences";
+import { apiAuthEnabled } from "@/features/auth/auth-config";
+import { ProfileDetailsForm } from "@/features/auth/components/profile-details-form";
 import { useDemo } from "./demo-provider";
 import { Workspace } from "./shared";
 
@@ -23,6 +25,7 @@ export function ProfilePage() {
         {[[t("Agency", "الوكالة"), profile.name], [t("Country", "الدولة"), profile.country], [t("Address", "العنوان"), profile.address]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value || t("Not provided", "غير متوفر")}</dd></div>)}
       </dl><Link to="/agency">{t("View agency details", "عرض تفاصيل الوكالة")}</Link></section>
     </div>
+    {apiAuthEnabled && <ProfileDetailsForm />}
     <section className="workspace-card"><h2>{t("Your workspace at a glance", "مساحة عملك بنظرة سريعة")}</h2><div className="profile-shortcuts">
       {[["/wallet", t("Wallet", "المحفظة"), t("Review credit", "راجع الرصيد")], ["/transactions", t("Transactions", "المعاملات"), t("Explore financial activity", "استعرض النشاط المالي")], ["/bookings", t("Bookings", "الحجوزات"), t("Manage stays", "أدر الإقامات")], ["/points", t("Points", "النقاط"), t("View points and activity", "عرض النقاط والنشاط")]].map(([path, title, description]) => <Link to={path} key={path}><strong>{title}</strong><span>{description}</span><Icon name="arrowRight" aria-hidden="true" /></Link>)}
     </div></section>

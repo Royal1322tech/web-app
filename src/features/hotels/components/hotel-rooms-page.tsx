@@ -27,6 +27,7 @@ import { findDestination } from "../data/destinations";
 import { hotelImageUrl, mealLabel } from "../lib/live-hotels";
 import { readHotelSummary, type RoomsHotelSummary } from "../lib/rooms-route";
 import { readStayQuery, stayQuery } from "../lib/stay-query";
+import { BookingDraftForm } from "./booking-draft-form";
 import { CatalogShell } from "./catalog-shell";
 import styles from "./hotel-rooms-page.module.css";
 
@@ -304,6 +305,7 @@ function RoomsFlow({ hid, request: initialRequest, searchHref }: { hid: number; 
           onChooseAnother={chooseAnother}
           onRefresh={refreshRooms}
           searchHref={searchHref}
+          occupancy={request.guests}
         />
       )}
     </div>
@@ -483,7 +485,8 @@ function RateSummary({ rate, label, price, provisional = false }: { rate: RoomRa
   );
 }
 
-function Review({ headingRef, step, now, onAccept, onChooseAnother, onRefresh, searchHref }: {
+function Review({ headingRef, step, now, onAccept, onChooseAnother, onRefresh, searchHref, occupancy }: {
+  occupancy: RoomsRequest["guests"];
   headingRef: React.RefObject<HTMLHeadingElement | null>;
   step: Extract<Step, { step: "review" }>;
   now: number;
@@ -562,9 +565,13 @@ function Review({ headingRef, step, now, onAccept, onChooseAnother, onRefresh, s
         <p className={styles.timer}><Icon name="clock" />{t("Price held for", "السعر محجوز لمدة")} <strong><Countdown seconds={remaining} /></strong></p>
       )}
 
+      {!expired && (!changed || step.accepted) && (
+        <BookingDraftForm reviewToken={review.review_token} occupancy={occupancy} onRefresh={onRefresh} />
+      )}
+
       <p className={styles.bookingNotice} role="note">
         <Icon name="info" />
-        <span>{t("This is a price check, not a reservation. Online booking and payment aren't available yet. Contact Royal Vacation to book this room.", "هذا تحقق من السعر وليس حجزًا. الحجز والدفع عبر الإنترنت غير متاحين بعد. تواصل مع رويال فاكيشن لحجز هذه الغرفة.")}</span>
+        <span>{t("This is a price check, not a reservation. You can save it as a booking draft; online booking and payment aren't available yet.", "هذا تحقق من السعر وليس حجزًا. يمكنك حفظه كمسودة حجز؛ الحجز والدفع عبر الإنترنت غير متاحين بعد.")}</span>
       </p>
 
       <div className={styles.actions}>

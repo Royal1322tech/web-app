@@ -119,6 +119,23 @@ export const b2bSession = {
   /** For authenticated API calls. */
   token: () => stored?.token,
   /**
+   * Reloads the signed-in user's profile from GET /me without leaving the active state (no loading
+   * screen), for example after the user edits their details. A 401 still ends the session through the
+   * API client; other failures keep the current profile.
+   */
+  async reloadIdentity(): Promise<boolean> {
+    const session = stored;
+    if (!session || state.status !== "active") return false;
+    try {
+      const identity = await (await authApi()).fetchCurrentUser(session.token);
+      if (stored !== session || identity.company.id !== session.companyId) return false;
+      setState({ status: "active", identity });
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  /**
    * Ends the session. Local state is always cleared; the result says whether the server confirmed
    * that the token was revoked.
    */
