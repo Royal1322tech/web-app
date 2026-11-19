@@ -145,7 +145,7 @@ function SearchRun({ request: initial, destinationName, roomsQuery }: { request:
         <div aria-busy="true" data-search-state="loading">
           <p className={styles.srOnly} role="status">{t("Searching hotels…", "جارٍ البحث عن الفنادق…")}</p>
           {!first && <p className={styles.loadingText} aria-hidden="true">{t("Searching hotels…", "جارٍ البحث عن الفنادق…")}</p>}
-          <div className={styles.grid}>{Array.from({ length: 6 }, (_, index) => <LiveHotelCardSkeleton key={index} />)}</div>
+          <ul className={styles.list}>{Array.from({ length: 4 }, (_, index) => <li key={index}><LiveHotelCardSkeleton variant="row" /></li>)}</ul>
         </div>
       )}
 
@@ -166,13 +166,28 @@ function SearchRun({ request: initial, destinationName, roomsQuery }: { request:
       )}
 
       {state.status === "done" && state.result.total > 0 && (
-        <div data-search-state="results">
-          <PageFilterBar value={filters} onChange={setFilters} sort={sort} onSort={setSort} />
-          {state.result.hotels.length === 0 ? (
-            <SystemState title={t("This page has no hotels", "لا توجد فنادق في هذه الصفحة")} description={t("Go back to the previous page.", "ارجع إلى الصفحة السابقة.")} />
-          ) : (
-            <HotelGrid result={state.result} filters={filters} sort={sort} onClear={() => setFilters(emptyPageFilters)} roomsQuery={roomsQuery} />
-          )}
+        <div data-search-state="results" className={styles.layout}>
+          <FilterSidebar value={filters} onChange={setFilters} onClear={() => setFilters(emptyPageFilters)} shown={filterPage(state.result.hotels, filters).length} total={state.result.hotels.length} />
+          <div className={styles.main}>
+            {state.result.hotels.length === 0 ? (
+              <SystemState title={t("This page has no hotels", "لا توجد فنادق في هذه الصفحة")} description={t("Go back to the previous page.", "ارجع إلى الصفحة السابقة.")} />
+            ) : (
+              <>
+                <div className={styles.listTools}>
+                  <label className={styles.sortField}>
+                    <span>{t("Sort by", "الترتيب حسب")}</span>
+                    <select value={sort} onChange={(event) => setSort(event.target.value as PageSort)}>
+                      <option value="recommended">{t("Recommended", "المقترح")}</option>
+                      <option value="stars">{t("Star rating: high to low", "التصنيف: من الأعلى")}</option>
+                      <option value="name">{t("Name: A to Z", "الاسم: أ إلى ي")}</option>
+                    </select>
+                  </label>
+                  <p className={styles.scopeNote}>{t("Filters and sorting apply to the hotels on this page.", "تنطبق التصفية والترتيب على فنادق هذه الصفحة.")}</p>
+                </div>
+                <HotelList result={state.result} filters={filters} sort={sort} roomsQuery={roomsQuery} />
+              </>
+            )}
+          </div>
         </div>
       )}
 
@@ -207,65 +222,69 @@ function sortPage(hotels: B2BHotelSearchResult["hotels"], sort: PageSort) {
   }).map(({ hotel }) => hotel);
 }
 
-function HotelGrid({ result, filters, sort, onClear, roomsQuery }: { result: B2BHotelSearchResult; filters: PageFilters; sort: PageSort; onClear: () => void; roomsQuery: string }) {
+function HotelList({ result, filters, sort, roomsQuery }: { result: B2BHotelSearchResult; filters: PageFilters; sort: PageSort; roomsQuery: string }) {
   const { t } = useLocale();
   const shown = sortPage(filterPage(result.hotels, filters), sort);
+  if (shown.length === 0) {
+    return <p className={styles.noMatch} data-search-state="no-match">{t("No hotels on this page match these filters.", "لا توجد فنادق في هذه الصفحة تطابق عوامل التصفية هذه.")}</p>;
+  }
   return (
-    <>
-      {pageFiltersActive(filters) && (
-        <p className={styles.filterCount} role="status">
-          <span>{t(`${shown.length} of ${result.hotels.length} hotels on this page match`, `${shown.length} من ${result.hotels.length} فنادق في هذه الصفحة مطابقة`)}</span>
-          <button type="button" onClick={onClear}><Icon name="close" />{t("Clear filters", "مسح عوامل التصفية")}</button>
-        </p>
-      )}
-      {shown.length === 0 ? (
-        <p className={styles.noMatch} data-search-state="no-match">{t("No hotels on this page match these filters.", "لا توجد فنادق في هذه الصفحة تطابق عوامل التصفية هذه.")}</p>
-      ) : (
-        <ul className={styles.grid} aria-label={t("Hotels", "الفنادق")}>
-          {shown.map((hotel, index) => (
-            <li key={`${result.page}-${hotel.result_index ?? "x"}-${index}`}>
-              <LiveHotelCard hotel={hotel} result={result} eager={index < 3} rooms={roomsActionFor(hotel, roomsQuery)} />
-            </li>
-          ))}
-        </ul>
-      )}
-    </>
+    <ul className={styles.list} aria-label={t("Hotels", "الفنادق")}>
+      {shown.map((hotel, index) => (
+        <li key={`${result.page}-${hotel.result_index ?? "x"}-${index}`}>
+          <LiveHotelCard hotel={hotel} result={result} variant="row" eager={index < 2} rooms={roomsActionFor(hotel, roomsQuery)} />
+        </li>
+      ))}
+    </ul>
   );
 }
 
-/** Filters for the hotels on the loaded page only; there is no price filter while prices are unverified. */
-function PageFilterBar({ value, onChange, sort, onSort }: { value: PageFilters; onChange: (next: PageFilters) => void; sort: PageSort; onSort: (next: PageSort) => void }) {
+/**
+ * The filter sidebar (wide screens) or a collapsible panel behind a "Filters" button (narrower
+ * screens): the same controls rendered once. Filters only narrow the hotels already loaded on this
+ * page, and say so; there is no price filter while prices are unverified.
+ */
+function FilterSidebar({ value, onChange, onClear, shown, total }: { value: PageFilters; onChange: (next: PageFilters) => void; onClear: () => void; shown: number; total: number }) {
   const { t } = useLocale();
+  const [open, setOpen] = useState(false);
+  const active = pageFiltersActive(value);
+  const count = Number(Boolean(value.name.trim())) + Number(Boolean(value.minStars)) + Number(value.breakfastOnly);
   return (
-    <fieldset className={styles.filters}>
-      <legend>{t("Filter this page", "تصفية هذه الصفحة")}</legend>
-      <label className={styles.searchField}>
-        <span>{t("Hotel name or address", "اسم الفندق أو العنوان")}</span>
-        <span className={styles.inputWrap}>
-          <Icon name="search" />
-          <input type="search" value={value.name} placeholder={t("Search this page", "ابحث في هذه الصفحة")} onChange={(event) => onChange({ ...value, name: event.target.value })} />
-        </span>
-      </label>
-      <label>
-        <span>{t("Stars", "النجوم")}</span>
-        <select value={value.minStars} onChange={(event) => onChange({ ...value, minStars: Number(event.target.value) })}>
-          <option value={0}>{t("Any", "الكل")}</option>
-          {[3, 4, 5].map((stars) => <option key={stars} value={stars}>{t(`${stars}+ stars`, `${stars}+ نجوم`)}</option>)}
-        </select>
-      </label>
-      <label>
-        <span>{t("Sort by", "الترتيب حسب")}</span>
-        <select value={sort} onChange={(event) => onSort(event.target.value as PageSort)}>
-          <option value="recommended">{t("Recommended", "المقترح")}</option>
-          <option value="stars">{t("Star rating: high to low", "التصنيف: من الأعلى")}</option>
-          <option value="name">{t("Name: A to Z", "الاسم: أ إلى ي")}</option>
-        </select>
-      </label>
-      <label className={styles.check}>
-        <input type="checkbox" checked={value.breakfastOnly} onChange={(event) => onChange({ ...value, breakfastOnly: event.target.checked })} />
-        <span>{t("Breakfast available", "الإفطار متاح")}</span>
-      </label>
-    </fieldset>
+    <aside className={styles.sidebar} aria-label={t("Filters", "التصفية")}>
+      <button type="button" className={styles.filterToggle} aria-expanded={open} aria-controls="api-hotel-filters" onClick={() => setOpen((current) => !current)}>
+        <Icon name="search" />{t("Filters", "التصفية")}{count > 0 && <span className={styles.badge}>{count}</span>}
+        <span className={styles.chevron} aria-hidden="true"><Icon name="chevron" /></span>
+      </button>
+      <div id="api-hotel-filters" className={styles.sidebarPanel} data-open={open || undefined}>
+        <fieldset className={styles.filters}>
+          <legend>{t("Filter this page", "تصفية هذه الصفحة")}</legend>
+          <label className={styles.searchField}>
+            <span>{t("Hotel name or address", "اسم الفندق أو العنوان")}</span>
+            <span className={styles.inputWrap}>
+              <Icon name="search" />
+              <input type="search" value={value.name} placeholder={t("Search this page", "ابحث في هذه الصفحة")} onChange={(event) => onChange({ ...value, name: event.target.value })} />
+            </span>
+          </label>
+          <label>
+            <span>{t("Stars", "النجوم")}</span>
+            <select value={value.minStars} onChange={(event) => onChange({ ...value, minStars: Number(event.target.value) })}>
+              <option value={0}>{t("Any", "الكل")}</option>
+              {[3, 4, 5].map((stars) => <option key={stars} value={stars}>{t(`${stars}+ stars`, `${stars}+ نجوم`)}</option>)}
+            </select>
+          </label>
+          <label className={styles.check}>
+            <input type="checkbox" checked={value.breakfastOnly} onChange={(event) => onChange({ ...value, breakfastOnly: event.target.checked })} />
+            <span>{t("Breakfast available", "الإفطار متاح")}</span>
+          </label>
+        </fieldset>
+        {active && (
+          <p className={styles.filterCount} role="status">
+            <span>{t(`${shown} of ${total} hotels on this page match`, `${shown} من ${total} فنادق في هذه الصفحة مطابقة`)}</span>
+            <button type="button" onClick={onClear}><Icon name="close" />{t("Clear filters", "مسح عوامل التصفية")}</button>
+          </p>
+        )}
+      </div>
+    </aside>
   );
 }
 

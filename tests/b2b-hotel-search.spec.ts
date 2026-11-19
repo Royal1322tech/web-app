@@ -505,7 +505,9 @@ test.describe("B2B hotel search: pagination (mocked API)", () => {
     const names = () => page.locator("#api-hotel-results [data-live-hotel] h3").allInnerTexts();
     await expect(page.locator("#api-hotel-results [data-live-hotel]")).toHaveCount(4);
     expect(await names()).toEqual(["Coral", "Hotel name not provided", "Atlas", "Bay"]);
-    const sort = page.getByRole("group", { name: "Filter this page" }).getByLabel("Sort by");
+    // Sorting sits above the list and, like the filters, applies to this page only.
+    const sort = page.getByLabel("Sort by");
+    await expect(page.getByText("Filters and sorting apply to the hotels on this page.")).toBeVisible();
     await sort.selectOption("stars");
     expect(await names()).toEqual(["Hotel name not provided", "Bay", "Coral", "Atlas"]);
     await sort.selectOption("name");

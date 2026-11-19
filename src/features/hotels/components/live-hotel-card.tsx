@@ -21,7 +21,8 @@ export function LiveHotelCard({ hotel, result, variant = "full", eager = false, 
   rooms?: RoomsAction;
   hotel: B2BHotel;
   result: ResultFlags;
-  variant?: "full" | "compact";
+  /** "row": the results list (horizontal when the card has room, stacked otherwise). */
+  variant?: "full" | "compact" | "row";
   eager?: boolean;
 }) {
   const { t, locale } = useLocale();
@@ -33,7 +34,7 @@ export function LiveHotelCard({ hotel, result, variant = "full", eager = false, 
   const breakfast = breakfastAvailability(hotel.rooms);
   const stars = hotel.stars && hotel.stars > 0 ? hotel.stars : null;
   // A short summary: at most two distinct room types, the rest behind "Show more".
-  const visibleRooms = variant === "full" ? 2 : 0;
+  const visibleRooms = variant === "compact" ? 0 : 2;
   const name = hotel.name ?? t("Hotel name not provided", "لم يُذكر اسم الفندق");
   const lang = locale === "ar" ? "ar" : "en";
 
@@ -134,7 +135,7 @@ function RoomLine({ option, lang }: { option: ReturnType<typeof roomOptions>[num
 }
 
 /** Loading placeholders shaped like the cards. */
-export function LiveHotelCardSkeleton({ variant = "full" }: { variant?: "full" | "compact" }) {
+export function LiveHotelCardSkeleton({ variant = "full" }: { variant?: "full" | "compact" | "row" }) {
   return (
     <div className={styles.card} data-variant={variant} data-skeleton aria-hidden="true">
       <div className={`${styles.media} ${styles.shimmer}`} />

@@ -84,6 +84,28 @@
 :global([dir="rtl"]) .roomsAction :global(.button) svg { rotate: 180deg; }
 .roomsUnavailable { margin: 0; color: var(--muted); font-size: var(--font-size-xs); }
 
+/*
+ * Row (search results list): photo | details | price and action when the card is wide enough, a
+ * stacked card otherwise. The breakpoint follows the card's own width (its list item is a size
+ * container), so it adapts to the sidebar as well as to the screen.
+ */
+@container (min-width: 680px) {
+  .card[data-variant="row"] {
+    display: grid;
+    grid-template-columns: minmax(220px, 32%) minmax(0, 1fr) minmax(190px, 220px);
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas: "media body price" "media body action";
+    min-height: 236px;
+  }
+  .card[data-variant="row"] .media { grid-area: media; aspect-ratio: auto; height: 100%; min-height: 236px; }
+  .card[data-variant="row"] .body { grid-area: body; padding: var(--space-5); }
+  .card[data-variant="row"] .footer { grid-area: price; flex-direction: column; align-items: flex-end; justify-content: flex-start; gap: var(--space-2); margin: 0; padding: var(--space-5) var(--space-5) var(--space-3); border-block-start: 0; border-inline-start: 1px solid #edf1f6; text-align: end; }
+  .card[data-variant="row"] .price { justify-items: end; }
+  .card[data-variant="row"] .roomsAction { grid-area: action; display: flex; align-items: flex-end; padding: 0 var(--space-5) var(--space-5); border-inline-start: 1px solid #edf1f6; }
+  .card[data-variant="row"][data-skeleton] .footer { grid-row: 1 / -1; }
+  .card[data-variant="row"]::before { inset-block: 0; inset-inline-end: auto; width: 3px; height: auto; background: linear-gradient(180deg, var(--card-gold), color-mix(in srgb, var(--card-gold) 30%, transparent)); }
+}
+
 /* Compact (home carousels). */
 .card[data-variant="compact"] .body { padding: var(--space-3) var(--space-4) var(--space-2); }
 .card[data-variant="compact"] .name { font-size: var(--font-size-base); }
