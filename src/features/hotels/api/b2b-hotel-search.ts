@@ -34,28 +34,32 @@ export interface B2BHotelSearchRequest {
   language: "en" | "ar";
   currency: B2BSearchCurrency;
   guests: { adults: number; children: number[] }[];
-  /** Sent only when server-side filters are switched on (see `serverSearchFilters`). */
+  /** Sent with server-side filters (see `serverSearchFilters`). */
   filters?: B2BSearchFilters;
   sort?: B2BSearchSort;
 }
 
 /*
- * Search filters, as in the backend team's example request (2026-11-20):
- * filters: {hotel_name, area, stars: number[], board: string[], amenities: string[], package_type},
- * sort: "recommended". On staging (2026-11-20) the API accepted every field (200) but the totals and
- * hotels did not change, so the filters are not effective yet. They are sent only in builds with
- * VITE_HOTEL_SEARCH_FILTERS=server; otherwise the sidebar narrows the loaded page.
+ * Search filters, from the backend filter contract (2026-11-21), applied by the API before paging:
+ * filters.hotel_name / area (strings, max 120), stars (unique 1–5), board, amenities and
+ * package_type (values below), and sort. Checked on staging (2026-11-21): stars [5] returned only
+ * 5-star hotels with total 2, board ["all-inclusive"] only all-inclusive rooms (total 9), and
+ * sort "name_asc" alphabetical order. Builds with VITE_HOTEL_SEARCH_FILTERS=page keep filtering the
+ * loaded page instead.
  */
+export const b2bBoardValues = ["nomeal", "breakfast", "half-board", "full-board", "all-inclusive", "ultra-all-inclusive"] as const;
+export const b2bAmenityValues = ["non_smoking", "room_service", "air_conditioning", "bathroom", "gym", "heating"] as const;
 export interface B2BSearchFilters {
   hotel_name?: string;
   area?: string;
   stars?: number[];
-  board?: string[];
-  amenities?: string[];
-  package_type?: "all" | "with" | "without";
+  board?: (typeof b2bBoardValues)[number][];
+  amenities?: (typeof b2bAmenityValues)[number][];
+  package_type?: "all" | "with_package" | "without_package";
 }
-export type B2BSearchSort = "recommended";
-export const serverSearchFilters = import.meta.env?.VITE_HOTEL_SEARCH_FILTERS === "server";
+export type B2BSearchSort = "recommended" | "stars_desc" | "name_asc";
+export const B2B_SEARCH_MAX_PAGE = 1000;
+export const serverSearchFilters = import.meta.env?.VITE_HOTEL_SEARCH_FILTERS !== "page";
 
 const validPoint = ({ latitude, longitude }: GeoPoint) =>
   Number.isFinite(latitude) && Number.isFinite(longitude) && Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180;

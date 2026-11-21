@@ -8,6 +8,7 @@ import { Popover } from "@/components/ui/popover";
 import { LanguageSelector } from "@/features/localization/language-selector";
 import { Icon } from "@/components/ui/icon";
 import { useB2BSession } from "@/features/auth/b2b-session";
+import { apiAuthEnabled } from "@/features/auth/auth-config";
 import styles from "./site-header.module.css";
 
 export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
@@ -86,7 +87,7 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
           {identity && <p className={styles.accountIdentity}><strong>{identity.user.name}</strong><span>{identity.company.name}</span></p>}
           {[
             ["/profile", t("My Profile", "ملفي الشخصي")],
-            ["/bookings", t("My Bookings", "حجوزاتي")], ["/car-rental/bookings", t("My Rentals", "تأجيراتي")], ["/tickets", t("My Tickets", "تذاكري")],
+            ["/bookings", t("My Bookings", "حجوزاتي")], ["/car-rental/bookings", t("My Rentals", "تأجيراتي")], ["/tickets", t("My Tickets", "تذاكري")], ...(apiAuthEnabled ? [["/price-requests", t("Price Requests", "طلبات الأسعار")]] : []),
             ["/invoices", t("Invoices", "الفواتير")], ["/accounting-review", t("Accounting Review", "مراجعة الحسابات")],
             ["/wallet", t("Wallet", "المحفظة")], ["/transactions", t("Transactions", "المعاملات")],
             ["/account/settings", t("Account Settings", "إعدادات الحساب")],

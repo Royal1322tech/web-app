@@ -1,11 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useId, useRef, useState, type DragEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type DragEvent, type ReactNode } from "react";
+import { z } from "zod";
 import { useForm, useWatch } from "react-hook-form";
 import { Link, Navigate, useLocation, useParams, useSearchParams } from "react-router-dom";
 import { BackLink } from "@/components/ui/back-link";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
 import { useLocale } from "@/features/localization/locale-provider";
+import { b2bSession } from "@/features/auth/b2b-session";
+import { ApiError } from "@/lib/api/client";
+import { classifyPriceReductionError, requestStatusLabel, submitPriceReductionRequest, type PriceReductionCreated, type PriceReductionFailure } from "../api/b2b-price-reduction";
 import { useTravelPreferences } from "@/features/preferences/travel-preferences";
 import { isB2BSearchCurrency } from "../api/b2b-hotel-search";
 import { isHotelHid, toRoomsRequest } from "../api/b2b-hotel-rooms";
@@ -18,7 +22,6 @@ import {
   REDUCE_PRICE_FILE_ACCEPT,
   reducePriceSchema,
   reducePriceSubmissionAvailable,
-  type ReducePriceFormInput,
 } from "../price-reduction-request";
 import { CatalogShell } from "./catalog-shell";
 import styles from "./reduce-price-page.module.css";
@@ -32,6 +35,15 @@ const messages: Record<string, [string, string]> = {
   "Attach a JPG, PNG or PDF file.": ["Attach a JPG, PNG or PDF file.", "أرفق ملفًا بصيغة JPG أو PNG أو PDF."],
   "The file must be 5 MB or smaller.": ["The file must be 5 MB or smaller.", "يجب ألا يتجاوز حجم الملف 5 ميغابايت."],
   "Notes can be up to 1,000 characters.": ["Notes can be up to 1,000 characters.", "يمكن أن تصل الملاحظات إلى 1000 حرف."],
+  "Enter the hotel name.": ["Enter the hotel name.", "أدخل اسم الفندق."],
+  "Choose the room.": ["Choose the room.", "اختر الغرفة."],
+  "Use 255 characters or fewer.": ["Use 255 characters or fewer.", "استخدم 255 حرفًا أو أقل."],
+};
+
+/** Room names the rooms page loaded for this stay (real rooms reply), for choosing the room. */
+const readRoomNames = (state: unknown): string[] => {
+  const rooms = state && typeof state === "object" && "rooms" in state ? (state as { rooms: unknown }).rooms : null;
+  return Array.isArray(rooms) ? [...new Set(rooms.filter((name): name is string => typeof name === "string" && !!name.trim()).map((name) => name.trim()))].slice(0, 100) : [];
 };
 
 /** Router state from the rooms page: the hotel summary, and a room name when one was chosen. */
@@ -57,6 +69,7 @@ export function ReducePricePage() {
   const request = criteria ? toRoomsRequest(criteria, { language: locale === "ar" ? "ar" : "en", currency }) : null;
   const summary = isHotelHid(hid) ? readHotelSummary(location.state, hid) : null;
   const roomName = readRoomName(location.state);
+  const roomNames = readRoomNames(location.state);
   const roomsHref = criteria && isHotelHid(hid) ? roomsPath(hid, stayQuery(criteria)) : "/search";
   const searchHref = criteria ? `/search?${stayQuery(criteria)}` : "/search";
   const backState = summary ? { hotel: summary } : undefined;
@@ -87,7 +100,7 @@ export function ReducePricePage() {
         ) : (
           <div className={styles.card}>
             <BookingDetails summary={summary} criteria={criteria} residency={request.residency} currency={request.currency} roomName={roomName} />
-            <RequestForm currency={request.currency} roomsHref={roomsHref} backState={backState} />
+            <RequestForm hid={hid} summary={summary} criteria={criteria} currency={request.currency} roomName={roomName} roomNames={roomNames} roomsHref={roomsHref} backState={backState} />
           </div>
         )}
       </div>
@@ -150,15 +163,44 @@ const formatSize = (bytes: number, locale: string) =>
     ? `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(bytes / (1024 * 1024))} MB`
     : `${new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(Math.max(1, Math.round(bytes / 1024)))} KB`;
 
-function RequestForm({ currency, roomsHref, backState }: { currency: string; roomsHref: string; backState: unknown }) {
+/** The request form. Hotel and room come from the stay; a field is asked for only when it's missing. */
+const requestSchema = reducePriceSchema.extend({
+  hotelName: z.string().trim().min(1, "Enter the hotel name.").max(255, "Use 255 characters or fewer."),
+  roomName: z.string().trim().min(1, "Choose the room.").max(255, "Use 255 characters or fewer."),
+});
+type RequestInput = z.input<typeof requestSchema>;
+type SubmitState =
+  | { status: "idle" }
+  | { status: "submitting" }
+  | { status: "done"; created: PriceReductionCreated }
+  | { status: "failed"; failure: PriceReductionFailure; retryAt?: number };
+
+const failureText: Record<PriceReductionFailure, [string, string]> = {
+  signed_out: ["Your session has ended. Sign in again to send this request.", "انتهت جلستك. سجّل الدخول مرة أخرى لإرسال هذا الطلب."],
+  forbidden: ["Your account can't send price requests. Contact your account manager.", "لا يمكن لحسابك إرسال طلبات الأسعار. تواصل مع مدير حسابك."],
+  validation: ["Some details weren't accepted. Check the highlighted fields and try again.", "لم تُقبل بعض التفاصيل. راجع الحقول المحددة وحاول مرة أخرى."],
+  rate_limited: ["Too many requests. Please wait a moment and try again.", "طلبات كثيرة. يرجى الانتظار قليلًا ثم المحاولة مرة أخرى."],
+  network: ["We couldn't reach the server. Check your connection and try again.", "تعذر الوصول إلى الخادم. تحقق من اتصالك وحاول مرة أخرى."],
+  timeout: ["The request took too long. Please try again.", "استغرق الطلب وقتًا طويلًا. يرجى المحاولة مرة أخرى."],
+  unavailable: ["Price requests are unavailable right now. Please try again later.", "طلبات الأسعار غير متاحة حاليًا. يرجى المحاولة لاحقًا."],
+};
+/** Server field names → form fields, for 422 messages shown next to the field. */
+const serverFields: Record<string, keyof RequestInput> = { requested_price: "requestedPrice", attachment: "document", notes: "notes", hotel_name: "hotelName", room_name: "roomName" };
+
+function RequestForm({ hid, summary, criteria, currency, roomName, roomNames, roomsHref, backState }: {
+  hid: number; summary: RoomsHotelSummary | null; criteria: Stay; currency: "USD" | "EGP" | "SAR"; roomName: string | null; roomNames: string[]; roomsHref: string; backState: unknown;
+}) {
   const { t, locale } = useLocale();
   const id = useId();
   const fileInput = useRef<HTMLInputElement | null>(null);
   const [dragging, setDragging] = useState(false);
-  const { register, handleSubmit, control, setValue, trigger, formState: { errors } } = useForm<ReducePriceFormInput>({
-    resolver: zodResolver(reducePriceSchema),
+  const [submit, setSubmit] = useState<SubmitState>({ status: "idle" });
+  const [now, setNow] = useState(() => Date.now());
+  const sending = useRef(false);
+  const { register, handleSubmit, control, setValue, setError, trigger, formState: { errors } } = useForm<RequestInput>({
+    resolver: zodResolver(requestSchema),
     mode: "onTouched",
-    defaultValues: { requestedPrice: "", notes: "", document: undefined },
+    defaultValues: { requestedPrice: "", notes: "", document: undefined, hotelName: summary?.name ?? "", roomName: roomName ?? (roomNames.length === 1 ? roomNames[0] : "") },
   });
   const documentFiles = useWatch({ control, name: "document" });
   const notes = useWatch({ control, name: "notes" }) ?? "";
@@ -168,6 +210,14 @@ function RequestForm({ currency, roomsHref, backState }: { currency: string; roo
   const priceError = message(errors.requestedPrice?.message);
   const fileError = message(errors.document?.message);
   const notesError = message(errors.notes?.message);
+  const hotelError = message(errors.hotelName?.message);
+  const roomError = message(errors.roomName?.message);
+  const retryIn = submit.status === "failed" && submit.retryAt ? Math.max(0, Math.ceil((submit.retryAt - now) / 1000)) : 0;
+  useEffect(() => {
+    if (!retryIn) return;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [retryIn]);
 
   const clearFile = () => {
     if (fileInput.current) fileInput.current.value = "";
@@ -180,10 +230,89 @@ function RequestForm({ currency, roomsHref, backState }: { currency: string; roo
     if (event.dataTransfer.files.length) setValue("document", event.dataTransfer.files, { shouldValidate: true });
   };
 
+  const onValid = async (values: RequestInput) => {
+    if (sending.current) return; // one request at a time, even on a double click
+    const token = b2bSession.token();
+    if (!token) { setSubmit({ status: "failed", failure: "signed_out" }); return; }
+    sending.current = true;
+    setSubmit({ status: "submitting" });
+    try {
+      const created = await submitPriceReductionRequest({
+        supplierHid: hid,
+        hotelName: values.hotelName,
+        roomName: values.roomName,
+        checkin: criteria.checkIn,
+        checkout: criteria.checkOut,
+        adults: criteria.rooms.reduce((sum, room) => sum + room.adults, 0),
+        children: criteria.rooms.reduce((sum, room) => sum + room.childAges.length, 0),
+        currency,
+        requestedPrice: values.requestedPrice,
+        hotelAddress: summary?.address ?? null,
+        notes: values.notes,
+        attachment: values.document?.[0] ?? null,
+      }, { token });
+      setSubmit({ status: "done", created });
+    } catch (error) {
+      const failure = classifyPriceReductionError(error);
+      if (error instanceof ApiError && failure === "validation") {
+        for (const [field, problems] of Object.entries(error.fieldErrors)) {
+          const target = serverFields[field];
+          if (target && problems[0]) setError(target, { type: "server", message: problems[0] });
+        }
+      }
+      const wait = error instanceof ApiError && failure === "rate_limited" ? error.retryAfterSeconds : undefined;
+      setSubmit({ status: "failed", failure, retryAt: wait ? Date.now() + wait * 1000 : undefined });
+    } finally {
+      sending.current = false;
+    }
+  };
+
+  if (submit.status === "done") {
+    return (
+      <section className={styles.request} aria-labelledby={`${id}-done`} data-request-state="submitted">
+        <div className={styles.success} role="status">
+          <span className={styles.successIcon} aria-hidden="true"><Icon name="check" /></span>
+          <h2 id={`${id}-done`}>{t("Request submitted for review", "تم إرسال الطلب للمراجعة")}</h2>
+          <p>{t("Our team will review your requested price for this stay.", "سيراجع فريقنا السعر الذي طلبته لهذه الإقامة.")}</p>
+          <dl className={styles.reference}>
+            <div><dt>{t("Request number", "رقم الطلب")}</dt><dd><bdi dir="ltr">{submit.created.request_no}</bdi></dd></div>
+            <div><dt>{t("Status", "الحالة")}</dt><dd>{requestStatusLabel(submit.created.status, t)}</dd></div>
+          </dl>
+          <div className={styles.actions}>
+            <Link className="button button--outline" to={roomsHref} state={backState}>{t("Back to rooms", "العودة إلى الغرف")}</Link>
+            <Link className="button button--primary" to="/price-requests">{t("View my price requests", "عرض طلبات الأسعار")}</Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const submitting = submit.status === "submitting";
   return (
     <section className={styles.request} aria-labelledby={`${id}-title`}>
       <h2 id={`${id}-title`} className={styles.sectionTitle}><span aria-hidden="true"><Icon name="tag" /></span>{t("Your price request", "طلب السعر")}</h2>
-      <form className={styles.form} noValidate onSubmit={handleSubmit(() => undefined)}>
+      <form className={styles.form} noValidate onSubmit={(event) => { void handleSubmit(onValid)(event); }} aria-busy={submitting || undefined}>
+        {!summary?.name && (
+          <div className={styles.field}>
+            <label htmlFor={`${id}-hotel`}>{t("Hotel name", "اسم الفندق")}<span className={styles.required} aria-hidden="true"> *</span></label>
+            <input id={`${id}-hotel`} className={styles.text} maxLength={255} autoComplete="off" aria-required="true" aria-invalid={!!hotelError} aria-describedby={hotelError ? `${id}-hotel-error` : undefined} {...register("hotelName")} />
+            {hotelError && <p id={`${id}-hotel-error`} className={styles.error} role="alert">{hotelError}</p>}
+          </div>
+        )}
+        {!roomName && (
+          <div className={styles.field}>
+            <label htmlFor={`${id}-room`}>{t("Room", "الغرفة")}<span className={styles.required} aria-hidden="true"> *</span></label>
+            {roomNames.length ? (
+              <select id={`${id}-room`} className={styles.text} aria-required="true" aria-invalid={!!roomError} aria-describedby={roomError ? `${id}-room-error` : undefined} {...register("roomName")}>
+                <option value="">{t("Choose a room", "اختر غرفة")}</option>
+                {roomNames.map((name) => <option key={name} value={name}>{name}</option>)}
+              </select>
+            ) : (
+              <input id={`${id}-room`} className={styles.text} maxLength={255} autoComplete="off" placeholder={t("The room type you were quoted", "نوع الغرفة الذي عُرض عليك")} aria-required="true" aria-invalid={!!roomError} aria-describedby={roomError ? `${id}-room-error` : undefined} {...register("roomName")} />
+            )}
+            {roomError && <p id={`${id}-room-error`} className={styles.error} role="alert">{roomError}</p>}
+          </div>
+        )}
         <div className={styles.field}>
           <label htmlFor={`${id}-price`}>{t(`Requested price (${currency})`, `السعر المطلوب (${currency})`)}<span className={styles.required} aria-hidden="true"> *</span></label>
           <div className={styles.money} data-invalid={!!priceError || undefined}>
@@ -238,7 +367,7 @@ function RequestForm({ currency, roomsHref, backState }: { currency: string; roo
               <small id={`${id}-document-help`}>{t("A competitor quote or screenshot. JPG, PNG or PDF, up to 5 MB.", "عرض سعر منافس أو لقطة شاشة. JPG أو PNG أو PDF، حتى 5 ميغابايت.")}</small>
             </label>
           )}
-          {file && <small id={`${id}-document-help`} className={styles.help}>{t("JPG, PNG or PDF, up to 5 MB. The file stays on this device.", "JPG أو PNG أو PDF، حتى 5 ميغابايت. يبقى الملف على هذا الجهاز.")}</small>}
+          {file && <small id={`${id}-document-help`} className={styles.help}>{t("JPG, PNG or PDF, up to 5 MB. Sent with your request.", "JPG أو PNG أو PDF، حتى 5 ميغابايت. يُرسل مع طلبك.")}</small>}
           {fileError && <p id={`${id}-document-error`} className={styles.error} role="alert">{fileError}</p>}
         </div>
 
@@ -250,16 +379,16 @@ function RequestForm({ currency, roomsHref, backState }: { currency: string; roo
         </div>
 
         <div className={styles.footer}>
-          {!reducePriceSubmissionAvailable && (
-            <p className={styles.notice} id={`${id}-unavailable`}>
+          {submit.status === "failed" && (
+            <p className={`${styles.notice} ${styles.failed}`} role="alert" data-request-state={submit.failure}>
               <Icon name="info" aria-hidden="true" />
-              <span>{t("Requests can't be sent online yet. Contact your account manager with these details to request a lower price.", "لا يمكن إرسال الطلبات عبر الإنترنت حاليًا. تواصل مع مدير حسابك بهذه التفاصيل لطلب سعر أقل.")}</span>
+              <span>{retryIn ? t(`Too many requests. You can try again in ${retryIn} seconds.`, `طلبات كثيرة. يمكنك المحاولة بعد ${retryIn} ثانية.`) : t(...failureText[submit.failure])}</span>
             </p>
           )}
           <div className={styles.actions}>
             <Link className="button button--outline" to={roomsHref} state={backState}>{t("Cancel", "إلغاء")}</Link>
-            <button type="submit" className="button button--primary" disabled={!reducePriceSubmissionAvailable} aria-describedby={reducePriceSubmissionAvailable ? undefined : `${id}-unavailable`}>
-              <Icon name="send" aria-hidden="true" />{t("Send request", "إرسال الطلب")}
+            <button type="submit" className="button button--primary" disabled={!reducePriceSubmissionAvailable || submitting || retryIn > 0}>
+              <Icon name="send" aria-hidden="true" />{submitting ? t("Sending…", "جارٍ الإرسال…") : t("Send request", "إرسال الطلب")}
             </button>
           </div>
         </div>

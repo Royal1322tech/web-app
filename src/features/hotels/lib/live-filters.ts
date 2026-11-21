@@ -1,4 +1,4 @@
-import type { B2BHotel, B2BHotelSearchResult, B2BRoom, B2BSearchFilters } from "../api/b2b-hotel-search";
+import type { B2BHotel, B2BHotelSearchResult, B2BRoom, B2BSearchFilters, b2bAmenityValues, b2bBoardValues } from "../api/b2b-hotel-search";
 import type { Amenity } from "../types";
 import type { BoardPlan } from "./board-plan-definitions";
 import { breakfastAvailability, verifiedPrice } from "./live-hotels";
@@ -70,22 +70,29 @@ export const priceFilterSupported = (result: B2BHotelSearchResult) =>
 
 const priceBound = (value: string) => (value.trim() === "" || Number.isNaN(Number(value)) ? null : Number(value));
 
-/** Amenity keys as the backend example writes them (snake_case). */
-const amenityParam = (amenity: Amenity) => amenity.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+/** Sidebar amenities the search API filters on, with their API values. Others aren't offered with server filters. */
+export const serverAmenities: Partial<Record<Amenity, (typeof b2bAmenityValues)[number]>> = {
+  nonSmoking: "non_smoking", roomService: "room_service", airConditioning: "air_conditioning", bathroom: "bathroom", gym: "gym", heating: "heating",
+};
+const boardParam: Record<BoardPlan, (typeof b2bBoardValues)[number]> = {
+  room: "nomeal", breakfast: "breakfast", "half-board": "half-board", "full-board": "full-board", "all-inclusive": "all-inclusive", "ultra-all-inclusive": "ultra-all-inclusive",
+};
+const packageParam = { with: "with_package", without: "without_package" } as const;
 
 /**
- * The sidebar choices the search request can carry, or undefined when none is set. Only fields in the
- * backend team's example are sent; breakfast, price, review, profile and top product never are.
+ * The sidebar choices the search request can carry (exact API values), or undefined when none is
+ * set. Breakfast, price, review, profile and top product are never sent: the API has no such field.
  */
 export function toB2BSearchFilters(filters: LiveFilters): B2BSearchFilters | undefined {
   const out: B2BSearchFilters = {};
-  const name = filters.name.trim();
+  const name = filters.name.trim().slice(0, 120);
   if (name) out.hotel_name = name;
-  if (filters.areas.length === 1) out.area = filters.areas[0];
-  if (filters.stars.length) out.stars = [...filters.stars].sort((a, b) => a - b);
-  if (filters.boards.length) out.board = [...filters.boards].sort();
-  if (filters.amenities.length) out.amenities = filters.amenities.map(amenityParam).sort();
-  if (filters.packaging !== "all") out.package_type = filters.packaging;
+  if (filters.areas.length === 1) out.area = filters.areas[0].slice(0, 120);
+  if (filters.stars.length) out.stars = [...new Set(filters.stars)].filter((star) => star >= 1 && star <= 5).sort((a, b) => a - b);
+  if (filters.boards.length) out.board = [...new Set(filters.boards.map((plan) => boardParam[plan]))].sort();
+  const amenities = filters.amenities.map((amenity) => serverAmenities[amenity]).filter((value): value is (typeof b2bAmenityValues)[number] => !!value);
+  if (amenities.length) out.amenities = [...new Set(amenities)].sort();
+  if (filters.packaging !== "all") out.package_type = packageParam[filters.packaging];
   return Object.keys(out).length ? out : undefined;
 }
 

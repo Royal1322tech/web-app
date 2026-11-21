@@ -1388,3 +1388,13 @@ input[type="date"]:focus-within {
   .registration-page .registration-section .form-field { gap: 6px; }
 }
 :root[dir="rtl"] .registration-page .registration-header h1 { letter-spacing: 0; }
+
+/* Wallet: the company's real loyalty points summary. */
+.loyalty-summary { display: grid; gap: 8px; margin-block-end: 16px; }
+.loyalty-summary h2 { margin: 0; }
+.loyalty-summary p { margin: 0; }
+.loyalty-summary__values { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 4px 0; }
+.loyalty-summary__values > div { display: grid; gap: 2px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: #f8fafd; }
+.loyalty-summary__values dt { color: var(--muted); font-size: 13px; font-weight: 600; }
+.loyalty-summary__values dd { margin: 0; color: var(--navy); font-size: 22px; font-weight: 800; }
+.loyalty-summary > a { justify-self: start; display: inline-flex; align-items: center; min-height: 44px; color: var(--primary); font-weight: 700; }

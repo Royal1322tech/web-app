@@ -1,10 +1,17 @@
 import { useState } from 'react';
+import { apiAuthEnabled } from '@/features/auth/auth-config';
+import { LoyaltyPointsPage } from '@/features/loyalty/loyalty-points-page';
 import { useLocale } from '@/features/localization/locale-provider';
 import { Workspace } from './shared';
 import { demoPoints, pointsSummary } from './points-data';
 import { formatCalendarDate } from '@/lib/format-date';
 
+/** Points: the company's real loyalty points with real sign-in; the labelled example otherwise. */
 export function PointsPage() {
+  return apiAuthEnabled ? <LoyaltyPointsPage /> : <DemoPointsPage />;
+}
+
+function DemoPointsPage() {
   const { locale, t } = useLocale();
   const [filter, setFilter] = useState('all');
   const [query, setQuery] = useState('');

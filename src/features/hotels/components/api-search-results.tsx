@@ -16,6 +16,8 @@ import {
   type B2BHotelSearchRequest,
   type B2BHotelSearchResult,
   type B2BSearchFilters,
+  type B2BSearchSort,
+  B2B_SEARCH_MAX_PAGE,
   type B2BSearchFailure,
 } from "../api/b2b-hotel-search";
 import { findDestination } from "../data/destinations";
@@ -69,10 +71,11 @@ function SearchRun({ base, destinationName, roomsQuery }: { base: B2BHotelSearch
   const [filters, setFilters] = useState<LiveFilters>(emptyLiveFilters);
   const [sort, setSort] = useState<PageSort>("recommended");
   // Server-side filters: the request carries the settled sidebar choices, so a change is one search.
-  const serverPart = useSettled(server ? JSON.stringify(toB2BSearchFilters(filters) ?? null) : "null", 400);
+  const serverPart = useSettled(server ? JSON.stringify({ filters: toB2BSearchFilters(filters) ?? null, sort: serverSort[sort] }) : "null", 400);
   const request = useMemo<B2BHotelSearchRequest>(() => {
-    const sent = JSON.parse(serverPart) as B2BSearchFilters | null;
-    return server ? { ...base, ...(sent ? { filters: sent } : {}), sort: "recommended" } : base;
+    if (!server) return base;
+    const sent = JSON.parse(serverPart) as { filters: B2BSearchFilters | null; sort: B2BSearchSort };
+    return { ...base, ...(sent.filters ? { filters: sent.filters } : {}), sort: sent.sort };
   }, [base, serverPart, server]);
   const requestKey = JSON.stringify(request);
 
@@ -80,7 +83,8 @@ function SearchRun({ base, destinationName, roomsQuery }: { base: B2BHotelSearch
   const [attempt, setAttempt] = useState(0);
   // Pages already received for this exact request, so going back never asks the API again.
   const [cache, setCache] = useState<{ key: string; pages: ReadonlyMap<number, B2BHotelSearchResult> }>({ key: requestKey, pages: emptyPages });
-  const [failure, setFailure] = useState<{ key: string; page: number; attempt: number; kind: B2BSearchFailure } | null>(null);
+  const [failure, setFailure] = useState<{ key: string; page: number; attempt: number; kind: B2BSearchFailure; retryAt?: number } | null>(null);
+  const [now, setNow] = useState(() => Date.now());
   const [pagingUnsupported, setPagingUnsupported] = useState(false);
   const [shownKey, setShownKey] = useState(requestKey);
   const top = useRef<HTMLDivElement>(null);
@@ -124,7 +128,9 @@ function SearchRun({ base, destinationName, roomsQuery }: { base: B2BHotelSearch
             setPage(1);
             return;
           }
-          setFailure({ key: requestKey, page, attempt, kind: classifyB2BSearchError(error) });
+          // A 429 with Retry-After: Retry stays unavailable until the server accepts searches again.
+          const wait = error instanceof ApiError && error.kind === "rate_limited" ? error.retryAfterSeconds : undefined;
+          setFailure({ key: requestKey, page, attempt, kind: classifyB2BSearchError(error), retryAt: wait ? Date.now() + wait * 1000 : undefined });
         });
     }, 0);
     return () => { clearTimeout(timer); controller.abort(); };
@@ -137,7 +143,13 @@ function SearchRun({ base, destinationName, roomsQuery }: { base: B2BHotelSearch
   }, [page]);
 
   const first = pages.get(1);
-  const pageCount = first && !pagingUnsupported ? totalPages(first) : 1;
+  const pageCount = first && !pagingUnsupported ? Math.min(totalPages(first), B2B_SEARCH_MAX_PAGE) : 1;
+  const retryIn = state.status === "error" && failure?.retryAt ? Math.max(0, Math.ceil((failure.retryAt - now) / 1000)) : 0;
+  useEffect(() => {
+    if (!retryIn) return;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [retryIn]);
   // Page-only filters belong to the page they were set on; server filters stay across pages.
   const goTo = (next: number) => { if (next >= 1 && next <= pageCount && next !== page) { if (!server) setFilters(emptyLiveFilters); setPage(next); } };
   const retry = () => { setAttempt((value) => value + 1); };
@@ -178,8 +190,10 @@ function SearchRun({ base, destinationName, roomsQuery }: { base: B2BHotelSearch
         <div data-search-state={state.failure} role="alert">
           <SystemState
             title={t(...searchFailureMessages[state.failure].title)}
-            description={t(...searchFailureMessages[state.failure].description)}
-            onRetry={searchFailureMessages[state.failure].retry ? retry : undefined}
+            description={retryIn
+              ? t(`Please wait before searching again. You can try again in ${retryIn} seconds.`, `يرجى الانتظار قبل البحث مرة أخرى. يمكنك المحاولة بعد ${retryIn} ثانية.`)
+              : t(...searchFailureMessages[state.failure].description)}
+            onRetry={searchFailureMessages[state.failure].retry && !retryIn ? retry : undefined}
           />
         </div>
       )}
@@ -215,7 +229,7 @@ function SearchRun({ base, destinationName, roomsQuery }: { base: B2BHotelSearch
                     </select>
                   </label>
                 </div>
-                <HotelList result={sidebarResult} filters={filters} sort={sort} roomsQuery={roomsQuery} server={server} />
+                <HotelList result={sidebarResult} filters={filters} sort={server ? "recommended" : sort} roomsQuery={roomsQuery} server={server} />
               </>
             )}
           </div>
@@ -237,8 +251,9 @@ function SearchRun({ base, destinationName, roomsQuery }: { base: B2BHotelSearch
   );
 }
 
-/** Sorting the loaded page by values the API actually returns. "Recommended" keeps the supplier's order. */
+/** Sorting: sent to the API with server filters; otherwise the loaded page is sorted by values the API returns. */
 type PageSort = "recommended" | "stars" | "name";
+const serverSort: Record<PageSort, B2BSearchSort> = { recommended: "recommended", stars: "stars_desc", name: "name_asc" };
 
 function sortPage(hotels: B2BHotelSearchResult["hotels"], sort: PageSort) {
   if (sort === "recommended") return hotels;

@@ -12,6 +12,7 @@ import {
   liveFiltersChanged,
   pageAreas,
   pageOnlyFilterCount,
+  serverAmenities,
   priceFilterSupported,
   type LiveFilters,
 } from "../lib/live-filters";
@@ -59,7 +60,7 @@ export function LiveHotelFilters({ result, value, onChange, shown, server = fals
               <span className={styles.srOnly}>{t("Hotel name or address", "اسم الفندق أو العنوان")}</span>
               <span className={styles.inputWrap}>
                 <Icon name="search" />
-                <input type="search" value={value.name} placeholder={t("Hotel name or address", "اسم الفندق أو العنوان")} onChange={(event) => update("name", event.target.value)} />
+                <input type="search" maxLength={120} value={value.name} placeholder={t("Hotel name or address", "اسم الفندق أو العنوان")} onChange={(event) => update("name", event.target.value)} />
               </span>
             </label>
             {value.name && <button type="button" className={styles.textAction} onClick={() => update("name", "")}>{t("Clear hotel name", "مسح اسم الفندق")}</button>}
@@ -90,7 +91,8 @@ export function LiveHotelFilters({ result, value, onChange, shown, server = fals
               <span>{t("Breakfast available", "الإفطار متاح")}</span>
             </label>
             {boardPlans.map((plan) => {
-              const unavailable = !boards.has(plan.value) && !value.boards.includes(plan.value);
+              // With server filters every plan can be asked for; otherwise only plans offered on this page.
+              const unavailable = !server && !boards.has(plan.value) && !value.boards.includes(plan.value);
               return (
                 <label className={styles.check} key={plan.value} data-unavailable={unavailable || undefined}>
                   <input type="checkbox" checked={value.boards.includes(plan.value)} disabled={unavailable} aria-describedby={unavailable ? `${id}-board-note` : undefined} onChange={() => update("boards", toggle(value.boards, plan.value))} />
@@ -98,7 +100,7 @@ export function LiveHotelFilters({ result, value, onChange, shown, server = fals
                 </label>
               );
             })}
-            <p id={`${id}-board-note`} className={styles.sectionNote}>{t("Options are enabled only when a matching room offer is listed.", "تُفعّل الخيارات فقط عند إدراج عرض غرفة مطابق.")}</p>
+            {!server && <p id={`${id}-board-note`} className={styles.sectionNote}>{t("Options are enabled only when a matching room offer is listed.", "تُفعّل الخيارات فقط عند إدراج عرض غرفة مطابق.")}</p>}
           </Section>
 
           <Section title={t("Category", "الفئة")} open>
@@ -135,7 +137,7 @@ export function LiveHotelFilters({ result, value, onChange, shown, server = fals
 
           <Section title={t("Amenities", "المرافق")} disabled={!server}>
             {!server && unavailable}
-            {amenityOrder.map((amenity, index) => (
+            {(server ? amenityOrder.filter((amenity) => serverAmenities[amenity]) : amenityOrder).map((amenity, index) => (
               <label className={styles.check} key={amenity} hidden={!moreAmenities && index >= 5} data-unavailable={!server || undefined}>
                 <input type="checkbox" checked={server && value.amenities.includes(amenity)} disabled={!server} onChange={() => update("amenities", toggle(value.amenities, amenity))} />
                 <span>{amenityLabels[amenity][locale]}</span>

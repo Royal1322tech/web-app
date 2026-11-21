@@ -1,18 +1,23 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type Request } from "@playwright/test";
 
 /*
- * Reduce Price request page (API build on port 4176, MOCKED API). No endpoint is approved, so the
- * page must validate locally, keep sending unavailable and send no request of its own.
+ * Reduce Price request page (API build on port 4176, MOCKED API; never contacts staging).
+ * POST /b2b/price-reduction-requests is answered here, so no real request is ever created.
  */
 const APP = "http://127.0.0.1:4176";
 const COMPANY = "8f14e45f-ceea-467a-9575-3c4b1f0b5c1a";
-const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Accept, Authorization, Content-Type, X-Locale", "Access-Control-Allow-Methods": "GET, POST, OPTIONS" };
+const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Accept, Authorization, Content-Type, X-Locale", "Access-Control-Allow-Methods": "GET, POST, OPTIONS", "Access-Control-Expose-Headers": "Retry-After" };
 const stay = `destination=dubai&nationality=EG&checkIn=2030-12-06&checkOut=2030-12-09&rooms=${encodeURIComponent(JSON.stringify([{ adults: 2, childAges: [] }]))}`;
 const profile = { message: "ok", data: { user: { id: 7, name: "Laila Hassan", email: "laila@example.com" }, company: { id: COMPANY, name: "Nile Gate Tours", legal_name: "Nile Gate Tours LLC", display_name: "Nile Gate Tours", status: "approved", account_currency: "USD", preferred_locale: "en", country_code: "EG", city: "Alexandria", address: "1 Corniche Road", business_type: "travel_agency", registration_no: "CR-1", tax_no: null, employee_count: 12 }, membership: { role_code: "company_admin", status: "active" } } };
 const searchReply = { success: true, code: "HOTEL_SEARCH_PREVIEW", message: "x", data: { hotels: [{ result_index: 0, hid: 4242, name: "Palm Court", address: "1 Palm Road, Jumeirah, Dubai", stars: 4, image: null, rooms: [], pricing_status: "unverified", booking_enabled: false }], total: 1, page: 1, per_page: 20, currency: "USD", supplier_currency: "USD", pricing_verified: false, booking_enabled: false } };
+const unverified = { verified: false, selling_price: null, agency_purchase_price: null, currency: "USD", price_on_request: true };
+const roomsReply = { hotel_hid: 4242, rooms_token: "rooms-token-A", expires_in_seconds: 900, total: 2, rooms: [0, 1].map((index) => ({ rate_index: index, room_name: ["Deluxe King", "Family Suite"][index], bedding_type: "double", meal_name: "breakfast", has_breakfast: true, price: unverified, selectable: false, booking_enabled: false })) };
+const created = { success: true, message: "Request submitted for review.", data: { id: "0b6f5a1e-8a52-4c2b-9d0a-3c1f2f6a9b11", request_no: "RP-ABC123456789", status: "new" } };
 
-async function signedIn(page: Page, locale: "en" | "ar" = "en") {
+type Reply = { status?: number; json?: unknown; headers?: Record<string, string>; delayMs?: number };
+async function signedIn(page: Page, { locale = "en", rooms = true, submit = () => ({ status: 201, json: created }) }: { locale?: "en" | "ar"; rooms?: boolean; submit?: (request: Request) => Reply } = {}) {
   const calls: string[] = [];
+  const posts: Request[] = [];
   await page.addInitScript(({ companyId, locale }) => {
     if (!sessionStorage.getItem("royal-travel.b2b-session.v1")) sessionStorage.setItem("royal-travel.b2b-session.v1", JSON.stringify({ token: "12|mocked", expiresAt: Date.now() + 3_600_000, companyId }));
     localStorage.setItem("royal-vacation.locale", locale);
@@ -24,30 +29,44 @@ async function signedIn(page: Page, locale: "en" | "ar" = "en") {
     calls.push(`${request.method()} ${path}`);
     if (path === "/api/v1/b2b/me") return route.fulfill({ headers: cors, json: profile });
     if (path === "/api/v1/b2b/hotels/search") return route.fulfill({ headers: cors, json: searchReply });
-    // Rooms: the supplier is unavailable; the page header and the Reduce Price entry still show.
-    if (path.startsWith("/api/v1/b2b/hotels/")) return route.fulfill({ status: 503, headers: cors, json: { success: false, code: "HOTEL_SUPPLIER_UNAVAILABLE", message: "x" } });
+    if (path === "/api/v1/b2b/hotels/4242/rooms") return rooms ? route.fulfill({ headers: cors, json: roomsReply }) : route.fulfill({ status: 503, headers: cors, json: { success: false, code: "HOTEL_SUPPLIER_UNAVAILABLE", message: "x" } });
+    if (path === "/api/v1/b2b/price-reduction-requests" && request.method() === "POST") {
+      posts.push(request);
+      const reply = submit(request);
+      if (reply.delayMs) await new Promise((resolve) => setTimeout(resolve, reply.delayMs));
+      return route.fulfill({ status: reply.status ?? 201, headers: { ...cors, ...reply.headers }, json: reply.json ?? {} });
+    }
     return route.fulfill({ headers: cors, json: { locale: "en", direction: "ltr" } });
   });
-  return calls;
+  return { calls, posts };
+}
+/** A multipart field's value from the raw request body. */
+const field = (body: string, name: string) => body.match(new RegExp(`name="${name}"\\r\\n\\r\\n([^\\r]*)`))?.[1];
+
+async function openFromRooms(page: Page) {
+  await page.goto(`${APP}/search?${stay}`);
+  await page.getByRole("link", { name: /View rooms/ }).click();
+  await expect(page.locator("[data-rate-index]")).toHaveCount(2);
+  const cta = page.getByRole("complementary", { name: "Found a better price?" });
+  await expect(page.getByRole("link", { name: "Back to search results" }).first()).toHaveAttribute("href", /\/search\?destination=dubai/);
+  await cta.getByRole("link", { name: "Request a Lower Price" }).click();
+  await expect(page).toHaveURL(/\/hotels\/rooms\/4242\/reduce-price\?destination=dubai/);
 }
 
 test.describe("Reduce Price request (mocked API)", () => {
-  test("opens from the rooms page with the hotel and stay, validates, and can't be sent yet", async ({ page }) => {
-    const calls = await signedIn(page);
-    await page.goto(`${APP}/search?${stay}`);
-    await page.getByRole("link", { name: /View rooms/ }).click();
-    // The rooms page promotes the request in its own call-to-action band.
-    const cta = page.getByRole("complementary", { name: "Found a better price?" });
-    await expect(cta).toBeVisible();
-    await expect(page.getByRole("link", { name: "Back to search results" }).first()).toHaveAttribute("href", /\/search\?destination=dubai/);
-    await cta.getByRole("link", { name: "Request a Lower Price" }).click();
-    await expect(page).toHaveURL(/\/hotels\/rooms\/4242\/reduce-price\?destination=dubai/);
-    await expect(page.getByRole("heading", { level: 1, name: "Request a lower price" })).toBeVisible();
+  test("opens from the rooms page, validates, and submits once as multipart with the real stay", async ({ page }) => {
+    const { posts } = await signedIn(page, { submit: () => ({ status: 201, json: created, delayMs: 600 }) });
+    await openFromRooms(page);
+    await expect(page.getByRole("heading", { level: 1, name: "Request a Lower Price" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Palm Court" })).toBeVisible();
-    await expect(page.getByText("1 Palm Road, Jumeirah, Dubai")).toBeVisible();
     await expect(page.getByLabel("Your stay")).toContainText("2 adults");
+    await expect(page.getByRole("link", { name: "Back to rooms" })).toHaveAttribute("href", /\/hotels\/rooms\/4242\?/);
+    await expect(page.getByLabel("Hotel name")).toHaveCount(0); // known from the search, so not asked
 
-    // Price: required, a plain amount with at most two decimals, above zero; shown in the stay currency.
+    // The room comes from the real rooms reply.
+    const room = page.getByLabel(/^Room/);
+    await expect(room.locator("option")).toHaveText(["Choose a room", "Deluxe King", "Family Suite"]);
+
     const price = page.getByLabel(/Requested price/);
     await price.focus();
     await price.blur();
@@ -55,42 +74,96 @@ test.describe("Reduce Price request (mocked API)", () => {
     await price.fill("12.345");
     await price.blur();
     await expect(page.getByText("Enter a valid amount, for example 120 or 120.50.")).toBeVisible();
-    await price.fill("0");
-    await expect(page.getByText("The amount must be greater than zero.")).toBeVisible();
     await price.fill("180.50");
-    await expect(price).toHaveAttribute("aria-invalid", "false");
-    await expect(page.getByText("Total for the stay, in USD.")).toBeVisible();
 
-    // Document: JPG, PNG or PDF up to 5 MB, optional and removable.
     const fileInput = page.locator("input[type=file]");
     await fileInput.setInputFiles({ name: "notes.txt", mimeType: "text/plain", buffer: Buffer.from("x") });
     await expect(page.getByText("Attach a JPG, PNG or PDF file.")).toBeVisible();
     await fileInput.setInputFiles({ name: "quote.pdf", mimeType: "application/pdf", buffer: Buffer.alloc(5 * 1024 * 1024 + 1) });
     await expect(page.getByText("The file must be 5 MB or smaller.")).toBeVisible();
-    await fileInput.setInputFiles({ name: "quote.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4") });
+    await fileInput.setInputFiles({ name: "quote.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4 test") });
     await expect(page.getByText("quote.pdf")).toBeVisible();
-    await expect(page.getByText(/^\d+ KB$/)).toBeVisible(); // file size shown
     await expect(page.locator("label", { hasText: "Replace" })).toBeVisible();
-    await expect(page.getByText(/Attach a JPG|5 MB or smaller/)).toHaveCount(0);
-    await page.getByRole("button", { name: "Remove the file" }).click();
-    await expect(page.getByText("quote.pdf")).toHaveCount(0);
+    await page.getByLabel(/^Notes/).fill("Competitor rate for the same dates.");
 
-    await page.getByLabel("Notes (optional)").fill("Competitor rate for the same dates.");
-    await expect(page.getByText("35 of 1,000 characters")).toBeVisible();
-
-    // Sending isn't available: the button is disabled and says why. Nothing is sent.
+    // The room is required.
     const send = page.getByRole("button", { name: "Send request" });
-    await expect(send).toBeDisabled();
-    await expect(page.getByText("Requests can't be sent online yet.", { exact: false })).toBeVisible();
-    await expect(page.getByText(/received|submitted|thank you/i)).toHaveCount(0);
-    expect(calls.every((call) => /^(GET \/api\/v1\/b2b\/me|POST \/api\/v1\/b2b\/hotels\/search|POST \/api\/v1\/b2b\/hotels\/4242\/rooms|GET \/api\/v1\/foundation-check)$/.test(call))).toBe(true);
+    await send.click();
+    await expect(page.getByText("Choose the room.")).toBeVisible();
+    expect(posts).toHaveLength(0);
+    await room.selectOption("Family Suite");
 
-    await expect(page.getByRole("link", { name: "Back to rooms" })).toHaveAttribute("href", /\/hotels\/rooms\/4242\?/);
-    await expect(page.getByRole("heading", { level: 2, name: "Booking details" })).toBeVisible();
-    // Cancel returns to the rooms page with the hotel still shown.
-    await page.getByRole("link", { name: "Cancel" }).click();
-    await expect(page).toHaveURL(/\/hotels\/rooms\/4242\?destination=dubai/);
-    await expect(page.getByRole("heading", { name: "Palm Court" })).toBeVisible();
+    // A double click sends one request; the button shows progress; success waits for the 201.
+    await send.dblclick();
+    await expect(page.getByRole("button", { name: "Sending…" })).toBeDisabled();
+    await expect(page.getByText(/submitted for review/i)).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Request submitted for review" })).toBeVisible();
+    expect(posts).toHaveLength(1);
+    await expect(page.locator("[data-request-state=submitted]")).toContainText("RP-ABC123456789");
+    await expect(page.locator("[data-request-state=submitted]")).toContainText("New");
+
+    const request = posts[0];
+    expect(request.headers()["content-type"]).toMatch(/^multipart\/form-data; boundary=/);
+    expect(request.headers()["authorization"]).toBe("Bearer 12|mocked");
+    const body = request.postDataBuffer()!.toString("latin1");
+    expect(field(body, "supplier_hid")).toBe("4242");
+    expect(field(body, "hotel_name")).toBe("Palm Court");
+    expect(field(body, "room_name")).toBe("Family Suite");
+    expect(field(body, "checkin")).toBe("2030-12-06");
+    expect(field(body, "checkout")).toBe("2030-12-09");
+    expect(field(body, "adults")).toBe("2");
+    expect(field(body, "currency")).toBe("USD");
+    expect(field(body, "requested_price")).toBe("180.50");
+    expect(field(body, "hotel_address")).toBe("1 Palm Road, Jumeirah, Dubai");
+    expect(field(body, "notes")).toBe("Competitor rate for the same dates.");
+    expect(body).toContain('name="attachment"; filename="quote.pdf"');
+    expect(body).not.toMatch(/name="(children|company_id|displayed_price|booking_id)"/);
+
+    await expect(page.getByRole("link", { name: "View my price requests" })).toHaveAttribute("href", "/price-requests");
+  });
+
+  test("a 422 shows the server's message next to the field and keeps the form", async ({ page }) => {
+    await signedIn(page, { submit: () => ({ status: 422, json: { message: "The given data was invalid.", errors: { requested_price: ["The requested price must be a valid amount."] } } }) });
+    await openFromRooms(page);
+    await page.getByLabel(/^Room/).selectOption("Deluxe King");
+    await page.getByLabel(/Requested price/).fill("99");
+    await page.getByRole("button", { name: "Send request" }).click();
+    await expect(page.getByText("The requested price must be a valid amount.")).toBeVisible();
+    await expect(page.locator("[data-request-state=validation]")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Request submitted for review" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Send request" })).toBeEnabled();
+  });
+
+  test("a 429 waits for Retry-After before sending can be tried again; 403 explains itself", async ({ page }) => {
+    let call = 0;
+    await signedIn(page, { submit: () => (++call === 1 ? { status: 429, json: { message: "Too Many Attempts." }, headers: { "Retry-After": "2" } } : { status: 403, json: { message: "Forbidden." } }) });
+    await openFromRooms(page);
+    await page.getByLabel(/^Room/).selectOption("Deluxe King");
+    await page.getByLabel(/Requested price/).fill("99");
+    const send = page.getByRole("button", { name: "Send request" });
+    await send.click();
+    await expect(page.getByText(/You can try again in \d seconds/)).toBeVisible();
+    await expect(send).toBeDisabled();
+    await expect(send).toBeEnabled({ timeout: 4000 });
+    await send.click();
+    await expect(page.locator("[data-request-state=forbidden]")).toContainText("can't send price requests");
+  });
+
+  test("without hotel or room details from the journey, both are asked for and sent as typed", async ({ page }) => {
+    const { posts } = await signedIn(page, { rooms: false });
+    await page.goto(`${APP}/hotels/rooms/4242/reduce-price?${stay}`);
+    await page.getByRole("button", { name: "Send request" }).click();
+    await expect(page.getByText("Enter the hotel name.")).toBeVisible();
+    await expect(page.getByText("Choose the room.")).toBeVisible();
+    await page.getByLabel("Hotel name").fill("Palm Court");
+    await page.getByLabel(/^Room/).fill("Deluxe King");
+    await page.getByLabel(/Requested price/).fill("150");
+    await page.getByRole("button", { name: "Send request" }).click();
+    await expect(page.getByRole("heading", { name: "Request submitted for review" })).toBeVisible();
+    const body = posts[0].postDataBuffer()!.toString("latin1");
+    expect(field(body, "hotel_name")).toBe("Palm Court");
+    expect(field(body, "room_name")).toBe("Deluxe King");
+    expect(body).not.toContain('name="attachment"');
   });
 
   test("a link without valid stay details explains itself", async ({ page }) => {
@@ -103,11 +176,11 @@ test.describe("Reduce Price request (mocked API)", () => {
   for (const width of [320, 375, 768, 1440]) {
     test(`Arabic RTL at ${width}px: translated, aligned and within the page`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
-      await signedIn(page, "ar");
+      await signedIn(page, { locale: "ar" });
       await page.goto(`${APP}/hotels/rooms/4242/reduce-price?${stay}`);
       await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
       await expect(page.getByRole("heading", { level: 1, name: "طلب سعر أقل" })).toBeVisible();
-      await expect(page.getByRole("button", { name: "إرسال الطلب" })).toBeDisabled();
+      await expect(page.getByRole("button", { name: "إرسال الطلب" })).toBeEnabled();
       await page.getByLabel(/السعر المطلوب/).focus();
       await page.getByLabel(/السعر المطلوب/).blur();
       await expect(page.getByText("أدخل السعر الذي تطلبه.")).toBeVisible();

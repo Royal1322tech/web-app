@@ -1,3 +1,5 @@
+import { LoyaltySummaryCard } from "@/features/loyalty/loyalty-points-page";
+import { apiAuthEnabled } from "@/features/auth/auth-config";
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useLocale } from "@/features/localization/locale-provider";
@@ -183,6 +185,7 @@ export function WalletPage() {
   const [insufficient, setInsufficient] = useState(false);
   return (
     <Workspace title={t("Wallet", "المحفظة")} accountNavigation={false}>
+      {apiAuthEnabled && <LoyaltySummaryCard />}
       <p className="fine-print">{t("Figures shown are examples and don't reflect a live balance.", "الأرقام المعروضة أمثلة ولا تعكس رصيدًا فعليًا.")}</p>
       <StatePreview
         emptyTitle={t("No credit information", "لا توجد بيانات ائتمانية")}

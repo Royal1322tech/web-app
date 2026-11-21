@@ -91,7 +91,7 @@ test.describe("B2B hotel search: server-side filters (mocked API)", () => {
     await packaging.getByRole("radio", { name: "With Package" }).check();
     await settle(page);
     await expect(page.getByText("Page 1 of 2").first()).toBeVisible();
-    expect(bodies.at(-1)).toEqual(expect.objectContaining({ filters: { hotel_name: "Hilton", area: "Deira", stars: [4, 5], board: ["breakfast"], amenities: ["air_conditioning", "gym"], package_type: "with" }, sort: "recommended" }));
+    expect(bodies.at(-1)).toEqual(expect.objectContaining({ filters: { hotel_name: "Hilton", area: "Deira", stars: [4, 5], board: ["breakfast"], amenities: ["air_conditioning", "gym"], package_type: "with_package" }, sort: "recommended" }));
     expect(bodies.at(-1)?.page).toBeUndefined();
 
     // Breakfast is not a server field: it narrows the loaded page and sends nothing.
@@ -111,6 +111,74 @@ test.describe("B2B hotel search: server-side filters (mocked API)", () => {
 
     // Hotel cards keep their hid-based View rooms links.
     await expect(cards.first().getByRole("link", { name: /View rooms/ })).toHaveAttribute("href", /\/hotels\/rooms\/5000\?/);
+  });
+
+  test("sorting is sent to the API (stars_desc, name_asc), starts again at page 1 and keeps the filters", async ({ page }) => {
+    const bodies = await signedIn(page, () => 45);
+    await page.goto(searchUrl);
+    const filters = page.getByRole("group", { name: "Hotel filters" });
+    await expect(page.locator("[data-live-hotel]")).toHaveCount(20);
+    await filters.getByRole("checkbox", { name: "4 stars" }).check();
+    await settle(page);
+    await page.getByRole("button", { name: "Next" }).click();
+    await expect(page.getByText("Page 2 of 3").first()).toBeVisible();
+    await page.getByLabel("Sort by").selectOption("stars");
+    await settle(page);
+    await expect(page.getByText("Page 1 of 3").first()).toBeVisible();
+    expect(bodies.at(-1)).toMatchObject({ sort: "stars_desc", filters: { stars: [4] } });
+    expect(bodies.at(-1)?.page).toBeUndefined();
+    await page.getByLabel("Sort by").selectOption("name");
+    await settle(page);
+    expect(bodies.at(-1)).toMatchObject({ sort: "name_asc" });
+    // The page keeps the API's order (no second, local sort).
+    await expect(page.locator("[data-live-hotel] h3").first()).toHaveText("Test Hotel 1");
+  });
+
+  test("board and packaging use the exact API values; a 429 waits for Retry-After before Retry", async ({ page }) => {
+    let failNext = false;
+    const bodies: Body[] = [];
+    await page.addInitScript(({ companyId }) => {
+      sessionStorage.setItem("royal-travel.b2b-session.v1", JSON.stringify({ token: "12|mocked", expiresAt: Date.now() + 3_600_000, companyId }));
+      localStorage.setItem("royal-vacation.locale", "en");
+    }, { companyId: COMPANY });
+    await page.route("https://api.royal.test/**", async (route) => {
+      const request = route.request();
+      const headers = { ...cors, "Access-Control-Expose-Headers": "Retry-After" };
+      if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers });
+      const path = new URL(request.url()).pathname;
+      if (path === "/api/v1/b2b/me") return route.fulfill({ headers, json: profile });
+      if (path === "/api/v1/b2b/hotels/search") {
+        const body = request.postDataJSON() as Body;
+        bodies.push(body);
+        if (failNext) { failNext = false; return route.fulfill({ status: 429, headers: { ...headers, "Retry-After": "2" }, json: { message: "Too Many Attempts." } }); }
+        return route.fulfill({ headers, json: reply(body.filters ? 5 : 30) });
+      }
+      return route.fulfill({ headers, json: {} });
+    });
+    await page.goto(searchUrl);
+    const filters = page.getByRole("group", { name: "Hotel filters" });
+    await expect(page.locator("[data-live-hotel]")).toHaveCount(20);
+    await filters.getByRole("checkbox", { name: "Room Only" }).check();
+    const packaging = filters.locator("details", { has: page.getByText("Product packaging", { exact: true }) });
+    await packaging.locator("summary").click();
+    await packaging.getByRole("radio", { name: "Without Package" }).check();
+    await settle(page);
+    expect(bodies.at(-1)?.filters).toEqual({ board: ["nomeal"], package_type: "without_package" });
+    // Only the amenities the API filters on are offered.
+    const amenities = filters.locator("details", { has: page.getByText("Amenities", { exact: true }) });
+    await amenities.locator("summary").click();
+    await amenities.getByRole("button", { name: "View More" }).click();
+    await expect(amenities.getByRole("checkbox")).toHaveCount(6);
+    await expect(amenities.getByRole("checkbox", { name: "Pool" })).toHaveCount(0);
+
+    failNext = true;
+    await filters.getByRole("checkbox", { name: "5 stars" }).check();
+    await settle(page);
+    await expect(page.getByText(/You can try again in \d seconds/)).toBeVisible();
+    await expect(page.getByRole("button", { name: "Retry" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Retry" })).toBeVisible({ timeout: 4000 });
+    await page.getByRole("button", { name: "Retry" }).click();
+    await expect(page.locator("[data-live-hotel]")).toHaveCount(5);
   });
 
   test("a filtered search with no hotels keeps the sidebar so the filters can be reset", async ({ page }) => {

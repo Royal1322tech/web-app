@@ -114,7 +114,9 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions<T>)
   if (url.origin !== base.origin) throw new ApiError("configuration");
 
   const headers = new Headers({ ...options.headers, Accept: "application/json", "X-Locale": options.locale ?? currentLocale() });
-  if (options.body !== undefined) headers.set("Content-Type", "application/json");
+  // FormData (file uploads) sets its own multipart Content-Type with the boundary.
+  const multipart = typeof FormData !== "undefined" && options.body instanceof FormData;
+  if (options.body !== undefined && !multipart) headers.set("Content-Type", "application/json");
   if (options.token) headers.set("Authorization", `Bearer ${options.token}`);
 
   const timeout = new AbortController();
@@ -126,7 +128,7 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions<T>)
     response = await fetch(url, {
       method: options.method ?? "GET",
       headers,
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      body: options.body === undefined ? undefined : multipart ? (options.body as FormData) : JSON.stringify(options.body),
       credentials: "omit",
       signal,
     });

@@ -241,6 +241,8 @@ export const router = createBrowserRouter([
         handle: { workspace: true },
         children: [
           { path: "points", lazy: async () => ({ Component: (await import("@/features/demo/points")).PointsPage }) },
+          // The company's price reduction requests (GET /b2b/price-reduction-requests).
+          { path: "price-requests", lazy: async () => ({ Component: (await import("@/features/hotels/components/price-requests-page")).PriceRequestsPage }) },
           { path: "invoices", lazy: async () => ({ Component: (await import("@/features/demo/invoices")).InvoiceHistoryPage }) },
           { path: "accounting-review", lazy: async () => ({ Component: (await import("@/features/demo/invoices")).AccountingReviewPage }) },
           { path: "profile", lazy: async () => ({ Component: (await import("@/features/demo/profile-settings")).ProfilePage }) },

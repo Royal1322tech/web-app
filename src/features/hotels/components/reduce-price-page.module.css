@@ -137,3 +137,23 @@
   .facts > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
 }
 @media (prefers-reduced-motion: reduce) { .money, .dropzone { transition: none; } }
+
+/* Hotel and room fields (shown only when the stay doesn't provide them). */
+.text { box-sizing: border-box; width: 100%; min-height: 48px; padding: 0 14px; border: 1px solid #cfd8e3; border-radius: 12px; background: #fbfcfe; color: var(--navy); font: inherit; font-size: 15px; }
+.text:focus-visible { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent); }
+.text[aria-invalid="true"] { border-color: var(--danger, #b42318); }
+.failed { border-color: #f3c7c2; background: #fff6f5; color: #8a1f14; }
+.failed svg { color: #b42318; }
+
+/* Submitted: the backend's reference and status. */
+.success { display: grid; justify-items: center; gap: var(--space-3); padding-block: var(--space-6); text-align: center; }
+.successIcon { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 50%; background: #e7f6ee; color: #137a43; }
+.successIcon svg { width: 30px; height: 30px; stroke-width: 2.4; }
+.success h2 { margin: 0; color: var(--navy); font-size: clamp(20px, 2vw, 24px); font-weight: var(--weight-heavy); }
+.success > p { margin: 0; max-width: 44ch; color: var(--muted); line-height: 1.55; }
+.reference { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); width: min(100%, 420px); margin: var(--space-2) 0; }
+.reference > div { display: grid; gap: 4px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: #f8fafd; }
+.reference dt { color: var(--muted); font-size: 12.5px; font-weight: 600; }
+.reference dd { margin: 0; color: var(--navy); font-size: 16px; font-weight: 800; overflow-wrap: anywhere; }
+.success .actions { justify-content: center; }
+@media (max-width: 599px) { .reference { grid-template-columns: minmax(0, 1fr); } .success .actions { width: 100%; } }

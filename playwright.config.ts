@@ -27,8 +27,9 @@ export default defineConfig({
           { port: 4174, outDir: "dist-auth-api", companyIdEntry: "true" },
           { port: 4175, outDir: "dist-auth-blocked", companyIdEntry: "" },
           // tests/b2b-hotel-search.spec.ts: real sign-in plus the company (B2B) hotel search.
-          { port: 4176, outDir: "dist-hotel-api", companyIdEntry: "true", hotelSearch: "api" },
-          // tests/b2b-hotel-filters-server.spec.ts: the same, with the sidebar filters sent to the search.
+          // The page-only filter fallback (VITE_HOTEL_SEARCH_FILTERS=page); staging uses server filters.
+          { port: 4176, outDir: "dist-hotel-api", companyIdEntry: "true", hotelSearch: "api", searchFilters: "page" },
+          // tests/b2b-hotel-filters-server.spec.ts: the default, with the sidebar filters sent to the search.
           { port: 4177, outDir: "dist-hotel-filters", companyIdEntry: "true", hotelSearch: "api", searchFilters: "server" },
         ].map(({ port, outDir, companyIdEntry, hotelSearch = "", searchFilters = "" }) => ({
           command: `npx vite build --outDir ${outDir} --emptyOutDir && npx vite preview --outDir ${outDir} --host 127.0.0.1 --port ${port} --strictPort`,

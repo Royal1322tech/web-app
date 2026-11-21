@@ -1,0 +1,26 @@
+.intro { margin: 0 0 var(--space-4); color: var(--muted); line-height: 1.55; }
+.loading { padding: var(--space-6); border: 1px dashed var(--border); border-radius: 16px; color: var(--muted); text-align: center; }
+.loading p { margin: 0; }
+.emptyAction { display: flex; justify-content: center; margin: var(--space-4) 0 0; }
+.list { display: grid; gap: var(--space-3); min-width: 0; }
+.list ul { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.total { margin: 0; color: var(--muted); font-size: 14px; font-weight: 600; }
+.item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-4); padding: 16px 18px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); box-shadow: 0 1px 3px #02143c0d; }
+.main { display: grid; gap: 4px; min-width: 0; }
+.number { margin: 0; color: #b7731e; font-size: 13px; font-weight: 800; letter-spacing: .02em; }
+.main h2 { margin: 0; color: var(--navy); font-size: 16px; font-weight: 800; overflow-wrap: anywhere; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; color: var(--muted); font-size: 13px; }
+.meta span { display: inline-flex; align-items: center; gap: 6px; }
+.meta svg { width: 15px; height: 15px; color: #b7731e; }
+.side { display: grid; justify-items: end; gap: 6px; }
+.side strong { color: var(--navy); font-size: 15px; }
+.status { display: inline-flex; align-items: center; min-height: 28px; padding: 0 12px; border-radius: 999px; background: #eef3fa; color: var(--primary); font-size: 12.5px; font-weight: 800; white-space: nowrap; }
+.status[data-status="approved"] { background: #e7f6ee; color: #137a43; }
+.status[data-status="rejected"], .status[data-status="declined"] { background: #fdecea; color: #a1281b; }
+.pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-3); padding-block: var(--space-2); }
+.pager span { color: var(--navy); font-weight: 700; }
+.pager :global(.button) { min-height: 44px; }
+@media (max-width: 599px) {
+  .item { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); padding: 14px; }
+  .side { justify-items: start; grid-auto-flow: column; justify-content: space-between; align-items: center; }
+}

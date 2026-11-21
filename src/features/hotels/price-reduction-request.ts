@@ -98,12 +98,10 @@ export async function submitPriceReductionRequest(
 }
 
 /*
- * Reduce Price request for the live rooms journey. There is no approved endpoint yet, so the form
- * validates locally and sending stays unavailable: nothing is uploaded, stored or sent. When the
- * backend contract is approved, set `reducePriceSubmissionAvailable` from it and send
- * `ReducePriceDraft` (plus the optional document) from the page's submit handler.
+ * Reduce Price request for the live rooms journey: validated here, then sent to
+ * POST /api/v1/b2b/price-reduction-requests (see api/b2b-price-reduction.ts).
  */
-export const reducePriceSubmissionAvailable = false;
+export const reducePriceSubmissionAvailable = true;
 export const REDUCE_PRICE_MAX_FILE_BYTES = 5 * 1024 * 1024;
 export const REDUCE_PRICE_FILE_TYPES = ["image/jpeg", "image/png", "application/pdf"] as const;
 export const REDUCE_PRICE_FILE_ACCEPT = ".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf";
@@ -122,16 +120,3 @@ export const reducePriceSchema = z.object({
   notes: z.string().trim().max(1000, "Notes can be up to 1,000 characters."),
 });
 export type ReducePriceFormInput = z.input<typeof reducePriceSchema>;
-
-/** What a future request would carry. Hotel and stay details are hints for the reviewer, not trusted. */
-export interface ReducePriceDraft {
-  hid: number;
-  hotelName: string | null;
-  checkIn: string;
-  checkOut: string;
-  rooms: { adults: number; children: number[] }[];
-  roomName: string | null;
-  currency: string;
-  requestedPrice: string;
-  notes: string;
-}

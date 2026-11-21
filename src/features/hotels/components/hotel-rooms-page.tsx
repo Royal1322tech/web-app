@@ -51,6 +51,8 @@ export function HotelRoomsPage() {
   const request = criteria ? toRoomsRequest(criteria, { language: locale === "ar" ? "ar" : "en", currency }) : null;
   const summary = isHotelHid(hid) ? readHotelSummary(location.state, hid) : null;
   const backToResults = criteria ? `/search?${stayQuery(criteria)}` : "/search";
+  // Room names from the real rooms reply, offered on the Reduce Price request.
+  const [roomNames, setRoomNames] = useState<string[]>([]);
 
   if (!apiHotelSearchEnabled) return <Navigate to="/search" replace />;
 
@@ -71,9 +73,9 @@ export function HotelRoomsPage() {
         ) : (
           <>
             <HotelHeader title={title} summary={summary} criteria={criteria} request={request} />
-            <PriceRequestCta to={`/hotels/rooms/${hid}/reduce-price?${stayQuery(criteria)}`} state={summary ? { hotel: summary } : undefined} />
+            <PriceRequestCta to={`/hotels/rooms/${hid}/reduce-price?${stayQuery(criteria)}`} state={{ ...(summary ? { hotel: summary } : {}), rooms: roomNames }} />
             {/* Keyed by the request: new dates, guests, language or currency start again and drop every token. */}
-            <RoomsFlow key={`${hid}:${JSON.stringify(request)}`} hid={hid} request={request} searchHref={backToResults} />
+            <RoomsFlow key={`${hid}:${JSON.stringify(request)}`} hid={hid} request={request} searchHref={backToResults} onRoomNames={setRoomNames} />
           </>
         )}
       </div>
@@ -169,7 +171,7 @@ function useNow(active: boolean) {
   return now;
 }
 
-function RoomsFlow({ hid, request: initialRequest, searchHref }: { hid: number; request: RoomsRequest; searchHref: string }) {
+function RoomsFlow({ hid, request: initialRequest, searchHref, onRoomNames }: { hid: number; request: RoomsRequest; searchHref: string; onRoomNames?: (names: string[]) => void }) {
   const { t } = useLocale();
   // The parent keys this component by the request, so the first value is the one to keep.
   const [request] = useState(initialRequest);
@@ -197,11 +199,12 @@ function RoomsFlow({ hid, request: initialRequest, searchHref }: { hid: number; 
           if (local.signal.aborted) return;
           if (result.hotel_hid !== hid) throw new Error("Rooms reply for another hotel.");
           setSettled({ attempt, state: { status: "done", rooms: hold(result) } });
+          onRoomNames?.([...new Set(result.rooms.map((rate) => rate.room_name?.trim()).filter((name): name is string => !!name))]);
         })
         .catch((error: unknown) => { if (!local.signal.aborted) setSettled({ attempt, state: { status: "error", failure: classifyRoomsError(error) } }); });
     }, 0);
     return () => { clearTimeout(timer); local.abort(); };
-  }, [hid, request, roomsAttempt]);
+  }, [hid, request, roomsAttempt, onRoomNames]);
 
   // Leaving the page cancels whatever is in flight.
   useEffect(() => () => controller.current?.abort(), []);
