@@ -24,7 +24,7 @@ for (const locale of ["en", "ar"] as const) {
       const text = copy[locale];
 
       await expect(apps.getByRole("heading", { name: text.heading })).toBeVisible();
-      await expect(apps.getByText(text.soon, { exact: true })).toBeVisible();
+      await expect(apps.getByText(text.soon, { exact: true })).toHaveCount(0); // no "Coming Soon" badge; the text and store badges say it
       await expect(apps).toContainText(text.description);
       const badges = apps.locator("li");
       await expect(badges).toHaveCount(2);

@@ -38,7 +38,7 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
       }
       await page.getByRole("button", { name: /Review enquiry|مراجعة الاستفسار/ }).click();
       await expect(page.locator(".rental-enquiry-review")).toContainText("EX123");
-      const preview = page.getByRole("button", { name: /Prepare enquiry preview|تجهيز معاينة الاستفسار/ });
+      const preview = page.getByRole("button", { name: /Review enquiry|مراجعة الاستفسار/ });
       await expect(page.getByRole("heading", { name: /Cancellation Policy|سياسة الإلغاء/ })).toHaveCount(0);
       await expect(preview).toBeEnabled();
       await page.getByRole("button", { name: /Edit enquiry|تعديل الاستفسار/ }).click();
@@ -49,7 +49,7 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
       await page.screenshot({ path: `test-results/chauffeur-review-${width}-${locale}.png`, fullPage: true });
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
       await preview.click();
-      await expect(page.getByRole("status")).toContainText(/not sent|لم تُرسل/);
+      await expect(page.getByRole("status")).toContainText(/not sent|لم تُرسل|لم يُرسل/);
       await expect(page.locator(".status-badge")).toHaveCount(0);
       expect(writes).toEqual([]);
     });

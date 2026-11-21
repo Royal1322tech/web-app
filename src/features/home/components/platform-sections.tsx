@@ -23,9 +23,9 @@ const publicServices: ServiceCard[] = [
 ];
 const strengths: { en:string; ar:string; description:string; descriptionAr:string; icon:IconName }[] = [
   { en:"Easy & Quick Registration", ar:"تسجيل سهل وسريع", description: apiAuthEnabled ? "A guided four-step agency form keeps company, contact and document details organized. Royal Vacation reviews every registration before sign-in is enabled." : "A guided four-step agency form keeps company, contact and document details organized. Real submission is not connected.", descriptionAr: apiAuthEnabled ? "نموذج إرشادي من أربع خطوات ينظم بيانات الوكالة والتواصل والمستندات. تراجع رويال فاكيشن كل تسجيل قبل تفعيل تسجيل الدخول." : "نموذج إرشادي من أربع خطوات ينظم بيانات الوكالة والتواصل والمستندات. الإرسال الفعلي غير متصل.", icon:"document" },
-  { en:"Booking Updates & Reports", ar:"تحديثات وتقارير الحجوزات", description:"Review booking timelines and transaction records. Live updates and reporting require backend integration.", descriptionAr:"راجع الجداول الزمنية للحجوزات وسجلات المعاملات. تتطلب التحديثات والتقارير المباشرة الربط بالخادم.", icon:"calendar" },
+  { en:"Booking Updates & Reports", ar:"تحديثات وتقارير الحجوزات", description:"Review booking timelines and transaction records in one place.", descriptionAr:"راجع الجداول الزمنية للحجوزات وسجلات المعاملات في مكان واحد.", icon:"calendar" },
   { en:"Clear Booking Journey", ar:"رحلة حجز واضحة", description:"Review booking conditions, status updates and voucher details at each step.", descriptionAr:"راجع شروط الحجز وتحديثات الحالة وتفاصيل القسيمة في كل خطوة.", icon:"shield" },
-  { en:"Dedicated Support", ar:"دعم مخصص", description:"Prepare a structured enquiry for your agency. Contact delivery and support hours are not yet configured.", descriptionAr:"جهز استفسارًا منظمًا لوكالتك. إرسال الرسائل ومواعيد الدعم لم تُحدد بعد.", icon:"mail" },
+  { en:"Dedicated Support", ar:"دعم مخصص", description:"Reach our team on WhatsApp or by email for help with your bookings.", descriptionAr:"تواصل مع فريقنا عبر واتساب أو البريد الإلكتروني للمساعدة في حجوزاتك.", icon:"mail" },
 ];
 export function ProductsServices({ publicLanding = false }: { publicLanding?: boolean }) {
   const { t } = useLocale();
@@ -38,7 +38,6 @@ export function ProductsServices({ publicLanding = false }: { publicLanding?: bo
       {visibleServices.map(service => <article key={service.en} data-coming-soon={service.comingSoon || undefined}>
         <div className={styles.serviceImage}>
           <ResponsiveImage src={service.image} alt="" width={1400} height={850} sizes="(max-width:599px) 90vw, (max-width:999px) 44vw, 300px" />
-          {service.comingSoon && <span className={styles.comingSoon}>{t("Coming Soon", "قريبًا")}</span>}
         </div>
         <div className={styles.body}><div className={styles.serviceTitle}><span className={styles.serviceIcon}><Icon name={service.icon} /></span><h3>{t(service.en,service.ar)}</h3></div><p>{t(service.description,service.descriptionAr)}</p>
           {service.to && <Link to={service.to}>{service.to === "/search" ? t("Explore hotels", "استكشف الفنادق") : service.to === "/car-rental" ? t("Explore car rentals", "استكشف تأجير السيارات") : t("Prepare an enquiry", "جهز استفسارًا")}<Icon name="arrowRight" /></Link>}

@@ -437,11 +437,28 @@
 .rental-hero__slide[data-active="true"] img { animation: rental-drift 4.8s ease-out both; }
 .rental-hero__slide[data-motion="false"] img { animation-play-state: paused; }
 @keyframes rental-drift { from { transform: scale(1.01); } to { transform: scale(1.04); } }
-.rental-hero__toggle { position: absolute; inset-block-start: 14px; inset-inline-end: 14px; z-index: 2; }
 @media (prefers-reduced-motion: reduce) { .rental-hero__slide { transition: none; } .rental-hero__slide img { animation: none; transform: none; } }
 @media (max-width: 800px) {
   .rental-landing .rental-hero-copy { padding-block-end: 72px; }
 }
 @media (max-width: 430px) {
   .rental-landing .rental-integrated-search .rental-criteria { padding: var(--space-4); }
+}
+
+/* Phones: a shorter hero with the copy at the top, the search card overlapping its base, and the
+   locations and dates in pairs so the form needs less scrolling. One column below 360px. */
+@media (max-width: 599px) {
+  .rental-landing .rental-hero { min-height: 248px; align-items: flex-start; }
+  .rental-landing .rental-hero > .rental-hero-copy { padding: 24px 20px 64px; }
+  .rental-landing .rental-hero .rental-kicker { font-size: 11px; letter-spacing: .1em; }
+  .rental-landing .rental-hero h1 { margin-block: 8px 6px; font-size: clamp(26px, 7.4vw, 32px); }
+  .rental-landing .rental-hero-copy > p:last-child { margin: 0; font-size: 15px; line-height: 1.55; }
+  .rental-landing .rental-integrated-search .workspace-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; }
+  .rental-landing .rental-integrated-search .workspace-fields > * { min-width: 0; }
+  .rental-landing .rental-integrated-search label { font-size: 13px; }
+  .rental-landing .rental-integrated-search :is(input, select) { padding-inline: 10px; font-size: 15px; }
+  .rental-landing .rental-integrated-search .rental-criteria > p { font-size: 12px; }
+}
+@media (max-width: 359px) {
+  .rental-landing .rental-integrated-search .workspace-fields { grid-template-columns: minmax(0, 1fr); }
 }

@@ -1645,7 +1645,6 @@
 .appsHeading { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .footerContent .appsHeading h3 { margin: 0; line-height: 1.35; }
 .footerApps p { margin: 10px 0 16px; color: #dce8f3; font-size: 14px; line-height: 1.65; }
-.comingSoon { display: inline-flex; align-items: center; min-height: 28px; padding: 4px 10px; border: 1px solid #f1cd8b70; border-radius: 999px; color: #ffdda1; background: #f1cd8b14; font-size: 12px; font-weight: 700; white-space: nowrap; }
 .storeBadges { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; list-style: none; }
 .storeBadge { display: flex; flex: 1 1 158px; align-items: center; gap: 10px; min-width: 0; max-width: 220px; min-height: 50px; padding: 8px 14px 8px 12px; border: 1px solid #ffffff3d; border-radius: 10px; background: #030d1c; color: #fff; cursor: default; user-select: none; }
 .storeBadge svg { flex: none; width: 24px; height: 24px; color: #ffdda1; }

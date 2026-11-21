@@ -56,16 +56,18 @@ test("partner video pauses, resumes and respects reduced motion", async ({ page 
   await video.scrollIntoViewIfNeeded();
   await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.readyState)).toBeGreaterThanOrEqual(2);
   await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.paused)).toBe(false);
-  await section.getByRole("button", { name: "Pause video", exact: true }).focus();
-  await page.keyboard.press("Enter");
+  // No play/pause control: the decorative video is muted, inline and stops when scrolled away.
+  await expect(section.locator("[data-partner-video] button")).toHaveCount(0);
+  await expect(video).toHaveJSProperty("muted", true);
+  await expect(video).toHaveAttribute("playsinline", "");
+  await page.evaluate(() => window.scrollTo(0, 0));
   await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.paused)).toBe(true);
+  await video.scrollIntoViewIfNeeded();
+  await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.paused)).toBe(false);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(drawing).toHaveCSS("animation-name", "none");
   await expect(cards.first()).toHaveCSS("animation-name", "none");
   await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.paused)).toBe(true);
-  await section.getByRole("button", { name: "Play video", exact: true }).focus();
-  await page.keyboard.press("Enter");
-  await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.paused)).toBe(false);
   await section.screenshot({ path: "test-results/partners-reduced-motion.png" });
 });
 

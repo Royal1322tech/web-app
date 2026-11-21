@@ -38,7 +38,7 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
       await visit(page, "/");
       const apps = page.locator('footer section[aria-labelledby="footer-apps-title"]');
       await expect(apps.getByRole("heading", { name: locale === "en" ? "Get the Royal Vacation App" : "احصل على تطبيق رويال فاكيشن" })).toBeVisible();
-      await expect(apps.getByText(locale === "en" ? "Coming Soon" : "قريبًا", { exact: true })).toBeVisible();
+      await expect(apps.getByText(locale === "en" ? "Coming Soon" : "قريبًا", { exact: true })).toHaveCount(0);
       await expect(apps.locator("a, img")).toHaveCount(0);
       await visit(page, "/contact");
     }
@@ -59,7 +59,7 @@ test("general contact validation prepares only a local preview and never sends d
   await page.locator("#enquiry-phone").fill("1001234567");
   await page.locator("#enquiry-message").fill("A fictional enquiry to preview locally.");
   await page.getByRole("button", { name: "Prepare enquiry", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("Local preview ready — not sent");
+  await expect(page.getByRole("status")).toContainText("Request ready — not sent yet");
   await expect(page.getByText(/Submitted|sent successfully/i)).toHaveCount(0);
   expect(requests).toEqual([]);
 

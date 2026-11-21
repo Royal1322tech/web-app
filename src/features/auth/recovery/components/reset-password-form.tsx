@@ -103,7 +103,7 @@ export function ResetPasswordForm() {
         <p role="status" className={styles.notice}>
           {text(
             pending
-              ? "Password reset is not connected yet. Your password has not been changed."
+              ? "Online password reset isn't available yet. Your password hasn't been changed."
               : "Recovery service unavailable",
           )}
         </p>

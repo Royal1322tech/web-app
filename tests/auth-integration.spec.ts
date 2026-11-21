@@ -466,7 +466,7 @@ test.describe("API mode", () => {
       const api = await mockApi(page, {});
       await page.goto(path);
       const note = page.getByRole("note");
-      await expect(note).toContainText("Password recovery isn't available online yet. These screens are a preview: no email is sent and no code is checked.");
+      await expect(note).toContainText("Online password reset isn't available yet. Contact Royal Vacation to reset your password.");
       await expect(note.getByRole("link", { name: "Contact Royal Vacation to reset your password" })).toHaveAttribute("href", "/contact");
       // The original recovery form is restored, not replaced.
       await expect(page.locator("main input")).toHaveCount(inputs);
@@ -480,10 +480,10 @@ test.describe("API mode", () => {
     const api = await mockApi(page, {});
     await page.goto("/verify-otp");
     await page.locator("main select").first().selectOption("ar");
-    await expect(page.getByRole("note")).toContainText("استعادة كلمة المرور غير متاحة عبر الإنترنت بعد");
+    await expect(page.getByRole("note")).toContainText("إعادة تعيين كلمة المرور عبر الإنترنت غير متاحة حاليًا");
     for (const [index, digit] of ["1", "2", "3", "4"].entries()) await page.getByLabel(`الرقم ${index + 1} من ٤`).fill(digit);
     await page.getByRole("button", { name: "تأكيد" }).click();
-    await expect(page.locator("main [role=status]").last()).toHaveText("التحقق غير متصل بعد. لم يتم إرسال أي رمز أو التحقق منه.");
+    await expect(page.locator("main [role=status]").last()).toHaveText("التحقق عبر الإنترنت غير متاح حاليًا. لم يُرسل أي رمز ولم يُتحقق منه.");
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
     expect(api.calls).toEqual([]);
   });

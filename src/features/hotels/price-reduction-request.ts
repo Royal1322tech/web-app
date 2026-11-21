@@ -96,3 +96,42 @@ export async function submitPriceReductionRequest(
   const data: unknown = responseText.trim() ? JSON.parse(responseText) : null;
   return { status: "accepted", ...parseResponse(data) };
 }
+
+/*
+ * Reduce Price request for the live rooms journey. There is no approved endpoint yet, so the form
+ * validates locally and sending stays unavailable: nothing is uploaded, stored or sent. When the
+ * backend contract is approved, set `reducePriceSubmissionAvailable` from it and send
+ * `ReducePriceDraft` (plus the optional document) from the page's submit handler.
+ */
+export const reducePriceSubmissionAvailable = false;
+export const REDUCE_PRICE_MAX_FILE_BYTES = 5 * 1024 * 1024;
+export const REDUCE_PRICE_FILE_TYPES = ["image/jpeg", "image/png", "application/pdf"] as const;
+export const REDUCE_PRICE_FILE_ACCEPT = ".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf";
+
+const allowedExtension = (name: string) => /\.(jpe?g|png|pdf)$/i.test(name);
+
+/** Messages are English keys; the page translates them. */
+export const reducePriceSchema = z.object({
+  requestedPrice: z.string().trim()
+    .min(1, "Enter the price you'd like.")
+    .refine((value) => /^\d{1,9}(?:\.\d{1,2})?$/.test(value), "Enter a valid amount, for example 120 or 120.50.")
+    .refine((value) => Number(value) > 0, "The amount must be greater than zero."),
+  document: z.custom<FileList | null | undefined>().optional()
+    .refine((files) => !files?.[0] || (REDUCE_PRICE_FILE_TYPES as readonly string[]).includes(files[0].type) || allowedExtension(files[0].name), "Attach a JPG, PNG or PDF file.")
+    .refine((files) => !files?.[0] || files[0].size <= REDUCE_PRICE_MAX_FILE_BYTES, "The file must be 5 MB or smaller."),
+  notes: z.string().trim().max(1000, "Notes can be up to 1,000 characters."),
+});
+export type ReducePriceFormInput = z.input<typeof reducePriceSchema>;
+
+/** What a future request would carry. Hotel and stay details are hints for the reviewer, not trusted. */
+export interface ReducePriceDraft {
+  hid: number;
+  hotelName: string | null;
+  checkIn: string;
+  checkOut: string;
+  rooms: { adults: number; children: number[] }[];
+  roomName: string | null;
+  currency: string;
+  requestedPrice: string;
+  notes: string;
+}

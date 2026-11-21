@@ -20,28 +20,39 @@ export function Popover({ label, trigger, children, panelClassName = "", trigger
   }, [open]);
   useLayoutEffect(() => {
     if (!open) return;
-
+    // Anchored to the trigger: opens below it (above when there is more room there), aligned to its
+    // inline end, shifted sideways to stay inside the viewport, and no taller than the space it has.
+    // Inside a container that lays panels out in place (the phone menu), the panel is static: skip.
     const reposition = () => {
       const element = panel.current;
-      if (!element) return;
-
-      element.style.translate = "0px 0px";
-
-      const bounds = element.getBoundingClientRect();
-      const padding = 8;
-      let shift = 0;
-
-      if (bounds.left < padding) {
-        shift = padding - bounds.left;
-      } else if (bounds.right > document.documentElement.clientWidth - padding) {
-        shift = document.documentElement.clientWidth - padding - bounds.right;
+      const anchor = button.current;
+      if (!element || !anchor || getComputedStyle(element).position === "static") return;
+      // Writes only on change: a resize here would otherwise re-trigger the observer below.
+      const set = (property: "translate" | "maxHeight", value: string) => { if (element.style[property] !== value) element.style[property] = value; };
+      const edge = 12, gap = 8;
+      const viewportWidth = document.documentElement.clientWidth;
+      const viewportHeight = window.innerHeight;
+      const trigger = anchor.getBoundingClientRect();
+      const below = viewportHeight - trigger.bottom - gap - edge;
+      const above = trigger.top - gap - edge;
+      const flip = element.scrollHeight > below && above > below;
+      if (flip !== (element.getAttribute("data-placement") === "top")) {
+        if (flip) element.setAttribute("data-placement", "top"); else element.removeAttribute("data-placement");
       }
-
-      element.style.translate = `${shift}px 0px`;
+      set("maxHeight", `${Math.round(Math.max(160, Math.min(540, flip ? above : below)))}px`);
+      // The shift is measured from the unshifted position, so the current one is taken off first.
+      const current = Number.parseFloat(element.style.translate) || 0;
+      const bounds = element.getBoundingClientRect();
+      const left = bounds.left - current, right = bounds.right - current;
+      let shift = 0;
+      if (left < edge) shift = edge - left;
+      else if (right > viewportWidth - edge) shift = viewportWidth - edge - right;
+      set("translate", `${Math.round(shift)}px 0px`);
     };
 
     reposition();
     window.addEventListener("resize", reposition);
+    window.addEventListener("scroll", reposition, { passive: true, capture: true });
     // Currency labels, content and responsive layout can resize without a window event.
     const observer = new ResizeObserver(reposition);
     if (root.current) observer.observe(root.current);
@@ -49,6 +60,7 @@ export function Popover({ label, trigger, children, panelClassName = "", trigger
     if (panel.current) observer.observe(panel.current);
     return () => {
       window.removeEventListener("resize", reposition);
+      window.removeEventListener("scroll", reposition, { capture: true });
       observer.disconnect();
     };
   }, [open, label]);

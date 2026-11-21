@@ -55,13 +55,13 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
       await expect(page).toHaveURL(/car-rental\/review$/);
       await layout(page);
       await expect(page.getByText("Illustrative quiet ride request", { exact: true })).toBeVisible();
-      await expect(page.getByRole("button", { name: /Continue to rental payment preview|المتابعة لمعاينة دفع التأجير/ })).toBeDisabled();
+      await expect(page.getByRole("button", { name: /Continue to payment review|المتابعة لمراجعة الدفع/ })).toBeDisabled();
       // A direct client-side navigation cannot bypass review acknowledgment.
       await page.evaluate(() => { history.pushState(null, "", "/car-rental/payment"); window.dispatchEvent(new PopStateEvent("popstate")); });
       await expect(page).toHaveURL(/car-rental\/review$/);
       await page.screenshot({ path: `test-results/rental-review-new-${width}-${locale}.png`, fullPage: true });
       await page.getByRole("checkbox", { name: /I have reviewed|راجعت معلومات/ }).check();
-      await page.getByRole("link", { name: /Continue to rental payment preview|المتابعة لمعاينة دفع التأجير/ }).click();
+      await page.getByRole("link", { name: /Continue to payment review|المتابعة لمراجعة الدفع/ }).click();
       await layout(page);
       if (width === 1440 && locale === "en") {
         await page.goBack();
@@ -71,7 +71,7 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
         await page.getByRole("button", { name: "Continue to review booking" }).click();
         await expect(page.getByRole("checkbox", { name: /I have reviewed/ })).not.toBeChecked();
         await page.getByRole("checkbox", { name: /I have reviewed/ }).check();
-        await page.getByRole("link", { name: "Continue to rental payment preview" }).click();
+        await page.getByRole("link", { name: "Continue to payment review" }).click();
       }
       await page.getByRole("button", { name: /Continue to outcome|متابعة للنتيجة/ }).click();
       await page.getByRole("button", { name: /Show outcome|عرض النتيجة/ }).click();

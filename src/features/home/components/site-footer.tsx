@@ -71,7 +71,6 @@ export function SiteFooter() {
         <section className={styles.footerApps} aria-labelledby="footer-apps-title">
           <div className={styles.appsHeading}>
             <h3 id="footer-apps-title">{t("Get the Royal Vacation App", "احصل على تطبيق رويال فاكيشن")}</h3>
-            <span className={styles.comingSoon}>{t("Coming Soon", "قريبًا")}</span>
           </div>
           <p><Text en="Plan, book and follow every client journey from your phone. Our iOS and Android apps are on the way." ar="خطط واحجز وتابع كل رحلة لعملائك من هاتفك. تطبيقاتنا على iOS و Android في الطريق." /></p>
           {/* Not links: there are no store listings yet. Official store badges replace these once the apps are published. */}

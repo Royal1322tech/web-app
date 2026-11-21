@@ -73,8 +73,8 @@ test("wallet shows readable dates and transaction types, aligned cards and a sep
   const usage = (await page.locator(".workspace-grid > aside").boundingBox())!;
   expect(Math.abs(overview.y - usage.y)).toBeLessThanOrEqual(1);
   const demo = page.locator(".demo-tools");
-  await expect(demo).toContainText("Demo");
-  await expect(demo.getByRole("button", { name: "Preview insufficient balance" })).toBeVisible();
+  await expect(demo).toContainText("Example");
+  await expect(demo.getByRole("button", { name: "Show insufficient-balance example" })).toBeVisible();
 });
 
 test("booking summary and timeline use readable localized dates", async ({ page }) => {

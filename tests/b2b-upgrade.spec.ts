@@ -174,7 +174,7 @@ test("account editing, notifications, transactions and state previews", async ({
   ).toBeVisible();
   await page.getByRole("navigation", { name: "Workspace navigation" }).getByRole("link", { name: "Wallet", exact: true }).click();
   await page
-    .getByRole("button", { name: "Preview insufficient balance" })
+    .getByRole("button", { name: "Show insufficient-balance example" })
     .click();
   await expect(page.getByRole("alert")).toContainText("Insufficient balance");
   if (!statePreviewBuild) return;

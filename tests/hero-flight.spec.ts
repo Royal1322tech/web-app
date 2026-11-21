@@ -25,8 +25,10 @@ for (const width of [375, 768, 1440, 1920]) {
       await Promise.all(el.getAnimations().map((a) => a.finished));
     });
     const header = await page.locator("header").boundingBox();
-    // Pausing the rotation also stops the zoom, so the background then holds still.
-    await page.getByRole("button", { name: "Pause image rotation" }).click();
+    // Keyboard focus in the hero pauses the rotation and the zoom, so the background holds still.
+    await expect(page.getByRole("button", { name: /image rotation/ })).toHaveCount(0);
+    await page.locator("section[aria-label='Royal Vacation agency platform'] header a").first().focus();
+    await page.keyboard.press("Tab"); // keyboard focus (focus-visible) inside the hero
     await expect(background).toHaveCSS("animation-play-state", "paused");
     const box = await background.boundingBox();
     await page.waitForTimeout(600);

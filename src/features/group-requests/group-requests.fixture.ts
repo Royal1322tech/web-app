@@ -12,7 +12,7 @@ function sample(number: number, createdOn: string, status: GroupRequestStatus, d
   };
 }
 
-// Illustrative records with fictional people and agencies, labelled "Sample request" wherever they
+// Illustrative records with fictional people and agencies, labelled "Example request" wherever they
 // appear. They are not customer submissions, and no request was made.
 export const sampleGroupRequests: readonly GroupRequest[] = [
   sample(6, "2026-10-28", "under_review", { name: "Mariam Fawzy", email: "mariam@example.com", agency: "Blue Horizon Travel", subject: "Spring incentive retreat", destination: "Sharm El Sheikh", start: "2027-03-14", end: "2027-03-18", passengers: 42, rooms: 22, service: "both", message: "Beachfront resort for a corporate incentive group. One meeting room on the first morning, airport transfers on arrival and departure." }),

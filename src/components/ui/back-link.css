@@ -1,0 +1,10 @@
+.rv-back-link { display: inline-flex; align-items: center; justify-self: start; align-self: start; gap: 6px; min-height: 44px; max-width: 100%; padding-inline: 12px 16px; border: 1px solid var(--border); border-radius: var(--rounded-pill, 999px); background: var(--surface, #fff); color: var(--navy); font-size: 14px; font-weight: 600; line-height: 1.2; text-decoration: none; box-shadow: 0 1px 2px #0b25450d; transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease, box-shadow 140ms ease; }
+.rv-back-link span { overflow-wrap: anywhere; }
+.rv-back-link svg { flex: none; width: 18px; height: 18px; transition: translate 140ms ease; }
+.rv-back-link:hover { border-color: color-mix(in srgb, var(--primary) 35%, var(--border)); background: #f4f7fb; color: var(--primary); }
+.rv-back-link:hover svg { translate: -2px 0; }
+.rv-back-link:active { background: #e9eef6; box-shadow: none; }
+.rv-back-link:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 35%, transparent); outline-offset: 2px; }
+[dir="rtl"] .rv-back-link svg { rotate: 180deg; }
+[dir="rtl"] .rv-back-link:hover svg { translate: 2px 0; }
+@media (prefers-reduced-motion: reduce) { .rv-back-link, .rv-back-link svg { transition: none; } .rv-back-link:hover svg { translate: none; } }

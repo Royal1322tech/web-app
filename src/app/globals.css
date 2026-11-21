@@ -1114,10 +1114,6 @@ input[type="date"]:focus-within {
 [dir="rtl"] input[dir="ltr"]:placeholder-shown { direction: rtl; }
 
 /* Pause and play for an auto-rotating hero. */
-.hero-rotation-toggle { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid #ffffff66; border-radius: 50%; background: #061b32a6; color: #fff; cursor: pointer; backdrop-filter: blur(6px); transition: background-color var(--duration-fast) ease; }
-.hero-rotation-toggle:hover { background: #061b32e0; }
-.hero-rotation-toggle:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
-.hero-rotation-toggle svg { width: 18px; height: 18px; }
 
 /* Shared photo header for content pages. */
 .page-hero { position: relative; isolation: isolate; display: flex; align-items: center; overflow: hidden; min-height: clamp(190px, 22vw, 280px); margin-block-end: var(--space-6); border-radius: var(--rounded-xl); background: var(--navy); color: #fff; }
@@ -1378,3 +1374,17 @@ input[type="date"]:focus-within {
 .login-otp__digits input[aria-invalid="true"] { border-color: var(--error); }
 .login-otp__group:disabled .login-otp__digits input { opacity: .55; cursor: not-allowed; }
 @media (max-width: 420px) { .login-otp__digits { gap: 8px; } .login-otp__digits input { height: 54px; font-size: 22px; } }
+
+/* Registration on phones: a smaller heading, tighter header and card spacing, and a compact stepper. */
+@media (max-width: 599px) {
+  .registration-page .registration-header__bar { margin-block-end: 12px; }
+  .registration-page .registration-header h1 { font-size: clamp(22px, 6.6vw, 26px); line-height: 1.2; letter-spacing: -0.01em; }
+  .registration-page .registration-header p { font-size: 14px; line-height: 1.5; }
+  .registration-page .registration-header .fine-print { font-size: 12.5px; }
+  .registration-page .registration-progress { margin: 18px 0 16px; }
+  .registration-page .step-number { width: 34px; height: 34px; font-size: 12px; }
+  .registration-page .step-line { inset-inline-start: calc(50% + 21px); width: calc(100% - 42px); }
+  .registration-page .registration-section { padding: 16px; border-radius: 16px; }
+  .registration-page .registration-section .form-field { gap: 6px; }
+}
+:root[dir="rtl"] .registration-page .registration-header h1 { letter-spacing: 0; }

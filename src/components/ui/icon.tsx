@@ -65,6 +65,9 @@ const paths = {
   playFilled: "M8 5.5v13l10.5-6.5Z",
   pauseFilled: "M7 5h3.5v14H7Zm6.5 0H17v14h-3.5Z",
   pause: "M9 5v14m6-14v14",
+  tag: "M3 12.6V4a1 1 0 0 1 1-1h8.6l8.7 8.7a1.5 1.5 0 0 1 0 2.1l-6.5 6.5a1.5 1.5 0 0 1-2.1 0ZM8 8h.01",
+  percent: "M19 5 5 19M7 9.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm10 10a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z",
+  send: "M21 3 10 14M21 3l-7 18-4-7-7-4Z",
 } as const;
 
 export type IconName = keyof typeof paths;

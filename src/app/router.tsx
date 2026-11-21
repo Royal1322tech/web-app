@@ -138,6 +138,11 @@ export const router = createBrowserRouter([
         lazy: page(() => import("@/pages/hotel-rooms"), "Hotel Rooms", "غرف الفندق"),
       },
       {
+        // Reduce Price request for one hotel and stay (signed-in, API builds only; sending isn't available yet).
+        path: "hotels/rooms/:hid/reduce-price",
+        lazy: page(() => import("@/pages/reduce-price"), "Request a Lower Price", "طلب سعر أقل"),
+      },
+      {
         path: "hotels/:hotelId",
         lazy: async () => ({
           Component: (await import("@/pages/hotel")).default,

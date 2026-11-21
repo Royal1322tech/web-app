@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { SystemState } from "@/components/ui/system-state";
 import { Icon } from "@/components/ui/icon";
 import type { HotelSearchCriteria } from "@/features/home/schemas/hotel-search.schema";
@@ -10,14 +10,16 @@ import {
   classifyB2BSearchError,
   isB2BSearchCurrency,
   searchB2BHotels,
+  serverSearchFilters,
   toB2BHotelSearchRequest,
   totalPages,
   type B2BHotelSearchRequest,
   type B2BHotelSearchResult,
+  type B2BSearchFilters,
   type B2BSearchFailure,
 } from "../api/b2b-hotel-search";
 import { findDestination } from "../data/destinations";
-import { emptyLiveFilters, filterLiveHotels, type LiveFilters } from "../lib/live-filters";
+import { emptyLiveFilters, filterLiveHotels, toB2BSearchFilters, type LiveFilters } from "../lib/live-filters";
 import { LiveHotelFilters } from "./live-hotel-filters";
 import { LiveHotelCard, LiveHotelCardSkeleton, type RoomsAction } from "./live-hotel-card";
 import { stayQuery } from "../lib/stay-query";
@@ -45,32 +47,55 @@ export function ApiSearchResults({ criteria }: { criteria?: HotelSearchCriteria 
   if (!request || !destination) {
     return <SystemState title={t("Check your search", "راجع بيانات البحث")} description={t("Choose a destination from the list and a nationality, then search again.", "اختر وجهة من القائمة وجنسية، ثم ابحث مرة أخرى.")} />;
   }
-  return (
-    <>
-      {/* Keyed by the search body: changed criteria start again at page 1. */}
-      <SearchRun key={requestKey} request={request} destinationName={t(destination.name.en, destination.name.ar)} roomsQuery={stayQuery(criteria)} />
-    </>
-  );
+  // Keyed by the search body: changed criteria start again at page 1 with no filters.
+  return <SearchRun key={requestKey} base={request} destinationName={t(destination.name.en, destination.name.ar)} roomsQuery={stayQuery(criteria)} />;
 }
 
-function SearchRun({ request: initial, destinationName, roomsQuery }: { request: B2BHotelSearchRequest; destinationName: string; roomsQuery: string }) {
+/** Waits until the value has been stable for `delay` ms, so typing or quick clicks send one search. */
+function useSettled<T>(value: T, delay: number): T {
+  const [settled, setSettled] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setSettled(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return settled;
+}
+
+const emptyPages: ReadonlyMap<number, B2BHotelSearchResult> = new Map();
+
+function SearchRun({ base, destinationName, roomsQuery }: { base: B2BHotelSearchRequest; destinationName: string; roomsQuery: string }) {
   const { t } = useLocale();
-  const [request] = useState(initial);
-  const [page, setPage] = useState(1);
-  const [attempt, setAttempt] = useState(0);
-  // Pages already received for this search, so going back never asks the API again.
-  const [pages, setPages] = useState<ReadonlyMap<number, B2BHotelSearchResult>>(() => new Map());
-  const [failure, setFailure] = useState<{ page: number; attempt: number; kind: B2BSearchFailure } | null>(null);
-  const [pagingUnsupported, setPagingUnsupported] = useState(false);
+  const server = serverSearchFilters;
   const [filters, setFilters] = useState<LiveFilters>(emptyLiveFilters);
   const [sort, setSort] = useState<PageSort>("recommended");
+  // Server-side filters: the request carries the settled sidebar choices, so a change is one search.
+  const serverPart = useSettled(server ? JSON.stringify(toB2BSearchFilters(filters) ?? null) : "null", 400);
+  const request = useMemo<B2BHotelSearchRequest>(() => {
+    const sent = JSON.parse(serverPart) as B2BSearchFilters | null;
+    return server ? { ...base, ...(sent ? { filters: sent } : {}), sort: "recommended" } : base;
+  }, [base, serverPart, server]);
+  const requestKey = JSON.stringify(request);
+
+  const [page, setPage] = useState(1);
+  const [attempt, setAttempt] = useState(0);
+  // Pages already received for this exact request, so going back never asks the API again.
+  const [cache, setCache] = useState<{ key: string; pages: ReadonlyMap<number, B2BHotelSearchResult> }>({ key: requestKey, pages: emptyPages });
+  const [failure, setFailure] = useState<{ key: string; page: number; attempt: number; kind: B2BSearchFailure } | null>(null);
+  const [pagingUnsupported, setPagingUnsupported] = useState(false);
+  const [shownKey, setShownKey] = useState(requestKey);
   const top = useRef<HTMLDivElement>(null);
   const firstLoad = useRef(true);
+  // The last results shown, kept on screen (with the sidebar) while a filtered search loads.
+  const [lastShown, setLastShown] = useState<B2BHotelSearchResult | null>(null);
 
+  // A new request (filters changed on the server) starts again at page 1.
+  if (shownKey !== requestKey) { setShownKey(requestKey); setPage(1); }
+  const pages = cache.key === requestKey ? cache.pages : emptyPages;
   const current = pages.get(page);
-  const failed = failure && failure.page === page && failure.attempt === attempt ? failure.kind : null;
+  const failed = failure && failure.key === requestKey && failure.page === page && failure.attempt === attempt ? failure.kind : null;
   const state = current ? { status: "done" as const, result: current } : failed ? { status: "error" as const, failure: failed } : { status: "loading" as const };
   const perPage = pages.get(1)?.perPage;
+  if (current && current !== lastShown) setLastShown(current);
 
   useEffect(() => {
     if (pages.has(page)) return;
@@ -78,8 +103,8 @@ function SearchRun({ request: initial, destinationName, roomsQuery }: { request:
     // Deferred so a mount that is immediately undone (React Strict Mode in development) sends nothing.
     const timer = setTimeout(() => {
       const token = b2bSession.token();
-      if (!token) { setFailure({ page, attempt, kind: "signed_out" }); return; }
-      // Page 1 is the confirmed search body exactly. Later pages add page and per_page to the full body.
+      if (!token) { setFailure({ key: requestKey, page, attempt, kind: "signed_out" }); return; }
+      // Page 1 is the search body exactly. Later pages add page and per_page to the full body.
       const paging = page > 1 && perPage ? { page, per_page: perPage } : undefined;
       searchB2BHotels(request, { token, signal: controller.signal, locale: request.language, page: paging })
         .then((result) => {
@@ -90,7 +115,7 @@ function SearchRun({ request: initial, destinationName, roomsQuery }: { request:
             setPage(1);
             return;
           }
-          setPages((previous) => new Map(previous).set(page, result));
+          setCache((previous) => ({ key: requestKey, pages: new Map(previous.key === requestKey ? previous.pages : emptyPages).set(page, result) }));
         })
         .catch((error: unknown) => {
           if (controller.signal.aborted) return;
@@ -99,11 +124,11 @@ function SearchRun({ request: initial, destinationName, roomsQuery }: { request:
             setPage(1);
             return;
           }
-          setFailure({ page, attempt, kind: classifyB2BSearchError(error) });
+          setFailure({ key: requestKey, page, attempt, kind: classifyB2BSearchError(error) });
         });
     }, 0);
     return () => { clearTimeout(timer); controller.abort(); };
-  }, [request, page, attempt, pages, perPage]);
+  }, [request, requestKey, page, attempt, pages, perPage]);
 
   useEffect(() => {
     if (firstLoad.current) { firstLoad.current = false; return; }
@@ -113,8 +138,13 @@ function SearchRun({ request: initial, destinationName, roomsQuery }: { request:
 
   const first = pages.get(1);
   const pageCount = first && !pagingUnsupported ? totalPages(first) : 1;
-  const goTo = (next: number) => { if (next >= 1 && next <= pageCount && next !== page) { setFilters(emptyLiveFilters); setPage(next); } };
+  // Page-only filters belong to the page they were set on; server filters stay across pages.
+  const goTo = (next: number) => { if (next >= 1 && next <= pageCount && next !== page) { if (!server) setFilters(emptyLiveFilters); setPage(next); } };
   const retry = () => { setAttempt((value) => value + 1); };
+  const serverFiltersSet = server && toB2BSearchFilters(filters) !== undefined;
+  // With server filters, the sidebar stays on screen while a filtered search loads or matches nothing.
+  const sidebarResult = state.status === "done" ? state.result : server && state.status === "loading" ? lastShown : null;
+  const showLayout = sidebarResult !== null && (sidebarResult.total > 0 || serverFiltersSet);
 
   const summary = first && (
     <div className={styles.summary}>
@@ -127,6 +157,8 @@ function SearchRun({ request: initial, destinationName, roomsQuery }: { request:
     </div>
   );
 
+  const skeleton = <ul className={styles.list}>{Array.from({ length: 4 }, (_, index) => <li key={index}><LiveHotelCardSkeleton variant="row" /></li>)}</ul>;
+
   return (
     <div className={styles.results} ref={top} tabIndex={-1} aria-label={t("Hotel results", "نتائج الفنادق")}>
       {summary}
@@ -134,11 +166,11 @@ function SearchRun({ request: initial, destinationName, roomsQuery }: { request:
         <p className={styles.note} role="status">{t("Only the first page of results can be shown for this search.", "يمكن عرض الصفحة الأولى فقط من نتائج هذا البحث.")}</p>
       )}
 
-      {state.status === "loading" && (
+      {state.status === "loading" && !showLayout && (
         <div aria-busy="true" data-search-state="loading">
           <p className={styles.srOnly} role="status">{t("Searching hotels…", "جارٍ البحث عن الفنادق…")}</p>
           {!first && <p className={styles.loadingText} aria-hidden="true">{t("Searching hotels…", "جارٍ البحث عن الفنادق…")}</p>}
-          <ul className={styles.list}>{Array.from({ length: 4 }, (_, index) => <li key={index}><LiveHotelCardSkeleton variant="row" /></li>)}</ul>
+          {skeleton}
         </div>
       )}
 
@@ -152,17 +184,24 @@ function SearchRun({ request: initial, destinationName, roomsQuery }: { request:
         </div>
       )}
 
-      {state.status === "done" && state.result.total === 0 && (
+      {state.status === "done" && state.result.total === 0 && !serverFiltersSet && (
         <div data-search-state="empty">
           <SystemState title={t("No hotels found", "لم يتم العثور على فنادق")} description={t("No hotels are available for these dates and guests. Try other dates or another destination.", "لا توجد فنادق متاحة لهذه التواريخ وعدد النزلاء. جرّب تواريخ أو وجهة أخرى.")} />
         </div>
       )}
 
-      {state.status === "done" && state.result.total > 0 && (
-        <div data-search-state="results" className={styles.layout}>
-          <LiveHotelFilters result={state.result} value={filters} onChange={setFilters} shown={filterLiveHotels(state.result, filters).length} />
+      {showLayout && sidebarResult && (
+        <div data-search-state={state.status === "loading" ? "loading" : "results"} className={styles.layout} aria-busy={state.status === "loading" || undefined}>
+          <LiveHotelFilters result={sidebarResult} value={filters} onChange={setFilters} shown={filterLiveHotels(sidebarResult, filters, server).length} server={server} />
           <div className={styles.main}>
-            {state.result.hotels.length === 0 ? (
+            {state.status === "loading" ? (
+              <>
+                <p className={styles.srOnly} role="status">{t("Searching hotels…", "جارٍ البحث عن الفنادق…")}</p>
+                {skeleton}
+              </>
+            ) : sidebarResult.total === 0 ? (
+              <p className={styles.noMatch} data-search-state="no-match">{t("No hotels match these filters.", "لا توجد فنادق تطابق عوامل التصفية هذه.")}</p>
+            ) : sidebarResult.hotels.length === 0 ? (
               <SystemState title={t("This page has no hotels", "لا توجد فنادق في هذه الصفحة")} description={t("Go back to the previous page.", "ارجع إلى الصفحة السابقة.")} />
             ) : (
               <>
@@ -176,7 +215,7 @@ function SearchRun({ request: initial, destinationName, roomsQuery }: { request:
                     </select>
                   </label>
                 </div>
-                <HotelList result={state.result} filters={filters} sort={sort} roomsQuery={roomsQuery} />
+                <HotelList result={sidebarResult} filters={filters} sort={sort} roomsQuery={roomsQuery} server={server} />
               </>
             )}
           </div>
@@ -214,9 +253,9 @@ function sortPage(hotels: B2BHotelSearchResult["hotels"], sort: PageSort) {
   }).map(({ hotel }) => hotel);
 }
 
-function HotelList({ result, filters, sort, roomsQuery }: { result: B2BHotelSearchResult; filters: LiveFilters; sort: PageSort; roomsQuery: string }) {
+function HotelList({ result, filters, sort, roomsQuery, server }: { result: B2BHotelSearchResult; filters: LiveFilters; sort: PageSort; roomsQuery: string; server: boolean }) {
   const { t } = useLocale();
-  const shown = sortPage(filterLiveHotels(result, filters), sort);
+  const shown = sortPage(filterLiveHotels(result, filters, server), sort);
   if (shown.length === 0) {
     return <p className={styles.noMatch} data-search-state="no-match">{t("No hotels on this page match these filters.", "لا توجد فنادق في هذه الصفحة تطابق عوامل التصفية هذه.")}</p>;
   }

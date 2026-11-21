@@ -162,7 +162,7 @@ test("bookings without an invoice and accounting stay empty without supporting r
   await expect(page.getByText(/No invoice number or financial values have been generated/)).toBeVisible();
   await page.goto("/accounting-review");
   await expect(page.getByRole("heading", { name: "No payment reviews" })).toBeVisible();
-  await expect(page.getByText(/No payment approval, reconciliation or settlement is performed/)).toBeVisible();
+  await expect(page.getByText(/No payment approval, reconciliation or settlement happens on this page/)).toBeVisible();
 });
 
 test("booking summary filters update results while preserving search and can be cleared", async ({ page }) => {

@@ -1,10 +1,10 @@
 import { useLocale } from "@/features/localization/locale-provider";
 const arabic: Record<string, string> = {
-  "Password recovery isn't available online yet. These screens are a preview: no email is sent and no code is checked.":
-    "استعادة كلمة المرور غير متاحة عبر الإنترنت بعد. هذه الشاشات للمعاينة فقط: لا يُرسل أي بريد ولا يُتحقق من أي رمز.",
+  "Online password reset isn't available yet. Contact Royal Vacation to reset your password.":
+    "إعادة تعيين كلمة المرور عبر الإنترنت غير متاحة حاليًا. تواصل مع رويال فاكيشن لإعادة تعيينها.",
   "Contact Royal Vacation to reset your password": "تواصل مع رويال فاكيشن لإعادة تعيين كلمة المرور",
-  "Continue to verification demo": "المتابعة لمعاينة التحقق",
-  "Continue to reset demo": "المتابعة لمعاينة إعادة التعيين",
+  "Continue to verification": "المتابعة إلى التحقق",
+  "Continue to reset": "المتابعة لإعادة التعيين",
   "Return to sign in": "العودة لتسجيل الدخول",
   "Forgot Your Password?": "نسيت كلمة المرور؟",
   "Enter the 4-digit verification code": "أدخل رمز التحقق المكوّن من ٤ أرقام",
@@ -15,8 +15,8 @@ const arabic: Record<string, string> = {
   Cancel: "إلغاء",
   Confirm: "تأكيد",
   "I forgot my email or user name?": "نسيت البريد الإلكتروني أو اسم المستخدم؟",
-  "Account recovery help is not connected yet. Please use your existing account support channel.":
-    "مساعدة استرداد الحساب غير متصلة بعد. يرجى استخدام قناة دعم حسابك الحالية.",
+  "Online account recovery isn't available yet. Please contact your account support channel.":
+    "استرداد الحساب عبر الإنترنت غير متاح حاليًا. يرجى التواصل مع قناة دعم حسابك.",
   "Back to sign in": "العودة إلى تسجيل الدخول",
   "Back to password recovery": "العودة إلى استرداد كلمة المرور",
   "Back to verification": "العودة إلى التحقق",
@@ -36,12 +36,12 @@ const arabic: Record<string, string> = {
   "Passwords must match.": "يجب أن تتطابق كلمتا المرور.",
   "Enter all four digits.": "أدخل الأرقام الأربعة كاملة.",
   "Use digits only.": "استخدم الأرقام فقط.",
-  "Password recovery is not connected yet. No email has been sent.":
-    "استرداد كلمة المرور غير متصل بعد. لم يتم إرسال أي بريد إلكتروني.",
-  "Verification is not connected yet. No code has been sent or verified.":
-    "التحقق غير متصل بعد. لم يتم إرسال أي رمز أو التحقق منه.",
-  "Password reset is not connected yet. Your password has not been changed.":
-    "إعادة تعيين كلمة المرور غير متصلة بعد. لم يتم تغيير كلمة المرور.",
+  "Online password recovery isn't available yet. No email has been sent.":
+    "استرداد كلمة المرور عبر الإنترنت غير متاح حاليًا. لم يُرسل أي بريد إلكتروني.",
+  "Online verification isn't available yet. No code has been sent or checked.":
+    "التحقق عبر الإنترنت غير متاح حاليًا. لم يُرسل أي رمز ولم يُتحقق منه.",
+  "Online password reset isn't available yet. Your password hasn't been changed.":
+    "إعادة تعيين كلمة المرور عبر الإنترنت غير متاحة حاليًا. لم تتغير كلمة المرور.",
   "Recovery service unavailable": "خدمة الاسترداد غير متاحة",
   "Verification code": "رمز التحقق",
   "Use the four-digit code from your recovery email when verification becomes available.":

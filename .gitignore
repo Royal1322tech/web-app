@@ -3,6 +3,7 @@ dist/
 # Extra builds used only by the authentication tests.
 dist-auth-*/
 dist-hotel-api/
+dist-hotel-filters/
 
 .env*
 !.env.example

@@ -19,6 +19,6 @@ export async function fillGroupContact(page: Page, contact: Partial<typeof group
 export async function completeGroupWizard(page: Page) {
   await fillGroupTrip(page);
   await fillGroupContact(page);
-  await page.getByRole("button", { name: /^(Preview request|معاينة الطلب)$/ }).click();
-  await expect(page.getByRole("heading", { name: /Local preview ready — not sent|المعاينة المحلية جاهزة — لم تُرسل/ })).toBeVisible();
+  await page.getByRole("button", { name: /^(Review request|مراجعة الطلب)$/ }).click();
+  await expect(page.getByRole("heading", { name: /Request ready — not sent yet|الطلب جاهز — لم يُرسل بعد/ })).toBeVisible();
 }

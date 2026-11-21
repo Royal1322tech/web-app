@@ -51,7 +51,7 @@ function MessageItem({ message, initial }: { message: TicketMessage; initial: bo
   const author =
     message.author === "owner"
       ? initial ? t("You · initial report", "أنت · البلاغ الأول") : t("You", "أنت")
-      : message.author === "support" ? t("Support · sample reply", "الدعم · رد تجريبي") : t("System", "النظام");
+      : message.author === "support" ? t("Support · example reply", "الدعم · رد مثال") : t("System", "النظام");
   return (
     <li className={`ticket-message ticket-message--${message.author}`}>
       <span className="ticket-message__avatar" aria-hidden="true">
@@ -97,7 +97,7 @@ function TicketDetail({ ticket }: { ticket: SupportTicket }) {
       <div className="ticket-layout__main">
         {created && (
           <p className="ticket-callout ticket-callout--local" role="status">
-            {t("Ticket created as a local preview. It has not been sent to Royal Vacation support, and no response is expected.", "أُنشئت التذكرة كمعاينة محلية. لم تُرسل إلى دعم رويال فاكيشن، ولا يُتوقع رد.")}
+            {t("Ticket saved in this browser. It hasn't been sent to Royal Vacation support, so no reply will follow.", "حُفظت التذكرة في هذا المتصفح. لم تُرسل إلى دعم رويال فاكيشن، لذا لن يصل رد.")}
           </p>
         )}
         <section className="workspace-card ticket-header" aria-labelledby="ticket-subject">
@@ -135,7 +135,7 @@ function TicketDetail({ ticket }: { ticket: SupportTicket }) {
                 <button className="button button--primary" type="submit">{t("Add message", "إضافة الرسالة")}</button>
               </div>
               <div role="status" aria-live="polite">
-                {sent && <p className="ticket-muted">{t("Message added to this local preview. It was not sent.", "أُضيفت الرسالة إلى هذه المعاينة المحلية ولم تُرسل.")}</p>}
+                {sent && <p className="ticket-muted">{t("Message saved in this browser. It wasn't sent.", "حُفظت الرسالة في هذا المتصفح ولم تُرسل.")}</p>}
               </div>
             </form>
           )}

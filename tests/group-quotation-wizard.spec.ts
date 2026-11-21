@@ -99,8 +99,8 @@ test.describe("group quotation wizard", () => {
     for (const value of ["Luxor", "12", "7", "Hotels", groupContact.name, groupContact.email, groupContact.agency, groupContact.subject, groupContact.message]) await expect(review).toContainText(value);
     await expect(review).toContainText(/Nov 20, 2030.*Nov 22, 2030/);
 
-    await page.getByRole("button", { name: "Preview request" }).click();
-    await expect(page.getByRole("heading", { name: "Local preview ready — not sent" })).toBeVisible();
+    await page.getByRole("button", { name: "Review request" }).click();
+    await expect(page.getByRole("heading", { name: "Request ready — not sent yet" })).toBeVisible();
 
     await page.getByRole("button", { name: "Edit trip details" }).click();
     await expect(stepHeading(page)).toContainText("Trip Details");
@@ -111,7 +111,7 @@ test.describe("group quotation wizard", () => {
     await expect(review).toContainText("Aswan");
     await expect(review).not.toContainText("Luxor");
     // Editing withdrew the earlier preview, so stale details can't be saved.
-    await expect(page.getByRole("button", { name: "Save demo request" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Save request" })).toHaveCount(0);
     await page.getByRole("button", { name: "Edit contact details" }).click();
     await expect(page.locator("#enquiry-name")).toHaveValue(groupContact.name);
     await next(page).click();

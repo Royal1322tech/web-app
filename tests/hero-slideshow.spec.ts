@@ -2,14 +2,14 @@ import { visit } from "./helpers/demo-login";
 import { expect, test } from '@playwright/test';
 
 for (const width of [375, 1440]) {
-  test(`hero automatically crossfades with one pause control at ${width}px`, async ({ page }) => {
+  test(`hero automatically crossfades with no pause control at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
     await visit(page, '/');
     const hero = page.getByRole('region', { name: 'Royal Vacation agency platform', exact: true });
     const slides = hero.locator('[data-active]');
     await expect(slides).toHaveCount(4);
     await expect(hero.getByRole('button', { name: /slideshow|Show slide/ })).toHaveCount(0);
-    await expect(hero.getByRole('button', { name: 'Pause image rotation' })).toBeVisible();
+    await expect(hero.getByRole('button', { name: /image rotation/ })).toHaveCount(0);
     await expect(hero.getByRole('group', { name: 'Hero slideshow' })).toHaveCount(0);
     const heading = hero.getByRole('heading', { level: 1 });
     await page.locator(".route-entrance").evaluate(async el => { await Promise.all(el.getAnimations().map(animation => animation.finished)); });

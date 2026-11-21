@@ -1,5 +1,4 @@
 import { useRef, type CSSProperties } from "react";
-import { RotationToggle } from "@/components/motion/rotation-toggle";
 import { useHeroRotation } from "@/components/motion/use-hero-rotation";
 import { useLocale } from "@/features/localization/locale-provider";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
@@ -12,7 +11,7 @@ const INTERVAL_MS = 4500;
 export function Hero({ slides }: { slides: readonly HeroSlide[] }) {
   const { t } = useLocale();
   const root = useRef<HTMLElement>(null);
-  const { index, running, paused, reduced, togglePaused, isLoaded } = useHeroRotation(root, { count: slides.length, intervalMs: INTERVAL_MS });
+  const { index, running, isLoaded } = useHeroRotation(root, { count: slides.length, intervalMs: INTERVAL_MS });
   return (
     <section ref={root} className={styles.hero} aria-label={t("Royal Vacation agency platform", "منصة رويال فاكيشن للوكالات")}>
       <div className={styles.slides} aria-hidden="true">
@@ -30,9 +29,6 @@ export function Hero({ slides }: { slides: readonly HeroSlide[] }) {
           {t("Your Gateway to", "بوابتك إلى")} <span>{t("Extraordinary Travel", "رحلات استثنائية")}</span>
         </p>
         <p className={styles.lede}>{t("Discover exceptional stays and seamless travel experiences with Royal Vacation.", "اكتشف إقامات مميزة وتجارب سفر سلسة مع رويال فاكيشن.")}</p>
-      </div>
-      <div className={styles.meta}>
-        <RotationToggle className={styles.toggle} paused={paused} reduced={reduced} onToggle={togglePaused} />
       </div>
     </section>
   );

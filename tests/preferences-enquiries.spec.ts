@@ -69,7 +69,7 @@ test('contact and group quotation validate locally without sending requests', as
       await expect(page.getByText('Enter your name.',{exact:true})).toBeVisible();
       for(const [key,value] of Object.entries({name:'Demo Traveller',email:'demo@example.com',agency:'Sample Agency',subject:'Sample enquiry',phone:'1001234567',message:'Fictional travel requirements for a preview.'})) await page.locator('#enquiry-'+key).fill(value);
       await page.getByRole('button',{name:'Prepare enquiry',exact:true}).click();
-      await expect(page.getByRole('heading',{name:'Local preview ready — not sent'})).toBeVisible();
+      await expect(page.getByRole('heading',{name:'Request ready — not sent yet'})).toBeVisible();
     } else {
       await page.getByRole('button',{name:'Next step',exact:true}).click();
       await expect(page.getByText('Enter a destination or route.',{exact:true})).toBeVisible();
@@ -85,8 +85,8 @@ test('contact and group quotation validate locally without sending requests', as
       await expect(page.getByText('Enter your name.',{exact:true})).toBeVisible();
       for(const [key,value] of Object.entries({name:'Demo Traveller',email:'demo@example.com',agency:'Sample Agency',subject:'Sample group request',message:'Fictional travel requirements for a preview.'})) await page.locator('#enquiry-'+key).fill(value);
       await page.getByRole('button',{name:'Next step',exact:true}).click();
-      await page.getByRole('button',{name:'Preview request',exact:true}).click();
-      await expect(page.getByRole('heading',{name:'Local preview ready — not sent'})).toBeVisible();
+      await page.getByRole('button',{name:'Review request',exact:true}).click();
+      await expect(page.getByRole('heading',{name:'Request ready — not sent yet'})).toBeVisible();
     }
   }
   expect(mutations).toEqual([]);

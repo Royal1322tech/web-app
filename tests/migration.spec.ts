@@ -342,7 +342,7 @@ test("OTP multi-digit entry and reset mismatch validation remain frontend-only",
     "4",
   );
   await page.getByRole("button", { name: "Confirm", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("not");
+  await expect(page.getByRole("status")).toContainText("isn't available");
   await visit(page, "/reset-password");
   await page.getByLabel("Password", { exact: true }).fill("ExamplePass123!");
   await page
@@ -355,6 +355,6 @@ test("OTP multi-digit entry and reset mismatch validation remain frontend-only",
     .fill("ExamplePass123!");
   await page.getByRole("button", { name: "Confirm", exact: true }).click();
   await expect(page.getByRole("status")).toContainText(
-    "Your password has not been changed.",
+    "Your password hasn't been changed.",
   );
 });

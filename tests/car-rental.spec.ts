@@ -16,7 +16,7 @@ for (const width of [375, 1440])
     );
     await expect(
       page.getByText(
-        "Browse self-drive vehicles at illustrative daily rates, or prepare an enquiry for airport transfers.",
+        "Browse self-drive vehicles at indicative daily rates, or prepare an enquiry for airport transfers.",
         { exact: true },
       ),
     ).toBeVisible();

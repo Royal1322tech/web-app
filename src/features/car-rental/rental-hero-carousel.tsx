@@ -1,5 +1,4 @@
 import { useRef } from "react";
-import { RotationToggle } from "@/components/motion/rotation-toggle";
 import { useHeroRotation } from "@/components/motion/use-hero-rotation";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
 import { useLocale } from "@/features/localization/locale-provider";
@@ -13,13 +12,13 @@ const slides = [
 ] as const;
 
 /**
- * Car Rental hero with a decorative background that crossfades every four seconds, with one
- * pause control. Timing and image loading live in useHeroRotation.
+ * Car Rental hero with a decorative background that crossfades every few seconds and holds still on
+ * hover or focus. Timing and image loading live in useHeroRotation.
  */
 export function RentalHeroCarousel({ title }: { title: string }) {
   const { t } = useLocale();
   const root = useRef<HTMLElement>(null);
-  const { index, running, paused, reduced, togglePaused, isLoaded } = useHeroRotation(root, { count: slides.length, intervalMs: INTERVAL_MS });
+  const { index, running, isLoaded } = useHeroRotation(root, { count: slides.length, intervalMs: INTERVAL_MS });
 
   return (
     <section ref={root} className="rental-hero rental-hero--carousel" aria-labelledby="rental-hero-title">
@@ -35,7 +34,6 @@ export function RentalHeroCarousel({ title }: { title: string }) {
         <h1 id="rental-hero-title">{title}</h1>
         <p>{t("A considered journey, from arrival to departure.", "رحلة مدروسة من الوصول إلى المغادرة.")}</p>
       </div>
-      <RotationToggle className="rental-hero__toggle" paused={paused} reduced={reduced} onToggle={togglePaused} />
     </section>
   );
 }

@@ -1,5 +1,5 @@
 import { visit, submitDemoLogin, logout } from "./helpers/demo-login";
-import { openHeaderTools } from "./helpers/header";
+import { closeHeaderMenu, openHeaderTools } from "./helpers/header";
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
@@ -67,6 +67,7 @@ for (const width of [375, 1440]) {
       ).toBeVisible();
       await openHeaderTools(page);
       await expect(account()).toHaveAttribute("aria-expanded", "false");
+      await closeHeaderMenu(page);
       for (const path of [
         "/transactions",
         "/notifications",

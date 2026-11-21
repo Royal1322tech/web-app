@@ -16,7 +16,7 @@ export function GroupStatusBadge({ status }: { status: GroupRequestStatus }) {
 
 export function GroupOrigin({ origin }: { origin: GroupRequest["origin"] }) {
   const { t } = useLocale();
-  return <span className="group-origin">{origin === "sample" ? t("Sample request", "طلب نموذجي") : t("This session only", "هذه الجلسة فقط")}</span>;
+  return <span className="group-origin">{origin === "sample" ? t("Example request", "طلب مثال") : t("This session only", "هذه الجلسة فقط")}</span>;
 }
 
 export function useServiceLabel() {

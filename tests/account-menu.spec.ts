@@ -43,6 +43,7 @@ for (const width of [320, 375, 768, 1440]) {
       await trigger.click();
       await page.mouse.click(2, 2);
       await expect(panel).toHaveCount(0);
+      await openHeaderTools(page); // on phones and tablets the outside tap closes the whole menu
       await trigger.click();
       await panel.getByRole("button", { name: /Sign Out|تسجيل الخروج/ }).click();
       await expect(page).toHaveURL(/\/welcome$/);

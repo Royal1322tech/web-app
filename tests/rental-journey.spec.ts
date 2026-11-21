@@ -39,9 +39,9 @@ async function chooseVehicle(page: Page) {
     .getByRole("button", { name: "Continue to review booking" })
     .click();
   await expect(page).toHaveURL(/car-rental\/review$/);
-  await expect(page.getByRole("button", { name: "Continue to rental payment preview" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Continue to payment review" })).toBeDisabled();
   await page.getByRole("checkbox", { name: /I have reviewed the cancellation/ }).check();
-  await page.getByRole("link", { name: "Continue to rental payment preview" }).click();
+  await page.getByRole("link", { name: "Continue to payment review" }).click();
 }
 for (const width of [375, 1440])
   test(`rental confirmation, modification and cancellation ${width}px`, async ({
@@ -114,7 +114,7 @@ test("rental failure retry, pending status and Arabic navigation", async ({
   await page.getByRole("button", { name: "Review another outcome" }).click();
   await expect(page).toHaveURL(/car-rental\/review$/);
   await page.getByRole("checkbox", { name: /I have reviewed the cancellation/ }).check();
-  await page.getByRole("link", { name: "Continue to rental payment preview" }).click();
+  await page.getByRole("link", { name: "Continue to payment review" }).click();
   await page.getByLabel("Payment outcome").selectOption("pending");
   await page.getByRole("button", { name: "Continue to outcome" }).click();
   await page.getByRole("button", { name: "Show outcome" }).click();

@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useParams, useSearchParams } from "react-router-dom";
+import { BackLink } from "@/components/ui/back-link";
 import { Icon } from "@/components/ui/icon";
 import { useLocale } from "@/features/localization/locale-provider";
 import { useTravelPreferences } from "@/features/preferences/travel-preferences";
@@ -57,7 +58,7 @@ export function HotelRoomsPage() {
   return (
     <CatalogShell title={t("Rooms", "الغرف")}>
       <div className={styles.page} data-rooms-page>
-        <Link to={backToResults} className={styles.back}><Icon name="back" />{t("Back to search results", "العودة إلى نتائج البحث")}</Link>
+        <BackLink to={backToResults}>{t("Back to search results", "العودة إلى نتائج البحث")}</BackLink>
         {!isHotelHid(hid) || !criteria || !request ? (
           <Notice
             tone="error"
@@ -70,6 +71,7 @@ export function HotelRoomsPage() {
         ) : (
           <>
             <HotelHeader title={title} summary={summary} criteria={criteria} request={request} />
+            <PriceRequestCta to={`/hotels/rooms/${hid}/reduce-price?${stayQuery(criteria)}`} state={summary ? { hotel: summary } : undefined} />
             {/* Keyed by the request: new dates, guests, language or currency start again and drop every token. */}
             <RoomsFlow key={`${hid}:${JSON.stringify(request)}`} hid={hid} request={request} searchHref={backToResults} />
           </>
@@ -79,7 +81,25 @@ export function HotelRoomsPage() {
   );
 }
 
-function HotelHeader({ title, summary, criteria, request }: {
+/** The Reduce Price entry: a promotional call to action under the hotel header. */
+function PriceRequestCta({ to, state }: { to: string; state?: unknown }) {
+  const { t } = useLocale();
+  const id = useId();
+  return (
+    <aside className={styles.priceCta} aria-labelledby={`${id}-cta`}>
+      <span className={styles.priceCtaIcon} aria-hidden="true"><Icon name="percent" /></span>
+      <div className={styles.priceCtaText}>
+        <h2 id={`${id}-cta`}>{t("Found a better price?", "وجدت سعرًا أفضل؟")}</h2>
+        <p>{t("Tell us the rate you've seen for this stay and prepare a request for a lower price.", "أخبرنا بالسعر الذي وجدته لهذه الإقامة وجهّز طلبًا للحصول على سعر أقل.")}</p>
+      </div>
+      <Link className={styles.priceCtaButton} to={to} state={state}>
+        <span>{t("Request a Lower Price", "اطلب سعرًا أقل")}</span><Icon name="arrowRight" aria-hidden="true" />
+      </Link>
+    </aside>
+  );
+}
+
+export function HotelHeader({ title, summary, criteria, request }: {
   title: string;
   summary: RoomsHotelSummary | null;
   criteria: NonNullable<ReturnType<typeof readStayQuery>>;

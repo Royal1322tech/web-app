@@ -21,7 +21,7 @@ export function VehicleDetailsPage() {
       <div className="rental-reference-details">
         <div className="rental-detail-main">
           <section className="rental-cinematic-vehicle">
-            <img src={vehicleImages[vehicle.id]} alt={t("Illustrative vehicle photograph", "صورة توضيحية للسيارة")} width="1200" height="800" />
+            <img src={vehicleImages[vehicle.id]} alt={t("Vehicle photo for reference", "صورة السيارة للاسترشاد")} width="1200" height="800" />
             <div className="rental-cinematic-copy">
               <Link to={`/car-rental/search?${rentalQuery(parsed.data)}`}><Icon name="back" />{t("Back to Search Results", "العودة لنتائج البحث")}</Link>
               <p className="rental-kicker">{t("YOUR JOURNEY · YOUR PACE", "رحلتك · بإيقاعك")}</p>

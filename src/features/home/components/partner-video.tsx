@@ -2,46 +2,62 @@ import { useEffect, useRef, useState } from "react";
 import { useMediaEnvironment } from "@/components/motion/use-media-environment";
 import { useLocale } from "@/features/localization/locale-provider";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
-import { Icon } from "@/components/ui/icon";
+import imageSources from "@/generated/image-sources.json";
 import styles from "./partner-benefits.module.css";
 
+const POSTER = "/images/home/partner-travel.png";
+/** The largest optimized WebP of the poster (about 40 KB) instead of the original PNG, when available. */
+const posterUrl = (() => {
+  const set = (imageSources as Record<string, string>)[POSTER];
+  const last = set?.split(",").map((entry) => entry.trim().split(" ")[0]).filter(Boolean).at(-1);
+  return last ?? POSTER;
+})();
+
+/**
+ * Decorative promotional video for "Built for Travel Partners". Muted, looped and inline; it loads
+ * only once near the viewport, plays only while visible on a visible page, and pauses otherwise.
+ * With reduced motion it stays on the poster. If the video can't load, the photograph is shown.
+ */
 export function PartnerVideo() {
   const { t } = useLocale();
   const container = useRef<HTMLDivElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const { visible, pageVisible, reduced } = useMediaEnvironment(container);
-  const [loaded, setLoaded] = useState(false);
-  const [paused, setPaused] = useState(false);
-  const [manualPlay, setManualPlay] = useState(false);
-  const [playing, setPlaying] = useState(false);
-  const [blocked, setBlocked] = useState(false);
+  const [requested, setRequested] = useState(false);
   const [failed, setFailed] = useState(false);
+  if (visible && !reduced && !requested) setRequested(true);
+
   useEffect(() => {
     const media = video.current;
     if (!media) return;
-    let live = true;
-    if (visible && pageVisible && !paused && (!reduced || manualPlay) && !failed) {
-      media.play().catch(() => { if (live) setBlocked(true); });
+    if (visible && pageVisible && !reduced && !failed) {
+      // A browser that blocks autoplay keeps the poster; nothing else changes.
+      media.play().catch(() => undefined);
     } else media.pause();
-    return () => { live = false; media.pause(); };
-  }, [visible, pageVisible, reduced, paused, manualPlay, failed]);
+    return () => { media.pause(); };
+  }, [visible, pageVisible, reduced, failed, requested]);
+
   return (
     <div ref={container} className={styles.visual} data-partner-video>
-      {failed ? <ResponsiveImage className={styles.photograph} src="/images/home/partner-travel.png" alt={t("Coastal travel scene", "مشهد سفر ساحلي")} width={642} height={611} /> :
-        <video ref={video} src={visible || loaded ? "/videos/partner-travel.mp4" : undefined}
-          poster="/images/home/partner-travel.png" muted loop playsInline preload="metadata"
-          autoPlay={!reduced && !paused && visible && pageVisible}
-          className={styles.video} aria-label={t("Travel inspiration: a tropical resort", "إلهام السفر: منتجع استوائي")}
-          onLoadStart={() => setLoaded(true)} onPlay={() => { setPlaying(true); setBlocked(false); }} onPause={() => setPlaying(false)} onError={() => setFailed(true)} />}
+      {failed ? (
+        <ResponsiveImage className={styles.photograph} src={POSTER} alt={t("Coastal travel scene", "مشهد سفر ساحلي")} width={642} height={611} />
+      ) : (
+        <video
+          ref={video}
+          src={requested ? "/videos/partner-travel.mp4" : undefined}
+          poster={posterUrl}
+          muted
+          loop
+          playsInline
+          disablePictureInPicture
+          preload="none"
+          className={styles.video}
+          aria-hidden="true"
+          tabIndex={-1}
+          onError={() => setFailed(true)}
+        />
+      )}
       <div className={styles.badge}>{t("Built for Travel Partners", "مصممة لشركاء السفر")}</div>
-      <div className={styles.videoControls}>
-        {failed ? <p role="status">{t("Video unavailable. Showing the travel photograph.", "الفيديو غير متاح. تُعرض صورة السفر.")}</p> :
-          <button type="button" onClick={() => {
-            if (playing) { video.current?.pause(); setPaused(true); setManualPlay(false); }
-            else { setPaused(false); setManualPlay(true); video.current?.play().catch(() => setBlocked(true)); }
-          }}><Icon name={playing ? "pause" : "play"} />{playing ? t("Pause video", "إيقاف الفيديو") : t("Play video", "تشغيل الفيديو")}</button>}
-        {blocked && !playing && <p role="status">{t("Playback is paused by your browser. Use Play to try again.", "أوقف المتصفح التشغيل. اضغط تشغيل للمحاولة.")}</p>}
-      </div>
     </div>
   );
 }

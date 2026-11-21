@@ -22,7 +22,7 @@ export function RentalDriverPage() {
     {!rentalSelection ? <MissingSelection /> : <div className="rental-booking-layout">
       <form className="rental-panel rental-passenger-form" noValidate onSubmit={handleSubmit(value => { saveRentalDriver(value); navigate("/car-rental/review"); })}>
         <section className="rental-form-section">
-          <NumberedHeading number={1} icon="people" title={t("Passenger Information", "معلومات الراكب")} description={t("Enter fictional contact information for this booking preview.", "أدخل بيانات تواصل وهمية لمعاينة الحجز.")} />
+          <NumberedHeading number={1} icon="people" title={t("Passenger Information", "معلومات الراكب")} description={t("Enter the driver's contact details.", "أدخل بيانات التواصل الخاصة بالسائق.")} />
           <div className="rental-form-fields">{([
             ["name", "Driver name", "اسم السائق", "text"],
             ["email", "Driver email", "بريد السائق", "email"],

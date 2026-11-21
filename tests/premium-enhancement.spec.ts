@@ -177,7 +177,7 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
       await visit(page, "/");
       const footer = page.locator("footer");
       await footer.scrollIntoViewIfNeeded();
-      await expect(footer.getByText(/Coming Soon|قريبًا/)).toBeVisible();
+      await expect(footer.getByText(/apps are on the way|في الطريق/)).toBeVisible();
       expect((await new AxeBuilder({ page }).include("footer").analyze()).violations).toEqual([]);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
       await footer.screenshot({ path: `test-results/premium-footer-${locale}-${width}.png` });

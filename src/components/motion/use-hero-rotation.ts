@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type RefObject } from "react";
+import { useEffect, useState, type RefObject } from "react";
 import { useMediaEnvironment } from "./use-media-environment";
 
 /** How long before a rotation the next image starts loading, so it never competes with the first paint. */
@@ -7,17 +7,31 @@ const RETRY_MS = 250;
 
 /**
  * Shared timing for the hero carousels. Slides mark their wrapper with `data-slide={position}`.
- * It rests while the page is hidden, the hero is offscreen or the viewer paused it; with reduced
- * motion it stays on the first image. Only shown and next images are rendered, and a slide changes
+ * It rests while the page is hidden, the hero is offscreen or keyboard focus is inside it; with
+ * reduced motion it stays on the first image. Only shown and next images are rendered, and a slide changes
  * only once the next image is decoded, so a slow connection waits instead of fading to a blank frame.
  */
 export function useHeroRotation(root: RefObject<HTMLElement | null>, { count, intervalMs }: { count: number; intervalMs: number }) {
   const { canAnimate, reduced } = useMediaEnvironment(root);
   const [index, setIndex] = useState(0);
   const [seen, setSeen] = useState<ReadonlySet<number>>(() => new Set([0]));
-  const [paused, setPaused] = useState(false);
+  const [focused, setFocused] = useState(false);
   const next = (index + 1) % count;
-  const running = canAnimate && !paused;
+  const running = canAnimate && !focused;
+
+  useEffect(() => {
+    const element = root.current;
+    if (!element) return;
+    // Only keyboard focus on a control holds it; focus the page moves itself (route changes) doesn't.
+    const focusIn = (event: FocusEvent) => { if ((event.target as Element).matches?.(":focus-visible")) setFocused(true); };
+    const focusOut = (event: FocusEvent) => { if (!element.contains(event.relatedTarget as Node | null)) setFocused(false); };
+    element.addEventListener("focusin", focusIn);
+    element.addEventListener("focusout", focusOut);
+    return () => {
+      element.removeEventListener("focusin", focusIn);
+      element.removeEventListener("focusout", focusOut);
+    };
+  }, [root]);
 
   useEffect(() => {
     if (!running) return;
@@ -46,6 +60,5 @@ export function useHeroRotation(root: RefObject<HTMLElement | null>, { count, in
     };
   }, [root, running, next, intervalMs]);
 
-  const togglePaused = useCallback(() => setPaused((current) => !current), []);
-  return { index, running, paused, reduced, togglePaused, isLoaded: (position: number) => seen.has(position) };
+  return { index, running, reduced, isLoaded: (position: number) => seen.has(position) };
 }

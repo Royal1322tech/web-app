@@ -20,16 +20,44 @@
 .navigation a:hover::after { background:#f4a26199; }
 .navigation a:hover::after,.navigation a[aria-current]::after { transform:scaleX(1); }
 .toggle { display:none; width:44px; height:44px; border:1px solid var(--border); border-radius:10px; background:transparent; color:var(--navy); }
+.preferences { display:flex; align-items:center; gap:8px; }
+.menuPanel { display:contents; }
+@keyframes menu-in { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+@media (prefers-reduced-motion: reduce) { .expanded .menuPanel { animation:none; } }
 @media(max-width:1199px) {
  .header { padding:8px 12px; gap:0; }
- .toggle { display:grid; place-items:center; justify-self:end; grid-column:2; grid-row:1; }
+ .toggle { display:grid; place-items:center; justify-self:end; grid-column:2; grid-row:1; cursor:pointer; }
+ .toggle:focus-visible { outline:2px solid var(--royal); outline-offset:2px; }
  .tools,.navigation { display:none; }
- .expanded .tools { display:flex; grid-column:1/-1; grid-row:2; flex-wrap:wrap; justify-content:center; margin-top:12px; padding:12px 0; border-top:1px solid var(--border); gap:8px; }
- .expanded .navigation { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px 12px; grid-row:3; }
- .navigation a { justify-content:center; white-space:normal; text-align:center; }
+ /* Open: one panel floating under the bar (closing it moves nothing), scrolling on short screens —
+    links, then preferences, then account. */
+ .expanded .menuPanel { position:absolute; inset-block-start:calc(100% + 8px); inset-inline:0; z-index:40; display:grid; max-height:calc(100dvh - var(--menu-top, 120px)); overflow-y:auto; overscroll-behavior:contain; padding:8px 12px 12px; border:1px solid var(--border); border-radius:18px; background:#fff; box-shadow:0 24px 48px -20px #061b3259, 0 2px 6px #0b25451a; animation:menu-in 160ms ease-out; }
+ .expanded .menuPanel { grid-template-columns:minmax(0,1fr); align-content:start; }
+ .expanded .menuPanel > * { grid-column:1; grid-row:auto; }
+ .expanded .navigation { display:grid; grid-template-columns:minmax(0,1fr); justify-content:stretch; gap:2px; padding:0 0 8px; border-top:0; }
+ .navigation a { justify-content:flex-start; min-height:46px; padding:0 14px; border-radius:10px; font-size:15px; font-weight:700; color:var(--navy); text-align:start; }
+ .navigation a::after { display:none; }
+ .navigation a:hover { background:var(--subtle); }
+ .navigation a:active { background:#e8edf4; }
+ .navigation a[aria-current] { background:#eef3fa; color:var(--royal); font-weight:800; box-shadow:inset 3px 0 0 var(--gold); }
+ :global([dir="rtl"]) .navigation a[aria-current] { box-shadow:inset -3px 0 0 var(--gold); }
+ .navigation a:focus-visible { outline-offset:-2px; }
+ .expanded .tools { display:grid; grid-template-columns:minmax(0,1fr); gap:10px; padding:12px 0 0; border-top:1px solid var(--border); justify-content:stretch; }
+ .preferences { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+ .preferences > :global(.rv-popover) { min-width:0; }
+ .preferences :global(.rv-popover-trigger) { width:100%; justify-content:space-between; min-width:0; }
+ .preferences :global(.rv-popover-trigger) bdi { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+ /* An open preference menu spans the row and lays out in place, under its trigger. */
+ .preferences > :global(.rv-popover:has(> [aria-expanded="true"])) { grid-column:1/-1; grid-row:1; }
+ .preferences > :global(.rv-popover:has(> [aria-expanded="true"])) ~ :global(.rv-popover) { grid-row:2; grid-column:1/-1; }
+ .tools :global(.rv-popover-panel) { position:static; width:auto; max-width:none; max-height:none; margin-top:6px; translate:none !important; box-shadow:none; animation:none; }
+ .icons { flex-wrap:wrap; justify-content:space-between; padding:4px; }
+ .icons :global(.rv-popover:has(> [aria-expanded="true"])) { flex-basis:100%; order:1; }
+ .icons > a, .icons .profileTrigger { flex:1; }
+ .icons :global(.rv-popover) { flex:1; position:static; }
+ .icons :global(.rv-popover-trigger) { width:100%; }
 }
 @media(max-width:599px) {
- .expanded .navigation { grid-template-columns:repeat(2,minmax(0,1fr)); }
  .tools .guest { width:100%; }
  .guest a { flex:1; }
 }

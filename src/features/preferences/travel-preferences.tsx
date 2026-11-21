@@ -65,7 +65,7 @@ export function PreferenceFields() {
         </label>)}
       </div>
     </fieldset>
-    <p className={styles.note}>{t("These preferences apply to this interface. Displayed prices remain in USD; nationality is independent of language.", "تنطبق هذه التفضيلات على الواجهة. تظل الأسعار المعروضة بالدولار، والجنسية مستقلة عن اللغة.")}</p>
+    <p className={styles.note}>{t("Hotel searches use your nationality and currency. Nationality is independent of language.", "يستخدم البحث عن الفنادق جنسيتك وعملتك. الجنسية مستقلة عن اللغة.")}</p>
   </div>;
 }
 export function TravelPreferences() {

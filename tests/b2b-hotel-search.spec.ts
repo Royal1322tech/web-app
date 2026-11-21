@@ -535,31 +535,24 @@ test.describe("B2B hotel search: pagination (mocked API)", () => {
     await expect(cards).toHaveCount(4);
     await expect(filters.getByRole("button", { name: "Reset filters" })).toBeDisabled();
 
-    // Controls the search has no data for stay usable but never hide a hotel or change the count.
+    // Sections the search has no data for are shown, disabled, and never hide a hotel.
     for (const title of ["Top product", "Customer Review", "Establishment profile", "Amenities", "Price (USD)", "Product packaging"]) {
       const section = filters.locator("details", { has: page.getByText(title, { exact: true }) });
-      await expect(section.locator("summary")).toContainText("Coming soon");
+      await expect(section).toHaveAttribute("data-disabled");
       await section.locator("summary").click();
+      await expect(section.getByText(/Not available for these results\.|Available once prices are confirmed\./)).toBeVisible();
     }
-    await filters.getByRole("checkbox", { name: "Luxury Collection" }).first().check();
-    await filters.getByRole("radio", { name: "Very Good 4+" }).check();
-    await filters.getByRole("checkbox", { name: "Business Hotels" }).check();
-    await filters.getByRole("checkbox", { name: "Pool" }).check();
+    await expect(filters.getByRole("checkbox", { name: "Business Hotels" })).toBeDisabled();
+    await expect(filters.getByRole("radio", { name: "Very Good 4+" })).toBeDisabled();
+    await expect(filters.getByRole("checkbox", { name: "Pool" })).toBeDisabled();
     await expect(filters.getByRole("checkbox", { name: "Gym" })).toBeHidden();
     await filters.getByRole("button", { name: "View More" }).click();
-    await filters.getByRole("checkbox", { name: "Gym" }).check();
+    await expect(filters.getByRole("checkbox", { name: "Gym" })).toBeDisabled();
     await expect(filters.getByRole("button", { name: "View Less" })).toHaveAttribute("aria-expanded", "true");
-    await filters.getByLabel("Min.").fill("100");
-    await filters.getByLabel("Max.").fill("50");
-    await expect(filters.getByRole("alert")).toHaveText("Minimum must not exceed maximum.");
-    await filters.getByRole("radio", { name: "With Package" }).check();
+    await expect(filters.getByLabel("Min.")).toBeDisabled();
+    await expect(filters.getByRole("radio", { name: "With Package" })).toBeDisabled();
     await expect(cards).toHaveCount(4);
-    await expect(page.getByText(/hotels on this page match/)).toHaveCount(0);
-    expect(await page.locator("[aria-controls=api-hotel-filters]").evaluate((element) => element.textContent)).not.toMatch(/\d/);
-    await filters.getByRole("button", { name: "Reset filters" }).click();
-    await expect(filters.getByRole("checkbox", { name: "Pool" })).not.toBeChecked();
-    await expect(filters.getByLabel("Min.")).toHaveValue("");
-    await expect(filters.getByRole("radio", { name: "All", exact: true }).last()).toBeChecked();
+    await expect(filters.getByText(/Coming soon|Preview/i)).toHaveCount(0);
     // No price amount appears anywhere while prices are unverified.
     await expect(page.locator("[data-price=verified]")).toHaveCount(0);
   });
@@ -576,7 +569,7 @@ test.describe("B2B hotel search: pagination (mocked API)", () => {
     const filters = page.getByRole("group", { name: "Hotel filters" });
     const price = filters.locator("details", { has: page.getByText("Price (USD)", { exact: true }) });
     await expect(price).toHaveAttribute("open", "");
-    await expect(price.locator("summary")).not.toContainText("Coming soon");
+    await expect(price).not.toHaveAttribute("data-disabled");
     await price.getByLabel("Max.").fill("200");
     await expect(page.locator("[data-live-hotel]")).toHaveCount(1);
     await expect(page.locator("[data-live-hotel] h3")).toHaveText("Low");

@@ -22,7 +22,7 @@ export function MyGroupRequestsPage() {
   return (
     <Workspace title={t("My Group Requests", "طلبات مجموعاتي")}>
       <div className="group-list__intro">
-        <p>{t("Track the status of your group requests.", "تابع حالة طلبات مجموعاتك.")} <span className="group-list__legend">{t("Sample requests", "طلبات نموذجية")}</span> {t("are illustrative examples, and demo requests stay in this session. None of them have been sent to Royal Vacation.", "هي أمثلة توضيحية، والطلبات التجريبية تبقى في هذه الجلسة. لم يُرسل أي منها إلى رويال فاكيشن.")}</p>
+        <p>{t("Track the status of your group requests.", "تابع حالة طلبات مجموعاتك.")} <span className="group-list__legend">{t("Example requests", "طلبات مثال")}</span> {t("are for illustration, and requests you save stay in this browser. None of them have been sent to Royal Vacation.", "للتوضيح فقط، والطلبات التي تحفظها تبقى في هذا المتصفح. لم يُرسل أي منها إلى رويال فاكيشن.")}</p>
         {newRequest}
       </div>
       {!groupRequests.length ? (

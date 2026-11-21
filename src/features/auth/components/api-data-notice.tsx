@@ -15,7 +15,7 @@ export function ApiDataNotice() {
   if (!partial.has(pathname.replace(/\/$/, "") || "/")) return null;
   return (
     <p className="api-data-notice" role="note">
-      {t("Your company details come from your account. Bookings and other activity on this page are sample data.", "بيانات شركتك مأخوذة من حسابك. الحجوزات والأنشطة الأخرى في هذه الصفحة بيانات تجريبية.")}
+      {t("Your company details come from your account. Other activity shown here is for illustration.", "بيانات شركتك مأخوذة من حسابك. الأنشطة الأخرى المعروضة هنا للتوضيح فقط.")}
     </p>
   );
 }

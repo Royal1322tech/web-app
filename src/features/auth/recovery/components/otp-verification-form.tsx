@@ -143,13 +143,13 @@ export function OtpVerificationForm() {
         <p role="status" className={styles.notice}>
           {text(
             pending
-              ? "Verification is not connected yet. No code has been sent or verified."
+              ? "Online verification isn't available yet. No code has been sent or checked."
               : "Recovery service unavailable",
           )}
         </p>
         {pending && (
           <Link to="/reset-password" className="button button--outline">
-            {text("Continue to reset demo")}
+            {text("Continue to reset")}
           </Link>
         )}
       </form>

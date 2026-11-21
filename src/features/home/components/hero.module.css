@@ -80,18 +80,6 @@
 :global([dir="rtl"]) .eyebrow { letter-spacing: 0; }
 :global([dir="rtl"]) .tagline { letter-spacing: 0; line-height: 1.25; }
 
-/* The pause control, aligned with the bottom of the copy. */
-.meta {
-  position: absolute;
-  z-index: 3;
-  inset-block-end: calc(var(--overlap) + 28px);
-  inset-inline-end: max(24px, (100% - 1280px) / 2);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.toggle { flex: none; margin-inline-start: auto; }
-
 @keyframes cinematic-drift { from { transform: scale(1.015); } to { transform: scale(1.055); } }
 
 /* Tablet: the header collapses to one row, so the copy can sit higher. */
@@ -100,23 +88,15 @@
   .copy { padding-inline: 22px; }
   .copy > * { max-width: 560px; }
 }
-/* Phones: the control sits in its own row under the copy instead of floating beside it. */
+/* Phones. */
 @media (max-width: 599px) {
   .hero { min-height: 0; }
   .headerWrap { padding-top: 12px; }
   .slide img { object-position: center; }
-  .copy { padding-block: 92px 6px; padding-inline: 18px; }
+  .copy { padding-block: 92px 28px; padding-inline: 18px; }
   .eyebrow { display: none; }
   .tagline { font-size: clamp(28px, 8.2vw, 34px); }
   .lede { margin-top: 10px; font-size: 15px; line-height: 1.55; }
-  .meta {
-    position: relative;
-    inset: auto;
-    width: var(--page-width);
-    margin: 0 auto 14px;
-    padding-inline: 18px;
-    justify-content: space-between;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   .slide { transition: none; }

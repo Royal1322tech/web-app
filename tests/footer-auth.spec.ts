@@ -57,7 +57,7 @@ test("footer hotel CTA uses the public login while signed out and hotel search a
   const footer = page.locator("footer");
   const cta = footer.getByRole("link", { name: "استكشف الفنادق" });
   await expect(cta).toHaveAttribute("href", "/login");
-  await expect(footer.getByText(/قريبًا/)).toBeVisible();
+  await expect(footer.getByText(/في الطريق/)).toBeVisible();
   await expect(footer.locator('a[href*="play.google"], a[href*="apps.apple"]')).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
 

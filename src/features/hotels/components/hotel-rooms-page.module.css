@@ -1,10 +1,6 @@
 /* Hotel rooms → price check → review. Existing tokens; gold is reserved for stars and the price-change moment. */
 .page { --rv-gold: #b7731e; --rv-navy: #02143c; display: grid; gap: var(--space-6); min-width: 0; color: var(--navy); }
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.back { display: inline-flex; align-items: center; gap: var(--space-2); justify-self: start; min-height: 44px; color: var(--primary); font-weight: var(--weight-semibold); text-decoration: none; }
-.back:hover { text-decoration: underline; text-underline-offset: 3px; }
-.back svg { width: 16px; height: 16px; }
-:global([dir="rtl"]) .back svg { rotate: 180deg; }
 
 /* Header */
 /* Hotel header: the same 16:10 frame and neutral placeholder as the search cards. */
@@ -163,3 +159,29 @@
 @media (prefers-reduced-motion: reduce) {
   .shimmer, .spinner { animation: none; }
 }
+
+/* Entry to the Reduce Price request: a navy promotional band with a gold accent. */
+.priceCta { position: relative; isolation: isolate; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-4) var(--space-5); overflow: hidden; padding: clamp(18px, 2.4vw, 26px) clamp(18px, 3vw, 32px); border-radius: 18px; background: linear-gradient(120deg, #02143c 0%, #0b2d63 62%, #12407f 100%); color: #fff; box-shadow: 0 18px 36px -24px #02143c99; }
+.priceCta::after { content: ""; position: absolute; inset-block: -40%; inset-inline-end: -8%; z-index: -1; width: 280px; border-radius: 50%; background: radial-gradient(circle, #b7731e40 0%, transparent 68%); }
+.priceCtaIcon { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 16px; background: linear-gradient(145deg, #d99a3f, #b7731e); color: #fff; box-shadow: 0 8px 18px -8px #b7731ecc; }
+.priceCtaIcon svg { width: 28px; height: 28px; stroke-width: 2; }
+.priceCtaText { display: grid; gap: 4px; min-width: 0; }
+.priceCtaText h2 { margin: 0; color: #fff; font-size: clamp(18px, 1.8vw, 22px); font-weight: var(--weight-heavy); line-height: 1.25; }
+.priceCtaText p { margin: 0; color: #d6e0ef; font-size: 14.5px; line-height: 1.5; }
+.priceCtaButton { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 50px; padding: 0 24px; border-radius: 999px; background: #fff; color: #02143c; font-size: 15px; font-weight: var(--weight-heavy); text-decoration: none; white-space: nowrap; box-shadow: 0 6px 16px -8px #00000066; transition: background-color 150ms ease, color 150ms ease, transform 150ms ease, box-shadow 150ms ease; }
+.priceCtaButton svg { width: 18px; height: 18px; transition: translate 150ms ease; }
+:global([dir="rtl"]) .priceCtaButton svg { rotate: 180deg; }
+.priceCtaButton:hover { background: #fbf3e7; color: #7a4a0f; box-shadow: 0 10px 22px -10px #00000080; }
+.priceCtaButton:hover svg { translate: 3px 0; }
+:global([dir="rtl"]) .priceCtaButton:hover svg { translate: -3px 0; }
+.priceCtaButton:active { transform: translateY(1px); box-shadow: 0 3px 8px -6px #00000080; }
+.priceCtaButton:focus-visible { outline: 3px solid #f1cd8b; outline-offset: 3px; }
+@media (max-width: 767px) {
+  .priceCta { grid-template-columns: auto minmax(0, 1fr); }
+  .priceCtaButton { grid-column: 1 / -1; width: 100%; white-space: normal; text-align: center; }
+}
+@media (max-width: 399px) {
+  .priceCta { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+  .priceCtaIcon { width: 48px; height: 48px; border-radius: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { .priceCtaButton, .priceCtaButton svg { transition: none; } .priceCtaButton:active { transform: none; } }

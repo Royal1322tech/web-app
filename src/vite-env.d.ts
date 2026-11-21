@@ -10,6 +10,8 @@ interface ImportMetaEnv {
   readonly VITE_AUTH_COMPANY_ID_ENTRY?: string;
   /** "api" sends hotel searches to the B2C search API; anything else keeps the sample catalogue. */
   readonly VITE_HOTEL_SEARCH_MODE?: string;
+  /** "server" sends the sidebar filters with the hotel search; anything else filters the loaded page. */
+  readonly VITE_HOTEL_SEARCH_FILTERS?: string;
 }
 interface ImportMeta {
   readonly env: ImportMetaEnv;

@@ -34,7 +34,7 @@ test("guests can reach and refresh the public general contact page", async ({ pa
   const requests: string[] = [];
   page.on("request", request => requests.push(request.url()));
   await page.getByRole("button", { name: "Prepare enquiry", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("Local preview ready — not sent");
+  await expect(page.getByRole("status")).toContainText("Request ready — not sent yet");
   expect(requests).toEqual([]);
   await expect(page.getByRole("complementary").locator('a[href="https://wa.me/201070724143"]')).toBeVisible();
   await expect(page.getByRole("link", { name: "royal.travel@royalvacation.online" })).toHaveAttribute("href", "mailto:royal.travel@royalvacation.online");

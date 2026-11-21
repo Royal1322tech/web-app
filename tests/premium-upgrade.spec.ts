@@ -13,7 +13,7 @@ const booking = (id: string) => bookings.find((item) => item.id === id)!;
 const noOverflow = async (page: Page) => expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
 
 test.describe("home services", () => {
-  test("shows seven distinct cards, with Flights and Apartment Rentals marked Coming Soon", async ({ page }) => {
+  test("shows seven distinct cards; Flights and Apartment Rentals say they are planned, with no badge or link", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await visit(page, "/");
     const section = page.locator('section[aria-labelledby="services-title"]');
@@ -27,7 +27,8 @@ test.describe("home services", () => {
     expect(new Set(images).size).toBe(7);
     for (const name of ["Flights", "Apartment Rentals"]) {
       const card = cards.filter({ has: page.getByRole("heading", { name, exact: true }) });
-      await expect(card).toContainText("Coming Soon");
+      await expect(card).toContainText("planned for a future release");
+      await expect(card).not.toContainText("Coming Soon");
       await expect(card.locator("a, button")).toHaveCount(0);
     }
     await expect(cards.filter({ hasText: "Hotel Reservations" }).getByRole("link")).toHaveAttribute("href", "/search");
@@ -35,12 +36,12 @@ test.describe("home services", () => {
     await expect(cards.filter({ hasText: "Airport Transfers" }).getByRole("link")).toHaveAttribute("href", "/contact?subject=airport-transfers");
   });
 
-  test("Arabic shows the translated Coming Soon label", async ({ page }) => {
+  test("Arabic: the services are translated and no Coming Soon badge is shown", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("royal-vacation.locale", "ar"));
     await visit(page, "/");
     const section = page.locator('section[aria-labelledby="services-title"]');
     await expect(section.getByRole("heading", { name: "الطيران", exact: true })).toBeVisible();
-    await expect(section.getByText("قريبًا", { exact: true })).toHaveCount(2);
+    await expect(section.getByText("قريبًا", { exact: true })).toHaveCount(0);
     await noOverflow(page);
   });
 });
@@ -100,12 +101,11 @@ test.describe("car rental", () => {
   test.describe("hero carousel", () => {
     const activeSrc = (page: Page) => page.locator('.rental-hero__slide[data-active="true"] img').getAttribute("src");
 
-    test("crossfades by itself with one pause control, using images distinct from the cards", async ({ page }) => {
+    test("crossfades by itself with no controls, using images distinct from the cards", async ({ page }) => {
       await visit(page, "/car-rental");
       const hero = page.locator(".rental-hero--carousel");
       await expect(hero.locator("a")).toHaveCount(0);
-      await expect(hero.locator("button")).toHaveCount(1);
-      await expect(hero.getByRole("button", { name: "Pause image rotation" })).toBeVisible();
+      await expect(hero.locator("button")).toHaveCount(0);
       await expect(hero.locator(".rental-hero__slide")).toHaveCount(4);
       await expect(hero.getByRole("heading", { level: 1 })).toHaveText("Car Rental for your clients");
       const before = await hero.boundingBox();
@@ -238,7 +238,7 @@ test.describe("invoices", () => {
     await visit(page, "/invoices");
     const cards = page.locator(".invoice-list-card");
     await expect(cards).toHaveCount(3);
-    await expect(cards.first()).toContainText("Demo preview");
+    await expect(cards.first()).toContainText("Example");
     await expect(page.locator(".invoice-list")).not.toContainText("DEMO-1002");
   });
 });

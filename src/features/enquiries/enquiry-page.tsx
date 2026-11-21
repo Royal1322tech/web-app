@@ -139,7 +139,7 @@ function GeneralEnquiryPage({ group, publicVisitor, saveGroupRequest }: { group:
         </nav>
       </>}
       {group && <p className={styles.eyebrow}>{t("ROYAL VACATION · AGENCY ENQUIRIES", "رويال فاكيشن · استفسارات الوكالات")}</p>}
-      {group && <><h1>{title}</h1><p className={styles.intro}>{t("Bring your group’s travel requirements together in one clear request preview.", "اجمع متطلبات سفر مجموعتك في معاينة طلب واحدة واضحة.")}</p></>}
+      {group && <><h1>{title}</h1><p className={styles.intro}>{t("Bring your group’s travel requirements together in one clear request.", "اجمع متطلبات سفر مجموعتك في طلب واحد واضح.")}</p></>}
       {saveState === "saving" && <GroupRequestSaving />}
       {saveState === "saved" && <GroupRequestSaved reference={savedReference} />}
       {saveState === "failed" && <GroupRequestFailed onRetry={() => { setSaveState("form"); setPreview(true); }} />}
@@ -162,7 +162,7 @@ function GeneralEnquiryPage({ group, publicVisitor, saveGroupRequest }: { group:
 
         <form noValidate className={styles.form} onChange={() => setPreview(false)} onSubmit={handleSubmit(async () => { await Promise.resolve(); setPreview(true); }, () => setPreview(false))}>
           <h2 className={contact.formTitle}>{t("Prepare your enquiry", "جهّز استفسارك")}</h2>
-          <p className={styles.notice}>{t("This form prepares a local preview only. It does not send your message.", "يجهز هذا النموذج معاينة محلية فقط، ولا يرسل رسالتك.")}</p>
+          <p className={styles.notice}>{t("Online sending isn't available yet. Review your details here, then send them to us on WhatsApp or by email.", "الإرسال عبر الإنترنت غير متاح حاليًا. راجع بياناتك هنا ثم أرسلها إلينا عبر واتساب أو البريد الإلكتروني.")}</p>
           <div className={styles.fields}>{fields.map(field => <FormField key={field.key} id={"enquiry-" + field.key} label={field.label} required={field.required} error={errors[field.key]?.message}>
             <div className={contact.inputWrap}>
             <Icon name={field.key === "email" ? "mail" : field.key === "name" ? "user" : field.key === "agency" ? "building" : "document"} />
@@ -180,8 +180,8 @@ function GeneralEnquiryPage({ group, publicVisitor, saveGroupRequest }: { group:
           <FormField id="enquiry-message" label={t("Message", "الرسالة")} required error={errors.message?.message}>
             <textarea placeholder={t("Write your message here…", "اكتب رسالتك هنا…")} id="enquiry-message" className="input" rows={5} required maxLength={2000} aria-invalid={!!errors.message} aria-describedby={errors.message ? "enquiry-message-error" : undefined} {...register("message")} />
           </FormField>
-          <button className={`button button--primary ${contact.send}`} disabled={isSubmitting} type="submit">{isSubmitting ? t("Preparing preview…", "تجهيز المعاينة…") : t("Prepare enquiry", "تجهيز الاستفسار")}<Icon name="arrowRight" /></button>
-          {preview && <section className={styles.preview} role="status"><h2>{t("Local preview ready — not sent", "المعاينة المحلية جاهزة — لم تُرسل")}</h2><p>{getValues("subject")}</p><p>{getValues("message")}</p><>
+          <button className={`button button--primary ${contact.send}`} disabled={isSubmitting} type="submit">{isSubmitting ? t("Preparing…", "جارٍ التجهيز…") : t("Prepare enquiry", "تجهيز الاستفسار")}<Icon name="arrowRight" /></button>
+          {preview && <section className={styles.preview} role="status"><h2>{t("Request ready — not sent yet", "الطلب جاهز — لم يُرسل بعد")}</h2><p>{getValues("subject")}</p><p>{getValues("message")}</p><>
             <div className={contact.sendActions}>
               <a className="button button--outline" href={`${whatsappUrl}?text=${encodeURIComponent(enquiryText())}`} target="_blank" rel="noopener noreferrer"><Icon name="whatsapp" />{t("Send via WhatsApp", "إرسال عبر واتساب")}</a>
               <a className="button button--outline" href={`mailto:${contactEmail}?subject=${encodeURIComponent(getValues("subject"))}&body=${encodeURIComponent(enquiryText())}`}><Icon name="mail" />{t("Send via Email", "إرسال عبر البريد الإلكتروني")}</a>

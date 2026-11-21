@@ -43,7 +43,7 @@ export function BookingRecordCard({ booking, hotel, eager }: { booking: DemoBook
           </div>
           <div className={styles.status}>
             <StatusBadge status={booking.status} />
-            <span className={styles.localStatus}>{t("Local preview", "معاينة محلية")}</span>
+            <span className={styles.localStatus}>{t("Example", "مثال")}</span>
           </div>
         </div>
         <div className={styles.hotel}>

@@ -30,7 +30,7 @@ async function recordRental(page: Page, outcome: "confirmed" | "pending" | "fail
   await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Continue to review booking" }).click();
   await page.getByRole("checkbox", { name: /I have reviewed the cancellation/ }).check();
-  await page.getByRole("link", { name: "Continue to rental payment preview" }).click();
+  await page.getByRole("link", { name: "Continue to payment review" }).click();
   await page.getByLabel("Payment outcome").selectOption(outcome);
   await page.getByRole("button", { name: "Continue to outcome" }).click();
 }
@@ -60,16 +60,16 @@ test("the owner reports a hotel issue that is linked automatically and kept as a
   await page.getByRole("button", { name: "Create ticket", exact: true }).click();
 
   await expect(page).toHaveURL(/\/tickets\/TKT-LOCAL-[A-Z0-9]{6}$/);
-  await expect(page.getByRole("status").filter({ hasText: "Ticket created as a local preview" })).toBeVisible();
-  await expect(page.getByText("Local preview — not sent to Royal Vacation support")).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "Ticket saved in this browser" })).toBeVisible();
+  await expect(page.getByText("Saved in this browser — not sent to Royal Vacation support")).toBeVisible();
   await expect(page.locator(".ticket-header")).toContainText("DEMO-1004");
   await expect(page.locator(".ticket-header .ticket-status")).toHaveText("Open");
-  await expect(page.getByText(/Support · sample reply/)).toHaveCount(0);
+  await expect(page.getByText(/Support · example reply/)).toHaveCount(0);
 
   await page.getByLabel("Add a message").fill("Following up with the companion's passport spelling.");
   await page.getByRole("button", { name: "Add message", exact: true }).click();
   await expect(page.locator(".ticket-messages > li")).toHaveCount(2);
-  await expect(page.getByText("Message added to this local preview. It was not sent.")).toBeVisible();
+  await expect(page.getByText("Message saved in this browser. It wasn't sent.")).toBeVisible();
 
   await page.locator(".ticket-booking").getByRole("link", { name: "View booking details" }).click();
   await expect(page).toHaveURL(/\/bookings\/DEMO-1004$/);
@@ -187,7 +187,7 @@ for (const width of [375, 1440]) {
     await visit(page, "/tickets/TKT-SAMPLE-0001");
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     await expect(page.locator(".ticket-header .ticket-status")).toHaveText("بانتظار ردك");
-    await expect(page.getByText("رد تجريبي", { exact: false }).first()).toBeVisible();
+    await expect(page.getByText("رد مثال", { exact: false }).first()).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     expect((await axe(page)).violations).toEqual([]);
     await visit(page, "/bookings/DEMO-1003/tickets/new");
@@ -299,7 +299,7 @@ for (const locale of ["en", "ar"] as const) {
   });
 }
 
-test("partner video controls stay visible for touch and reduced-motion users", async ({ page }) => {
+test("partner video has no controls and stays on its poster with reduced motion", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await visit(page, "/");
@@ -307,11 +307,9 @@ test("partner video controls stay visible for touch and reduced-motion users", a
   await section.scrollIntoViewIfNeeded();
   const video = section.locator("video");
   await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.paused)).toBe(true);
-  const play = section.getByRole("button", { name: "Play video", exact: true });
-  await expect(play).toBeVisible();
-  expect((await play.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-  await play.tap().catch(() => play.click());
-  await expect(section.getByRole("button", { name: "Pause video", exact: true })).toBeVisible();
+  await expect(section.getByRole("button")).toHaveCount(0);
+  await expect(video).toHaveAttribute("poster", /\.(webp|png)$/);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
 });
 
 test("login keeps the centred card with refined proportions", async ({ page }) => {

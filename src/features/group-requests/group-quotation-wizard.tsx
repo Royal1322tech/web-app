@@ -132,7 +132,7 @@ export function GroupQuotationWizard({ form, preview, onPreviewChange, onSave }:
         onChange={() => onPreviewChange(false)}
         onSubmit={handleSubmit(async () => { await Promise.resolve(); onPreviewChange(true); }, () => onPreviewChange(false))}
       >
-        <p className="wizard-notice">{t("This form prepares a local preview only. It does not send your message.", "يجهز هذا النموذج معاينة محلية فقط، ولا يرسل رسالتك.")}</p>
+        <p className="wizard-notice">{t("Online sending isn't available yet. Review your details here, then send them to us on WhatsApp or by email.", "الإرسال عبر الإنترنت غير متاح حاليًا. راجع بياناتك هنا ثم أرسلها إلينا عبر واتساب أو البريد الإلكتروني.")}</p>
 
         <div className="wizard-step" hidden={step !== 0}>
           {heading(0, t("Where is your group going, and when?", "إلى أين ستسافر مجموعتك ومتى؟"))}
@@ -173,7 +173,7 @@ export function GroupQuotationWizard({ form, preview, onPreviewChange, onSave }:
         </div>
 
         <div className="wizard-step" hidden={step !== 2}>
-          {heading(2, t("Check the details, then prepare your preview.", "راجع التفاصيل ثم جهز المعاينة."))}
+          {heading(2, t("Check the details, then review your request.", "راجع التفاصيل ثم راجع طلبك."))}
           {step === 2 && (
             <div className="wizard-review">
               {review(t("Trip", "الرحلة"), t("Edit trip details", "تعديل تفاصيل الرحلة"), 0, [
@@ -203,15 +203,15 @@ export function GroupQuotationWizard({ form, preview, onPreviewChange, onSave }:
         <div className="wizard-actions">
           {step > 0 && <button type="button" className="button button--outline" onClick={() => goTo((step - 1) as Step)}><Icon name="back" />{t("Back", "رجوع")}</button>}
           {step < 2 && <button type="button" className="button button--primary" onClick={() => void next()}>{t("Next step", "الخطوة التالية")}<Icon name="arrowRight" /></button>}
-          {step === 2 && <button type="submit" className="button button--primary" disabled={isSubmitting}>{isSubmitting ? t("Preparing preview…", "تجهيز المعاينة…") : t("Preview request", "معاينة الطلب")}</button>}
+          {step === 2 && <button type="submit" className="button button--primary" disabled={isSubmitting}>{isSubmitting ? t("Preparing…", "جارٍ التجهيز…") : t("Review request", "مراجعة الطلب")}</button>}
         </div>
 
         {preview && step === 2 && (
           <section className="wizard-preview" role="status">
-            <h2>{t("Local preview ready — not sent", "المعاينة المحلية جاهزة — لم تُرسل")}</h2>
+            <h2>{t("Request ready — not sent yet", "الطلب جاهز — لم يُرسل بعد")}</h2>
             <p>{t("Delivery is unavailable until an approved contact service is connected. No response time or price is promised.", "الإرسال غير متاح حتى ربط خدمة تواصل معتمدة. لا يوجد وعد بمدة رد أو سعر.")}</p>
-            <button type="button" className="button button--primary" onClick={onSave}>{t("Save demo request", "حفظ الطلب التجريبي")}</button>
-            <p>{t("Saves a demo record in this browser session so you can track it in My Group Requests. It is not sent to Royal Vacation.", "يحفظ سجلًا تجريبيًا في جلسة المتصفح هذه لتتابعه في طلبات مجموعاتي. لا يُرسل إلى رويال فاكيشن.")}</p>
+            <button type="button" className="button button--primary" onClick={onSave}>{t("Save request", "حفظ الطلب")}</button>
+            <p>{t("Saves the request in this browser so you can track it in My Group Requests. It isn't sent to Royal Vacation.", "يحفظ الطلب في هذا المتصفح لتتابعه في طلبات مجموعاتي. لا يُرسل إلى رويال فاكيشن.")}</p>
           </section>
         )}
       </form>

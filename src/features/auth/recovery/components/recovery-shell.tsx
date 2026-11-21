@@ -44,7 +44,7 @@ export function RecoveryShell({
         {/* Real sign-in builds: there is no password recovery API yet, so the original screens are a preview. */}
         {apiAuthEnabled && (
           <div className={`availability-notice ${styles.preview}`} role="note">
-            <p>{text("Password recovery isn't available online yet. These screens are a preview: no email is sent and no code is checked.")}</p>
+            <p>{text("Online password reset isn't available yet. Contact Royal Vacation to reset your password.")}</p>
             <Link to="/contact">{text("Contact Royal Vacation to reset your password")}</Link>
           </div>
         )}

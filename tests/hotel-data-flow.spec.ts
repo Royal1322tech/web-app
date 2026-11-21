@@ -148,7 +148,7 @@ test("My Bookings leads with reference, status and stay, and offers booking acti
   await expect(card.getByText("Booking reference")).toBeVisible();
   await expect(card.getByRole("heading", { name: /^DEMO-100\d$/ })).toBeVisible();
   await expect(card.locator(".status-badge")).toBeVisible();
-  await expect(card.getByText("Local preview")).toBeVisible();
+  await expect(card.getByText("Example", { exact: true })).toBeVisible();
   await expect(card.locator('[aria-label="4-star hotel classification"]')).toBeVisible();
   await expect(card).toContainText(/Stay[A-Z][a-z]{2} \d{1,2}, \d{4} – [A-Z][a-z]{2} \d{1,2}, \d{4} · \d+ nights/);
   await expect(card).toContainText("Booking total");
@@ -169,7 +169,7 @@ for (const width of [375, 1440]) {
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     const card = page.locator('article[class*="bookingCard"]').filter({ hasText: "DEMO-1001" }).first();
     await expect(card).toBeVisible();
-    await expect(card.getByText("معاينة محلية")).toBeVisible();
+    await expect(card.getByText("مثال", { exact: true })).toBeVisible();
     await expect(card.getByRole("link", { name: "إدارة الحجز" })).toBeVisible();
     const image = card.locator('[class*="cover"]').first();
     const imageBox = await image.boundingBox();

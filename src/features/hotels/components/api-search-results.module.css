@@ -44,7 +44,7 @@
 .section[open] > summary .chevron { rotate: 180deg; }
 .section > summary:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 35%, transparent); outline-offset: 2px; border-radius: var(--rounded-sm, 4px); }
 .sectionBody { display: grid; gap: 6px; padding-block-end: var(--space-3); min-width: 0; }
-.soon { flex: none; padding: 2px 8px; border-radius: var(--rounded-pill); background: #f1f4f8; color: var(--muted); font-size: 11px; font-weight: var(--weight-semibold); }
+.section[data-disabled] > summary { color: var(--muted); }
 .sectionNote { margin: 0; color: var(--muted); font-size: var(--font-size-xs); line-height: 1.45; }
 .fieldError { margin: 0; color: var(--danger, #b42318); font-size: var(--font-size-xs); }
 

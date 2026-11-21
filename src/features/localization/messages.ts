@@ -24,8 +24,8 @@ export const arabicMessages: Record<string, string> = {
   "Follow each step from room selection to voucher details, with clear status updates.":
     "تابع كل خطوة من اختيار الغرفة إلى تفاصيل القسيمة مع تحديثات واضحة للحالة.",
   "Booking Updates & Reports": "تحديثات وتقارير الحجوزات",
-  "Review booking timelines and transaction records. Live updates and reporting require backend integration.":
-    "راجع الجداول الزمنية للحجوزات وسجلات المعاملات. تتطلب التحديثات والتقارير المباشرة الربط بالخادم.",
+  "Review booking timelines and transaction records in one place.":
+    "راجع الجداول الزمنية للحجوزات وسجلات المعاملات في مكان واحد.",
   "Review booking conditions, status updates and voucher details at each step.":
     "راجع شروط الحجز وتحديثات الحالة وتفاصيل القسيمة في كل خطوة.",
   "Your agency workspace is ready": "مساحة عمل وكالتك جاهزة",

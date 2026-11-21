@@ -117,7 +117,7 @@ function TicketForm({ booking, categories }: { booking: TicketBookingContext; ca
           </div>
           <p className="ticket-notice">
             <Icon name="info" />
-            {t("Frontend preview: the ticket is kept in this browser session only and is not sent to Royal Vacation support.", "معاينة للواجهة: تُحفظ التذكرة في جلسة المتصفح هذه فقط ولا تُرسل إلى دعم رويال فاكيشن.")}
+            {t("Online support tickets aren't available yet. This ticket stays in this browser and isn't sent to Royal Vacation support.", "تذاكر الدعم عبر الإنترنت غير متاحة حاليًا. تبقى هذه التذكرة في هذا المتصفح ولا تُرسل إلى دعم رويال فاكيشن.")}
           </p>
           <FormField id="ticket-category" label={t("Issue category", "فئة المشكلة")} required error={errors.category?.message}>
             <select id="ticket-category" className="input" aria-invalid={!!errors.category} aria-describedby={described("category")} {...register("category")}>
@@ -134,7 +134,7 @@ function TicketForm({ booking, categories }: { booking: TicketBookingContext; ca
           <FileField
             id="ticket-attachment"
             label={t("Supporting file (optional)", "ملف داعم (اختياري)")}
-            help={t("JPG, PNG or PDF · up to 5 MB · only the file name is kept in this preview", "JPG أو PNG أو PDF · حتى ٥ ميغابايت · يُحفظ اسم الملف فقط في هذه المعاينة")}
+            help={t("JPG, PNG or PDF · up to 5 MB · only the file name is kept", "JPG أو PNG أو PDF · حتى ٥ ميغابايت · يُحفظ اسم الملف فقط")}
             error={errors.attachment?.message}
             accept={supportAttachmentAccept}
             chooseLabel={t("Choose a file", "اختر ملفًا")}

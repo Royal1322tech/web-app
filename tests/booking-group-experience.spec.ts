@@ -117,14 +117,14 @@ test.describe("group requests", () => {
     page.on("request", (request) => { if (request.method() !== "GET") writes.push(request.url()); });
     await visit(page, "/group-quotation");
     await fillGroupForm(page);
-    const save = page.getByRole("button", { name: "Save demo request" });
+    const save = page.getByRole("button", { name: "Save request" });
     await save.dblclick();
-    await expect(page.getByRole("status").filter({ hasText: "Saving your demo request" })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "Saving your request" })).toBeVisible();
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
 
-    await expect(page.getByRole("heading", { name: "Your demo group request is saved" })).toBeFocused();
+    await expect(page.getByRole("heading", { name: "Your group request is saved" })).toBeFocused();
     const result = page.locator(".group-result");
-    await expect(result).toContainText("It was not sent to Royal Vacation");
+    await expect(result).toContainText("wasn't sent to Royal Vacation");
     await expect(result.locator(".group-result__next li")).toHaveCount(3);
     await expect(result).toContainText("not a hotel booking reference");
     await expect(result).not.toContainText(/24 hours|receive an email|submitted/i);
@@ -166,7 +166,7 @@ test.describe("group requests", () => {
     await expect(page.getByRole("link", { name: "New Group Request" })).toHaveAttribute("href", "/group-quotation");
     const rows = page.locator("tbody tr");
     await expect(rows).toHaveCount(5);
-    for (const row of await rows.all()) await expect(row).toContainText("Sample request");
+    for (const row of await rows.all()) await expect(row).toContainText("Example request");
     for (const label of ["Under Review", "Quotation Sent", "In Discussion", "Closed"]) await expect(rows.filter({ hasText: label }).first()).toBeVisible();
     await page.getByRole("button", { name: "Next" }).click();
     await expect(page.getByText("Page 2 / 2")).toBeVisible();
@@ -203,7 +203,7 @@ test.describe("group requests", () => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await visit(page, "/group-quotation");
     await fillGroupForm(page);
-    await page.getByRole("button", { name: "Save demo request" }).click();
+    await page.getByRole("button", { name: "Save request" }).click();
     await expect(page.locator(".group-saving__ring")).toBeVisible();
     await expect(page.locator(".group-saving img")).toHaveCSS("position", "absolute");
     expect(await page.locator(".group-saving__ring").evaluate((ring) => getComputedStyle(ring, "::before").animationName)).toBe("none");
@@ -336,12 +336,12 @@ for (const [locale, width] of [["en", 1440], ["ar", 390]] as const) {
     await visit(page, "/group-quotation");
     if (locale === "en") {
       await fillGroupForm(page);
-      await page.getByRole("button", { name: "Save demo request" }).click();
+      await page.getByRole("button", { name: "Save request" }).click();
     }
     if (locale === "ar") {
       await selectLanguage(page, "ar");
       await completeGroupWizard(page);
-      await page.getByRole("button", { name: "حفظ الطلب التجريبي" }).click();
+      await page.getByRole("button", { name: "حفظ الطلب" }).click();
     }
     await expect(page.locator(".group-saving")).toBeVisible();
     await expect(page.locator(".group-saving__ring")).toBeInViewport();
@@ -364,10 +364,10 @@ for (const [locale, width] of [["en", 1440], ["ar", 390]] as const) {
 
 test("sample requests look realistic, vary and are never presented as real submissions", async ({ page }) => {
   await visit(page, "/group-requests");
-  await expect(page.locator(".group-list__legend")).toHaveText("Sample requests");
+  await expect(page.locator(".group-list__legend")).toHaveText("Example requests");
   await expect(page.locator("main")).not.toContainText(/Sample Agent|Sample Agency|Sample group request/);
   await expect(page.locator("tbody tr").filter({ hasText: "GRP-SAMPLE-0005" })).toContainText("Luxor & Aswan");
   await page.locator("tbody tr").filter({ hasText: "GRP-SAMPLE-0005" }).locator("a").click();
   const detail = page.locator(".group-detail");
-  for (const value of ["Luxor & Aswan", "Nile Gate Tours", "Sample request", "Not sent to Royal Vacation", "step-free rooms"]) await expect(detail).toContainText(value);
+  for (const value of ["Luxor & Aswan", "Nile Gate Tours", "Example request", "Not sent to Royal Vacation", "step-free rooms"]) await expect(detail).toContainText(value);
 });

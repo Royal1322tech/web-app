@@ -16,7 +16,7 @@ const formatMoney = formatInvoiceMoney;
 
 function Lifecycle({ view }: { view: InvoiceView }) {
   const { t } = useLocale();
-  if (view.source === "demo-preview") return <span className="hotel-demo-indicator">{t("Demo preview", "معاينة تجريبية")}</span>;
+  if (view.source === "demo-preview") return <span className="hotel-demo-indicator">{t("Example", "مثال")}</span>;
   return <span className={`status-badge status-badge--${view.lifecycle}`}>{view.lifecycle === "issued" ? t("Issued", "صادر") : t("Draft", "مسودة")}</span>;
 }
 
@@ -40,7 +40,7 @@ export function InvoiceHistoryPage() {
     return view ? [{ booking, view }] : [];
   }).filter(({ booking, view }) => `${booking.id} ${booking.agencyReference} ${view.reference}`.toLowerCase().includes(query.toLowerCase()));
   return <Workspace title={t("Invoice History", "سجل الفواتير")}>
-    <p className="workspace-intro">{t("Invoices for confirmed and cancelled bookings. Demo previews are built from demonstration booking records and are not issued documents.", "فواتير الحجوزات المؤكدة والملغاة. تُعد المعاينات التجريبية من سجلات حجز تجريبية وليست مستندات صادرة.")}</p>
+    <p className="workspace-intro">{t("Invoices for confirmed and cancelled bookings. Examples are built from example bookings and aren't issued documents.", "فواتير الحجوزات المؤكدة والملغاة. الأمثلة مبنية على حجوزات مثال وليست مستندات صادرة.")}</p>
     <label className="invoice-search">{t("Search invoices", "البحث في الفواتير")}<input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("Invoice or booking reference", "مرجع الفاتورة أو الحجز")} /></label>
     {invoices.length ? <div className="invoice-list">{invoices.map(({ booking, view }) => {
       const hotel = hotels.find((item) => item.id === booking.hotelId);
@@ -90,7 +90,7 @@ export function AccountingReviewPage() {
   const { records } = useDemo();
   const items = records.filter((booking) => booking.paymentReview);
   return <Workspace title={t("Accounting Review", "مراجعة الحسابات")}>
-    <p className="accounting-local-note">{t("Frontend preview only. No payment approval, reconciliation or settlement is performed here.", "معاينة للواجهة فقط. لا تتم الموافقة على الدفع أو المطابقة أو التسوية هنا.")}</p>
+    <p className="accounting-local-note">{t("No payment approval, reconciliation or settlement happens on this page.", "لا تتم الموافقة على الدفع أو المطابقة أو التسوية في هذه الصفحة.")}</p>
     <section className="workspace-card accounting-status-key" aria-labelledby="accounting-status-title"><h2 id="accounting-status-title">{t("Review status definitions", "تعريفات حالات المراجعة")}</h2><ul>{reviewStatuses.map((status) => <li key={status}><span className="status-badge">{reviewStatusLabel(status, t)}</span></li>)}</ul></section>
     {items.length ? <section className="workspace-card"><h2>{t("Payment review records", "سجلات مراجعة الدفع")}</h2><ul className="accounting-records">{items.map((booking) => <li key={booking.id}><Link to={`/bookings/${booking.id}`}>{booking.id}</Link><span>{reviewStatusLabel(booking.paymentReview!.status, t)}</span>{booking.paymentReview!.submittedAt && <time dateTime={booking.paymentReview!.submittedAt}>{formatDateTime(booking.paymentReview!.submittedAt, locale)}</time>}{booking.paymentReview!.amountMinor !== undefined && booking.paymentReview!.currency && <bdi>{formatMoney(booking.paymentReview!.amountMinor, booking.paymentReview!.currency, locale)}</bdi>}</li>)}</ul></section> : <SystemState title={t("No payment reviews", "لا توجد مراجعات دفع")} description={t("No payment review records have been supplied for this workspace.", "لم تُقدم سجلات مراجعة دفع لمساحة العمل هذه.")} />}
   </Workspace>;

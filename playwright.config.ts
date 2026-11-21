@@ -28,12 +28,14 @@ export default defineConfig({
           { port: 4175, outDir: "dist-auth-blocked", companyIdEntry: "" },
           // tests/b2b-hotel-search.spec.ts: real sign-in plus the company (B2B) hotel search.
           { port: 4176, outDir: "dist-hotel-api", companyIdEntry: "true", hotelSearch: "api" },
-        ].map(({ port, outDir, companyIdEntry, hotelSearch = "" }) => ({
+          // tests/b2b-hotel-filters-server.spec.ts: the same, with the sidebar filters sent to the search.
+          { port: 4177, outDir: "dist-hotel-filters", companyIdEntry: "true", hotelSearch: "api", searchFilters: "server" },
+        ].map(({ port, outDir, companyIdEntry, hotelSearch = "", searchFilters = "" }) => ({
           command: `npx vite build --outDir ${outDir} --emptyOutDir && npx vite preview --outDir ${outDir} --host 127.0.0.1 --port ${port} --strictPort`,
           url: `http://127.0.0.1:${port}`,
           reuseExistingServer: false,
           timeout: 120000,
-          env: { VITE_AUTH_MODE: "api", VITE_AUTH_COMPANY_ID_ENTRY: companyIdEntry, VITE_HOTEL_SEARCH_MODE: hotelSearch, VITE_API_BASE_URL: "https://api.royal.test" },
+          env: { VITE_AUTH_MODE: "api", VITE_AUTH_COMPANY_ID_ENTRY: companyIdEntry, VITE_HOTEL_SEARCH_MODE: hotelSearch, VITE_HOTEL_SEARCH_FILTERS: searchFilters, VITE_API_BASE_URL: "https://api.royal.test" },
         })),
       ],
 });

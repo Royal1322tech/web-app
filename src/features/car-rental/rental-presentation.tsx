@@ -26,7 +26,7 @@ export const vehicleImages: Record<string, string> = {
 export function VehiclePhoto({ vehicle, className = "" }: { vehicle: DemoVehicle; className?: string }) {
   const { t } = useLocale();
   return <figure className={`rental-vehicle-photo ${className}`}>
-    <img src={vehicleImages[vehicle.id]} alt={t("Illustrative vehicle photograph, not a guaranteed rental model", "صورة توضيحية للسيارة وليست ضمانًا لطراز التأجير")} width="1536" height="1024" loading="lazy" />
+    <img src={vehicleImages[vehicle.id]} alt={t("Vehicle photo for reference; the exact model may vary", "صورة السيارة للاسترشاد؛ قد يختلف الطراز الفعلي")} width="1536" height="1024" loading="lazy" />
   </figure>;
 }
 export function VehicleFacts({ vehicle }: { vehicle: DemoVehicle }) {

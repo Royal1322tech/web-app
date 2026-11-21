@@ -84,7 +84,7 @@ export function ForgotPasswordForm() {
         {help && (
           <p id="recovery-help" className={styles.notice}>
             {text(
-              "Account recovery help is not connected yet. Please use your existing account support channel.",
+              "Online account recovery isn't available yet. Please contact your account support channel.",
             )}
           </p>
         )}
@@ -95,13 +95,13 @@ export function ForgotPasswordForm() {
         <p role="status" className={styles.notice}>
           {pending
             ? text(
-                "Password recovery is not connected yet. No email has been sent.",
+                "Online password recovery isn't available yet. No email has been sent.",
               )
             : text("Recovery service unavailable")}
         </p>
         {pending && (
           <Link to="/verify-otp" className="button button--outline">
-            {text("Continue to verification demo")}
+            {text("Continue to verification")}
           </Link>
         )}
       </form>

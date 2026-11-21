@@ -183,7 +183,7 @@ export function WalletPage() {
   const [insufficient, setInsufficient] = useState(false);
   return (
     <Workspace title={t("Wallet", "المحفظة")} accountNavigation={false}>
-      <p className="fine-print">{t("Account figures are informational and are not connected to a live balance.", "أرقام الحساب للمعلومات فقط ولا ترتبط برصيد مباشر.")}</p>
+      <p className="fine-print">{t("Figures shown are examples and don't reflect a live balance.", "الأرقام المعروضة أمثلة ولا تعكس رصيدًا فعليًا.")}</p>
       <StatePreview
         emptyTitle={t("No credit information", "لا توجد بيانات ائتمانية")}
       >
@@ -227,14 +227,14 @@ export function WalletPage() {
             </div>
             {/* Demo-only control: kept available but visually separate from real account actions. */}
             <div className="demo-tools">
-              <span className="demo-tools__label">{t("Demo", "تجريبي")}</span>
+              <span className="demo-tools__label">{t("Example", "مثال")}</span>
               <button
                 type="button"
                 className="text-button"
                 aria-pressed={insufficient}
                 onClick={() => setInsufficient(!insufficient)}
               >
-                {t("Preview insufficient balance", "معاينة الرصيد غير الكافي")}
+                {t("Show insufficient-balance example", "عرض مثال الرصيد غير الكافي")}
               </button>
             </div>
             {insufficient && (
@@ -248,7 +248,7 @@ export function WalletPage() {
           </section>
           <aside className="workspace-card">
             <p className="workspace-eyebrow">
-              {t("CREDIT USAGE · DEMO", "استخدام الائتمان · تجريبي")}
+              {t("CREDIT USAGE · EXAMPLE", "استخدام الائتمان · مثال")}
             </p>
             <h2>
               <bdi>
@@ -256,7 +256,7 @@ export function WalletPage() {
               </bdi>
             </h2>
             <meter
-              aria-label={t("Demo credit used", "الائتمان التجريبي المستخدم")}
+              aria-label={t("Example credit used", "الائتمان المستخدم (مثال)")}
               min={0}
               max={demoFinance.limit}
               value={demoFinance.used}
@@ -264,7 +264,7 @@ export function WalletPage() {
             />
             <p className="fine-print">
               {t(
-                "37.5% of illustrative credit limit. No real wallet is connected.",
+                "37.5% of the example credit limit.",
                 "٣٧٫٥٪ من حد الائتمان التوضيحي. لا توجد محفظة فعلية متصلة.",
               )}
             </p>

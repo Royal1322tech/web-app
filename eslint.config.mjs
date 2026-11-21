@@ -10,6 +10,7 @@ export default tseslint.config(
       "dist/**",
       "dist-auth-*/**",
       "dist-hotel-api/**",
+      "dist-hotel-filters/**",
       "node_modules/**",
       "playwright-report/**",
       "test-results/**",

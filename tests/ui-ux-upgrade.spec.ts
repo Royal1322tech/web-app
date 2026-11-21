@@ -27,17 +27,17 @@ test.describe("hero carousels", () => {
     expect(interval).toBeGreaterThan(4200);
     expect(interval).toBeLessThan(5000);
 
-    const pause = page.getByRole("button", { name: "Pause image rotation" });
-    await pause.click();
+    // No pause control: the rotation holds still while keyboard focus is in the hero, then resumes.
+    await expect(page.getByRole("button", { name: /image rotation/ })).toHaveCount(0);
+    await page.locator("section[aria-label='Royal Vacation agency platform'] header a").first().focus();
+    await page.keyboard.press("Tab"); // keyboard focus (focus-visible) inside the hero
     const paused = await activeIndex(page, slides);
     await page.waitForTimeout(5500);
     expect(await activeIndex(page, slides)).toBe(paused);
     await expect(page.locator(`${slides}[data-active="true"]`)).toHaveAttribute("data-motion", "false");
 
-    const play = page.getByRole("button", { name: "Play image rotation" });
-    await expect(play).toBeFocused();
-    await page.keyboard.press("Enter");
-    await expect.poll(() => activeIndex(page, slides), { timeout: 7000 }).not.toBe(paused);
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    await expect.poll(() => activeIndex(page, slides), { timeout: 9000 }).not.toBe(paused);
 
     await expect.poll(async () => {
       const sources = await page.locator(`${slides} img`).evaluateAll((images) => images.map((image) => image.getAttribute("src")));
@@ -45,7 +45,7 @@ test.describe("hero carousels", () => {
     }).toBe(true);
   });
 
-  test("Car Rental rotates about every 4000ms without shifting and can pause", async ({ page }) => {
+  test("Car Rental rotates about every 4000ms without shifting and has no controls", async ({ page }) => {
     await visit(page, "/car-rental");
     const hero = page.locator(".rental-hero--carousel");
     // Measure the resting layout: the route entrance can still be on its last sub-pixel frame here.
@@ -62,10 +62,7 @@ test.describe("hero carousels", () => {
     expect(interval).toBeGreaterThan(3700);
     expect(interval).toBeLessThan(4500);
     expect(await hero.boundingBox()).toEqual(before);
-    await page.getByRole("button", { name: "Pause image rotation" }).click();
-    const paused = await activeIndex(page, ".rental-hero__slide");
-    await page.waitForTimeout(4800);
-    expect(await activeIndex(page, ".rental-hero__slide")).toBe(paused);
+    await expect(hero.getByRole("button")).toHaveCount(0);
   });
 
   for (const path of ["/", "/car-rental"]) {
@@ -156,7 +153,7 @@ test.describe("contact", () => {
     await page.getByRole("button", { name: "Prepare enquiry" }).click();
 
     const status = page.getByRole("status");
-    await expect(status).toContainText("Local preview ready — not sent");
+    await expect(status).toContainText("Request ready — not sent yet");
     await expect(status).toContainText("You must complete sending there");
     await expect(status).toContainText("does not send or store your enquiry");
     await expect(status).not.toContainText(/delivered|sent successfully|received/i);

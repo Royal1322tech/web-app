@@ -34,7 +34,28 @@ export interface B2BHotelSearchRequest {
   language: "en" | "ar";
   currency: B2BSearchCurrency;
   guests: { adults: number; children: number[] }[];
+  /** Sent only when server-side filters are switched on (see `serverSearchFilters`). */
+  filters?: B2BSearchFilters;
+  sort?: B2BSearchSort;
 }
+
+/*
+ * Search filters, as in the backend team's example request (2026-11-20):
+ * filters: {hotel_name, area, stars: number[], board: string[], amenities: string[], package_type},
+ * sort: "recommended". On staging (2026-11-20) the API accepted every field (200) but the totals and
+ * hotels did not change, so the filters are not effective yet. They are sent only in builds with
+ * VITE_HOTEL_SEARCH_FILTERS=server; otherwise the sidebar narrows the loaded page.
+ */
+export interface B2BSearchFilters {
+  hotel_name?: string;
+  area?: string;
+  stars?: number[];
+  board?: string[];
+  amenities?: string[];
+  package_type?: "all" | "with" | "without";
+}
+export type B2BSearchSort = "recommended";
+export const serverSearchFilters = import.meta.env?.VITE_HOTEL_SEARCH_FILTERS === "server";
 
 const validPoint = ({ latitude, longitude }: GeoPoint) =>
   Number.isFinite(latitude) && Number.isFinite(longitude) && Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180;

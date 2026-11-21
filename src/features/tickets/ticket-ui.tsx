@@ -15,10 +15,10 @@ export function TicketStatusBadge({ status }: { status: TicketStatus }) {
 export function TicketOriginNote({ ticket }: { ticket: SupportTicket }) {
   const { t } = useLocale();
   return ticket.origin === "sample" ? (
-    <span className="ticket-origin">{t("Sample data", "بيانات تجريبية")}</span>
+    <span className="ticket-origin">{t("Example", "مثال")}</span>
   ) : (
     <span className="ticket-origin ticket-origin--local">
-      {t("Local preview — not sent to Royal Vacation support", "معاينة محلية — لم تُرسل إلى دعم رويال فاكيشن")}
+      {t("Saved in this browser — not sent to Royal Vacation support", "محفوظة في هذا المتصفح — لم تُرسل إلى دعم رويال فاكيشن")}
     </span>
   );
 }
