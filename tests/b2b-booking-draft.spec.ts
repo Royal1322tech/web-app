@@ -17,6 +17,9 @@ const roomsUrl = (rooms = ROOMS) => `${APP}/hotels/rooms/8675779?${new URLSearch
 const profile = { message: "ok", data: { user: { id: 7, name: "Laila Hassan", email: "laila@example.com" }, company: { id: COMPANY, name: "Nile Gate Tours", legal_name: "Nile Gate Tours LLC", display_name: "Nile Gate Tours", status: "approved", account_currency: "USD", preferred_locale: "en", country_code: "EG", city: "Alexandria", address: "1 Corniche Road", business_type: "travel_agency", registration_no: "CR-1", tax_no: null, employee_count: 12 }, membership: { role_code: "company_admin", status: "active" } } };
 const price = { verified: true, selling_price: "108.15", agency_purchase_price: "103.00", currency: "USD", price_on_request: false };
 type Reply = { status?: number; json?: unknown; abort?: boolean; headers?: Record<string, string>; delay?: Promise<void> };
+const CUSTOMER = "9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d";
+/** The company's customers (GET /b2b/customers): one fictional customer. */
+const customers = { current_page: 1, data: [{ id: CUSTOMER, first_name: "Nour", last_name: "Adel", email: "nour@example.test", phone: null, created_at: "2030-11-01T10:00:00+00:00", updated_at: "2030-11-01T10:00:00+00:00" }], last_page: 1, per_page: 20, total: 1 };
 
 async function mockFlow(page: Page, draft: (request: Request, call: number) => Reply, options: { prebook?: Record<string, unknown>; locale?: "en" | "ar" } = {}) {
   const calls: Record<"rooms" | "draft", Request[]> = { rooms: [], draft: [] };
@@ -33,6 +36,7 @@ async function mockFlow(page: Page, draft: (request: Request, call: number) => R
     if (path.endsWith("/rooms")) { calls.rooms.push(request); return route.fulfill({ headers: cors, json: { hotel_hid: 8675779, rooms_token: "a".repeat(48), expires_in_seconds: 900, total: 1, rooms: [{ rate_index: 0, room_name: "Test Room", bedding_type: "double", meal_name: "breakfast", has_breakfast: true, price, selectable: true, booking_enabled: false }] } }); }
     if (path.endsWith("/rooms/select")) return route.fulfill({ headers: cors, json: { selection_token: "b".repeat(48), expires_in_seconds: 600, room_name: "Test Room", price, next_step: "prebook" } });
     if (path.endsWith("/rooms/prebook")) return route.fulfill({ headers: cors, json: { status: "rechecked", review_token: REVIEW, expires_in_seconds: 600, price_changed: false, review_required: true, room_name: "Test Room", price, booking_enabled: false, message: "Room rechecked; review required.", ...options.prebook } });
+    if (path === "/api/v1/b2b/customers" && request.method() === "GET") return route.fulfill({ headers: cors, json: customers });
     if (path === "/api/v1/b2b/bookings/draft") {
       calls.draft.push(request);
       const reply = draft(request, calls.draft.length);
@@ -45,13 +49,17 @@ async function mockFlow(page: Page, draft: (request: Request, call: number) => R
   return calls;
 }
 
-const created: Reply = { status: 201, json: { message: "Booking draft created.", data: { status: "draft" } } };
+const created: Reply = { status: 201, json: { customer_id: CUSTOMER, order_id: "o-1", order_no: "ORD-TEST0000000001", booking_id: "b6f0c1d2-0000-4000-8000-000000000001", booking_no: "HTL-TEST0000000001", status: "draft", currency: "USD", customer_total: "108.15", next_step: "payment_method", payment_collected: false, supplier_booking_created: false } };
 async function toReview(page: Page, rooms = ROOMS) {
   await page.goto(roomsUrl(rooms));
   await page.getByRole("button", { name: "Select room" }).click();
   await expect(page.locator("[data-draft-state=form]")).toBeVisible();
 }
+async function chooseCustomer(page: Page) {
+  await page.locator("[data-customer-picker]").getByRole("radio", { name: "Nour Adel" }).check();
+}
 async function fillNames(page: Page, names: [string, string][]) {
+  await chooseCustomer(page);
   const rows = page.locator("[data-guest]");
   for (let i = 0; i < names.length; i++) {
     await rows.nth(i).getByLabel("First name").fill(names[i][0]);
@@ -84,6 +92,8 @@ test.describe("booking draft (mocked API)", () => {
     await page.getByRole("button", { name: "Create booking draft" }).click();
     await expect(page.getByRole("heading", { name: "Booking Draft Created" })).toBeFocused();
     await expect(page.getByText("A draft is not a confirmed reservation, and no payment has been taken.")).toBeVisible();
+    await expect(page.getByText("HTL-TEST0000000001")).toBeVisible();
+    await expect(page.getByRole("link", { name: "View booking" })).toHaveAttribute("href", "/bookings/b6f0c1d2-0000-4000-8000-000000000001");
     await expect(page.locator("body")).not.toContainText(confirmedWords);
     expect(calls.draft).toHaveLength(1);
     const request = calls.draft[0];
@@ -95,6 +105,7 @@ test.describe("booking draft (mocked API)", () => {
         { first_name: "Mona", last_name: "Said", guest_type: "adult", is_lead: false },
         { first_name: "Youssef", last_name: "Said", guest_type: "child", is_lead: false },
       ],
+      customer_id: CUSTOMER,
     });
     expect(isIdempotencyKey(request.headers()["idempotency-key"])).toBe(true);
     expect(request.headers()["authorization"]).toBe(`Bearer ${TOKEN}`);
@@ -110,6 +121,29 @@ test.describe("booking draft (mocked API)", () => {
     await expect(page.getByRole("heading", { name: "Booking Draft Created" })).toBeVisible();
     expect(calls.draft[0].postDataJSON().guests.map((guest: { is_lead: boolean }) => guest.is_lead)).toEqual([false, false, true, false]);
     await expect(page.locator("[data-guest=r1-c0]").getByLabel("Lead guest")).toHaveCount(0);
+  });
+
+  test("a customer is required: an existing one is chosen, or a new one is sent with the draft", async ({ page }) => {
+    const calls = await mockFlow(page, () => created);
+    await toReview(page);
+    const rows = page.locator("[data-guest]");
+    for (let i = 0; i < 4; i++) { await rows.nth(i).getByLabel("First name").fill(FOUR[i][0]); await rows.nth(i).getByLabel("Last name").fill(FOUR[i][1]); }
+    await page.getByRole("button", { name: "Create booking draft" }).click();
+    await expect(page.getByText("Choose a customer.")).toBeVisible();
+    expect(calls.draft).toHaveLength(0);
+
+    const picker = page.locator("[data-customer-picker]");
+    await picker.getByRole("radio", { name: "New customer" }).check();
+    await picker.getByLabel("First name").fill("Hana");
+    await picker.getByLabel("Last name").fill("Fouad");
+    await page.getByRole("button", { name: "Create booking draft" }).click();
+    await expect(page.getByText("Enter an email or a phone number.")).toBeVisible();
+    await picker.getByLabel("Phone").fill("+201001234567");
+    await page.getByRole("button", { name: "Create booking draft" }).click();
+    await expect(page.getByRole("heading", { name: "Booking Draft Created" })).toBeVisible();
+    const body = calls.draft[0].postDataJSON();
+    expect(body.customer).toEqual({ first_name: "Hana", last_name: "Fouad", phone: "+201001234567" });
+    expect(body).not.toHaveProperty("customer_id");
   });
 
   test("missing names are flagged before anything is sent", async ({ page }) => {
@@ -232,6 +266,8 @@ test.describe("booking draft (mocked API)", () => {
     await page.goto(roomsUrl([{ adults: 1, childAges: [] }]));
     await page.getByRole("button", { name: "اختيار الغرفة" }).click();
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+    await page.locator("[data-customer-picker]").getByRole("radio", { name: "Nour Adel" }).check();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
     const row = page.locator("[data-guest]").first();
     await row.getByLabel("الاسم الأول").fill("ليلى");
     await row.getByLabel("اسم العائلة").fill("حسن");

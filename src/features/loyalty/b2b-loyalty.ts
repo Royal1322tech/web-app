@@ -3,9 +3,11 @@ import { ApiError, apiRequest } from "@/lib/api/client";
 
 /*
  * GET /api/v1/b2b/loyalty: the company's loyalty points (Bearer token, dashboard.view permission).
- * Confirmed on staging (2026-11-21): {company_id, balances: {pending, available}, transactions: [],
- * redemption_enabled: false}. No transaction has been seen yet, so each transaction field is read on
- * its own and anything missing becomes null: nothing is calculated, awarded or invented here.
+ * Contract (backend, ROYAL_TRAVEL_B2B_API_HANDOFF.md §3.10): {company_id, balances: {pending,
+ * available}, transactions: [{id, booking_id, entry_type (booking_earn | booking_release |
+ * booking_void | manual_credit | manual_debit), points (signed), balance_bucket (pending | available),
+ * note, created_at}], redemption_enabled}. Each field is read on its own and anything missing becomes
+ * null: nothing is calculated, awarded or invented here.
  */
 const number = z.number().finite().catch(0);
 const text = z.string().trim().min(1).nullable().optional().catch(null).transform((value) => value ?? null);
@@ -13,6 +15,10 @@ const points = z.union([z.number(), z.string()]).nullable().optional().catch(nul
   .transform((value) => (value === null || value === undefined || value === "" || Number.isNaN(Number(value)) ? null : Number(value)));
 const transactionSchema = z.object({
   id: z.union([z.string(), z.number()]).nullable().optional().catch(null).transform((value) => (value === null || value === undefined ? null : String(value))),
+  entry_type: text,
+  balance_bucket: text,
+  note: text,
+  // Earlier names, read only as a fallback.
   type: text,
   status: text,
   description: text,
@@ -23,9 +29,9 @@ const transactionSchema = z.object({
   date: text,
 }).transform((entry) => ({
   id: entry.id,
-  type: entry.type,
-  status: entry.status,
-  description: entry.description,
+  type: entry.entry_type ?? entry.type,
+  status: entry.balance_bucket ?? entry.status,
+  description: entry.note ?? entry.description,
   reference: entry.reference,
   points: entry.points ?? entry.amount,
   date: entry.created_at ?? entry.date,

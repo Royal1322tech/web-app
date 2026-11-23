@@ -1,0 +1,51 @@
+/* Customer picker (booking draft) and customer pages. */
+.picker { display: grid; gap: var(--space-3); min-width: 0; margin: 0; padding: var(--space-4); border: 1px solid var(--border); border-radius: 14px; background: #fbfcfe; }
+.picker legend { padding-inline: 6px; color: var(--navy); font-weight: 800; }
+.help, .muted { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.modes { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.mode { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border: 1px solid var(--border); border-radius: 999px; background: #fff; color: var(--navy); font-weight: 600; cursor: pointer; }
+.mode:has(input:checked) { border-color: var(--primary); background: #eef3fa; color: var(--primary); }
+.mode:has(input:focus-visible) { outline: 3px solid color-mix(in srgb, var(--primary) 35%, transparent); outline-offset: 2px; }
+.mode input, .result input { accent-color: var(--primary); }
+.existing { display: grid; gap: var(--space-2); }
+.field { display: grid; gap: 6px; min-width: 0; color: var(--navy); font-size: 14px; font-weight: 700; }
+.field input { min-height: 44px; }
+.results { display: grid; gap: 6px; max-height: 260px; margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+.result { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 12px; background: #fff; cursor: pointer; }
+.result[data-selected] { border-color: var(--primary); background: #eef3fa; }
+.result span { display: grid; gap: 2px; min-width: 0; }
+.result b { color: var(--navy); overflow-wrap: anywhere; }
+.result small { color: var(--muted); font-size: 12.5px; overflow-wrap: anywhere; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.span { grid-column: 1 / -1; margin: 0; }
+@media (max-width: 599px) { .grid { grid-template-columns: minmax(0, 1fr); } .picker { padding: var(--space-3); } }
+
+/* Customer pages */
+.page { display: grid; gap: var(--space-4); min-width: 0; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--space-3); }
+.toolbar .field { flex: 1 1 260px; max-width: 420px; }
+.list { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); padding: 14px 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); text-decoration: none; color: inherit; }
+.row:hover { border-color: color-mix(in srgb, var(--primary) 35%, var(--border)); }
+.row:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 35%, transparent); outline-offset: 2px; }
+.row b { color: var(--navy); overflow-wrap: anywhere; }
+.row small { display: block; color: var(--muted); overflow-wrap: anywhere; }
+.row svg { width: 18px; height: 18px; color: var(--muted); }
+:global([dir="rtl"]) .row svg { rotate: 180deg; }
+.card { display: grid; gap: var(--space-4); padding: clamp(16px, 2.4vw, 28px); border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+.card h2 { margin: 0; color: var(--navy); font-size: 18px; }
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); margin: 0; }
+.facts > div { display: grid; gap: 2px; min-width: 0; }
+.facts dt { color: var(--muted); font-size: 13px; font-weight: 600; }
+.facts dd { margin: 0; color: var(--navy); font-weight: 700; overflow-wrap: anywhere; }
+.actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.actions > :global(.button) { min-height: 44px; }
+.pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-3); }
+.pager span { color: var(--navy); font-weight: 700; }
+@media (max-width: 599px) { .facts { grid-template-columns: minmax(0, 1fr); } .actions > :global(.button) { flex: 1 1 100%; justify-content: center; } }
+.metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
+.metric { display: grid; gap: 6px; min-width: 0; padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+.metric h2 { margin: 0; color: var(--muted); font-size: 13px; font-weight: 700; }
+.metric strong { color: var(--navy); font-size: clamp(18px, 2vw, 22px); overflow-wrap: anywhere; }
+@media (max-width: 1023px) { .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 420px) { .metrics { grid-template-columns: minmax(0, 1fr); } }

@@ -61,6 +61,11 @@ const priceSchema = z.object({
   agency_purchase_price: amount.optional().transform((value) => value ?? null),
   currency: z.string().regex(/^[A-Z]{3}$/).nullable().catch(null),
   price_on_request: z.boolean().catch(false),
+  /** Charged by the property at the stay, never included in the prices above. Malformed entries are dropped. */
+  taxes_at_property: z.array(z.unknown()).optional().catch([]).transform((list) => (list ?? []).flatMap((item) => {
+    const parsed = z.object({ amount: z.string().regex(/^\d+(?:\.\d{1,2})?$/), currency: z.string().regex(/^[A-Z]{3}$/) }).safeParse(item);
+    return parsed.success ? [parsed.data] : [];
+  })),
 });
 export type RatePrice = z.infer<typeof priceSchema>;
 
@@ -114,9 +119,9 @@ export type PrebookResult = z.infer<typeof prebookSchema>;
  * The price that may be shown as a confirmed amount, or null: verified, not on request, a currency
  * and a numeric selling price. The amount string is returned exactly as sent.
  */
-export function confirmedPrice(price: RatePrice): { amount: string; currency: string; agencyAmount: string | null } | null {
+export function confirmedPrice(price: Omit<RatePrice, "taxes_at_property"> & Partial<Pick<RatePrice, "taxes_at_property">>): { amount: string; currency: string; agencyAmount: string | null; propertyTaxes: { amount: string; currency: string }[] } | null {
   if (!price.verified || price.price_on_request || !price.selling_price || !price.currency) return null;
-  return { amount: price.selling_price, currency: price.currency, agencyAmount: price.agency_purchase_price };
+  return { amount: price.selling_price, currency: price.currency, agencyAmount: price.agency_purchase_price, propertyTaxes: price.taxes_at_property ?? [] };
 }
 
 /** Selectable only when the backend says so and the price is a confirmed amount. booking_enabled is not checked: it governs final booking, not selection. */

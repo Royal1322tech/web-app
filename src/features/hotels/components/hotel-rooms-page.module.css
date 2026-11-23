@@ -185,3 +185,8 @@
   .priceCtaIcon { width: 48px; height: 48px; border-radius: 14px; }
 }
 @media (prefers-reduced-motion: reduce) { .priceCtaButton, .priceCtaButton svg { transition: none; } .priceCtaButton:active { transform: none; } }
+
+/* Taxes the guest pays at the property (from the supplier), shown under a confirmed price. */
+.propertyTaxes { display: block; margin-block-start: 4px; color: #8a5a14; font-size: 12px; font-weight: 600; line-height: 1.45; }
+
+.draftReference { margin: 0; color: var(--navy); font-weight: 700; }
