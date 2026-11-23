@@ -156,6 +156,7 @@ export type RoomsFailure =
   | "supplier_unavailable"
   | "network"
   | "timeout"
+  | "rate_limited"
   | "unexpected";
 
 /** One category per screen message, chosen by HTTP status as the contract defines. */
@@ -163,6 +164,7 @@ export function classifyRoomsError(error: unknown): RoomsFailure {
   if (!(error instanceof ApiError)) return "unexpected";
   if (error.kind === "network") return "network";
   if (error.kind === "timeout") return "timeout";
+  if (error.status === 429 || error.kind === "rate_limited") return "rate_limited";
   switch (error.status) {
     case 401: return "signed_out";
     case 403: return "forbidden";
@@ -173,4 +175,11 @@ export function classifyRoomsError(error: unknown): RoomsFailure {
     case 503: return "supplier_unavailable";
     default: return "unexpected";
   }
+}
+
+/** When a rate-limited request may be sent again: the server's Retry-After, or 10 seconds without one. */
+export function roomsRetryAt(error: unknown, now = Date.now()): number | undefined {
+  if (classifyRoomsError(error) !== "rate_limited") return undefined;
+  const seconds = error instanceof ApiError ? error.retryAfterSeconds : undefined;
+  return now + (seconds && seconds > 0 ? seconds : 10) * 1000;
 }
