@@ -54,7 +54,7 @@ test.describe("B2B hotel search: server-side filters (mocked API)", () => {
     // Go to page 2, then filter: the next search is page 1 of the filtered results.
     await page.getByRole("button", { name: "Next" }).click();
     await expect(page.getByText("Page 2 of 5").first()).toBeVisible();
-    expect(bodies[1]).toMatchObject({ page: 2, per_page: 20 });
+    await expect.poll(() => bodies[1]).toMatchObject({ page: 2, per_page: 20 });
 
     await filters.getByRole("checkbox", { name: "5 stars" }).check();
     await filters.getByRole("checkbox", { name: "4 stars" }).check();
@@ -73,7 +73,7 @@ test.describe("B2B hotel search: server-side filters (mocked API)", () => {
     // Filters stay across pages and go with each page request.
     await page.getByRole("button", { name: "Next" }).click();
     await expect(page.getByText("Page 2 of 2").first()).toBeVisible();
-    expect(bodies[3]).toMatchObject({ page: 2, filters: { hotel_name: "Hilton", stars: [4, 5] } });
+    await expect.poll(() => bodies[3]).toMatchObject({ page: 2, filters: { hotel_name: "Hilton", stars: [4, 5] } });
     await expect(filters.getByRole("checkbox", { name: "5 stars" })).toBeChecked();
 
     // Board, area (one at a time), amenities and packaging.
