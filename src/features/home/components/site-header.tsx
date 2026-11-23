@@ -87,7 +87,7 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
           {identity && <p className={styles.accountIdentity}><strong>{identity.user.name}</strong><span>{identity.company.name}</span></p>}
           {[
             ["/profile", t("My Profile", "ملفي الشخصي")],
-            ["/bookings", t("My Bookings", "حجوزاتي")], ["/car-rental/bookings", t("My Rentals", "تأجيراتي")], ["/tickets", t("My Tickets", "تذاكري")], ...(apiAuthEnabled ? [["/price-requests", t("Price Requests", "طلبات الأسعار")]] : []),
+            ["/bookings", t("My Bookings", "حجوزاتي")], ["/car-rental/bookings", t("My Rentals", "تأجيراتي")], ["/tickets", t("My Tickets", "تذاكري")], ...(apiAuthEnabled ? [["/customers", t("Customers", "العملاء")], ["/price-requests", t("Price Requests", "طلبات الأسعار")]] : []),
             ["/invoices", t("Invoices", "الفواتير")], ["/accounting-review", t("Accounting Review", "مراجعة الحسابات")],
             ["/wallet", t("Wallet", "المحفظة")], ["/transactions", t("Transactions", "المعاملات")],
             ["/account/settings", t("Account Settings", "إعدادات الحساب")],

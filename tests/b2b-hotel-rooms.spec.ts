@@ -19,7 +19,7 @@ const roomsUrl = (hid: number | string = HID, params = query()) => `${APP}/hotel
 
 const profile = { message: "ok", data: { user: { id: 7, name: "Laila Hassan", email: "laila@example.com" }, company: { id: COMPANY, name: "Nile Gate Tours", legal_name: "Nile Gate Tours LLC", display_name: "Nile Gate Tours", status: "approved", account_currency: "USD", preferred_locale: "en", country_code: "EG", city: "Alexandria", address: "1 Corniche Road", business_type: "travel_agency", registration_no: "CR-1", tax_no: null, employee_count: 12 }, membership: { role_code: "company_admin", status: "active" } } };
 
-const price = (selling: string | null, extra: Record<string, unknown> = {}) => ({ verified: true, selling_price: selling, agency_purchase_price: selling ? "103.00" : null, currency: "USD", price_on_request: false, ...extra });
+const price = (selling: string | null, extra: Record<string, unknown> = {}) => ({ verified: true, selling_price: selling, agency_purchase_price: selling ? "103.00" : null, currency: "USD", price_on_request: false, taxes_at_property: [] as { amount: string; currency: string }[], ...extra });
 const rate = (index: number, overrides: Record<string, unknown> = {}) => ({ rate_index: index, room_name: `Test Room ${index + 1}`, bedding_type: "double", meal_name: "breakfast", has_breakfast: true, price: price("108.15"), selectable: true, booking_enabled: false, ...overrides });
 const roomsReply = (rooms: unknown[] = [rate(0)], extra: Record<string, unknown> = {}) => ({ json: { hotel_hid: HID, rooms_token: "rooms-token-A", expires_in_seconds: 900, total: rooms.length, rooms, ...extra } });
 const selectReply = (extra: Record<string, unknown> = {}) => ({ json: { selection_token: "selection-token-B", expires_in_seconds: 600, room_name: "Test Room 1", price: price("108.15"), next_step: "prebook", ...extra } });
@@ -81,7 +81,7 @@ test.describe("rooms contract (no browser)", () => {
     for (const value of [0, -3, 1.5, Number.NaN, "8675779", null, undefined]) expect(isHotelHid(value)).toBe(false);
   });
   test("a price is confirmed only when verified, not on request, with currency and amount; booking_enabled doesn't block selection", () => {
-    expect(confirmedPrice(price("108.15"))).toEqual({ amount: "108.15", currency: "USD", agencyAmount: "103.00" });
+    expect(confirmedPrice(price("108.15"))).toEqual({ amount: "108.15", currency: "USD", agencyAmount: "103.00", propertyTaxes: [] });
     expect(confirmedPrice(price("108.15", { verified: false }))).toBeNull();
     expect(confirmedPrice(price("108.15", { price_on_request: true }))).toBeNull();
     expect(confirmedPrice(price(null))).toBeNull();
@@ -103,6 +103,16 @@ test.describe("from search results to rooms", () => {
   const searchUrl = `${APP}/search?${query()}`;
   const hotel = (index: number, hid: number | null) => ({ result_index: index, ...(hid ? { hid } : {}), name: `Search Hotel ${index + 1}`, address: "1 Test Street", stars: 4, image: null, rooms: [], pricing_status: "unverified", booking_enabled: false });
   const search = () => ({ json: { success: true, code: "HOTEL_SEARCH_PREVIEW", data: { hotels: [hotel(0, HID), hotel(1, null)], total: 2, page: 1, per_page: 20, currency: "USD", pricing_verified: false, booking_enabled: false } } });
+
+  test("taxes paid at the property are shown under the confirmed price, never added to it", async ({ page }) => {
+    const withTaxes = price("118.55", { agency_purchase_price: "111.00", taxes_at_property: [{ amount: "23.00", currency: "AED" }, { amount: "bad", currency: "AED" }] });
+    await mockFlow(page, { ...ok, rooms: () => roomsReply([rate(0, { price: withTaxes })]) });
+    await page.goto(roomsUrl());
+    const cell = page.locator("[data-rate-index='0'] [data-price=confirmed]");
+    await expect(cell).toContainText("USD 118.55");
+    await expect(cell.locator("[data-property-taxes]")).toHaveText("Plus taxes paid at the property: AED 23.00");
+    await expect(page.getByText("Agency price: USD 111.00")).toBeVisible();
+  });
 
   test("a hotel with a real hid opens its rooms; one without offers no rooms request", async ({ page }) => {
     const api = await mockFlow(page, { search, ...ok });

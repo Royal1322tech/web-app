@@ -25,7 +25,11 @@ export function LoyaltyPointsPage() {
   const date = (value: string | null) => (value && /^\d{4}-\d{2}-\d{2}/.test(value) ? formatCalendarDate(value.slice(0, 10), locale) : null);
   const label = (value: string | null) => {
     if (!value) return null;
-    const known: Record<string, [string, string]> = { earned: ["Earned", "مكتسبة"], earn: ["Earned", "مكتسبة"], redeemed: ["Redeemed", "مستبدلة"], adjustment: ["Adjustment", "تعديل"], expired: ["Expired", "منتهية"], pending: ["Pending", "معلق"], available: ["Available", "متاح"], posted: ["Posted", "مسجل"], reversed: ["Reversed", "معكوس"] };
+    const known: Record<string, [string, string]> = {
+      booking_earn: ["Earned from a booking", "مكتسبة من حجز"], booking_release: ["Released from a booking", "محررة من حجز"],
+      booking_void: ["Booking voided", "حجز ملغى"], manual_credit: ["Credit by Royal Vacation", "إضافة من رويال فاكيشن"],
+      manual_debit: ["Deduction by Royal Vacation", "خصم من رويال فاكيشن"], pending: ["Pending", "معلق"], available: ["Available", "متاح"],
+    };
     const pair = known[value.toLowerCase()];
     return pair ? t(...pair) : value.replace(/[_-]+/g, " ");
   };

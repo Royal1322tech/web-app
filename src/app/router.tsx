@@ -1,3 +1,4 @@
+import { apiAuthEnabled } from "@/features/auth/auth-config";
 import { DemoSessionGate } from "@/features/demo/session-gate";
 import {
   PageLoadingState,
@@ -213,9 +214,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "bookings/:id",
+        // Real booking details with real sign-in; the example detail otherwise.
         lazy: async () => ({
-          Component: (await import("@/features/demo/booking-detail"))
-            .BookingDetailPage,
+          Component: apiAuthEnabled
+            ? (await import("@/features/bookings/live/live-bookings-pages")).LiveBookingDetailPage
+            : (await import("@/features/demo/booking-detail")).BookingDetailPage,
         }),
       },
       {
@@ -241,6 +244,9 @@ export const router = createBrowserRouter([
         handle: { workspace: true },
         children: [
           { path: "points", lazy: async () => ({ Component: (await import("@/features/demo/points")).PointsPage }) },
+          // The company's customer directory (GET/POST /b2b/customers, GET /b2b/customers/{id}).
+          { path: "customers", lazy: async () => ({ Component: (await import("@/features/customers/customers-pages")).CustomersPage }) },
+          { path: "customers/:id", lazy: async () => ({ Component: (await import("@/features/customers/customers-pages")).CustomerDetailPage }) },
           // The company's price reduction requests (GET /b2b/price-reduction-requests).
           { path: "price-requests", lazy: async () => ({ Component: (await import("@/features/hotels/components/price-requests-page")).PriceRequestsPage }) },
           { path: "invoices", lazy: async () => ({ Component: (await import("@/features/demo/invoices")).InvoiceHistoryPage }) },
@@ -277,14 +283,17 @@ export const router = createBrowserRouter([
           {
             path: "wallet",
             lazy: async () => ({
-              Component: (await import("@/features/demo/finance")).WalletPage,
+              Component: apiAuthEnabled
+                ? (await import("@/features/finance/live-finance-pages")).LiveWalletPage
+                : (await import("@/features/demo/finance")).WalletPage,
             }),
           },
           {
             path: "transactions",
             lazy: async () => ({
-              Component: (await import("@/features/demo/finance"))
-                .TransactionsPage,
+              Component: apiAuthEnabled
+                ? (await import("@/features/finance/live-finance-pages")).LiveTransactionsPage
+                : (await import("@/features/demo/finance")).TransactionsPage,
             }),
           },
         ],

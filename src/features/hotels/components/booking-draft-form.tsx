@@ -1,4 +1,7 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
+import { CustomerPicker, validateCustomerChoice, type CustomerChoice, type CustomerErrors } from "@/features/customers/customer-picker";
+import { newCustomerBody } from "@/features/customers/b2b-customers";
 import { Icon } from "@/components/ui/icon";
 import { ApiError } from "@/lib/api/client";
 import { useLocale } from "@/features/localization/locale-provider";
@@ -9,6 +12,8 @@ import {
   guestSlots,
   isRetryableDraftFailure,
   newIdempotencyKey,
+  type DraftCreated,
+  type DraftCustomer,
   type DraftFailure,
   type DraftGuest,
 } from "../api/b2b-booking-draft";
@@ -24,6 +29,7 @@ type Text = [string, string];
 
 const MESSAGES: Record<Exclude<DraftFailure, "validation" | "signed_out">, Text> = {
   forbidden: ["Your account can't create booking drafts.", "لا يمكن لحسابك إنشاء مسودات حجز."],
+  customer_missing: ["This customer wasn't found in your company. Choose another customer.", "لم يُعثر على هذا العميل في شركتك. اختر عميلًا آخر."],
   conflict: ["This room can't be drafted anymore. Choose another room or refresh the rates.", "لم يعد من الممكن إنشاء مسودة لهذه الغرفة. اختر غرفة أخرى أو حدّث الأسعار."],
   expired: ["This price check has expired. Refresh the rates and choose the room again.", "انتهت صلاحية التحقق من السعر. حدّث الأسعار واختر الغرفة مرة أخرى."],
   rate_limited: ["Too many requests. Please wait a few minutes before trying again.", "طلبات كثيرة. يرجى الانتظار بضع دقائق قبل المحاولة مرة أخرى."],
@@ -47,7 +53,9 @@ export function BookingDraftForm({ reviewToken, occupancy, onRefresh }: { review
   const [errors, setErrors] = useState<FieldErrors>({});
   const [failure, setFailure] = useState<{ kind: DraftFailure; text: string; retryAfter?: number } | null>(null);
   const [busy, setBusy] = useState(false);
-  const [created, setCreated] = useState(false);
+  const [created, setCreated] = useState<DraftCreated | null>(null);
+  const [customer, setCustomer] = useState<CustomerChoice>({ mode: "existing", customer: null });
+  const [customerErrors, setCustomerErrors] = useState<CustomerErrors>({});
   const [now, setNow] = useState(clock);
   const pending = useRef(false);
   const submitted = useRef<{ payload: string; key: string } | null>(null);
@@ -68,6 +76,10 @@ export function BookingDraftForm({ reviewToken, occupancy, onRefresh }: { review
       <section className={styles.draftDone} data-draft-state="created" aria-labelledby={`${formId}-done`}>
         <h3 id={`${formId}-done`} ref={successRef} tabIndex={-1}><Icon name="check" />{t("Booking Draft Created", "تم إنشاء مسودة الحجز")}</h3>
         <p>{t("The guest details and this price check were saved as a booking draft. A draft is not a confirmed reservation, and no payment has been taken.", "تم حفظ بيانات الضيوف وهذا التحقق من السعر كمسودة حجز. المسودة ليست حجزًا مؤكدًا، ولم يتم أي دفع.")}</p>
+        <p className={styles.draftReference}>{t("Booking number", "رقم الحجز")}: <bdi dir="ltr">{created.booking_no}</bdi></p>
+        <div className={styles.actions}>
+          <Link className="button button--primary" to={`/bookings/${encodeURIComponent(created.booking_id)}`}>{t("View booking", "عرض الحجز")}</Link>
+        </div>
       </section>
     );
   }
@@ -95,8 +107,14 @@ export function BookingDraftForm({ reviewToken, occupancy, onRefresh }: { review
       if (issue.first || issue.last) found[slot.key] = issue;
       return { first_name: first, last_name: last, guest_type: slot.type, is_lead: slot.key === lead };
     });
+    const foundCustomer = validateCustomerChoice(customer, t);
     setErrors(found);
+    setCustomerErrors(foundCustomer);
     setFailure(null);
+    if (Object.keys(foundCustomer).length) {
+      document.querySelector<HTMLElement>("[data-customer-picker] input")?.focus();
+      return;
+    }
     if (Object.keys(found).length) {
       document.getElementById(`${formId}-${Object.keys(found)[0]}-${found[Object.keys(found)[0]].first ? "first" : "last"}`)?.focus();
       return;
@@ -104,14 +122,16 @@ export function BookingDraftForm({ reviewToken, occupancy, onRefresh }: { review
     const token = b2bSession.token();
     if (!token) return;
     // Same submission (unchanged after a failure that's safe to retry): same key. Anything else: new key.
-    const payload = JSON.stringify([reviewToken, guests]);
+    const draftCustomer: DraftCustomer = customer.mode === "existing"
+      ? { customer_id: customer.customer!.id }
+      : { customer: newCustomerBody(customer) };
+    const payload = JSON.stringify([reviewToken, guests, draftCustomer]);
     const key = submitted.current?.payload === payload ? submitted.current.key : newIdempotencyKey();
     submitted.current = { payload, key };
     pending.current = true;
     setBusy(true);
     try {
-      await createBookingDraft(reviewToken, guests, key, { token, locale: locale === "ar" ? "ar" : "en" });
-      setCreated(true);
+      setCreated(await createBookingDraft(reviewToken, guests, draftCustomer, key, { token, locale: locale === "ar" ? "ar" : "en" }));
     } catch (error) {
       const kind = classifyDraftError(error);
       // A failure that can't succeed on retry: the next attempt, even unchanged, gets a new key.
@@ -124,6 +144,14 @@ export function BookingDraftForm({ reviewToken, occupancy, onRefresh }: { review
           const slot = match ? slots[Number(match[1])] : undefined;
           if (slot) mapped[slot.key] = { ...mapped[slot.key], [match![2] === "first_name" ? "first" : "last"]: t("Check this name.", "تحقق من هذا الاسم.") };
         }
+        const customerFields: CustomerErrors = {};
+        for (const field of Object.keys(fields)) {
+          if (field === "customer_id" || field === "customer") customerFields.customer = t("Choose a customer or enter a new one.", "اختر عميلًا أو أدخل عميلًا جديدًا.");
+          if (field === "customer.first_name") customerFields.first_name = t("Check this name.", "تحقق من هذا الاسم.");
+          if (field === "customer.last_name") customerFields.last_name = t("Check this name.", "تحقق من هذا الاسم.");
+          if (field === "customer.email" || field === "customer.phone") customerFields.contact = t("Check the email or phone.", "تحقق من البريد أو الهاتف.");
+        }
+        setCustomerErrors(customerFields);
         setErrors(mapped);
         setFailure({ kind, text: t("Check the guest details: a first and last name for every guest, and exactly one lead guest.", "تحقق من بيانات الضيوف: اسم أول واسم عائلة لكل ضيف، وضيف رئيسي واحد فقط.") });
       } else if (kind !== "signed_out") {
@@ -142,6 +170,7 @@ export function BookingDraftForm({ reviewToken, occupancy, onRefresh }: { review
     <form className={styles.draftForm} noValidate onSubmit={submit} aria-busy={busy} aria-labelledby={`${formId}-title`} data-draft-state="form">
       <h3 id={`${formId}-title`}>{t("Guest details", "بيانات الضيوف")}</h3>
       <p className={styles.note}>{t("Enter every guest's name as on their passport, and choose the lead guest. This saves a booking draft only: it isn't a reservation and takes no payment.", "أدخل اسم كل ضيف كما في جواز سفره، واختر الضيف الرئيسي. هذا يحفظ مسودة حجز فقط: ليس حجزًا ولا يتضمن أي دفع.")}</p>
+      <CustomerPicker value={customer} onChange={(next) => { setCustomer(next); setCustomerErrors({}); }} errors={customerErrors} disabled={busy} />
       {rooms.map((room) => (
         <fieldset key={room} className={styles.draftRoom} disabled={busy}>
           <legend>{t(`Room ${room}`, `الغرفة ${room}`)}</legend>

@@ -486,6 +486,12 @@ function PriceBlock({ price, provisional = false, emphasis = false }: { price: R
       {confirmed.agencyAmount && (
         <small className={styles.agencyPrice}>{t("Agency price", "سعر الوكالة")}: <Money amount={confirmed.agencyAmount} currency={confirmed.currency} /></small>
       )}
+      {confirmed.propertyTaxes.length > 0 && (
+        <small className={styles.propertyTaxes} data-property-taxes>
+          {t("Plus taxes paid at the property:", "بالإضافة إلى ضرائب تُدفع في الفندق:")}{" "}
+          {confirmed.propertyTaxes.map((tax, index) => <span key={tax.currency}>{index > 0 && " + "}<Money amount={tax.amount} currency={tax.currency} /></span>)}
+        </small>
+      )}
     </div>
   );
 }
