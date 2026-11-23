@@ -125,11 +125,13 @@ test.describe("B2B hotel search: server-side filters (mocked API)", () => {
     await page.getByLabel("Sort by").selectOption("stars");
     await settle(page);
     await expect(page.getByText("Page 1 of 3").first()).toBeVisible();
-    expect(bodies.at(-1)).toMatchObject({ sort: "stars_desc", filters: { stars: [4] } });
+    await expect.poll(() => bodies.at(-1)).toMatchObject({ sort: "stars_desc", filters: { stars: [4] } });
+    expect(bodies).toHaveLength(4); // initial, filter, page 2, sort: no duplicate requests
     expect(bodies.at(-1)?.page).toBeUndefined();
     await page.getByLabel("Sort by").selectOption("name");
     await settle(page);
-    expect(bodies.at(-1)).toMatchObject({ sort: "name_asc" });
+    await expect.poll(() => bodies.at(-1)).toMatchObject({ sort: "name_asc" });
+    expect(bodies).toHaveLength(5);
     // The page keeps the API's order (no second, local sort).
     await expect(page.locator("[data-live-hotel] h3").first()).toHaveText("Test Hotel 1");
   });

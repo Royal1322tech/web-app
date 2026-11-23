@@ -8,6 +8,7 @@ import { b2bSession } from "@/features/auth/b2b-session";
 import { isB2BSearchCurrency } from "../api/b2b-hotel-search";
 import {
   classifyRoomsError,
+  roomsRetryAt,
   confirmedPrice,
   fetchHotelRooms,
   isHotelHid,
@@ -152,11 +153,11 @@ export function HotelHeader({ title, summary, criteria, request }: {
 /* ---------- The flow ---------- */
 
 type Held<T> = { value: T; expiresAt: number };
-type RoomsState = { status: "loading" } | { status: "error"; failure: RoomsFailure } | { status: "done"; rooms: Held<RoomsResult> };
+type RoomsState = { status: "loading" } | { status: "error"; failure: RoomsFailure; retryAt?: number } | { status: "done"; rooms: Held<RoomsResult> };
 type Step =
   | { step: "rooms" }
   | { step: "checking"; rate: RoomRate; phase: "select" | "prebook" }
-  | { step: "failed"; rate: RoomRate; failure: RoomsFailure; at: "select" | "prebook"; selection: Held<SelectResult> | null }
+  | { step: "failed"; rate: RoomRate; failure: RoomsFailure; at: "select" | "prebook"; selection: Held<SelectResult> | null; retryAt?: number }
   | { step: "review"; rate: RoomRate; selection: Held<SelectResult>; review: Held<PrebookResult>; accepted: boolean };
 
 const hold = <T extends { expires_in_seconds: number }>(value: T): Held<T> => ({ value, expiresAt: Date.now() + value.expires_in_seconds * 1000 });
@@ -201,7 +202,7 @@ function RoomsFlow({ hid, request: initialRequest, searchHref, onRoomNames }: { 
           setSettled({ attempt, state: { status: "done", rooms: hold(result) } });
           onRoomNames?.([...new Set(result.rooms.map((rate) => rate.room_name?.trim()).filter((name): name is string => !!name))]);
         })
-        .catch((error: unknown) => { if (!local.signal.aborted) setSettled({ attempt, state: { status: "error", failure: classifyRoomsError(error) } }); });
+        .catch((error: unknown) => { if (!local.signal.aborted) setSettled({ attempt, state: { status: "error", failure: classifyRoomsError(error), retryAt: roomsRetryAt(error) } }); });
     }, 0);
     return () => { clearTimeout(timer); local.abort(); };
   }, [hid, request, roomsAttempt, onRoomNames]);
@@ -239,7 +240,7 @@ function RoomsFlow({ hid, request: initialRequest, searchHref, onRoomNames }: { 
       setFlow({ step: "review", rate, selection, review: hold(result), accepted: false });
     } catch (error) {
       if (id !== generation.current || signal.aborted) return;
-      setFlow({ step: "failed", rate, failure: classifyRoomsError(error), at: "prebook", selection });
+      setFlow({ step: "failed", rate, failure: classifyRoomsError(error), at: "prebook", selection, retryAt: roomsRetryAt(error) });
     }
   }
 
@@ -260,7 +261,7 @@ function RoomsFlow({ hid, request: initialRequest, searchHref, onRoomNames }: { 
       if (id !== generation.current) return;
       await runPrebook(rate, hold(selected), id, local.signal, token);
     } catch (error) {
-      if (id === generation.current && !local.signal.aborted) setFlow({ step: "failed", rate, failure: classifyRoomsError(error), at: "select", selection: null });
+      if (id === generation.current && !local.signal.aborted) setFlow({ step: "failed", rate, failure: classifyRoomsError(error), at: "select", selection: null, retryAt: roomsRetryAt(error) });
     } finally {
       if (id === generation.current) busy.current = false;
     }
@@ -292,7 +293,7 @@ function RoomsFlow({ hid, request: initialRequest, searchHref, onRoomNames }: { 
 
       {flow.step === "rooms" && rooms.status === "error" && (
         <div data-rooms-state={rooms.failure}>
-          <FailureNotice failure={rooms.failure} context="rooms" onRefresh={refreshRooms} searchHref={searchHref} />
+          <FailureNotice failure={rooms.failure} retryAt={rooms.retryAt} context="rooms" onRefresh={refreshRooms} searchHref={searchHref} />
         </div>
       )}
 
@@ -316,6 +317,7 @@ function RoomsFlow({ hid, request: initialRequest, searchHref, onRoomNames }: { 
         <div data-rooms-state={flow.failure}>
           <FailureNotice
             failure={flow.failure}
+            retryAt={flow.retryAt}
             context={flow.at}
             onRefresh={refreshRooms}
             onRetry={flow.at === "prebook" && flow.selection && now < flow.selection.expiresAt
@@ -641,12 +643,14 @@ const failureText: Record<RoomsFailure, { title: Text; text: Text }> = {
   validation: { title: ["Check your stay details", "راجع تفاصيل إقامتك"], text: ["The dates, nationality or guests weren't accepted. Change your search and try again.", "لم يتم قبول التواريخ أو الجنسية أو النزلاء. عدّل البحث وحاول مرة أخرى."] },
   supplier_unavailable: { title: ["The supplier isn't responding", "المورد لا يستجيب"], text: ["Please try again in a moment.", "يرجى المحاولة مرة أخرى بعد قليل."] },
   network: { title: ["Can't reach the hotel service", "تعذر الوصول إلى خدمة الفنادق"], text: ["Check your internet connection and try again.", "تحقق من اتصالك بالإنترنت وحاول مرة أخرى."] },
+  rate_limited: { title: ["Too many requests", "طلبات كثيرة"], text: ["The hotel service is limiting requests. Please wait a moment before trying again.", "خدمة الفنادق تحدّ من الطلبات حاليًا. يرجى الانتظار قليلًا قبل المحاولة مرة أخرى."] },
   timeout: { title: ["The supplier took too long", "استغرق المورد وقتًا طويلًا"], text: ["Please try again.", "يرجى المحاولة مرة أخرى."] },
   unexpected: { title: ["Room rates can't be displayed", "تعذر عرض أسعار الغرف"], text: ["We received a response we couldn't read. Please try again.", "تلقينا ردًا لم نتمكن من قراءته. يرجى المحاولة مرة أخرى."] },
 };
 
-function FailureNotice({ failure, context, onRefresh, onRetry, onChooseAnother, searchHref }: {
+function FailureNotice({ failure, retryAt, context, onRefresh, onRetry, onChooseAnother, searchHref }: {
   failure: RoomsFailure;
+  retryAt?: number;
   context: "rooms" | "select" | "prebook";
   onRefresh: () => void;
   onRetry?: () => void;
@@ -659,18 +663,23 @@ function FailureNotice({ failure, context, onRefresh, onRetry, onChooseAnother, 
     ? { title: ["Rooms for this hotel weren't found", "لم يتم العثور على غرف لهذا الفندق"] as Text, text: ["Choose another hotel from your search results.", "اختر فندقًا آخر من نتائج البحث."] as Text }
     : failureText[failure];
   const restart = failure === "token_invalid" || failure === "unbookable" || failure === "expired";
-  const retryable = failure === "supplier_unavailable" || failure === "network" || failure === "timeout" || failure === "unexpected";
+  const retryable = failure === "supplier_unavailable" || failure === "network" || failure === "timeout" || failure === "rate_limited" || failure === "unexpected";
+  // While a rate limit is active, retrying would only be refused again: wait out Retry-After.
+  const now = useNow(!!retryAt);
+  const retryIn = retryAt ? Math.max(0, Math.ceil((retryAt - now) / 1000)) : 0;
+  const waiting = retryIn > 0;
   return (
     <section className={styles.notice} data-tone="error" role="alert">
       <h2>{t(...copy.title)}</h2>
       <p>{t(...copy.text)}</p>
+      {waiting && <p role="status" data-retry-in={retryIn}>{t(`You can try again in ${retryIn} seconds.`, `يمكنك المحاولة مرة أخرى بعد ${retryIn} ثانية.`)}</p>}
       <div className={styles.actions}>
         {failure === "signed_out" && <Link className="button button--primary" to="/login">{t("Sign in", "تسجيل الدخول")}</Link>}
         {failure === "validation" && <Link className="button button--primary" to={searchHref}>{t("Change search", "تعديل البحث")}</Link>}
         {context !== "rooms" && restart && <button type="button" className="button button--primary" onClick={onRefresh}>{t("Refresh rates", "تحديث الأسعار")}</button>}
-        {context === "rooms" && (restart && failure !== "token_invalid" || retryable) && <button type="button" className="button button--primary" onClick={onRefresh}>{t("Try again", "إعادة المحاولة")}</button>}
-        {context !== "rooms" && retryable && onRetry && <button type="button" className="button button--primary" onClick={onRetry}>{t("Try again", "إعادة المحاولة")}</button>}
-        {context !== "rooms" && retryable && !onRetry && <button type="button" className="button button--primary" onClick={onRefresh}>{t("Refresh rates", "تحديث الأسعار")}</button>}
+        {context === "rooms" && (restart && failure !== "token_invalid" || retryable) && <button type="button" className="button button--primary" disabled={waiting} onClick={onRefresh}>{t("Try again", "إعادة المحاولة")}</button>}
+        {context !== "rooms" && retryable && onRetry && <button type="button" className="button button--primary" disabled={waiting} onClick={onRetry}>{t("Try again", "إعادة المحاولة")}</button>}
+        {context !== "rooms" && retryable && !onRetry && <button type="button" className="button button--primary" disabled={waiting} onClick={onRefresh}>{t("Refresh rates", "تحديث الأسعار")}</button>}
         {onChooseAnother && failure !== "signed_out" && <button type="button" className="button button--outline" onClick={onChooseAnother}>{t("Choose another room", "اختيار غرفة أخرى")}</button>}
         {context === "rooms" && failure !== "validation" && <Link className="button button--ghost" to={searchHref}>{t("Back to search results", "العودة إلى نتائج البحث")}</Link>}
       </div>

@@ -25,7 +25,7 @@ const roomsReply = (rooms: unknown[] = [rate(0)], extra: Record<string, unknown>
 const selectReply = (extra: Record<string, unknown> = {}) => ({ json: { selection_token: "selection-token-B", expires_in_seconds: 600, room_name: "Test Room 1", price: price("108.15"), next_step: "prebook", ...extra } });
 const prebookReply = (extra: Record<string, unknown> = {}) => ({ json: { status: "rechecked", review_token: "review-token-C", expires_in_seconds: 600, price_changed: false, review_required: true, room_name: "Test Room 1", price: price("108.15"), booking_enabled: false, message: "Room rechecked; review required.", ...extra } });
 
-type Reply = { status?: number; json?: unknown; abort?: boolean; delay?: Promise<void> };
+type Reply = { status?: number; json?: unknown; abort?: boolean; delay?: Promise<void>; headers?: Record<string, string> };
 type Handler = (request: Request, call: number) => Reply;
 
 /** A signed-in company session and mocked rooms, select and prebook endpoints. */
@@ -48,7 +48,7 @@ async function mockFlow(page: Page, handlers: { rooms?: Handler; select?: Handle
     const reply = handlers[key]!(request, calls[key].length);
     if (reply.delay) await reply.delay;
     if (reply.abort) return route.abort("connectionrefused");
-    return route.fulfill({ status: reply.status ?? 200, headers: cors, json: reply.json ?? {} });
+    return route.fulfill({ status: reply.status ?? 200, headers: { ...cors, ...reply.headers }, json: reply.json ?? {} });
   });
   return { calls, unexpected };
 }
@@ -96,6 +96,7 @@ test.describe("rooms contract (no browser)", () => {
     for (const [status, kind] of cases) expect(classifyRoomsError(new ApiError(status === 422 ? "validation" : "server", status))).toBe(kind);
     expect(classifyRoomsError(new ApiError("network"))).toBe("network");
     expect(classifyRoomsError(new ApiError("timeout"))).toBe("timeout");
+    expect(classifyRoomsError(new ApiError("rate_limited", 429))).toBe("rate_limited");
   });
 });
 
@@ -333,6 +334,31 @@ test.describe("rooms → price check → review (mocked API)", () => {
       await expect(page.getByRole("button", { name: "Select room" })).toHaveCount(0);
     });
   }
+
+  test("rooms 429: a rate-limit message (EN/AR), Try again waits for Retry-After, then one new request", async ({ page }) => {
+    const limited: Reply = { status: 429, json: { message: "Too Many Attempts." }, headers: { "Access-Control-Expose-Headers": "Retry-After", "Retry-After": "3" } };
+    const api = await mockFlow(page, { ...ok, rooms: (_, call) => (call === 1 ? limited : roomsReply()) });
+    await page.goto(roomsUrl());
+    await expect(state(page)).toHaveAttribute("data-rooms-state", "rate_limited");
+    await expect(page.getByRole("heading", { name: "Too many requests" })).toBeVisible();
+    await expect(page.getByText("We received a response we couldn't read")).toHaveCount(0);
+    const retry = page.getByRole("button", { name: "Try again" });
+    await expect(retry).toBeDisabled();
+    await expect(page.getByText(/You can try again in [1-3] seconds\./)).toBeVisible();
+    expect(api.calls.rooms).toHaveLength(1);
+    await expect(retry).toBeEnabled({ timeout: 5000 });
+    await retry.click();
+    await expect(page.getByRole("button", { name: "Select room" }).first()).toBeVisible();
+    expect(api.calls.rooms).toHaveLength(2);
+  });
+
+  test("rooms 429 in Arabic: RTL rate-limit message and a disabled retry", async ({ page }) => {
+    await mockFlow(page, { ...ok, rooms: () => ({ status: 429, json: { message: "Too Many Attempts." }, headers: { "Access-Control-Expose-Headers": "Retry-After", "Retry-After": "30" } }) }, "ar");
+    await page.goto(roomsUrl());
+    await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+    await expect(page.getByRole("heading", { name: "طلبات كثيرة" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "إعادة المحاولة" })).toBeDisabled();
+  });
 
   test("a rooms reply for a different hotel is rejected", async ({ page }) => {
     await mockFlow(page, { ...ok, rooms: () => roomsReply([rate(0)], { hotel_hid: 1 }) });
