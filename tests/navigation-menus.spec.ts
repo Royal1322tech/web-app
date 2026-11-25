@@ -41,6 +41,8 @@ test.describe("mobile navigation", () => {
       // Favourites is hidden for now, so the main navigation has seven links.
       await expect(links).toHaveCount(7);
       await expect(links.and(page.locator('[href="/favourites"]'))).toHaveCount(0);
+      // Every other main destination is still there, in order.
+      expect(await links.evaluateAll((items) => items.map((item) => item.getAttribute("href")))).toEqual(["/", "/search", "/car-rental", "/bookings", "/group-quotation", "/wallet", "/contact"]);
       const lefts = await links.evaluateAll((items) => items.map((item) => Math.round(item.getBoundingClientRect().left)));
       expect(new Set(lefts).size).toBe(1);
       await expect(nav.locator("[aria-current=page]")).toHaveCount(1);
