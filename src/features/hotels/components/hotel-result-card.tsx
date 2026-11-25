@@ -1,3 +1,4 @@
+import { favouritesVisible } from "@/app/hidden-features";
 import { hotelDisplayAddress, hotelDisplayName } from "../lib/presentation";
 import { stayQuery } from "../lib/stay-query";
 import type { HotelSearchCriteria } from "@/features/home/schemas/hotel-search.schema";
@@ -26,6 +27,7 @@ export function FavouriteButton({
   const { locale, t } = useLocale();
   const { ids, toggle } = useHotelPreferences("favourites");
   const active = ids.includes(hotel.id);
+  if (!favouritesVisible) return null;
   return (
     <button
       type="button"

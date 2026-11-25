@@ -1,0 +1,63 @@
+/* My Profile and Account Settings (account area). Brand tokens come from the global theme. */
+.page { display: grid; gap: 20px; min-width: 0; }
+.muted { margin: 0; color: var(--muted, #5b6470); font-size: 14px; line-height: 1.55; }
+.overview { display: flex; align-items: center; gap: 20px; border-top: 3px solid #c6a65b; }
+.avatar { display: grid; flex: 0 0 72px; place-items: center; height: 72px; border-radius: 22px; background: #e8eef8; color: var(--navy, #02143c); font-size: 26px; font-weight: 800; }
+.identity { display: grid; gap: 4px; min-width: 0; overflow-wrap: anywhere; }
+.identity h2 { margin: 0; color: var(--navy, #02143c); font-size: clamp(20px, 2.4vw, 26px); }
+.identity p { margin: 0; color: #4f5d6b; }
+.badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px !important; }
+.badge, .badgeMuted, .readOnly { display: inline-flex; align-items: center; min-height: 26px; padding: 2px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 700; }
+.badge { background: #fbf3e6; color: #8a5a12; }
+.badgeMuted { background: #eef1f4; color: #3c4a58; }
+.readOnly { background: #eef1f4; color: #5b6470; }
+.columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
+.card { display: grid; gap: 16px; min-width: 0; margin: 0 !important; }
+.cardHead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.cardTitle { display: inline-flex; align-items: center; gap: 10px; margin: 0 !important; color: var(--navy, #02143c); font-size: 18px !important; }
+.cardTitle svg { width: 20px; height: 20px; color: #b7731e; }
+.facts { display: grid; gap: 14px; margin: 0; }
+.factsWide { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.facts > div { display: grid; gap: 3px; min-width: 0; }
+.facts dt { color: #5b6470; font-size: 13px; font-weight: 600; }
+.facts dd { margin: 0; color: var(--navy, #02143c); font-weight: 700; overflow-wrap: anywhere; }
+.form { display: grid; gap: 14px; }
+.field { display: grid; gap: 6px; min-width: 0; color: var(--navy, #02143c); font-size: 14px; font-weight: 700; }
+.field input { min-height: 46px; }
+.required { color: #8a5a12; font-size: 12px; font-weight: 600; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.actions > :global(.button) { min-height: 44px; }
+.success, .error { margin: 0; padding: 10px 12px; border-radius: 10px; font-weight: 600; }
+.success { background: #edf8f2; color: #17603a; }
+.error { background: #fff1f2; color: #a21c2c; }
+
+/* Account Settings */
+.settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
+.settings > .wide { grid-column: 1 / -1; }
+.cardIntro { margin: 0; color: #5b6470; font-size: 14px; line-height: 1.5; }
+.segmented { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.choice { position: relative; display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 10px 14px; border: 1px solid var(--border, #d6dbde); border-radius: 12px; background: #fff; color: var(--navy, #02143c); cursor: pointer; }
+.choice input { position: absolute; opacity: 0; pointer-events: none; }
+.choice b { display: block; font-size: 15px; }
+.choice small { display: block; color: #5b6470; font-size: 12.5px; }
+.choice:has(input:checked) { border-color: var(--navy, #02143c); background: #f1f5fb; box-shadow: inset 0 0 0 1px var(--navy, #02143c); }
+.choice:has(input:focus-visible) { outline: 3px solid color-mix(in srgb, var(--navy, #02143c) 30%, transparent); outline-offset: 2px; }
+.choice .tick { margin-inline-start: auto; width: 18px; height: 18px; color: var(--navy, #02143c); }
+.choiceMark { display: grid; flex: 0 0 34px; place-items: center; height: 34px; border-radius: 10px; background: #eef1f4; font-weight: 800; }
+.saved { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: #17603a; font-size: 13px; font-weight: 700; }
+.saved svg { width: 16px; height: 16px; }
+.securityLinks { display: flex; flex-wrap: wrap; gap: 10px; }
+
+@media (max-width: 1023px) {
+  .factsWide { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 899px) {
+  .columns, .settings { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 599px) {
+  .overview { align-items: flex-start; gap: 14px; }
+  .avatar { flex-basis: 56px; height: 56px; border-radius: 16px; font-size: 20px; }
+  .factsWide { grid-template-columns: minmax(0, 1fr); }
+  .actions > :global(.button) { flex: 1 1 100%; justify-content: center; }
+  .segmented { grid-template-columns: minmax(0, 1fr); }
+}

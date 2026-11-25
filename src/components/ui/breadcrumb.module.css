@@ -1,0 +1,57 @@
+/* Shared breadcrumb: aligned with the page container, quiet parents, a clear current page. */
+.breadcrumb { margin: 24px 0 18px; min-width: 0; }
+.list {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  list-style: none;
+  scrollbar-width: none;
+  white-space: nowrap;
+}
+.list::-webkit-scrollbar { display: none; }
+.item { display: inline-flex; flex-shrink: 0; align-items: center; gap: 2px; min-width: 0; }
+.item:last-child { flex-shrink: 1; }
+.link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  color: #4f5d6b;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.item:first-child .link { padding-inline-start: 0; }
+/* 44px touch target without changing the bar's height. */
+.link::after { position: absolute; inset: -6px -2px; content: ""; }
+.link:hover { background: #eef3fa; color: var(--navy, #02143c); }
+.item:first-child .link:hover { padding-inline-start: 8px; margin-inline-start: -8px; }
+.link:focus-visible { outline: 2px solid var(--primary, #02143c); outline-offset: 2px; }
+.home { width: 16px; height: 16px; flex-shrink: 0; }
+.separator { width: 14px; height: 14px; flex-shrink: 0; color: #a3adb7; }
+:global([dir="rtl"]) .separator { transform: scaleX(-1); }
+.current {
+  display: block;
+  min-width: 0;
+  max-width: min(46ch, 60vw);
+  overflow: hidden;
+  padding: 4px 8px;
+  color: var(--navy, #02143c);
+  font-size: 14px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+}
+@media (max-width: 599px) {
+  .breadcrumb { margin: 16px 0 12px; }
+  .link, .current { font-size: 13px; }
+  /* On phones the Home label is the icon alone; the link keeps its accessible name. */
+  .item:first-child .link span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+@media (prefers-reduced-motion: reduce) { .link { transition: none; } }

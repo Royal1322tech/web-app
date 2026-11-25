@@ -122,13 +122,13 @@ test("search validation, rooms, child ages, query navigation and browser history
   await expect(page).toHaveURL(/\/$/);
 });
 
-test("filters, sorting, comparison and persisted favourites", async ({
+test("filters, sorting and comparison; Favourites is hidden for now", async ({
   page,
 }) => {
   await visit(page, "/search");
-  const favourites = page.getByRole("button", { name: /^Favourite:/ });
-  await expect(favourites.first()).toBeVisible();
-  await favourites.first().click();
+  await expect(page.locator("article").first()).toBeVisible();
+  // Favourites is hidden for now: no heart buttons, no navigation item, and its route goes home.
+  await expect(page.getByRole("button", { name: /^Favourite:/ })).toHaveCount(0);
   await page.getByLabel("Hotel Name", { exact: true }).fill("does-not-exist");
   await expect(page.getByText("No hotels match")).toBeVisible();
   await page.getByLabel("Hotel Name", { exact: true }).fill("");
@@ -144,11 +144,9 @@ test("filters, sorting, comparison and persisted favourites", async ({
     .getByRole("dialog")
     .getByRole("button", { name: "Close", exact: true })
     .click();
-  await page.getByRole("link", { name: "Favourites", exact: true }).click();
-  await page.reload();
-  await expect(
-    page.getByRole("button", { name: /^Favourite:/ }).first(),
-  ).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("link", { name: "Favourites", exact: true })).toHaveCount(0);
+  await page.goto("/favourites");
+  await expect(page).toHaveURL(/127\.0\.0\.1:\d+\/$/);
 });
 
 test("gallery, room and rate dialogs, chart, map", async ({ page }) => {

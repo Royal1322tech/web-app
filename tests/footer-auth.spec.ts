@@ -13,7 +13,8 @@ for (const width of [375, 768, 1440]) {
       await footer.scrollIntoViewIfNeeded();
       const links = footer.locator("nav a");
       await expect(links).toHaveCount(4);
-      const paths = ["/search", "/car-rental", "/agency", "/login"];
+      // Agency Profile is hidden for now: the agency workspace link opens My Profile.
+      const paths = ["/search", "/car-rental", "/profile", "/login"];
       for (let i = 0; i < paths.length; i++) {
         const link = links.nth(i);
         await expect(link).toHaveAttribute("href", paths[i]);

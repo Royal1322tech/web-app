@@ -1,3 +1,4 @@
+import { agencyProfileVisible } from "@/app/hidden-features";
 import { useEffect, useId, useRef, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Icon } from "@/components/ui/icon";
@@ -72,7 +73,7 @@ export function WorkspaceNavigation() {
         <div className="workspace-nav__group" role="group" aria-labelledby={`${id}-account`}>
           <p className="workspace-nav__label" id={`${id}-account`}>{t("Account", "الحساب")}</p>
           <NavLink to="/profile">{t("My Profile", "ملفي الشخصي")}</NavLink>
-          <NavLink to="/agency">{t("Agency Profile", "ملف الوكالة")}</NavLink>
+          {agencyProfileVisible && <NavLink to="/agency">{t("Agency Profile", "ملف الوكالة")}</NavLink>}
           <NavLink to="/notifications">{t("Notifications", "الإشعارات")}</NavLink>
           <NavLink to="/account/settings">{t("Account Settings", "إعدادات الحساب")}</NavLink>
           {demoSessionActive && (

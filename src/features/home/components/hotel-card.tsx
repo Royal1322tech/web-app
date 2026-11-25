@@ -1,3 +1,4 @@
+import { favouritesVisible } from "@/app/hidden-features";
 import { hotelDisplayName } from "@/features/hotels/lib/presentation";
 import { hotelDisplayRate } from "@/features/hotels/lib/display-rate";
 import { PointsIndicator } from "./points-indicator";
@@ -44,7 +45,7 @@ export function HotelCard({
               : "(max-width: 700px) 85vw, (max-width: 1000px) 44vw, 400px"
           }
         />
-        {!compact && (
+        {!compact && favouritesVisible && (
           <button
             type="button"
             className={styles.favouriteButton}

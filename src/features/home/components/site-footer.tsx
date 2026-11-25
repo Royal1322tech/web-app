@@ -1,3 +1,4 @@
+import { agencyProfileVisible } from "@/app/hidden-features";
 import { Link } from "react-router-dom";
 import { useAppSessionActive } from "@/features/auth/app-session";
 import {  } from "react";
@@ -6,10 +7,11 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import { Text, useLocale } from "@/features/localization/locale-provider";
 import styles from "../home.module.css";
 
-const links: { route: "/car-rental" | "/search" | "/agency" | "/login"; icon: IconName; en: string; ar: string }[] = [
+const links: { route: "/car-rental" | "/search" | "/agency" | "/profile" | "/login"; icon: IconName; en: string; ar: string }[] = [
   { route: "/search", icon: "building", en: "Discover Hotels", ar: "اكتشف الفنادق" },
   { route: "/car-rental", icon: "car", en: "Car Rental", ar: "تأجير السيارات" },
-  { route: "/agency", icon: "building", en: "Agency Workspace", ar: "مساحة الوكالة" },
+  // Agency Profile is hidden for now: the workspace entry opens My Profile.
+  { route: agencyProfileVisible ? "/agency" : "/profile", icon: "building", en: "Agency Workspace", ar: "مساحة الوكالة" },
   { route: "/login", icon: "user", en: "Partner Access", ar: "دخول الشركاء" },
 ];
 

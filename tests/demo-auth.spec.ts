@@ -53,7 +53,7 @@ test("invalid credentials fail, valid login returns to the complete deep link an
 for (const width of [375, 768, 1440]) {
   test(`authenticated navigation and logout preserve preferences at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
-    await visit(page, "/agency");
+    await visit(page, "/profile");
     await openHeaderTools(page);
     await expect(page.locator('header a[href="/login"], header a[href^="/register"]')).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Account menu", exact: true })).toHaveAttribute("aria-expanded", "false");
@@ -100,7 +100,7 @@ test("storage failure is explained without creating a session", async ({ page })
 
 
 test("restored documents recheck demo access before exposing internal routes", async ({ page }) => {
-  await visit(page, "/agency");
+  await visit(page, "/profile");
   await page.evaluate(() => {
     sessionStorage.removeItem("royal-vacation.demo-auth.v1");
     window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true }));

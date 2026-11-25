@@ -274,6 +274,12 @@
     transform: none;
   }
 }
+.nights {
+  margin: 6px 0 0;
+  color: #4f5559;
+  font-size: 12px;
+  font-weight: 600;
+}
 .error {
   color: #b42336;
   font-size: 12px;

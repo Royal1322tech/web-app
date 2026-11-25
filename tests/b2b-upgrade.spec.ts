@@ -6,8 +6,9 @@ import AxeBuilder from "@axe-core/playwright";
 // Interface state previews are developer-only; the local test build enables them (playwright.config.ts).
 const statePreviewBuild = !process.env.PLAYWRIGHT_BASE_URL || process.env.VITE_ENABLE_STATE_PREVIEW === "true";
 const routes = [
-  "/agency",
-  "/agency/edit",
+  // Agency Profile (/agency, /agency/edit) is hidden for now and redirects to My Profile.
+  "/profile",
+  "/account/settings",
   "/notifications",
   "/verify-email",
   "/wallet",
@@ -126,25 +127,14 @@ test("booking modification updates dates, total and timeline", async ({
 test("account editing, notifications, transactions and state previews", async ({
   page,
 }) => {
-  await visit(page, "/agency/edit");
-  await page.getByLabel("Agency name", { exact: true }).fill("");
-  await page
-    .getByRole("button", { name: "Save profile", exact: true })
-    .click();
-  await expect(page.getByRole("alert")).toContainText(
-    "Enter your agency name.",
-  );
-  await page
-    .getByLabel("Agency name", { exact: true })
-    .fill("Local Demo Agency");
-  await page
-    .getByRole("button", { name: "Save profile", exact: true })
-    .click();
-  await expect(page.getByRole("status")).toContainText("Profile changes saved for this session");
-  await page.getByRole("link", { name: "Back to profile" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Local Demo Agency" }),
-  ).toBeVisible();
+  // Agency Profile is hidden for now: both of its routes open My Profile, with no link back to it.
+  await visit(page, "/profile");
+  for (const path of ["/agency", "/agency/edit"]) {
+    await page.goto(path);
+    await expect(page).toHaveURL(/\/profile$/);
+  }
+  await expect(page.locator('a[href="/agency"], a[href="/agency/edit"]')).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Agency Profile" })).toHaveCount(0);
   await page
     .getByRole("link", { name: "Notifications", exact: true })
     .last()
@@ -230,8 +220,8 @@ test("new routes load directly, refresh, and preserve RTL and reduced motion", a
   await openHeaderTools(page);
   await selectLanguage(page, "ar");
   for (const route of [
-    "/agency",
-    "/agency/edit",
+    "/profile",
+    "/account/settings",
     "/wallet",
     "/transactions",
     "/bookings/DEMO-1001",
@@ -258,8 +248,8 @@ test("new account and finance screens pass accessibility checks", async ({
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   for (const route of [
-    "/agency",
-    "/agency/edit",
+    "/profile",
+    "/account/settings",
     "/wallet",
     "/transactions",
     "/notifications",

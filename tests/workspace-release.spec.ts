@@ -92,10 +92,12 @@ test('points history filters, paginates and shows an honest empty state', async 
   await page.getByLabel('Search points activity').fill('no such entry');
   await expect(page.getByRole('status')).toHaveText('No points activity matches your filters.');
 });
-test('workspace navigation persists across all sections and profile edits remain local', async ({ page }) => {
+test('workspace navigation persists across all sections; My Profile has no link to the hidden agency editor', async ({ page }) => {
   await visit(page, '/profile');
   const navigation = page.getByRole('navigation', { name: 'Workspace navigation' });
-  for (const route of ['/car-rental/bookings', '/profile', '/agency', '/transactions', '/notifications', '/points', '/tickets', '/account/settings', '/profile']) {
+  // Agency Profile is hidden for now, so it isn't in the bar.
+  await expect(navigation.locator('a[href="/agency"]')).toHaveCount(0);
+  for (const route of ['/car-rental/bookings', '/profile', '/transactions', '/notifications', '/points', '/tickets', '/account/settings', '/profile']) {
     await navigation.locator(`a[href="${route}"]`).click();
     await expect(page).toHaveURL(new RegExp(`${route}$`));
     await expect(navigation).toHaveCount(1);
@@ -115,16 +117,10 @@ test('workspace navigation persists across all sections and profile edits remain
   await expect(page).toHaveURL(/\/group-quotation$/);
   await expect(navigation).toHaveCount(0);
   await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible();
+  // The demo agency editor is part of the hidden Agency Profile: My Profile offers no link to it.
   await page.goto('/profile');
-  await page.getByRole('link', { name: 'Edit profile' }).click();
-  await page.getByLabel('Contact person', { exact: true }).fill('Demo Partner Contact');
-  await page.getByRole('button', { name: 'Save profile' }).click();
-  await expect(page.getByRole('status')).toContainText('Profile changes saved for this session');
-  await navigation.getByRole('link', { name: 'My Profile', exact: true }).click();
-  await expect(page.locator('.profile-overview')).toContainText('Demo Partner Contact');
-  await expect(page.locator('.profile-information')).toContainText('Demo Partner Contact');
-  await page.reload();
-  await expect(page.locator('.profile-overview')).not.toContainText('Demo Partner Contact');
+  await expect(page.getByRole('link', { name: 'Edit profile' })).toHaveCount(0);
+  await expect(page.locator('a[href="/agency"], a[href="/agency/edit"]')).toHaveCount(0);
 });
 test('policy acknowledgment gates the flow, persists within an attempt and resets on offer changes', async ({ page }) => {
   await visit(page, '/hotels/eastern-al-montazah');
@@ -258,18 +254,13 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) for (const locale of 
   });
 }
 
-test('sample collection hotels without details routes cannot be chosen', async ({ page }) => {
+test('Favourites is hidden: no hearts on hotel cards and its route goes home', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await visit(page, '/');
-  await page.getByRole('button', { name: 'Favourite: Golden Rose Hotel — Alexandria', exact: true }).first().click();
-  await page.getByRole('button', { name: 'Favourite: Golden Rose Hotel — Cairo', exact: true }).first().click();
+  await expect(page.getByRole('button', { name: /^Favourite:/ })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Favourites', exact: true })).toHaveCount(0);
   await page.goto('/favourites');
-  await compare(page);
-  const dialog = page.getByRole('dialog');
-  await expect(dialog.getByRole('link', { name: 'Choose Hotel' })).toHaveCount(0);
-  const actions = dialog.getByRole('button', { name: 'Selection unavailable' });
-  await expect(actions).toHaveCount(2);
-  for (const action of await actions.all()) await expect(action).toBeDisabled();
+  await expect(page).toHaveURL(/127\.0\.0\.1:\d+\/$/);
 });
 
 for (const locale of ['en', 'ar']) test(`enhanced workspace and comparison meet accessibility checks in ${locale}`, async ({ page }) => {

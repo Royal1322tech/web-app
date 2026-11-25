@@ -49,7 +49,7 @@ test("search result cards label offer-based and listed prices, with a quieter Re
 test("every audited page has a descriptive, localized document title", async ({ page }) => {
   const english: Record<string, string> = {
     "/": "Home", "/bookings": "My Bookings", "/bookings/DEMO-1001": "Booking details", "/wallet": "Wallet",
-    "/tickets": "My Tickets", "/profile": "My Profile", "/agency": "Agency Profile",
+    "/tickets": "My Tickets", "/profile": "My Profile", "/account/settings": "Account Settings",
   };
   for (const [path, title] of Object.entries(english)) {
     await visit(page, path);

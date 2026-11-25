@@ -1,3 +1,4 @@
+import { agencyProfileVisible, favouritesVisible } from "./hidden-features";
 import { apiAuthEnabled } from "@/features/auth/auth-config";
 import { DemoSessionGate } from "@/features/demo/session-gate";
 import {
@@ -127,7 +128,8 @@ export const router = createBrowserRouter([
       },
       {
         path: "favourites",
-        lazy: page(() => import("@/pages/favourites"), "Favourites", "المفضلة"),
+        // Hidden for now (see hidden-features.ts): direct visits go home; saved favourites are kept.
+        ...(favouritesVisible ? { lazy: page(() => import("@/pages/favourites"), "Favourites", "المفضلة") } : { element: <Navigate to="/" replace /> }),
       },
       {
         path: "bookings",
@@ -255,21 +257,23 @@ export const router = createBrowserRouter([
           { path: "price-requests", lazy: async () => ({ Component: (await import("@/features/hotels/components/price-requests-page")).PriceRequestsPage }) },
           { path: "invoices", lazy: async () => ({ Component: (await import("@/features/demo/invoices")).InvoiceHistoryPage }) },
           { path: "accounting-review", lazy: async () => ({ Component: (await import("@/features/demo/invoices")).AccountingReviewPage }) },
-          { path: "profile", lazy: async () => ({ Component: (await import("@/features/demo/profile-settings")).ProfilePage }) },
-          { path: "account/settings", lazy: async () => ({ Component: (await import("@/features/demo/profile-settings")).AccountSettingsPage }) },
-          {
+          // My Profile: the real profile (GET/PATCH /b2b/me) with real sign-in; the example otherwise.
+          { path: "profile", lazy: async () => ({ Component: apiAuthEnabled ? (await import("@/features/account/live-profile-page")).LiveProfilePage : (await import("@/features/demo/profile-settings")).ProfilePage }) },
+          { path: "account/settings", lazy: async () => ({ Component: (await import("@/features/account/account-settings-page")).AccountSettingsPage }) },
+          // Agency Profile is hidden for now (see hidden-features.ts): its routes open My Profile.
+          agencyProfileVisible ? {
             path: "agency",
             lazy: async () => ({
               Component: (await import("@/features/demo/account")).AgencyPage,
             }),
-          },
-          {
+          } : { path: "agency", element: <Navigate to="/profile" replace /> },
+          agencyProfileVisible ? {
             path: "agency/edit",
             lazy: async () => ({
               Component: (await import("@/features/demo/account"))
                 .EditAgencyPage,
             }),
-          },
+          } : { path: "agency/edit", element: <Navigate to="/profile" replace /> },
           {
             path: "notifications",
             lazy: async () => ({

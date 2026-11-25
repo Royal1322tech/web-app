@@ -1,3 +1,4 @@
+import { stayDateIssue, toLocalDay } from "@/lib/stay-dates";
 import { z } from "zod";
 import { ApiError, apiRequest } from "@/lib/api/client";
 import type { HotelSearchCriteria } from "@/features/home/schemas/hotel-search.schema";
@@ -31,7 +32,7 @@ export const isHotelHid = (value: unknown): value is number => typeof value === 
 export function toRoomsRequest(criteria: HotelSearchCriteria, options: { language: "en" | "ar"; currency: B2BSearchCurrency }): RoomsRequest | null {
   const residency = criteria.nationality?.trim().toLowerCase();
   if (!residency || !/^[a-z]{2}$/.test(residency)) return null;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(criteria.checkIn) || !/^\d{4}-\d{2}-\d{2}$/.test(criteria.checkOut) || !(criteria.checkOut > criteria.checkIn)) return null;
+  if (stayDateIssue(criteria.checkIn, criteria.checkOut, toLocalDay(new Date()))) return null;
   if (!["en", "ar"].includes(options.language) || !isB2BSearchCurrency(options.currency)) return null;
   const rooms = criteria.rooms;
   if (rooms.length < 1 || rooms.length > 8) return null;

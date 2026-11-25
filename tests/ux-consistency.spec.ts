@@ -17,7 +17,8 @@ test("booking records omit catalogue actions while search results keep them", as
   await visit(page, search);
   const result = page.locator('article[class*="resultCard"]').first();
   await expect(result.getByRole("button", { name: "Compare" })).toBeVisible();
-  await expect(result.locator('[class*="heart"]')).toHaveCount(1);
+  // Favourites is hidden for now, so search results show no heart.
+  await expect(result.locator('[class*="heart"]')).toHaveCount(0);
 });
 
 test("transactional flows hide the account navigation and account pages keep it", async ({ page }) => {
@@ -38,7 +39,7 @@ test("navigation labels are consistent across header, workspace and breadcrumbs"
   await expect(page.getByRole("navigation", { name: "Workspace navigation" })).toHaveCount(0);
   await visit(page, "/transactions");
   const workspace = page.getByRole("navigation", { name: "Workspace navigation" });
-  for (const label of ["My Bookings", "My Rentals", "Agency Profile", "Wallet"]) {
+  for (const label of ["My Bookings", "My Rentals", "My Profile", "Wallet"]) {
     await expect(workspace.getByRole("link", { name: label, exact: true })).toBeVisible();
   }
   await expect(workspace.getByRole("link", { name: "Credit balance" })).toHaveCount(0);

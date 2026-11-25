@@ -1,3 +1,4 @@
+import { isCalendarDay, toLocalDay } from "@/lib/stay-dates";
 import { countries } from "@/features/agency-registration/data/countries";
 import { z } from "zod";
 import { searchLimits } from "../data/search-limits";
@@ -25,13 +26,13 @@ const dateSchema = z
   .string()
   .min(1, "Choose a date.")
   .refine(
-    (value) => z.iso.date().safeParse(value).success,
+    (value) => z.iso.date().safeParse(value).success && isCalendarDay(value),
     "Choose a valid date.",
   );
 
+/** Today's local calendar day, read when the form is validated (never a fixed date). */
 export function localToday() {
-  const date = new Date();
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  return toLocalDay(new Date());
 }
 
 export const hotelSearchSchema = z

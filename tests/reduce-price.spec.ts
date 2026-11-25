@@ -43,17 +43,58 @@ async function signedIn(page: Page, { locale = "en", rooms = true, submit = () =
 /** A multipart field's value from the raw request body. */
 const field = (body: string, name: string) => body.match(new RegExp(`name="${name}"\\r\\n\\r\\n([^\\r]*)`))?.[1];
 
-async function openFromRooms(page: Page) {
+/** Opens the request form from a room rate's own Reduce Price action (one per rate card). */
+async function openFromRooms(page: Page, rateIndex = 1) {
   await page.goto(`${APP}/search?${stay}`);
   await page.getByRole("link", { name: /View rooms/ }).click();
-  await expect(page.locator("[data-rate-index]")).toHaveCount(2);
-  const cta = page.getByRole("complementary", { name: "Found a better price?" });
+  const rates = page.locator("[data-rate-index]");
+  await expect(rates).toHaveCount(2);
+  // The old page-level call to action is gone; every rate (Price on request included) has its own action.
+  await expect(page.getByRole("complementary", { name: "Found a better price?" })).toHaveCount(0);
+  for (let index = 0; index < 2; index++) {
+    const card = rates.nth(index);
+    await expect(card.locator("[data-reduce-price]")).toHaveCount(1);
+    await expect(card).toContainText("Price on request");
+    // Selection stays as it was (these rates aren't selectable); Reduce Price doesn't change that.
+    await expect(card.getByRole("button", { name: "Select room" })).toBeDisabled();
+  }
   await expect(page.getByRole("link", { name: "Back to search results" }).first()).toHaveAttribute("href", /\/search\?destination=dubai/);
-  await cta.getByRole("link", { name: "Request a Lower Price" }).click();
+  await rates.nth(rateIndex).getByRole("link", { name: "Reduce Price" }).click();
   await expect(page).toHaveURL(/\/hotels\/rooms\/4242\/reduce-price\?destination=dubai/);
 }
 
 test.describe("Reduce Price request (mocked API)", () => {
+  test("each rate's Reduce Price opens the form for that room; the API contract is unchanged", async ({ page }) => {
+    const { posts } = await signedIn(page);
+    await openFromRooms(page, 0);
+    // The rate's room is carried over: shown with the stay, not asked again.
+    await expect(page.getByLabel("Your stay")).toContainText("Deluxe King");
+    await expect(page.getByLabel(/^Room/)).toHaveCount(0);
+    await page.getByLabel(/Requested price/).fill("150");
+    await page.getByRole("button", { name: "Send request" }).click();
+    await expect(page.getByRole("heading", { name: "Request submitted for review" })).toBeVisible();
+    expect(posts).toHaveLength(1);
+    const body = posts[0].postDataBuffer()!.toString("latin1");
+    expect(field(body, "room_name")).toBe("Deluxe King");
+    expect(field(body, "hotel_name")).toBe("Palm Court");
+    expect(posts[0].headers()["content-type"]).toMatch(/^multipart\/form-data; boundary=/);
+  });
+
+  for (const [locale, width] of [["ar", 375], ["en", 768], ["en", 1440]] as const) {
+    test(`${locale} ${width}px: the per-rate Reduce Price action fits under Select room`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await signedIn(page, { locale });
+      await page.goto(`${APP}/hotels/rooms/4242?${stay}`);
+      const card = page.locator("[data-rate-index]").first();
+      const action = card.locator("[data-reduce-price]");
+      await expect(action).toHaveText(locale === "ar" ? "اطلب سعرًا أقل" : "Reduce Price");
+      const select = await card.getByRole("button", { name: locale === "ar" ? "اختيار الغرفة" : "Select room" }).boundingBox();
+      const reduce = await action.boundingBox();
+      expect(reduce!.y).toBeGreaterThan(select!.y + select!.height - 1); // directly below the selection button
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+    });
+  }
+
   test("opens from the rooms page, validates, and submits once as multipart with the real stay", async ({ page }) => {
     const { posts } = await signedIn(page, { submit: () => ({ status: 201, json: created, delayMs: 600 }) });
     await openFromRooms(page);
@@ -63,9 +104,9 @@ test.describe("Reduce Price request (mocked API)", () => {
     await expect(page.getByRole("link", { name: "Back to rooms" })).toHaveAttribute("href", /\/hotels\/rooms\/4242\?/);
     await expect(page.getByLabel("Hotel name")).toHaveCount(0); // known from the search, so not asked
 
-    // The room comes from the real rooms reply.
-    const room = page.getByLabel(/^Room/);
-    await expect(room.locator("option")).toHaveText(["Choose a room", "Deluxe King", "Family Suite"]);
+    // The room of the rate the action was used on is carried over and not asked again.
+    await expect(page.getByLabel("Your stay")).toContainText("Family Suite");
+    await expect(page.getByLabel(/^Room/)).toHaveCount(0);
 
     const price = page.getByLabel(/Requested price/);
     await price.focus();
@@ -86,12 +127,7 @@ test.describe("Reduce Price request (mocked API)", () => {
     await expect(page.locator("label", { hasText: "Replace" })).toBeVisible();
     await page.getByLabel(/^Notes/).fill("Competitor rate for the same dates.");
 
-    // The room is required.
     const send = page.getByRole("button", { name: "Send request" });
-    await send.click();
-    await expect(page.getByText("Choose the room.")).toBeVisible();
-    expect(posts).toHaveLength(0);
-    await room.selectOption("Family Suite");
 
     // A double click sends one request; the button shows progress; success waits for the 201.
     await send.dblclick();
@@ -124,8 +160,7 @@ test.describe("Reduce Price request (mocked API)", () => {
 
   test("a 422 shows the server's message next to the field and keeps the form", async ({ page }) => {
     await signedIn(page, { submit: () => ({ status: 422, json: { message: "The given data was invalid.", errors: { requested_price: ["The requested price must be a valid amount."] } } }) });
-    await openFromRooms(page);
-    await page.getByLabel(/^Room/).selectOption("Deluxe King");
+    await openFromRooms(page, 0);
     await page.getByLabel(/Requested price/).fill("99");
     await page.getByRole("button", { name: "Send request" }).click();
     await expect(page.getByText("The requested price must be a valid amount.")).toBeVisible();
@@ -137,8 +172,7 @@ test.describe("Reduce Price request (mocked API)", () => {
   test("a 429 waits for Retry-After before sending can be tried again; 403 explains itself", async ({ page }) => {
     let call = 0;
     await signedIn(page, { submit: () => (++call === 1 ? { status: 429, json: { message: "Too Many Attempts." }, headers: { "Retry-After": "2" } } : { status: 403, json: { message: "Forbidden." } }) });
-    await openFromRooms(page);
-    await page.getByLabel(/^Room/).selectOption("Deluxe King");
+    await openFromRooms(page, 0);
     await page.getByLabel(/Requested price/).fill("99");
     const send = page.getByRole("button", { name: "Send request" });
     await send.click();

@@ -158,7 +158,7 @@ export function CustomerDetailPage() {
   const { id = "" } = useParams();
   const { state, retry } = useB2BResource(id, (token, signal) => getCustomer(id, { token, signal }), classifyCustomerError);
   return (
-    <Workspace title={t("Customer", "العميل")}>
+    <Workspace title={t("Customer", "العميل")} trail={[{ to: "/customers", label: t("Customers", "العملاء") }]}>
       <div className={styles.page} data-customer-detail>
         <BackLink to="/customers">{t("Back to customers", "العودة إلى العملاء")}</BackLink>
         {state.status === "loading" && <p className={styles.muted} role="status">{t("Loading customer…", "جارٍ تحميل العميل…")}</p>}
