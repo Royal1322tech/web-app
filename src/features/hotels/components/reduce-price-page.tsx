@@ -14,6 +14,7 @@ import { useTravelPreferences } from "@/features/preferences/travel-preferences"
 import { isB2BSearchCurrency } from "../api/b2b-hotel-search";
 import { isHotelHid, toRoomsRequest } from "../api/b2b-hotel-rooms";
 import { findDestination } from "../data/destinations";
+import { destinationName } from "../lib/destination-name";
 import { apiHotelSearchEnabled } from "../hotel-search-config";
 import { hotelImageUrl } from "../lib/live-hotels";
 import { readHotelSummary, roomsPath, type RoomsHotelSummary } from "../lib/rooms-route";
@@ -118,7 +119,7 @@ function BookingDetails({ summary, criteria, residency, currency, roomName }: { 
   const place = findDestination(criteria.destination);
   const image = hotelImageUrl(summary?.image ?? null);
   const country = new Intl.DisplayNames([locale], { type: "region" }).of(residency.toUpperCase()) ?? residency.toUpperCase();
-  const location = summary?.address ?? (place ? t(place.name.en, place.name.ar) : null);
+  const location = summary?.address ?? (place ? t(place.name.en, place.name.ar) : destinationName(criteria.destination, locale) ?? null);
   const rows: [IconName, string, ReactNode][] = [
     ["calendar", t("Check-in", "الوصول"), date(criteria.checkIn)],
     ["calendar", t("Check-out", "المغادرة"), <><bdi>{date(criteria.checkOut)}</bdi><small className={styles.nights}>{t(`${nights} ${nights === 1 ? "night" : "nights"}`, `${nights} ليالٍ`)}</small></>],

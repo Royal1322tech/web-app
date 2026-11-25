@@ -5,13 +5,19 @@ import { newCustomerBody } from "@/features/customers/b2b-customers";
 import { Icon } from "@/components/ui/icon";
 import { ApiError } from "@/lib/api/client";
 import { useLocale } from "@/features/localization/locale-provider";
-import { b2bSession } from "@/features/auth/b2b-session";
+import { b2bSession, useB2BSession } from "@/features/auth/b2b-session";
+import { BookingConfirmPanel } from "@/features/bookings/live/booking-confirm-panel";
 import {
+  GUEST_NAME_MAX,
   classifyDraftError,
   createBookingDraft,
   guestSlots,
+  isContactPhone,
+  isEmail,
+  isGuestName,
   isRetryableDraftFailure,
   newIdempotencyKey,
+  type Gender,
   type DraftCreated,
   type DraftCustomer,
   type DraftFailure,
@@ -23,8 +29,9 @@ import styles from "./hotel-rooms-page.module.css";
 /** Wall-clock time for event handlers (kept out of render). */
 const clock = () => Date.now();
 
-type Names = Record<string, { first: string; last: string }>;
+type Names = Record<string, { first: string; last: string; gender?: Gender }>;
 type FieldErrors = Record<string, { first?: string; last?: string }>;
+type ContactErrors = { email?: string; phone?: string };
 type Text = [string, string];
 
 const MESSAGES: Record<Exclude<DraftFailure, "validation" | "signed_out">, Text> = {
@@ -44,8 +51,22 @@ const MESSAGES: Record<Exclude<DraftFailure, "validation" | "signed_out">, Text>
  * The Idempotency-Key is reused only when the exact same submission is retried, and replaced as soon as
  * anything in it changes. A draft is never presented as a reservation or payment.
  */
-export function BookingDraftForm({ reviewToken, occupancy, onRefresh }: { reviewToken: string; occupancy: RoomsRequest["guests"]; onRefresh: () => void }) {
+export function BookingDraftForm({ reviewToken, occupancy, nationality, expiresAt, expired, onRefresh }: {
+  reviewToken: string;
+  occupancy: RoomsRequest["guests"];
+  /** The stay's nationality (search residency), sent as each guest's nationality_code. */
+  nationality: string;
+  /** When the prebook expires; drafts and confirmations must happen before then. */
+  expiresAt: number;
+  expired: boolean;
+  onRefresh: () => void;
+}) {
   const { t, locale } = useLocale();
+  const b2b = useB2BSession();
+  const identity = b2b.status === "active" ? b2b.identity : null;
+  const [contact, setContact] = useState<{ email: string; phone: string } | null>(null);
+  const contactValue = contact ?? { email: identity?.user.email ?? "", phone: (identity?.user as { phone?: string | null } | undefined)?.phone ?? "" };
+  const [contactErrors, setContactErrors] = useState<ContactErrors>({});
   const slots = guestSlots(occupancy);
   const adults = slots.filter((slot) => slot.type === "adult");
   const [names, setNames] = useState<Names>({});
@@ -73,24 +94,41 @@ export function BookingDraftForm({ reviewToken, occupancy, onRefresh }: { review
 
   if (created) {
     return (
-      <section className={styles.draftDone} data-draft-state="created" aria-labelledby={`${formId}-done`}>
-        <h3 id={`${formId}-done`} ref={successRef} tabIndex={-1}><Icon name="check" />{t("Booking Draft Created", "تم إنشاء مسودة الحجز")}</h3>
-        <p>{t("The guest details and this price check were saved as a booking draft. A draft is not a confirmed reservation, and no payment has been taken.", "تم حفظ بيانات الضيوف وهذا التحقق من السعر كمسودة حجز. المسودة ليست حجزًا مؤكدًا، ولم يتم أي دفع.")}</p>
-        <p className={styles.draftReference}>{t("Booking number", "رقم الحجز")}: <bdi dir="ltr">{created.booking_no}</bdi></p>
-        <div className={styles.actions}>
-          <Link className="button button--primary" to={`/bookings/${encodeURIComponent(created.booking_id)}`}>{t("View booking", "عرض الحجز")}</Link>
-        </div>
-      </section>
+      <div className={styles.draftDoneGroup}>
+        <section className={styles.draftDone} data-draft-state="created" aria-labelledby={`${formId}-done`}>
+          <h3 id={`${formId}-done`} ref={successRef} tabIndex={-1}><Icon name="check" />{t("Booking Draft Created", "تم إنشاء مسودة الحجز")}</h3>
+          <p>{t("The guest details and this price check were saved as a booking draft. A draft is not a confirmed reservation, and no payment has been taken.", "تم حفظ بيانات الضيوف وهذا التحقق من السعر كمسودة حجز. المسودة ليست حجزًا مؤكدًا، ولم يتم أي دفع.")}</p>
+          <p className={styles.draftReference}>{t("Booking number", "رقم الحجز")}: <bdi dir="ltr">{created.booking_no}</bdi>{created.order_no && <> · {t("Order", "الطلب")}: <bdi dir="ltr">{created.order_no}</bdi></>}</p>
+          <div className={styles.actions}>
+            <Link className="button button--outline" to={`/bookings/${encodeURIComponent(created.booking_id)}`}>{t("View booking", "عرض الحجز")}</Link>
+          </div>
+        </section>
+        {created.next_step === "confirm" && (
+          <BookingConfirmPanel
+            bookingId={created.booking_id}
+            agencyPurchasePrice={created.agency_purchase_price}
+            customerTotal={created.customer_total}
+            currency={created.currency}
+            initial={null}
+            expiresAt={expiresAt}
+            onRefreshRates={onRefresh}
+          />
+        )}
+      </div>
     );
   }
+  // The parent shows the expiry and a refresh; a form for an expired price check would only fail.
+  if (expired) return null;
 
   const label = (slot: (typeof slots)[number]) => slot.type === "adult"
     ? t(`Adult ${slot.number}`, `بالغ ${slot.number}`)
     : t(`Child ${slot.number}`, `طفل ${slot.number}`);
   const set = (key: string, part: "first" | "last", value: string) => {
-    setNames((current) => ({ ...current, [key]: { first: current[key]?.first ?? "", last: current[key]?.last ?? "", [part]: value } }));
+    setNames((current) => ({ ...current, [key]: { ...current[key], first: current[key]?.first ?? "", last: current[key]?.last ?? "", [part]: value } }));
     if (errors[key]?.[part]) setErrors((current) => ({ ...current, [key]: { ...current[key], [part]: undefined } }));
   };
+  const setGender = (key: string, gender: Gender | "") => setNames((current) => ({ ...current, [key]: { first: current[key]?.first ?? "", last: current[key]?.last ?? "", gender: gender || undefined } }));
+  const nationalityCode = /^[a-z]{2}$/i.test(nationality) ? nationality.toUpperCase() : undefined;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -100,19 +138,40 @@ export function BookingDraftForm({ reviewToken, occupancy, onRefresh }: { review
       const first = (names[slot.key]?.first ?? "").trim();
       const last = (names[slot.key]?.last ?? "").trim();
       const issue: { first?: string; last?: string } = {};
-      if (!first) issue.first = t("Enter the first name.", "أدخل الاسم الأول.");
-      else if (first.length > 100) issue.first = t("Use 100 characters or fewer.", "استخدم 100 حرف أو أقل.");
-      if (!last) issue.last = t("Enter the last name.", "أدخل اسم العائلة.");
-      else if (last.length > 100) issue.last = t("Use 100 characters or fewer.", "استخدم 100 حرف أو أقل.");
+      const nameIssue = (value: string, missing: string) => !value ? missing
+        : value.length > GUEST_NAME_MAX ? t(`Use ${GUEST_NAME_MAX} characters or fewer.`, `استخدم ${GUEST_NAME_MAX} حرفًا أو أقل.`)
+        : !isGuestName(value) ? t("Use letters, spaces and . ' - only.", "استخدم الحروف والمسافات و . ' - فقط.") : undefined;
+      issue.first = nameIssue(first, t("Enter the first name.", "أدخل الاسم الأول."));
+      issue.last = nameIssue(last, t("Enter the last name.", "أدخل اسم العائلة."));
       if (issue.first || issue.last) found[slot.key] = issue;
-      return { first_name: first, last_name: last, guest_type: slot.type, is_lead: slot.key === lead };
+      const gender = names[slot.key]?.gender;
+      return {
+        first_name: first,
+        last_name: last,
+        guest_type: slot.type,
+        room_index: slot.room - 1,
+        is_lead: slot.key === lead,
+        ...(slot.type === "child" && slot.age !== undefined ? { age: slot.age } : {}),
+        ...(gender ? { gender } : {}),
+        ...(nationalityCode ? { nationality_code: nationalityCode } : {}),
+      };
     });
+    const email = contactValue.email.trim(), phone = contactValue.phone.trim();
+    const foundContact: ContactErrors = {
+      email: !email ? t("Enter the agency contact email.", "أدخل بريد التواصل للوكالة.") : !isEmail(email) ? t("Enter a valid email address.", "أدخل بريدًا إلكترونيًا صحيحًا.") : undefined,
+      phone: !phone ? t("Enter the agency contact phone.", "أدخل هاتف التواصل للوكالة.") : !isContactPhone(phone) ? t("Use 5–35 digits, spaces, + ( ) or -.", "استخدم من 5 إلى 35 رقمًا أو مسافة أو + ( ) -.") : undefined,
+    };
+    setContactErrors(foundContact);
     const foundCustomer = validateCustomerChoice(customer, t);
     setErrors(found);
     setCustomerErrors(foundCustomer);
     setFailure(null);
     if (Object.keys(foundCustomer).length) {
       document.querySelector<HTMLElement>("[data-customer-picker] input")?.focus();
+      return;
+    }
+    if (foundContact.email || foundContact.phone) {
+      document.getElementById(`${formId}-contact-${foundContact.email ? "email" : "phone"}`)?.focus();
       return;
     }
     if (Object.keys(found).length) {
@@ -125,13 +184,14 @@ export function BookingDraftForm({ reviewToken, occupancy, onRefresh }: { review
     const draftCustomer: DraftCustomer = customer.mode === "existing"
       ? { customer_id: customer.customer!.id }
       : { customer: newCustomerBody(customer) };
-    const payload = JSON.stringify([reviewToken, guests, draftCustomer]);
+    const draftContact = { contact_email: email, contact_phone: phone };
+    const payload = JSON.stringify([reviewToken, guests, draftCustomer, draftContact]);
     const key = submitted.current?.payload === payload ? submitted.current.key : newIdempotencyKey();
     submitted.current = { payload, key };
     pending.current = true;
     setBusy(true);
     try {
-      setCreated(await createBookingDraft(reviewToken, guests, draftCustomer, key, { token, locale: locale === "ar" ? "ar" : "en" }));
+      setCreated(await createBookingDraft(reviewToken, guests, draftCustomer, draftContact, key, { token, locale: locale === "ar" ? "ar" : "en" }));
     } catch (error) {
       const kind = classifyDraftError(error);
       // A failure that can't succeed on retry: the next attempt, even unchanged, gets a new key.
@@ -151,9 +211,13 @@ export function BookingDraftForm({ reviewToken, occupancy, onRefresh }: { review
           if (field === "customer.last_name") customerFields.last_name = t("Check this name.", "تحقق من هذا الاسم.");
           if (field === "customer.email" || field === "customer.phone") customerFields.contact = t("Check the email or phone.", "تحقق من البريد أو الهاتف.");
         }
+        setContactErrors({
+          email: fields.contact_email ? t("Check the contact email.", "تحقق من بريد التواصل.") : undefined,
+          phone: fields.contact_phone ? t("Check the contact phone.", "تحقق من هاتف التواصل.") : undefined,
+        });
         setCustomerErrors(customerFields);
         setErrors(mapped);
-        setFailure({ kind, text: t("Check the guest details: a first and last name for every guest, and exactly one lead guest.", "تحقق من بيانات الضيوف: اسم أول واسم عائلة لكل ضيف، وضيف رئيسي واحد فقط.") });
+        setFailure({ kind, text: t("Check the details: contact email and phone, a first and last name for every guest as on the passport, and exactly one lead guest.", "تحقق من البيانات: بريد وهاتف التواصل، واسم أول واسم عائلة لكل ضيف كما في جواز السفر، وضيف رئيسي واحد فقط.") });
       } else if (kind !== "signed_out") {
         const retryAfter = kind === "rate_limited" && error instanceof ApiError && error.retryAfterSeconds ? clock() + error.retryAfterSeconds * 1000 : undefined;
         setNow(clock());
@@ -171,21 +235,53 @@ export function BookingDraftForm({ reviewToken, occupancy, onRefresh }: { review
       <h3 id={`${formId}-title`}>{t("Guest details", "بيانات الضيوف")}</h3>
       <p className={styles.note}>{t("Enter every guest's name as on their passport, and choose the lead guest. This saves a booking draft only: it isn't a reservation and takes no payment.", "أدخل اسم كل ضيف كما في جواز سفره، واختر الضيف الرئيسي. هذا يحفظ مسودة حجز فقط: ليس حجزًا ولا يتضمن أي دفع.")}</p>
       <CustomerPicker value={customer} onChange={(next) => { setCustomer(next); setCustomerErrors({}); }} errors={customerErrors} disabled={busy} />
+      <fieldset className={styles.draftRoom} disabled={busy} data-draft-contact>
+        <legend>{t("Agency contact", "تواصل الوكالة")}</legend>
+        <div className={styles.contactRow}>
+          {(["email", "phone"] as const).map((field) => (
+            <label key={field} className={styles.guestField}>
+              <span>{field === "email" ? t("Contact email", "بريد التواصل") : t("Contact phone", "هاتف التواصل")}</span>
+              <input
+                id={`${formId}-contact-${field}`}
+                className="input"
+                type={field === "email" ? "email" : "tel"}
+                dir="ltr"
+                autoComplete={field === "email" ? "email" : "tel"}
+                maxLength={field === "email" ? 254 : 35}
+                value={contactValue[field]}
+                aria-invalid={!!contactErrors[field]}
+                aria-describedby={contactErrors[field] ? `${formId}-contact-${field}-error` : undefined}
+                onChange={(event) => { setContact({ ...contactValue, [field]: event.target.value }); setContactErrors((current) => ({ ...current, [field]: undefined })); }}
+              />
+              {contactErrors[field] && <span id={`${formId}-contact-${field}-error`} className="field-error" role="alert">{contactErrors[field]}</span>}
+            </label>
+          ))}
+        </div>
+      </fieldset>
       {rooms.map((room) => (
         <fieldset key={room} className={styles.draftRoom} disabled={busy}>
           <legend>{t(`Room ${room}`, `الغرفة ${room}`)}</legend>
           {slots.filter((slot) => slot.room === room).map((slot) => (
             <div key={slot.key} className={styles.guestRow} data-guest={slot.key}>
-              <p className={styles.guestLabel}>{label(slot)}</p>
+              <p className={styles.guestLabel}>{label(slot)}{slot.type === "child" && slot.age !== undefined && <> · {t(`Age ${slot.age}`, `العمر ${slot.age}`)}</>}</p>
               <label className={styles.guestField}>
                 <span>{t("First name", "الاسم الأول")}</span>
-                <input id={`${formId}-${slot.key}-first`} className="input" autoComplete="off" value={names[slot.key]?.first ?? ""} aria-invalid={!!errors[slot.key]?.first} aria-describedby={errors[slot.key]?.first ? `${formId}-${slot.key}-first-error` : undefined} onChange={(event) => set(slot.key, "first", event.target.value)} />
+                <input id={`${formId}-${slot.key}-first`} className="input" autoComplete="off" maxLength={GUEST_NAME_MAX} value={names[slot.key]?.first ?? ""} aria-invalid={!!errors[slot.key]?.first} aria-describedby={errors[slot.key]?.first ? `${formId}-${slot.key}-first-error` : undefined} onChange={(event) => set(slot.key, "first", event.target.value)} />
                 {errors[slot.key]?.first && <span id={`${formId}-${slot.key}-first-error`} className="field-error" role="alert">{errors[slot.key]!.first}</span>}
               </label>
               <label className={styles.guestField}>
                 <span>{t("Last name", "اسم العائلة")}</span>
-                <input id={`${formId}-${slot.key}-last`} className="input" autoComplete="off" value={names[slot.key]?.last ?? ""} aria-invalid={!!errors[slot.key]?.last} aria-describedby={errors[slot.key]?.last ? `${formId}-${slot.key}-last-error` : undefined} onChange={(event) => set(slot.key, "last", event.target.value)} />
+                <input id={`${formId}-${slot.key}-last`} className="input" autoComplete="off" maxLength={GUEST_NAME_MAX} value={names[slot.key]?.last ?? ""} aria-invalid={!!errors[slot.key]?.last} aria-describedby={errors[slot.key]?.last ? `${formId}-${slot.key}-last-error` : undefined} onChange={(event) => set(slot.key, "last", event.target.value)} />
                 {errors[slot.key]?.last && <span id={`${formId}-${slot.key}-last-error`} className="field-error" role="alert">{errors[slot.key]!.last}</span>}
+              </label>
+              <label className={styles.guestField}>
+                <span>{t("Gender (optional)", "النوع (اختياري)")}</span>
+                <select className="input" value={names[slot.key]?.gender ?? ""} onChange={(event) => setGender(slot.key, event.target.value as Gender | "")}>
+                  <option value="">{t("Not specified", "غير محدد")}</option>
+                  <option value="female">{t("Female", "أنثى")}</option>
+                  <option value="male">{t("Male", "ذكر")}</option>
+                  <option value="unknown">{t("Prefer not to say", "أفضّل عدم الذكر")}</option>
+                </select>
               </label>
               {slot.type === "adult" && (
                 <label className={styles.leadChoice}>

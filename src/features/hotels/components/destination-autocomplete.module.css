@@ -1,0 +1,27 @@
+/* Destination combobox; the input itself uses the search form's field styles. */
+.box { position: relative; min-width: 0; }
+.panel {
+  position: absolute;
+  inset-block-start: calc(100% + 6px);
+  inset-inline: 0;
+  z-index: 30;
+  display: grid;
+  gap: 4px;
+  max-height: min(320px, 60dvh);
+  padding: 6px;
+  overflow-y: auto;
+  border: 1px solid #c9ced1;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgb(2 20 60 / 0.14);
+}
+.list { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.option { display: grid; gap: 2px; min-height: 44px; padding: 8px 10px; border-radius: 8px; cursor: pointer; text-align: start; }
+.option b { color: var(--navy, #02143c); font-weight: 700; overflow-wrap: anywhere; }
+.option small { color: var(--muted, #5b6470); font-size: 13px; overflow-wrap: anywhere; }
+.option:hover, .option[aria-selected="true"] { background: #eef3fa; }
+.state, .error, .hint { margin: 0; padding: 8px 10px; font-size: 14px; line-height: 1.45; }
+.state, .hint { color: var(--muted, #5b6470); }
+.error { color: var(--danger, #b42318); }
+.hint { padding-inline: 2px; }
+@media (prefers-reduced-motion: reduce) { .panel { scroll-behavior: auto; } }

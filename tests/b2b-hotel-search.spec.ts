@@ -30,8 +30,22 @@ const profile = {
 type Reply = { status?: number; json?: unknown; abort?: boolean };
 
 /** A signed-in company session (verified through the mocked /me) and a mocked hotel search. */
-async function signedIn(page: Page, search: (request: Request, attempt: number) => Reply, locale: "en" | "ar" = "en") {
+/** GET /b2b/destinations (API release 2026-11-25): staging's sandbox-known cities, plus a region. */
+const destinationRows = [
+  { id: "dubai", type: "city", name: "Dubai", country: "United Arab Emirates", country_code: "AE", parent: null },
+  { id: "paris", type: "city", name: "Paris", country: "France", country_code: "FR", parent: null },
+  { id: "region:6053839", type: "region", name: "Dubai Marina", country: "United Arab Emirates", country_code: "AE", parent: "Dubai" },
+];
+const destinationsReply = (request: Request): Reply => {
+  const query = new URL(request.url()).searchParams.get("q")?.toLowerCase() ?? "";
+  const ar = new URL(request.url()).searchParams.get("language") === "ar";
+  const rows = destinationRows.filter((row) => row.name.toLowerCase().startsWith(query) || (ar && query === "دبي" && row.id === "dubai"));
+  return { json: { success: true, code: "OK", scope: "sandbox_known", data: rows.map((row) => (ar && row.id === "dubai" ? { ...row, name: "دبي", country: "الإمارات العربية المتحدة" } : row)) } };
+};
+
+async function signedIn(page: Page, search: (request: Request, attempt: number) => Reply, locale: "en" | "ar" = "en", destinations: (request: Request, attempt: number) => Reply = destinationsReply) {
   const searches: Request[] = [];
+  const lookups: Request[] = [];
   const unexpected: string[] = [];
   await page.addInitScript(({ token, companyId, locale }) => {
     if (!sessionStorage.getItem("royal-travel.b2b-session.v1")) sessionStorage.setItem("royal-travel.b2b-session.v1", JSON.stringify({ token, expiresAt: Date.now() + 3_600_000, companyId }));
@@ -43,6 +57,12 @@ async function signedIn(page: Page, search: (request: Request, attempt: number) 
     const path = new URL(request.url()).pathname;
     if (path === "/api/v1/b2b/me") return route.fulfill({ status: 200, headers: cors, json: profile });
     if (path === "/api/v1/foundation-check") return route.fulfill({ status: 200, headers: cors, json: { locale: "en", direction: "ltr" } });
+    if (request.method() === "GET" && path === "/api/v1/b2b/destinations") {
+      lookups.push(request);
+      const reply = destinations(request, lookups.length);
+      if (reply.abort) return route.abort("connectionrefused");
+      return route.fulfill({ status: reply.status ?? 200, headers: cors, json: reply.json ?? {} });
+    }
     if (request.method() === "POST" && path === "/api/v1/b2b/hotels/search") {
       searches.push(request);
       const reply = search(request, searches.length);
@@ -52,7 +72,7 @@ async function signedIn(page: Page, search: (request: Request, attempt: number) 
     unexpected.push(`${request.method()} ${path}`);
     return route.fulfill({ status: 500, headers: cors, json: {} });
   });
-  return { searches, unexpected };
+  return { searches, lookups, unexpected };
 }
 
 const supplierUnavailable: Reply = { status: 503, json: { success: false, code: "HOTEL_SUPPLIER_UNAVAILABLE", message: "Hotel search is currently unavailable.", data: { hotels: [], total: 0 } } };
@@ -154,16 +174,21 @@ test.describe("B2B hotel search: mapping (no browser)", () => {
 });
 
 test.describe("B2B hotel search: the search page (mocked API)", () => {
-  test("the home form searches Dubai with the company token and coordinates, then shows the result count without sample hotels", async ({ page }) => {
+  test("the home form finds Dubai through destination autocomplete, searches with the company token, then shows the result count without sample hotels", async ({ page }) => {
     let release!: () => void;
     const held = new Promise<void>((resolve) => { release = resolve; });
     const api = await signedIn(page, () => results(3));
     await page.route("https://api.royal.test/api/v1/b2b/hotels/search", async (route) => { await held; await route.fallback(); });
     await page.goto(APP + "/");
-    await expect(page.locator("#destination option")).toHaveCount(8);
-    const options = await page.locator("#destination option").allTextContents();
-    expect(options.map((o) => o.trim())).toEqual(["Select destination", "Alexandria", "Cairo", "Hurghada", "Sharm El Sheikh", "Dubai", "Paris", "Los Angeles"]);
-    await page.locator("#destination").selectOption("dubai");
+    const input = page.locator("#destination");
+    await input.pressSequentially("Dub", { delay: 30 });
+    await expect(page.locator("[data-destination-autocomplete]").getByRole("option", { name: /Dubai/ }).first()).toBeVisible();
+    // One request after typing settles (400 ms debounce), with the query, language and limit.
+    expect(api.lookups).toHaveLength(1);
+    expect(Object.fromEntries(new URL(api.lookups[0].url()).searchParams)).toEqual({ q: "Dub", language: "en", limit: "10" });
+    expect(api.lookups[0].headers()["authorization"]).toBe(`Bearer ${TOKEN}`);
+    await page.locator("[data-destination-autocomplete]").getByRole("option", { name: /^Dubai United Arab Emirates/ }).click();
+    await expect(input).toHaveValue("Dubai, United Arab Emirates");
     await page.locator("#check-in").fill("2030-12-06");
     await page.locator("#check-out").fill("2030-12-09");
     await page.locator("#hotel-search button[type=submit]").click();
@@ -180,8 +205,57 @@ test.describe("B2B hotel search: the search page (mocked API)", () => {
     const request = mine[0];
     expect(request.headers()["authorization"]).toBe(`Bearer ${TOKEN}`);
     expect(request.headers()["x-locale"]).toBe("en");
+    // Dubai is also a built-in destination, so the proven coordinates body is kept for it.
     expect(request.postDataJSON()).toEqual({ checkin: "2030-12-06", checkout: "2030-12-09", latitude: 25.2048, longitude: 55.2708, radius: 10000, residency: "eg", language: "en", currency: "USD", guests: [{ adults: 2, children: [] }] });
     expect(api.unexpected).toEqual([]);
+  });
+
+  test("a region from autocomplete is searched by its ID (never its name), and its name is shown", async ({ page }) => {
+    const api = await signedIn(page, () => results(2));
+    await page.goto(APP + "/");
+    await page.locator("#destination").pressSequentially("Dubai M", { delay: 20 });
+    await page.locator("[data-destination-autocomplete]").getByRole("option", { name: /Dubai Marina/ }).click();
+    await page.locator("#check-in").fill("2030-12-06");
+    await page.locator("#check-out").fill("2030-12-09");
+    await page.locator("#hotel-search button[type=submit]").click();
+    await expect(page).toHaveURL(/destination=region%3A6053839/);
+    await expect(page.getByRole("heading", { name: /2 hotels in Dubai Marina/ })).toBeVisible();
+    const mine = api.searches.filter((r) => r.postDataJSON().checkin === "2030-12-06");
+    expect(mine[0].postDataJSON()).toEqual({ checkin: "2030-12-06", checkout: "2030-12-09", destination: "region:6053839", residency: "eg", language: "en", currency: "USD", guests: [{ adults: 2, children: [] }] });
+  });
+
+  test("autocomplete: stale replies are ignored, short queries send nothing, and empty, error and keyboard states work", async ({ page }) => {
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => { release = resolve; });
+    const api = await signedIn(page, () => results(0), "en", (request, attempt) => {
+      if (attempt === 1) return { ...destinationsReply(request) };
+      if (new URL(request.url()).searchParams.get("q") === "Zz") return { json: { success: true, code: "OK", scope: "sandbox_known", data: [] } };
+      if (new URL(request.url()).searchParams.get("q") === "Err") return { status: 503, json: { success: false, code: "DESTINATION_SEARCH_UNAVAILABLE" } };
+      return destinationsReply(request);
+    });
+    await page.route("https://api.royal.test/api/v1/b2b/destinations?q=Pa*", async (route) => { await held; await route.fallback(); });
+    await page.goto(APP + "/");
+    const input = page.locator("#destination");
+    await input.fill("D");
+    await page.waitForTimeout(600);
+    expect(api.lookups).toHaveLength(0);
+    await expect(page.getByText("Type at least 2 letters.")).toBeVisible();
+    // "Pa" is held; typing on to "Dubai" makes it stale, so only Dubai's results are shown.
+    await input.fill("Pa");
+    await page.waitForTimeout(500);
+    await input.fill("Dubai");
+    await expect(page.locator("[data-destination-autocomplete]").getByRole("option", { name: /^Dubai United Arab Emirates/ })).toBeVisible();
+    release();
+    await page.waitForTimeout(300);
+    await expect(page.locator("[data-destination-autocomplete]").getByRole("option", { name: /Paris/ })).toHaveCount(0);
+    await input.press("ArrowDown");
+    await expect(input).toHaveAttribute("aria-activedescendant", /option-0$/);
+    await input.press("Enter");
+    await expect(input).toHaveValue("Dubai, United Arab Emirates");
+    await input.fill("Zz");
+    await expect(page.locator("[data-destination-state=empty]")).toBeVisible();
+    await input.fill("Err");
+    await expect(page.locator("[data-destination-state=unavailable]")).toContainText("Destination search isn't available right now");
   });
 
   for (const [id, latitude, longitude] of [["paris", 48.8566, 2.3522], ["los-angeles", 34.0522, -118.2437], ["Cairo", 30.0444, 31.2357]] as const) {
@@ -240,8 +314,16 @@ test.describe("B2B hotel search: the search page (mocked API)", () => {
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     await expect(page.getByRole("heading", { name: "البحث عن الفنادق غير متاح" })).toBeVisible();
     await expect(page.getByRole("button", { name: "إعادة المحاولة" })).toBeVisible();
-    await expect(page.locator("#destination option[value=dubai]")).toHaveText("دبي");
-    await expect(page.locator("#destination")).toHaveValue("los-angeles");
+    await expect(page.locator("#destination")).toHaveValue("لوس أنجلوس");
+  });
+
+  test("Arabic autocomplete asks in Arabic and shows Arabic names", async ({ page }) => {
+    const api = await signedIn(page, () => results(0), "ar");
+    await page.goto(APP + "/");
+    await page.locator("#destination").pressSequentially("دبي", { delay: 30 });
+    await expect(page.locator("[data-destination-autocomplete]").getByRole("option", { name: /دبي/ })).toBeVisible();
+    expect(new URL(api.lookups.at(-1)!.url()).searchParams.get("language")).toBe("ar");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
   });
 
   test("Arabic sends language ar; an unsupported preferred currency falls back to USD without a technical note", async ({ page }) => {
@@ -280,7 +362,7 @@ test.describe("B2B hotel search: the search page (mocked API)", () => {
       await page.goto(searchUrl("dubai"));
       await expect(state(page)).toHaveAttribute("data-search-state", "supplier_unavailable");
       await expect(page.getByRole("heading", { name: "Hotel search is unavailable" })).toBeVisible();
-      if (width >= 1024) await expect(page.locator("#destination")).toHaveValue("dubai");
+      if (width >= 1024) await expect(page.locator("#destination")).toHaveValue("Dubai");
       else await expect(page.locator("[class*=searchSummary]").getByText("Dubai")).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
     });

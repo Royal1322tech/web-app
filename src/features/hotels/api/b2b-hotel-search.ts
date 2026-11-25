@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ApiError, apiRequest } from "@/lib/api/client";
 import type { HotelSearchCriteria } from "@/features/home/schemas/hotel-search.schema";
 import type { GeoPoint } from "../lib/geo";
+import { isDestinationId } from "./b2b-destinations";
 
 /*
  * POST /api/v1/b2b/hotels/search, the company (B2B) hotel search.
@@ -27,9 +28,15 @@ export const isB2BSearchCurrency = (value: string): value is B2BSearchCurrency =
 export interface B2BHotelSearchRequest {
   checkin: string;
   checkout: string;
-  latitude: number;
-  longitude: number;
-  radius: number;
+  /**
+   * A destination ID from GET /b2b/destinations (API release 2026-11-25), sent instead of
+   * coordinates. Checked on staging (2026-11-25): with `destination`, the coordinates are ignored,
+   * so a request carries one or the other.
+   */
+  destination?: string;
+  latitude?: number;
+  longitude?: number;
+  radius?: number;
   residency: string;
   language: "en" | "ar";
   currency: B2BSearchCurrency;
@@ -74,20 +81,22 @@ const validRoom = (room: HotelSearchCriteria["rooms"][number]) =>
  */
 export function toB2BHotelSearchRequest(
   criteria: HotelSearchCriteria,
-  point: GeoPoint,
+  /** Built-in destinations' coordinates; null for a destination chosen from the API (sent by ID). */
+  point: GeoPoint | null,
   options: { language: "en" | "ar"; currency: B2BSearchCurrency },
 ): B2BHotelSearchRequest | null {
   const residency = criteria.nationality?.trim().toLowerCase();
-  if (!residency || !/^[a-z]{2}$/.test(residency) || !validPoint(point)) return null;
+  if (!residency || !/^[a-z]{2}$/.test(residency)) return null;
+  if (point ? !validPoint(point) : !isDestinationId(criteria.destination.trim())) return null;
   if (!["en", "ar"].includes(options.language) || !isB2BSearchCurrency(options.currency)) return null;
   if (criteria.rooms.length < 1 || criteria.rooms.length > 9 || !criteria.rooms.every(validRoom)) return null;
   if (!(criteria.checkOut > criteria.checkIn)) return null;
   return {
     checkin: criteria.checkIn,
     checkout: criteria.checkOut,
-    latitude: point.latitude,
-    longitude: point.longitude,
-    radius: B2B_SEARCH_RADIUS_METRES,
+    ...(point
+      ? { latitude: point.latitude, longitude: point.longitude, radius: B2B_SEARCH_RADIUS_METRES }
+      : { destination: criteria.destination.trim() }),
     residency,
     language: options.language,
     currency: options.currency,

@@ -2,6 +2,7 @@ import { useId, useState, type ReactNode } from "react";
 import { Icon } from "@/components/ui/icon";
 import { useLocale } from "@/features/localization/locale-provider";
 import { findDestination } from "../data/destinations";
+import { destinationName } from "../lib/destination-name";
 import styles from "../hotels.module.css";
 
 /**
@@ -25,7 +26,7 @@ export function CollapsibleSearch({ criteria, showDestination = true, children }
     <div className={styles.collapsibleSearch} data-open={open}>
       <div className={styles.searchSummary}>
         <p>
-          {showDestination && <strong><Icon name="pin" />{place ? t(place.name.en, place.name.ar) : destination ? t(destination) : t("All destinations", "كل الوجهات")}</strong>}
+          {showDestination && <strong><Icon name="pin" />{place ? t(place.name.en, place.name.ar) : destination ? destinationName(destination, locale) : t("All destinations", "كل الوجهات")}</strong>}
           <span><bdi>{criteria?.checkIn && criteria.checkOut ? `${date(criteria.checkIn)} – ${date(criteria.checkOut)}` : t("Dates not set", "لم تُحدد التواريخ")}</bdi></span>
           {guests > 0 && <span>{t(`${guests} guests, ${rooms.length} ${rooms.length === 1 ? "room" : "rooms"}`, `${guests} نزلاء، ${rooms.length} غرف`)}</span>}
         </p>

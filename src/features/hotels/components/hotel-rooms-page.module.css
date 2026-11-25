@@ -119,7 +119,9 @@
 .draftForm h3, .draftDone h3 { margin: 0; font-size: var(--font-size-lg); }
 .draftRoom { display: grid; gap: var(--space-3); margin: 0; padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--rounded-lg); }
 .draftRoom legend { padding-inline: 6px; font-weight: var(--weight-bold); }
-.guestRow { display: grid; grid-template-columns: 110px minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; gap: var(--space-2) var(--space-3); }
+.guestRow { display: grid; grid-template-columns: 110px minmax(0, 1fr) minmax(0, 1fr) minmax(120px, 0.8fr) auto; align-items: end; gap: var(--space-2) var(--space-3); }
+.contactRow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2) var(--space-3); }
+.draftDoneGroup { display: grid; gap: var(--space-4); }
 .guestLabel { margin: 0; padding-block-end: 12px; color: var(--muted); font-size: var(--font-size-sm); font-weight: var(--weight-semibold); }
 .guestField { display: grid; gap: 4px; min-width: 0; font-size: var(--font-size-sm); font-weight: var(--weight-semibold); }
 .guestField :global(.input) { min-height: 44px; }
@@ -131,8 +133,12 @@
 .draftDone h3 { display: inline-flex; align-items: center; gap: 8px; color: var(--success); outline: none; }
 .draftDone h3 svg { width: 20px; height: 20px; }
 .draftDone p { margin: 0; color: #34485f; }
+@media (max-width: 1023px) and (min-width: 721px) {
+  .guestRow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .guestLabel { grid-column: 1 / -1; padding-block-end: 0; }
+}
 @media (max-width: 720px) {
-  .guestRow { grid-template-columns: minmax(0, 1fr); align-items: stretch; }
+  .guestRow, .contactRow { grid-template-columns: minmax(0, 1fr); align-items: stretch; }
   .guestLabel { padding-block-end: 0; }
 }
 .actions :global(.button) { min-height: 44px; }

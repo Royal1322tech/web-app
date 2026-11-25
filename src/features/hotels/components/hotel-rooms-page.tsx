@@ -26,6 +26,7 @@ import {
 } from "../api/b2b-hotel-rooms";
 import { apiHotelSearchEnabled } from "../hotel-search-config";
 import { findDestination } from "../data/destinations";
+import { destinationName } from "../lib/destination-name";
 import { hotelImageUrl, mealLabel } from "../lib/live-hotels";
 import { readHotelSummary, type RoomsHotelSummary } from "../lib/rooms-route";
 import { readStayQuery, stayQuery } from "../lib/stay-query";
@@ -130,8 +131,8 @@ export function HotelHeader({ title, summary, criteria, request }: {
       <div className={styles.headerText}>
         {summary?.stars ? <p className={styles.stars} aria-label={t(`${summary.stars}-star hotel`, `فندق ${summary.stars} نجوم`)}><span aria-hidden="true">{"★".repeat(Math.round(summary.stars))}</span></p> : null}
         <h1 className={styles.title}><bdi>{title}</bdi></h1>
-        {(summary?.address || place) && (
-          <p className={styles.address}><Icon name="pin" /><bdi>{summary?.address ?? t(place!.name.en, place!.name.ar)}</bdi></p>
+        {(summary?.address || criteria.destination) && (
+          <p className={styles.address}><Icon name="pin" /><bdi>{summary?.address ?? (place ? t(place.name.en, place.name.ar) : destinationName(criteria.destination, locale))}</bdi></p>
         )}
       </div>
       <dl className={styles.stay} aria-label={t("Your stay", "إقامتك")}>
@@ -339,6 +340,7 @@ function RoomsFlow({ hid, request: initialRequest, searchHref, onRoomNames }: { 
           onRefresh={refreshRooms}
           searchHref={searchHref}
           occupancy={request.guests}
+          residency={request.residency}
         />
       )}
     </div>
@@ -524,8 +526,9 @@ function RateSummary({ rate, label, price, provisional = false }: { rate: RoomRa
   );
 }
 
-function Review({ headingRef, step, now, onAccept, onChooseAnother, onRefresh, searchHref, occupancy }: {
+function Review({ headingRef, step, now, onAccept, onChooseAnother, onRefresh, searchHref, occupancy, residency }: {
   occupancy: RoomsRequest["guests"];
+  residency: string;
   headingRef: React.RefObject<HTMLHeadingElement | null>;
   step: Extract<Step, { step: "review" }>;
   now: number;
@@ -605,8 +608,9 @@ function Review({ headingRef, step, now, onAccept, onChooseAnother, onRefresh, s
         <p className={styles.timer}><Icon name="clock" />{t("This price check is valid for", "التحقق من السعر صالح لمدة")} <strong><Countdown seconds={remaining} /></strong></p>
       )}
 
-      {!expired && (!changed || step.accepted) && (
-        <BookingDraftForm reviewToken={review.review_token} occupancy={occupancy} onRefresh={onRefresh} />
+      {/* Kept mounted after expiry so a draft that was already created stays visible. */}
+      {(!changed || step.accepted) && (
+        <BookingDraftForm reviewToken={review.review_token} occupancy={occupancy} nationality={residency} expiresAt={step.review.expiresAt} expired={expired} onRefresh={onRefresh} />
       )}
 
       <p className={styles.bookingNotice} role="note">

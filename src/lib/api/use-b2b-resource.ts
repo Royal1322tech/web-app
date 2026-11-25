@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { b2bSession } from "@/features/auth/b2b-session";
 
 export type ResourceState<T, F> = { status: "loading" } | { status: "done"; data: T } | { status: "error"; failure: F | "signed_out" };
@@ -31,5 +31,6 @@ export function useB2BResource<T, F extends string>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  return { state: settled?.id === id ? settled.state : { status: "loading" }, retry: () => setAttempt((value) => value + 1) };
+  const retry = useCallback(() => setAttempt((value) => value + 1), []);
+  return { state: settled?.id === id ? settled.state : { status: "loading" }, retry };
 }
