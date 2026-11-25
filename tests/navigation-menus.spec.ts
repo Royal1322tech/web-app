@@ -38,7 +38,9 @@ test.describe("mobile navigation", () => {
       const nav = page.locator("#home-navigation");
       await expect(nav).toBeVisible();
       const links = nav.getByRole("link");
-      await expect(links).toHaveCount(8);
+      // Favourites is hidden for now, so the main navigation has seven links.
+      await expect(links).toHaveCount(7);
+      await expect(links.and(page.locator('[href="/favourites"]'))).toHaveCount(0);
       const lefts = await links.evaluateAll((items) => items.map((item) => Math.round(item.getBoundingClientRect().left)));
       expect(new Set(lefts).size).toBe(1);
       await expect(nav.locator("[aria-current=page]")).toHaveCount(1);
