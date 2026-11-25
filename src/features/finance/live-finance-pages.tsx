@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { FINANCE_CHANGED_EVENT } from "@/features/bookings/live/b2b-booking-confirm";
 import { SystemState } from "@/components/ui/system-state";
 import { Workspace } from "@/features/demo/shared";
 import { useLocale } from "@/features/localization/locale-provider";
@@ -25,7 +27,14 @@ function entryLabel(type: string, t: (en: string, ar: string) => string) {
 }
 
 function useFinance() {
-  return useB2BResource<Finance, FinanceFailure>("finance", (token, signal) => fetchFinance({ token, signal }), classifyFinanceError);
+  const resource = useB2BResource<Finance, FinanceFailure>("finance", (token, signal) => fetchFinance({ token, signal }), classifyFinanceError);
+  // A booking confirmation elsewhere in the app can change the wallet: load it again.
+  const { retry } = resource;
+  useEffect(() => {
+    window.addEventListener(FINANCE_CHANGED_EVENT, retry);
+    return () => window.removeEventListener(FINANCE_CHANGED_EVENT, retry);
+  }, [retry]);
+  return resource;
 }
 
 function FinanceState({ state, retry }: ReturnType<typeof useFinance>) {

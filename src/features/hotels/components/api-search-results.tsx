@@ -21,6 +21,7 @@ import {
   type B2BSearchFailure,
 } from "../api/b2b-hotel-search";
 import { findDestination } from "../data/destinations";
+import { destinationName } from "../lib/destination-name";
 import { emptyLiveFilters, filterLiveHotels, toB2BSearchFilters, type LiveFilters } from "../lib/live-filters";
 import { LiveHotelFilters } from "./live-hotel-filters";
 import { LiveHotelCard, LiveHotelCardSkeleton, type RoomsAction } from "./live-hotel-card";
@@ -38,19 +39,19 @@ export function ApiSearchResults({ criteria }: { criteria?: HotelSearchCriteria 
   const preferences = useTravelPreferences();
   const currency = isB2BSearchCurrency(preferences.currency) ? preferences.currency : "USD";
   const destination = findDestination(criteria?.destination);
-  const request = criteria && destination
-    ? toB2BHotelSearchRequest(criteria, destination.point, { language: locale === "ar" ? "ar" : "en", currency })
+  const request = criteria
+    ? toB2BHotelSearchRequest(criteria, destination?.point ?? null, { language: locale === "ar" ? "ar" : "en", currency })
     : null;
   const requestKey = request ? JSON.stringify(request) : "";
 
   if (!criteria) {
     return <SystemState title={t("Start a hotel search", "ابدأ البحث عن فندق")} description={t("Choose a destination, dates and guests, then select Search.", "اختر الوجهة والتواريخ والنزلاء، ثم اضغط بحث.")} />;
   }
-  if (!request || !destination) {
+  if (!request) {
     return <SystemState title={t("Check your search", "راجع بيانات البحث")} description={t("Choose a destination from the list and a nationality, then search again.", "اختر وجهة من القائمة وجنسية، ثم ابحث مرة أخرى.")} />;
   }
   // Keyed by the search body: changed criteria start again at page 1 with no filters.
-  return <SearchRun key={requestKey} base={request} destinationName={t(destination.name.en, destination.name.ar)} roomsQuery={stayQuery(criteria)} />;
+  return <SearchRun key={requestKey} base={request} destinationName={destinationName(criteria.destination, locale) ?? criteria.destination} roomsQuery={stayQuery(criteria)} />;
 }
 
 /** Waits until the value has been stable for `delay` ms, so typing or quick clicks send one search. */

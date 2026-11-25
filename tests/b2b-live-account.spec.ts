@@ -74,14 +74,50 @@ test.describe("customers (mocked API)", () => {
 });
 
 test.describe("bookings (mocked API)", () => {
-  test("real bookings with status filter and details; no cancel, payment or voucher actions", async ({ page }) => {
+  test("my bookings, incomplete and company bookings use their own endpoints, filters and pages", async ({ page }) => {
+    const calls = await signedIn(page, (_request, url) => {
+      if (url.pathname === "/api/v1/b2b/bookings/my-bookings") return { json: url.searchParams.get("page") === "2" ? paginator([booking(3, "confirmed")], 2, 2, 21) : paginator([{ ...booking(1), can_resume_draft: true }, booking(2, "confirmed")], 1, 2, 21) };
+      if (url.pathname === "/api/v1/b2b/bookings/my-incomplete") return { json: paginator([{ ...booking(4, "draft"), can_resume_draft: false }, { ...booking(5, "draft"), confirmation_state: "finish_unknown" }]) };
+      if (url.pathname === "/api/v1/b2b/bookings") return { json: paginator([booking(6, "cancelled")]) };
+      return undefined;
+    });
+    await page.goto(`${APP}/bookings`);
+    const list = page.locator("[data-bookings-state=list]");
+    await expect(page.getByRole("heading", { name: "My bookings" })).toBeVisible();
+    await expect(list.locator("li")).toHaveCount(2);
+    await expect(list.locator("li").first().locator("[data-resumable]")).toContainText("Draft: continue to confirm");
+    await page.getByRole("button", { name: "Next" }).click();
+    await expect(list.locator("li")).toHaveCount(1);
+    expect(calls).toContain("GET /api/v1/b2b/bookings/my-bookings?page=2");
+    await page.getByLabel("Status").selectOption("pending_supplier");
+    await expect.poll(() => calls).toContain("GET /api/v1/b2b/bookings/my-bookings?page=1&status=pending_supplier");
+
+    await page.getByRole("link", { name: "Incomplete" }).click();
+    await expect(page).toHaveURL(/view=incomplete/);
+    await expect.poll(() => calls).toContain("GET /api/v1/b2b/bookings/my-incomplete?page=1");
+    await expect(list.locator("li").first()).toContainText("HTL-TEST0000000004");
+    await expect(list.locator("li")).toHaveCount(2);
+    // Only incomplete statuses are offered here.
+    await expect(page.getByLabel("Status").locator("option")).toHaveText(["All statuses", "Draft", "Pending", "Waiting for supplier"]);
+    await expect(list.locator("li").first().locator("[data-resumable=false]")).toContainText("can't be continued");
+    await expect(list.locator("li").nth(1)).toContainText("Outcome uncertain");
+
+    await page.getByRole("link", { name: "Company bookings" }).click();
+    await expect(list.locator("li").first()).toContainText("HTL-TEST0000000006");
+    await expect(list.locator("li")).toHaveCount(1);
+    await expect.poll(() => calls).toContain("GET /api/v1/b2b/bookings?page=1");
+    await expect(list).toContainText("Cancelled");
+  });
+
+  test("company bookings with status filter and details; no cancel, payment or voucher actions", async ({ page }) => {
     const calls = await signedIn(page, (_request, url) => {
       if (url.pathname === "/api/v1/b2b/bookings") return { json: url.searchParams.get("status") === "confirmed" ? paginator([booking(2, "confirmed")]) : paginator([booking(1), booking(2, "confirmed")]) };
+      if (url.pathname.endsWith("/tickets")) return { json: paginator([]) };
       if (url.pathname === `/api/v1/b2b/bookings/${booking(1).booking_id}`) return { json: { data: { ...booking(1), guests: [{ first_name: "Hana", last_name: "Adel", guest_type: "adult", is_lead: true, room_index: null, age: null, nationality_code: "EG" }, { first_name: "Omar", last_name: "Adel", guest_type: "child", is_lead: false, room_index: null, age: 7, nationality_code: null }] } } };
       if (url.pathname.startsWith("/api/v1/b2b/bookings/")) return { status: 404, json: { message: "Booking not found." } };
       return undefined;
     });
-    await page.goto(`${APP}/bookings`);
+    await page.goto(`${APP}/bookings?view=company`);
     const list = page.locator("[data-bookings-state=list]");
     await expect(list.locator("li")).toHaveCount(2);
     await expect(list.locator("li").first()).toContainText("HTL-TEST0000000001");
@@ -99,6 +135,10 @@ test.describe("bookings (mocked API)", () => {
     await expect(detail).toContainText("Lead guest");
     await expect(detail).toContainText("isn't a confirmed reservation");
     await expect(detail.getByRole("button", { name: /cancel|pay|voucher/i })).toHaveCount(0);
+    // Without an agency purchase price in the details, the draft can't be confirmed from here.
+    await expect(detail.locator("[data-confirm-blocked=price]")).toBeVisible();
+    await expect(detail.getByRole("button", { name: "Confirm booking" })).toHaveCount(0);
+    await expect(detail.locator("[data-ticket-eligible=false]")).toBeVisible();
     await page.goto(`${APP}/bookings/b0000000-0000-4000-8000-000000000999`);
     await expect(page.locator("[data-booking-state=not_found]")).toBeVisible();
   });
@@ -160,7 +200,7 @@ test.describe("layout", () => {
       await page.setViewportSize({ width, height: 900 });
       await signedIn(page, (_request, url) => {
         if (url.pathname === "/api/v1/b2b/customers") return { json: paginator([customer(0), customer(1)]) };
-        if (url.pathname === "/api/v1/b2b/bookings") return { json: paginator([booking(1)]) };
+        if (url.pathname === "/api/v1/b2b/bookings/my-bookings") return { json: paginator([booking(1)]) };
         if (url.pathname === "/api/v1/b2b/finance") return { json: finance };
         if (url.pathname === "/api/v1/b2b/loyalty") return { json: { company_id: COMPANY, balances: { pending: 0, available: 100 }, transactions: [], redemption_enabled: false } };
         return undefined;
@@ -168,6 +208,129 @@ test.describe("layout", () => {
       for (const [path, marker] of [["/customers", "[data-customers-state=list]"], ["/bookings", "[data-bookings-state=list]"], ["/wallet", "[data-metric]"]] as const) {
         await page.goto(`${APP}${path}`);
         await expect(page.locator(marker).first()).toBeVisible();
+        await expect(page.locator("html")).toHaveAttribute("dir", locale === "ar" ? "rtl" : "ltr");
+        expect(await overflow(page), path).toBeLessThanOrEqual(0);
+      }
+    });
+  }
+});
+
+test.describe("booking status on the details page (mocked API)", () => {
+  test("a processing booking is polled until the backend confirms; then a ticket can be opened", async ({ page }) => {
+    const id = booking(7).booking_id;
+    let polls = 0;
+    await signedIn(page, (_request, url) => {
+      if (url.pathname === `/api/v1/b2b/bookings/${id}`) return { json: { data: { ...booking(7), confirmation_state: "processing", agency_purchase_price: "100.00", guests: [] } } };
+      if (url.pathname === `/api/v1/b2b/bookings/${id}/status`) { polls++; return { json: { booking_id: id, status: "confirmed", confirmation_state: "confirmed", confirmed_at: "2030-12-01T10:00:00.000000Z" } }; }
+      if (url.pathname === `/api/v1/b2b/bookings/${id}/tickets`) return { json: paginator([]) };
+      return undefined;
+    });
+    await page.goto(`${APP}/bookings/${id}`);
+    await expect(page.locator("[data-confirm-view=processing]")).toContainText("Supplier processing");
+    await expect(page.getByRole("button", { name: "Confirm booking" })).toHaveCount(0);
+    await expect(page.locator("[data-confirm-view=confirmed]")).toBeVisible({ timeout: 15000 });
+    expect(polls).toBeGreaterThanOrEqual(1);
+  });
+});
+
+test.describe("support tickets (mocked API)", () => {
+  const TICKET = "71c1c1c1-0000-4000-8000-000000000001";
+  const confirmed = { ...booking(8, "confirmed"), confirmation_state: "confirmed", confirmed_at: "2030-12-01T10:00:00.000000Z" };
+  const ticket = (status = "open") => ({ id: TICKET, ticket_no: "TKT-TEST000000000001", booking_id: confirmed.booking_id, company_id: COMPANY, created_by: 7, category: "room_issue", subject: "AC not working", status, created_at: "2030-12-02T10:00:00Z", updated_at: "2030-12-02T11:00:00Z" });
+  const messages = (page = 1, last = 1) => paginator([{ id: `m${page}`, actor_type: page === 1 ? "employee" : "support", body: page === 1 ? "Please assist.\nRoom 204." : "<b>We are on it</b>", created_at: "2030-12-02T10:00:00Z" }], page, last);
+
+  test("list, create with categories from the API and an Idempotency-Key, then one ticket opened", async ({ page }) => {
+    const posts: Request[] = [];
+    const calls = await signedIn(page, (request, url) => {
+      if (url.pathname === "/api/v1/b2b/tickets/categories") return { json: ["booking_issue", "room_issue", "new_issue"] };
+      if (url.pathname === "/api/v1/b2b/tickets") return { json: paginator([ticket()]) };
+      if (url.pathname === `/api/v1/b2b/bookings/${confirmed.booking_id}`) return { json: { data: { ...confirmed, guests: [] } } };
+      if (url.pathname === `/api/v1/b2b/bookings/${confirmed.booking_id}/tickets` && request.method() === "POST") { posts.push(request); return { status: 201, json: ticket() }; }
+      if (url.pathname === `/api/v1/b2b/tickets/${TICKET}`) return { json: { ticket: ticket(), messages: messages() } };
+      return undefined;
+    });
+    await page.goto(`${APP}/tickets`);
+    await expect(page.locator("[data-tickets] li")).toHaveCount(1);
+    await expect(page.locator("[data-tickets]")).toContainText("AC not working");
+    await expect(page.locator("[data-tickets]")).toContainText("Room issue");
+    expect(calls).toContain("GET /api/v1/b2b/tickets?page=1");
+
+    await page.goto(`${APP}/bookings/${confirmed.booking_id}/tickets/new`);
+    const form = page.locator("[data-ticket-form]");
+    // Categories come from the API; unknown values are shown readably but sent unchanged.
+    await expect(form.getByLabel("Category").locator("option")).toHaveText(["Choose a category", "Booking issue", "Room issue", "new issue"]);
+    await form.getByRole("button", { name: "Open ticket" }).click();
+    await expect(form.getByText("Choose a category.")).toBeVisible();
+    expect(posts).toHaveLength(0);
+    await form.getByLabel("Category").selectOption("room_issue");
+    await form.getByLabel("Subject").fill("AC not working");
+    await form.getByLabel("Description").fill("Please assist with the room issue.");
+    await form.getByRole("button", { name: "Open ticket" }).dblclick();
+    await expect(page).toHaveURL(new RegExp(`/tickets/${TICKET}$`));
+    expect(posts).toHaveLength(1);
+    expect(posts[0].postDataJSON()).toEqual({ category: "room_issue", subject: "AC not working", description: "Please assist with the room issue." });
+    expect(posts[0].headers()["idempotency-key"]).toMatch(/^ticket_[a-f0-9]{32}$/);
+  });
+
+  test("a booking that isn't confirmed can't have a ticket", async ({ page }) => {
+    await signedIn(page, (_request, url) => {
+      if (url.pathname === "/api/v1/b2b/tickets/categories") return { json: ["room_issue"] };
+      if (url.pathname === `/api/v1/b2b/bookings/${booking(1).booking_id}`) return { json: { data: { ...booking(1), guests: [] } } };
+      return undefined;
+    });
+    await page.goto(`${APP}/bookings/${booking(1).booking_id}/tickets/new`);
+    await expect(page.locator("[data-ticket-eligible=false]")).toBeVisible();
+    await expect(page.locator("[data-ticket-form]")).toHaveCount(0);
+  });
+
+  test("details show the latest message page as plain text; a reply is sent once with a key, retried with the same key", async ({ page }) => {
+    const replies: Request[] = [];
+    const calls = await signedIn(page, (request, url) => {
+      if (url.pathname === `/api/v1/b2b/tickets/${TICKET}` && request.method() === "GET") return { json: { ticket: ticket("waiting_for_customer"), messages: url.searchParams.get("page") === "2" ? messages(2, 2) : messages(1, 2) } };
+      if (url.pathname === `/api/v1/b2b/tickets/${TICKET}/messages`) { replies.push(request); return replies.length === 1 ? { status: 503, json: { message: "x" } } : { status: 201, json: { status: "sent", message_id: "m3" } }; }
+      return undefined;
+    });
+    await page.goto(`${APP}/tickets/${TICKET}`);
+    await expect(page.locator("[data-ticket-status]")).toHaveText("Waiting for your reply");
+    // The latest page (2 of 2) is shown; markup in a message is shown as text, not HTML.
+    await expect(page.getByText("<b>We are on it</b>")).toBeVisible();
+    await expect(page.locator("[data-ticket-messages] b", { hasText: "We are on it" })).toHaveCount(0);
+    expect(calls).toContain(`GET /api/v1/b2b/tickets/${TICKET}?page=2`);
+    await page.getByRole("button", { name: "Previous" }).click();
+    await expect(page.locator("[data-ticket-messages]")).toContainText("Room 204.");
+    const reply = page.getByLabel("Your reply");
+    await reply.fill("Thank you for your assistance.");
+    await page.getByRole("button", { name: "Send reply" }).click();
+    await expect(page.locator("[data-reply-failure=unavailable]")).toBeVisible();
+    await page.getByRole("button", { name: "Send reply" }).click();
+    await expect(page.getByText("Reply sent.")).toBeVisible();
+    expect(replies).toHaveLength(2);
+    expect(replies[0].postDataJSON()).toEqual({ message: "Thank you for your assistance." });
+    expect(replies[1].headers()["idempotency-key"]).toBe(replies[0].headers()["idempotency-key"]);
+    await expect(reply).toHaveValue("");
+  });
+
+  for (const status of ["resolved", "closed"]) {
+    test(`${status} tickets can't be replied to`, async ({ page }) => {
+      await signedIn(page, (_request, url) => (url.pathname === `/api/v1/b2b/tickets/${TICKET}` ? { json: { ticket: ticket(status), messages: messages() } } : undefined));
+      await page.goto(`${APP}/tickets/${TICKET}`);
+      await expect(page.locator("[data-ticket-closed]")).toBeVisible();
+      await expect(page.getByLabel("Your reply")).toHaveCount(0);
+    });
+  }
+
+  for (const [locale, width] of [["ar", 375], ["en", 768], ["ar", 1440]] as const) {
+    test(`${locale} ${width}px: tickets, conversation and the incomplete list fit`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await signedIn(page, (_request, url) => {
+        if (url.pathname === "/api/v1/b2b/tickets") return { json: paginator([ticket()]) };
+        if (url.pathname === `/api/v1/b2b/tickets/${TICKET}`) return { json: { ticket: ticket(), messages: messages() } };
+        if (url.pathname === "/api/v1/b2b/bookings/my-incomplete") return { json: paginator([{ ...booking(5), confirmation_state: "processing" }]) };
+        return undefined;
+      }, locale);
+      for (const [path, marker] of [["/tickets", "[data-tickets]"], [`/tickets/${TICKET}`, "[data-ticket-messages]"], ["/bookings?view=incomplete", "[data-bookings-state=list]"]] as const) {
+        await page.goto(`${APP}${path}`);
+        await expect(page.locator(marker)).toBeVisible();
         await expect(page.locator("html")).toHaveAttribute("dir", locale === "ar" ? "rtl" : "ltr");
         expect(await overflow(page), path).toBeLessThanOrEqual(0);
       }

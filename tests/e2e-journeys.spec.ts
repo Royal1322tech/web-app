@@ -44,6 +44,18 @@ const profile = {
 };
 
 /** Answers every API call. `search` decides each hotel search reply; anything unhandled is recorded. */
+/** GET /b2b/destinations (API release 2026-11-25), sandbox-known cities. */
+const cities = [
+  { id: "dubai", type: "city", name: "Dubai", country: "United Arab Emirates", country_code: "AE", parent: null },
+  { id: "paris", type: "city", name: "Paris", country: "France", country_code: "FR", parent: null },
+  { id: "los-angeles", type: "city", name: "Los Angeles", country: "United States", country_code: "US", parent: null },
+];
+async function chooseDestination(page: Page, name: string) {
+  const input = page.locator("#destination");
+  await input.fill(name);
+  await page.locator("[data-destination-autocomplete]").getByRole("option", { name: new RegExp(`^${name}`) }).click();
+}
+
 async function mockApi(page: Page, search: (request: Request, attempt: number) => Reply | Promise<Reply> = (request) => results(request), extra: Record<string, () => Reply> = {}) {
   const calls: string[] = [];
   const searches: Request[] = [];
@@ -59,6 +71,7 @@ async function mockApi(page: Page, search: (request: Request, attempt: number) =
     else if (key === "POST /b2b/auth/login") reply = { json: { message: "Login successful.", token_type: "Bearer", access_token: TOKEN, expires_in: 3600, company_id: COMPANY, user: { id: 7, name: "Laila Hassan", email: EMAIL } } };
     else if (key === "GET /b2b/me") reply = { json: profile };
     else if (key === "POST /b2b/auth/logout") reply = { json: { message: "Logged out successfully." } };
+    else if (key === "GET /b2b/destinations") { const q = new URL(request.url()).searchParams.get("q")?.toLowerCase() ?? ""; reply = { json: { success: true, code: "OK", scope: "sandbox_known", data: cities.filter((city) => city.name.toLowerCase().startsWith(q)) } }; }
     else if (key === "POST /b2b/hotels/search") { searches.push(request); reply = await search(request, searches.length); }
     if (!reply) { unexpected.push(key); return route.fulfill({ status: 500, headers: cors, json: {} }); }
     if (reply.abort) return route.abort("connectionrefused");
@@ -207,7 +220,7 @@ test.describe("journey: sign in, browse hotels, sign out (mocked API)", () => {
     await page.goto(APP + "/login");
     await signIn(page);
     await expect(page.locator("[data-live-home=featured]")).toHaveAttribute("data-search-state", "results");
-    await page.locator("#destination").selectOption("dubai");
+    await chooseDestination(page, "Dubai");
     await page.locator("#check-in").fill("2030-12-06");
     await page.locator("#check-out").fill("2030-12-15");
     await page.locator("#search-nationality").selectOption("AL");
@@ -270,7 +283,7 @@ test.describe("hotel search results: navigation and races (mocked API)", () => {
     await expect(page.locator("#api-hotel-results [aria-busy=true]")).toBeVisible();
 
     await openSearchForm(page);
-    await page.locator("#destination").selectOption("paris");
+    await chooseDestination(page, "Paris");
     await page.locator("#hotel-search button[type=submit]").click();
     await expect(page).toHaveURL(/destination=paris/);
     await expect(hotelNames(page)).toHaveText(["Paris Test Hotel 1", "Paris Test Hotel 2", "Paris Test Hotel 3"]);
@@ -289,7 +302,7 @@ test.describe("hotel search results: navigation and races (mocked API)", () => {
     await page.goto(APP + searchPath("dubai"));
     await expect(hotelNames(page).first()).toHaveText("Dubai Test Hotel 1");
     await openSearchForm(page);
-    await page.locator("#destination").selectOption("los-angeles");
+    await chooseDestination(page, "Los Angeles");
     await page.locator("#hotel-search button[type=submit]").click();
     await expect(hotelNames(page).first()).toHaveText("Los Angeles Test Hotel 1");
 

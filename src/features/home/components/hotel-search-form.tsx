@@ -16,6 +16,7 @@ import {
 } from "../schemas/hotel-search.schema";
 import { searchDestinations } from "@/features/hotels/data/destinations";
 import { apiHotelSearchEnabled } from "@/features/hotels/hotel-search-config";
+import { DestinationAutocomplete } from "@/features/hotels/components/destination-autocomplete";
 import { RoomSelector } from "./room-selector";
 import styles from "../home.module.css";
 
@@ -57,6 +58,7 @@ export function HotelSearchForm({
     formState: { errors },
   } = form;
   const nationalityField = register("nationality");
+  const destinationValue = useWatch({ control, name: "destination" }) ?? "";
   const currentNationality = useWatch({ control, name: "nationality" });
   const updateNationalityPreference = preferences.update;
   const hasInitializedNationality = useRef(false);
@@ -130,6 +132,16 @@ export function HotelSearchForm({
                   <Icon name="pin" />
                   {t("Destination", "الوجهة")}
                 </label>
+                {apiHotelSearchEnabled ? (
+                  <>
+                    <input type="hidden" {...register("destination")} />
+                    <DestinationAutocomplete
+                      value={destinationValue}
+                      error={errors.destination ? t(errors.destination.message || "Check this field.") : undefined}
+                      onChange={(id) => setValue("destination", id, { shouldValidate: !!errors.destination, shouldDirty: true })}
+                    />
+                  </>
+                ) : (
                 <select
                   id="destination"
                   aria-invalid={!!errors.destination}
@@ -147,6 +159,7 @@ export function HotelSearchForm({
                     </option>
                   ))}
                 </select>
+                )}
                 {errors.destination && (
                   <p
                     id="destination-error"

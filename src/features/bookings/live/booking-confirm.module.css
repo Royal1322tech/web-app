@@ -1,0 +1,19 @@
+/* Booking confirmation panel: shared by the draft result and the booking details. */
+.panel { display: grid; gap: var(--space-3, 12px); min-width: 0; padding: clamp(16px, 2.4vw, 24px); border: 1px solid var(--border); border-radius: 14px; background: var(--surface, #fff); }
+.panel h3 { margin: 0; color: var(--navy); font-size: 17px; }
+.panel p { margin: 0; line-height: 1.55; }
+.prices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3, 12px); margin: 0; }
+.prices > div { display: grid; gap: 4px; min-width: 0; padding: 12px; border: 1px solid var(--border); border-radius: 12px; background: #fbfcfe; }
+.prices > div[data-price="agency"] { border-color: color-mix(in srgb, var(--primary) 40%, var(--border)); }
+.prices dt { color: var(--muted); font-size: 13px; font-weight: 600; }
+.prices dd { margin: 0; color: var(--navy); font-size: 18px; font-weight: 800; overflow-wrap: anywhere; }
+.accept { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; background: #fff; color: var(--navy); font-weight: 600; cursor: pointer; }
+.accept input { flex-shrink: 0; width: 20px; height: 20px; margin-top: 2px; accent-color: var(--primary); }
+.note { color: var(--muted); font-size: 14px; }
+.warning { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 12px; background: #fff4e5; color: #7a4a00; font-weight: 600; }
+.actions { display: flex; flex-wrap: wrap; gap: var(--space-3, 12px); }
+.actions > :global(.button) { min-height: 44px; }
+@media (max-width: 599px) {
+  .prices { grid-template-columns: minmax(0, 1fr); }
+  .actions > :global(.button) { flex: 1 1 100%; justify-content: center; }
+}

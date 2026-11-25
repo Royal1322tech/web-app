@@ -2,15 +2,20 @@ import { z } from "zod";
 import { ApiError, apiRequest } from "@/lib/api/client";
 
 /*
- * The company's bookings, read-only (backend 888cb8c, ROYAL_TRAVEL_B2B_API_HANDOFF.md §3.6).
- * Permission bookings.view; the company comes from the token.
- * - GET /api/v1/b2b/bookings?status=&page=  → Laravel paginator, 20 per page, newest first.
- * - GET /api/v1/b2b/bookings/{id}          → { data: booking + guests } (another company's: 404).
- * Only the customer total is returned: no supplier cost, markups or supplier references.
- * There are no cancel, confirm, payment or voucher endpoints.
+ * Bookings, read-only. Permission bookings.view; the company comes from the token.
+ * - GET /api/v1/b2b/bookings?status=&page=               company-wide (backend 888cb8c).
+ * - GET /api/v1/b2b/bookings/my-bookings?status=&page=&per_page=   the signed-in employee's bookings
+ * - GET /api/v1/b2b/bookings/my-incomplete?status=&page=&per_page= (API release 2026-11-25), 30 a minute.
+ *   Laravel paginators, 20 per page; items add confirmation_state, confirmed_at and can_resume_draft.
+ * - GET /api/v1/b2b/bookings/{id} → { data: booking + guests } (another company's: 404).
+ * No cancel, payment, voucher or invoice endpoints exist.
  */
-export const bookingStatuses = ["draft", "pending", "confirmed", "failed", "cancelled", "completed"] as const;
+export const bookingStatuses = ["draft", "pending", "pending_supplier", "confirmed", "failed", "cancelled", "completed"] as const;
 export type BookingStatus = (typeof bookingStatuses)[number];
+export const incompleteStatuses = ["draft", "pending", "pending_supplier"] as const satisfies readonly BookingStatus[];
+export type BookingScope = "mine" | "incomplete" | "company";
+const scopePath: Record<BookingScope, string> = { mine: "api/v1/b2b/bookings/my-bookings", incomplete: "api/v1/b2b/bookings/my-incomplete", company: "api/v1/b2b/bookings" };
+export const statusesFor = (scope: BookingScope): readonly BookingStatus[] => (scope === "incomplete" ? incompleteStatuses : bookingStatuses);
 
 const text = z.string().nullable().optional().catch(null).transform((value) => (value?.trim() ? value : null));
 const bookingSchema = z.object({
@@ -26,6 +31,11 @@ const bookingSchema = z.object({
   rooms_count: z.number().int().nullable().optional().catch(null).transform((value) => value ?? null),
   customer: z.object({ id: z.string(), first_name: z.string(), last_name: z.string() }).nullable().optional().catch(null).transform((value) => value ?? null),
   created_at: text,
+  confirmation_state: text,
+  confirmed_at: text,
+  can_resume_draft: z.boolean().nullable().optional().catch(null).transform((value) => value ?? null),
+  /** The company wallet charge; read only when the backend includes it. */
+  agency_purchase_price: text,
 });
 export type LiveBooking = z.infer<typeof bookingSchema>;
 
@@ -45,10 +55,10 @@ export interface BookingPage { items: LiveBooking[]; page: number; lastPage: num
 
 type Options = { token: string; signal?: AbortSignal };
 
-export function listBookings(status: BookingStatus | "", page: number, options: Options): Promise<BookingPage> {
+export function listBookings(scope: BookingScope, status: BookingStatus | "", page: number, options: Options): Promise<BookingPage> {
   const params = new URLSearchParams({ page: String(Math.max(1, Math.min(1000, Math.floor(page)))) });
-  if (status) params.set("status", status);
-  return apiRequest(`api/v1/b2b/bookings?${params}`, {
+  if (status && statusesFor(scope).includes(status)) params.set("status", status);
+  return apiRequest(`${scopePath[scope]}?${params}`, {
     ...options,
     parse: (value) => {
       const data = pageSchema.parse(value);
@@ -81,7 +91,7 @@ export function classifyBookingError(error: unknown): BookingFailure {
 
 export function bookingStatusLabel(status: string, t: (en: string, ar: string) => string): string {
   const known: Record<string, [string, string]> = {
-    draft: ["Draft", "مسودة"], pending: ["Pending", "قيد الانتظار"], confirmed: ["Confirmed", "مؤكد"],
+    draft: ["Draft", "مسودة"], pending: ["Pending", "قيد الانتظار"], pending_supplier: ["Waiting for supplier", "بانتظار المورد"], confirmed: ["Confirmed", "مؤكد"],
     failed: ["Failed", "فشل"], cancelled: ["Cancelled", "ملغى"], completed: ["Completed", "مكتمل"],
   };
   const pair = known[status];
