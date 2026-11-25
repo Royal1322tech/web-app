@@ -1,3 +1,4 @@
+import { agencyProfileVisible } from "@/app/hidden-features";
 import { Link } from "react-router-dom";
 import { Icon } from "@/components/ui/icon";
 import { useLocale } from "@/features/localization/locale-provider";
@@ -15,7 +16,7 @@ export function ProfilePage() {
     <section className="workspace-card profile-overview">
       <div className="profile-avatar" aria-hidden="true">{initials}</div>
       <div><p className="workspace-eyebrow">{t("YOUR PARTNER WORKSPACE", "مساحة عملك كشريك")}</p><h2>{profile.contact}</h2><p>{t("Agency contact", "مسؤول التواصل بالوكالة")}</p><strong>{profile.name}</strong></div>
-      <Link className="button button--primary" to="/agency/edit">{t("Edit profile", "تعديل الملف الشخصي")}</Link>
+      {agencyProfileVisible && <Link className="button button--primary" to="/agency/edit">{t("Edit profile", "تعديل الملف الشخصي")}</Link>}
     </section>
     <div className="profile-information">
       <section className="workspace-card"><h2 className="profile-card-title"><span aria-hidden="true"><Icon name="user" /></span>{t("Personal information", "المعلومات الشخصية")}</h2><dl className="profile-fields">
@@ -23,7 +24,7 @@ export function ProfilePage() {
       </dl></section>
       <section className="workspace-card"><h2 className="profile-card-title"><span aria-hidden="true"><Icon name="building" /></span>{t("Agency information", "معلومات الوكالة")}</h2><dl className="profile-fields">
         {[[t("Agency", "الوكالة"), profile.name], [t("Country", "الدولة"), profile.country], [t("Address", "العنوان"), profile.address]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value || t("Not provided", "غير متوفر")}</dd></div>)}
-      </dl><Link to="/agency">{t("View agency details", "عرض تفاصيل الوكالة")}</Link></section>
+      </dl>{agencyProfileVisible && <Link to="/agency">{t("View agency details", "عرض تفاصيل الوكالة")}</Link>}</section>
     </div>
     {apiAuthEnabled && <ProfileDetailsForm />}
     <section className="workspace-card"><h2>{t("Your workspace at a glance", "مساحة عملك بنظرة سريعة")}</h2><div className="profile-shortcuts">

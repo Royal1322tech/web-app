@@ -268,9 +268,11 @@ test("account navigation offers My Tickets and the complete grouped account map"
   await visit(page, "/tickets");
   const workspace = page.getByRole("navigation", { name: "Workspace navigation" });
   for (const group of ["Bookings", "Finance", "Account"]) await expect(workspace.getByRole("group", { name: group })).toBeVisible();
-  for (const label of ["My Bookings", "My Rentals", "My Tickets", "Wallet", "Transactions", "Invoices", "Accounting Review", "Points", "My Profile", "Agency Profile", "Notifications", "Account Settings"]) {
+  for (const label of ["My Bookings", "My Rentals", "My Tickets", "Wallet", "Transactions", "Invoices", "Accounting Review", "Points", "My Profile", "Notifications", "Account Settings"]) {
     await expect(workspace.getByRole("link", { name: label, exact: true })).toHaveCount(1);
   }
+  // Agency Profile is hidden for now.
+  await expect(workspace.getByRole("link", { name: "Agency Profile", exact: true })).toHaveCount(0);
   await expect(workspace.getByRole("link", { name: "My Tickets", exact: true })).toHaveAttribute("aria-current", "page");
   await openHeaderTools(page);
   await page.getByRole("button", { name: "Account menu" }).click();

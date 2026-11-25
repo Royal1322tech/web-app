@@ -1,5 +1,6 @@
 import { WorkspaceNavigation } from "@/features/demo/workspace-navigation";
-import { Link, useMatches } from "react-router-dom";
+import { useMatches } from "react-router-dom";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 import type { ReactNode } from "react";
 import { SiteHeader } from "@/features/home/components/site-header";
 import { useLocale } from "@/features/localization/locale-provider";
@@ -33,26 +34,12 @@ export function CatalogShell({
       </a>
       {publicHeader ? <PublicLandingHeader /> : <SiteHeader standalone />}
       <main id="catalog-main">
-        <nav
-          aria-label={t("Breadcrumb", "مسار التنقل")}
-          className={styles.breadcrumb}
-        >
-          <Link to="/">{t("Home", "الرئيسية")}</Link>
-          <span aria-hidden="true">›</span>
-          {detail && (
-            <>
-              <Link to="/search">{t("Search", "بحث")}</Link>
-              <span aria-hidden="true">›</span>
-            </>
-          )}
-          {trail.map((crumb) => (
-            <span key={crumb.to} className={styles.crumb}>
-              <Link to={crumb.to}>{crumb.label}</Link>
-              <span aria-hidden="true">›</span>
-            </span>
-          ))}
-          <span aria-current="page">{title}</span>
-        </nav>
+        <Breadcrumb
+          label={t("Breadcrumb", "مسار التنقل")}
+          homeLabel={t("Home", "الرئيسية")}
+          items={[...(detail ? [{ to: "/search", label: t("Search", "بحث") }] : []), ...trail]}
+          current={title}
+        />
         {showPreview && <p className={styles.preview}>
           {t(
             "Design preview — sample hotels, prices and bookings. No live availability or transactions.",

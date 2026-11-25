@@ -32,6 +32,10 @@ const profileSchema = z.object({
       address: z.string().nullable().optional(),
       account_currency: z.string().nullable().optional(),
       preferred_locale: z.string().nullable().optional(),
+      display_name: z.string().nullable().optional().catch(null),
+      registration_no: z.string().nullable().optional().catch(null),
+      tax_no: z.string().nullable().optional().catch(null),
+      employee_count: z.number().int().nonnegative().nullable().optional().catch(null),
     }),
     membership: z.object({ role_code: z.string(), status: z.string() }),
   }),
@@ -39,7 +43,10 @@ const profileSchema = z.object({
 
 export interface B2BIdentity {
   user: { id: string; name: string; email: string; phone?: string };
-  company: { id: string; name: string; legalName?: string; status: string; businessType?: string; countryCode?: string; city?: string; address?: string; currency?: string };
+  company: {
+    id: string; name: string; legalName?: string; displayName?: string; status: string; businessType?: string; countryCode?: string; city?: string;
+    address?: string; currency?: string; preferredLocale?: string; registrationNo?: string; taxNo?: string; employeeCount?: number;
+  };
   membership: { role: string; status: string };
 }
 
@@ -114,15 +121,21 @@ export async function fetchCurrentUser(token: string): Promise<B2BIdentity> {
       city: data.company.city ?? undefined,
       address: data.company.address ?? undefined,
       currency: data.company.account_currency ?? undefined,
+      preferredLocale: data.company.preferred_locale ?? undefined,
+      displayName: data.company.display_name ?? undefined,
+      registrationNo: data.company.registration_no ?? undefined,
+      taxNo: data.company.tax_no ?? undefined,
+      employeeCount: data.company.employee_count ?? undefined,
     },
     membership: { role: data.membership.role_code, status: data.membership.status },
   };
 }
 
 /**
- * PATCH /api/v1/b2b/me: updates the signed-in user's own name and phone. The API accepts only these
- * two fields (company details aren't editable here) and needs at least one. The reply body isn't relied
- * on: callers reload the profile from GET /me afterwards.
+ * PATCH /api/v1/b2b/me: updates the signed-in user's own name and phone. Checked on staging
+ * (2026-11-25, rejected requests only): `name` (string, ≤255) and `phone` (string, ≤30) are the only
+ * validated fields, at least one is required ("profile"), and other fields (email, company details) are
+ * ignored. The reply body isn't relied on: callers reload the profile from GET /me afterwards.
  */
 export async function updateCurrentUser(token: string, changes: { name?: string; phone?: string }): Promise<void> {
   await apiRequest("api/v1/b2b/me", { method: "PATCH", token, body: changes, parse: () => undefined });

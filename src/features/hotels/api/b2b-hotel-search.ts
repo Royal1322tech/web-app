@@ -1,3 +1,4 @@
+import { stayDateIssue, toLocalDay } from "@/lib/stay-dates";
 import { z } from "zod";
 import { ApiError, apiRequest } from "@/lib/api/client";
 import type { HotelSearchCriteria } from "@/features/home/schemas/hotel-search.schema";
@@ -90,7 +91,8 @@ export function toB2BHotelSearchRequest(
   if (point ? !validPoint(point) : !isDestinationId(criteria.destination.trim())) return null;
   if (!["en", "ar"].includes(options.language) || !isB2BSearchCurrency(options.currency)) return null;
   if (criteria.rooms.length < 1 || criteria.rooms.length > 9 || !criteria.rooms.every(validRoom)) return null;
-  if (!(criteria.checkOut > criteria.checkIn)) return null;
+  // Never send a past or zero-night stay (dates restored from a link or saved state included).
+  if (stayDateIssue(criteria.checkIn, criteria.checkOut, toLocalDay(new Date()))) return null;
   return {
     checkin: criteria.checkIn,
     checkout: criteria.checkOut,

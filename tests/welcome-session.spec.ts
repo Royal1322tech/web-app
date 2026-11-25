@@ -61,17 +61,16 @@ for (const width of [375, 1440]) {
       await expect(page).toHaveURL(/\/login$/);
       await submitDemoLogin(page);
       await expect(page).toHaveURL(/\/$/);
-      await visit(page, "/agency");
-      await expect(
-        page.getByRole("heading", { name: "Horizon Travel — Demo Agency" }),
-      ).toBeVisible();
+      await visit(page, "/profile");
+      await expect(page.locator(".profile-overview")).toContainText("Horizon Travel — Demo Agency");
       await openHeaderTools(page);
       await expect(account()).toHaveAttribute("aria-expanded", "false");
       await closeHeaderMenu(page);
       for (const path of [
         "/transactions",
         "/notifications",
-        "/agency",
+        // Agency Profile is hidden for now; My Profile takes its place here.
+        "/profile",
         "/wallet",
       ]) {
         await page.locator(`.workspace-nav a[href="${path}"]`).click();
@@ -98,7 +97,7 @@ for (const width of [375, 1440]) {
 }
 
 test("private demo screens require login and refresh preserves access", async ({ page }) => {
-  for (const path of ["/agency", "/agency/edit", "/wallet", "/notifications", "/transactions", "/verify-email"]) {
+  for (const path of ["/profile", "/account/settings", "/wallet", "/notifications", "/transactions", "/verify-email"]) {
     await page.goto(path);
     await expect(page.locator(".welcome-content")).toBeVisible();
     await expect(page.locator("header, footer, .workspace")).toHaveCount(0);

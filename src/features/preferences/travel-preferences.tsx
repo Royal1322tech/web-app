@@ -7,8 +7,11 @@ import { countries } from "@/features/agency-registration/data/countries";
 import styles from "./travel-preferences.module.css";
 
 const currencies = ["AED", "EGP", "EUR", "KWD", "SAR", "USD"] as const;
+/** Display currencies offered as a preference (hotel search sends only the ones its API supports). */
+export const preferenceCurrencies = currencies;
+export type PreferenceCurrency = typeof currencies[number];
 export type NationalityCode = (typeof countries)[number]["value"];
-type Preferences = { currency: typeof currencies[number]; nationality: NationalityCode };
+type Preferences = { currency: PreferenceCurrency; nationality: NationalityCode };
 const defaults: Preferences = { currency: "USD", nationality: "EG" };
 const key = "royal-vacation.travel-preferences";
 let fallback = JSON.stringify(defaults);

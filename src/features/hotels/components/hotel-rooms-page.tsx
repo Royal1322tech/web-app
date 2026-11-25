@@ -60,7 +60,7 @@ export function HotelRoomsPage() {
 
   const title = summary?.name ?? t("Hotel rooms", "غرف الفندق");
   return (
-    <CatalogShell title={t("Rooms", "الغرف")}>
+    <CatalogShell title={t("Rooms", "الغرف")} trail={[{ to: backToResults, label: t("Search results", "نتائج البحث") }]}>
       <div className={styles.page} data-rooms-page>
         <BackLink to={backToResults}>{t("Back to search results", "العودة إلى نتائج البحث")}</BackLink>
         {!isHotelHid(hid) || !criteria || !request ? (
@@ -75,9 +75,16 @@ export function HotelRoomsPage() {
         ) : (
           <>
             <HotelHeader title={title} summary={summary} criteria={criteria} request={request} />
-            <PriceRequestCta to={`/hotels/rooms/${hid}/reduce-price?${stayQuery(criteria)}`} state={{ ...(summary ? { hotel: summary } : {}), rooms: roomNames }} />
             {/* Keyed by the request: new dates, guests, language or currency start again and drop every token. */}
-            <RoomsFlow key={`${hid}:${JSON.stringify(request)}`} hid={hid} request={request} searchHref={backToResults} onRoomNames={setRoomNames} />
+            <RoomsFlow
+              key={`${hid}:${JSON.stringify(request)}`}
+              hid={hid}
+              request={request}
+              searchHref={backToResults}
+              onRoomNames={setRoomNames}
+              // Reduce Price sits on each rate: the existing request form, with this hotel, stay and room.
+              reducePrice={(rate) => ({ to: `/hotels/rooms/${hid}/reduce-price?${stayQuery(criteria)}`, state: { ...(summary ? { hotel: summary } : {}), ...(rate.room_name ? { room: rate.room_name } : {}), rooms: roomNames } })}
+            />
           </>
         )}
       </div>
@@ -86,23 +93,6 @@ export function HotelRoomsPage() {
 }
 
 /** The Reduce Price entry: a promotional call to action under the hotel header. */
-function PriceRequestCta({ to, state }: { to: string; state?: unknown }) {
-  const { t } = useLocale();
-  const id = useId();
-  return (
-    <aside className={styles.priceCta} aria-labelledby={`${id}-cta`}>
-      <span className={styles.priceCtaIcon} aria-hidden="true"><Icon name="percent" /></span>
-      <div className={styles.priceCtaText}>
-        <h2 id={`${id}-cta`}>{t("Found a better price?", "وجدت سعرًا أفضل؟")}</h2>
-        <p>{t("Tell us the rate you've seen for this stay and prepare a request for a lower price.", "أخبرنا بالسعر الذي وجدته لهذه الإقامة وجهّز طلبًا للحصول على سعر أقل.")}</p>
-      </div>
-      <Link className={styles.priceCtaButton} to={to} state={state}>
-        <span>{t("Request a Lower Price", "اطلب سعرًا أقل")}</span><Icon name="arrowRight" aria-hidden="true" />
-      </Link>
-    </aside>
-  );
-}
-
 export function HotelHeader({ title, summary, criteria, request }: {
   title: string;
   summary: RoomsHotelSummary | null;
@@ -173,7 +163,9 @@ function useNow(active: boolean) {
   return now;
 }
 
-function RoomsFlow({ hid, request: initialRequest, searchHref, onRoomNames }: { hid: number; request: RoomsRequest; searchHref: string; onRoomNames?: (names: string[]) => void }) {
+type ReducePriceLink = (rate: RoomRate) => { to: string; state: unknown };
+
+function RoomsFlow({ hid, request: initialRequest, searchHref, onRoomNames, reducePrice }: { hid: number; request: RoomsRequest; searchHref: string; onRoomNames?: (names: string[]) => void; reducePrice?: ReducePriceLink }) {
   const { t } = useLocale();
   // The parent keys this component by the request, so the first value is the one to keep.
   const [request] = useState(initialRequest);
@@ -299,7 +291,7 @@ function RoomsFlow({ hid, request: initialRequest, searchHref, onRoomNames }: { 
       )}
 
       {flow.step === "rooms" && rooms.status === "done" && (
-        <RatesList rooms={rooms.rooms} now={now} onSelect={(rate) => void select(rate)} onRefresh={refreshRooms} searchHref={searchHref} />
+        <RatesList rooms={rooms.rooms} now={now} onSelect={(rate) => void select(rate)} onRefresh={refreshRooms} searchHref={searchHref} reducePrice={reducePrice} />
       )}
 
       {flow.step === "checking" && (
@@ -386,7 +378,8 @@ function RatesSkeleton() {
   );
 }
 
-function RatesList({ rooms, now, onSelect, onRefresh, searchHref }: {
+function RatesList({ rooms, now, onSelect, onRefresh, searchHref, reducePrice }: {
+  reducePrice?: ReducePriceLink;
   rooms: Held<RoomsResult>;
   now: number;
   onSelect: (rate: RoomRate) => void;
@@ -426,7 +419,7 @@ function RatesList({ rooms, now, onSelect, onRefresh, searchHref }: {
       <ul className={styles.rates}>
         {rates.map((rate) => (
           <li key={rate.rate_index}>
-            <RateRow rate={rate} disabled={expired} onSelect={() => onSelect(rate)} />
+            <RateRow rate={rate} disabled={expired} onSelect={() => onSelect(rate)} reducePrice={reducePrice?.(rate)} />
           </li>
         ))}
       </ul>
@@ -434,7 +427,7 @@ function RatesList({ rooms, now, onSelect, onRefresh, searchHref }: {
   );
 }
 
-function RateRow({ rate, disabled, onSelect }: { rate: RoomRate; disabled: boolean; onSelect: () => void }) {
+function RateRow({ rate, disabled, onSelect, reducePrice }: { rate: RoomRate; disabled: boolean; onSelect: () => void; reducePrice?: { to: string; state: unknown } }) {
   const { t, locale } = useLocale();
   const reasonId = useId();
   const selectable = rateIsSelectable(rate);
@@ -468,6 +461,12 @@ function RateRow({ rate, disabled, onSelect }: { rate: RoomRate; disabled: boole
           {t("Select room", "اختيار الغرفة")}
         </button>
         {(!selectable || disabled) && <p id={reasonId} className={styles.reason}><Icon name="info" />{reason}</p>}
+        {/* Available whatever the price state (Price on request included); it never selects the rate. */}
+        {reducePrice && (
+          <Link className={styles.reducePrice} to={reducePrice.to} state={reducePrice.state} data-reduce-price>
+            <Icon name="priceDown" aria-hidden="true" />{t("Reduce Price", "اطلب سعرًا أقل")}
+          </Link>
+        )}
       </div>
     </article>
   );

@@ -139,7 +139,7 @@ export function LiveBookingDetailPage() {
   const lang = locale === "ar" ? "ar" : "en";
 
   return (
-    <Workspace title={t("Booking details", "تفاصيل الحجز")}>
+    <Workspace title={t("Booking details", "تفاصيل الحجز")} trail={[{ to: "/bookings", label: t("My bookings", "حجوزاتي") }]}>
       <div className={styles.page} data-live-booking>
         <BackLink to="/bookings">{t("Back to my bookings", "العودة إلى حجوزاتي")}</BackLink>
         {state.status === "loading" && <p className={styles.muted} role="status">{t("Loading booking…", "جارٍ تحميل الحجز…")}</p>}

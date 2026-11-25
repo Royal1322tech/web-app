@@ -18,6 +18,7 @@ import { searchDestinations } from "@/features/hotels/data/destinations";
 import { apiHotelSearchEnabled } from "@/features/hotels/hotel-search-config";
 import { DestinationAutocomplete } from "@/features/hotels/components/destination-autocomplete";
 import { RoomSelector } from "./room-selector";
+import { adjustedCheckOut, isCalendarDay, minCheckOut, nightsBetween, useLocalToday } from "@/lib/stay-dates";
 import styles from "../home.module.css";
 
 export function HotelSearchForm({
@@ -59,6 +60,13 @@ export function HotelSearchForm({
   } = form;
   const nationalityField = register("nationality");
   const destinationValue = useWatch({ control, name: "destination" }) ?? "";
+  // Check-in can't be before today (local calendar day); check-out is at least one night later.
+  const today = useLocalToday();
+  const checkInValue = useWatch({ control, name: "checkIn" }) ?? "";
+  const checkOutValue = useWatch({ control, name: "checkOut" }) ?? "";
+  const checkInField = register("checkIn");
+  const checkOutMin = isCalendarDay(checkInValue) && checkInValue >= today ? minCheckOut(checkInValue) : minCheckOut(today);
+  const nights = isCalendarDay(checkInValue) && isCalendarDay(checkOutValue) ? nightsBetween(checkInValue, checkOutValue) : 0;
   const currentNationality = useWatch({ control, name: "nationality" });
   const updateNationalityPreference = preferences.update;
   const hasInitializedNationality = useRef(false);
@@ -180,9 +188,18 @@ export function HotelSearchForm({
               <input
                 id="check-in"
                 type="date"
+                min={today}
                 aria-invalid={!!errors.checkIn}
                 aria-describedby={errors.checkIn ? "check-in-error" : undefined}
-                {...register("checkIn")}
+                {...checkInField}
+                onChange={(event) => {
+                  void checkInField.onChange(event);
+                  const next = event.target.value;
+                  // A check-out that's no longer after check-in moves to the next valid day; a valid one stays.
+                  if (isCalendarDay(next) && checkOutValue !== adjustedCheckOut(next, checkOutValue)) {
+                    setValue("checkOut", adjustedCheckOut(next, checkOutValue), { shouldValidate: !!errors.checkOut, shouldDirty: true });
+                  }
+                }}
               />
               {errors.checkIn && (
                 <p id="check-in-error" className={styles.error} role="alert">
@@ -198,6 +215,7 @@ export function HotelSearchForm({
               <input
                 id="check-out"
                 type="date"
+                min={checkOutMin}
                 aria-invalid={!!errors.checkOut}
                 aria-describedby={
                   errors.checkOut ? "check-out-error" : undefined
@@ -208,6 +226,9 @@ export function HotelSearchForm({
                 <p id="check-out-error" className={styles.error} role="alert">
                   {t(errors.checkOut.message || "Check this field.")}
                 </p>
+              )}
+              {!errors.checkOut && nights > 0 && (
+                <p className={styles.nights} data-nights={nights}>{t(`${nights} ${nights === 1 ? "night" : "nights"}`, nights === 1 ? "ليلة واحدة" : nights === 2 ? "ليلتان" : `${nights} ليالٍ`)}</p>
               )}
             </div>
             <div className={styles.searchField}>

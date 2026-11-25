@@ -488,7 +488,7 @@ test.describe("API mode", () => {
     expect(api.calls).toEqual([]);
   });
 
-  test("profile and agency pages show the account from /me, and nothing pretends to be live", async ({ page }) => {
+  test("profile shows the account from /me; the hidden agency pages open My Profile; nothing pretends to be live", async ({ page }) => {
     await mockApi(page, { "POST /b2b/auth/login": ok.login, "GET /b2b/me": ok.me });
     await page.goto("/login");
     await signIn(page);
@@ -499,18 +499,17 @@ test.describe("API mode", () => {
 
     await page.goto("/profile");
     const main = page.locator("main");
-    for (const value of ["Laila Hassan", "laila@example.com", "Nile Gate Tours", "1 Corniche Road, Alexandria", "Egypt"]) await expect(main).toContainText(value);
+    for (const value of ["Laila Hassan", "laila@example.com", "Nile Gate Tours", "1 Corniche Road", "Alexandria", "Egypt"]) await expect(main).toContainText(value);
     await expect(main).not.toContainText(/Alex Morgan|Horizon Travel|partner@example\.com/);
     await expect(page.locator(".api-data-notice")).toHaveCount(0);
+    await expect(main.locator('a[href="/agency"], a[href="/agency/edit"]')).toHaveCount(0);
 
-    await page.goto("/agency");
-    await expect(page.locator(".api-data-notice")).toContainText("Your company details come from your account.");
-    await expect(main).toContainText("Signed in to your company account");
-    await expect(main).toContainText("Nile Gate Tours");
-
-    await page.goto("/agency/edit");
-    await expect(page.getByRole("status")).toHaveText("Company details can't be edited online yet. Please contact Royal Vacation to change them.");
-    await expect(page.locator("form")).toHaveCount(0);
+    // Agency Profile is hidden for now: its routes open My Profile.
+    for (const path of ["/agency", "/agency/edit"]) {
+      await page.goto(path);
+      await expect(page).toHaveURL(/\/profile$/);
+      await expect(page.locator("[data-live-profile]")).toBeVisible();
+    }
 
     await page.goto("/bookings");
     await expect(page.locator("main")).toBeVisible();

@@ -115,7 +115,7 @@ export function LiveTransactionsPage() {
   const { t } = useLocale();
   const finance = useFinance();
   return (
-    <Workspace title={t("Transactions", "المعاملات")} accountNavigation={false}>
+    <Workspace title={t("Transactions", "المعاملات")} accountNavigation={false} trail={[{ to: "/wallet", label: t("Wallet", "المحفظة") }]}>
       <div className={styles.page} data-live-transactions>
         <FinanceState {...finance} />
         {finance.state.status === "done" && <EntriesList entries={finance.state.data.entries} currency={finance.state.data.account.currency} />}

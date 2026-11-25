@@ -1,3 +1,4 @@
+import { favouritesVisible } from "@/app/hidden-features";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useLocale } from "@/features/localization/locale-provider";
@@ -72,7 +73,7 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
           ["/", t("Home", "الرئيسية")], ["/search", t("Search", "بحث")],
           ["/car-rental", t("Car Rental", "تأجير السيارات")], ["/bookings", t("My Bookings", "حجوزاتي")],
           ["/group-quotation", t("Group Quotation", "عرض سعر للمجموعات")],
-          ["/wallet", t("Wallet", "المحفظة")], ["/favourites", t("Favourites", "المفضلة")], ["/contact", t("Contact Us", "تواصل معنا")],
+          ["/wallet", t("Wallet", "المحفظة")], ...(favouritesVisible ? [["/favourites", t("Favourites", "المفضلة")]] : []), ["/contact", t("Contact Us", "تواصل معنا")],
         ].map(([href, label]) => <Link key={href} to={href} aria-current={active(href) ? "page" : undefined} onClick={close}>{label}</Link>)}
       </nav>
       <div id="header-tools" className={styles.tools}>

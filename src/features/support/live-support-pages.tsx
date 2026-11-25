@@ -195,7 +195,7 @@ export function LiveNewTicketPage() {
   const ready = booking.state.status === "done" && categories.state.status === "done";
   const eligible = booking.state.status === "done" && bookingAcceptsTickets(booking.state.data);
   return (
-    <Workspace title={t("New support ticket", "تذكرة دعم جديدة")}>
+    <Workspace title={t("New support ticket", "تذكرة دعم جديدة")} trail={[{ to: "/bookings", label: t("My bookings", "حجوزاتي") }, { to: `/bookings/${encodeURIComponent(id)}`, label: t("Booking details", "تفاصيل الحجز") }]}>
       <div className={styles.page} data-live-new-ticket>
         <BackLink to={`/bookings/${encodeURIComponent(id)}`}>{t("Back to booking", "العودة إلى الحجز")}</BackLink>
         {(booking.state.status === "loading" || categories.state.status === "loading") && <p className={styles.muted} role="status">{t("Loading…", "جارٍ التحميل…")}</p>}
@@ -287,7 +287,7 @@ export function LiveTicketDetailPage() {
   }
 
   return (
-    <Workspace title={t("Support ticket", "تذكرة الدعم")}>
+    <Workspace title={t("Support ticket", "تذكرة الدعم")} trail={[{ to: "/tickets", label: t("My Tickets", "تذاكري") }]}>
       <div className={styles.page} data-live-ticket>
         <BackLink to="/tickets">{t("Back to my tickets", "العودة إلى تذاكري")}</BackLink>
         {state.status === "loading" && <p className={styles.muted} role="status">{t("Loading ticket…", "جارٍ تحميل التذكرة…")}</p>}
