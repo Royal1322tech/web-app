@@ -1,3 +1,4 @@
+import { formatMoney } from "@/lib/money";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { BackLink } from "@/components/ui/back-link";
 import { Icon } from "@/components/ui/icon";
@@ -21,7 +22,7 @@ const failureText: Record<BookingFailure | "signed_out", [string, string]> = {
   unavailable: ["Bookings can't be loaded right now. Please try again later.", "تعذر تحميل الحجوزات حاليًا. يرجى المحاولة لاحقًا."],
 };
 const date = (value: string | null, locale: "en" | "ar") => (value && /^\d{4}-\d{2}-\d{2}/.test(value) ? formatCalendarDate(value.slice(0, 10), locale) : null);
-const money = (booking: Pick<LiveBooking, "customer_total" | "currency">) => (booking.customer_total ? `${booking.currency ?? ""} ${booking.customer_total}`.trim() : null);
+const money = (booking: Pick<LiveBooking, "customer_total" | "currency">) => (booking.customer_total ? formatMoney(booking.customer_total, booking.currency) : null);
 
 const confirmationLabel: Partial<Record<ConfirmationView, [string, string]>> = {
   wallet_held: ["Wallet held", "المبلغ محجوز"], preparing: ["Preparing confirmation", "جارٍ تجهيز التأكيد"],
@@ -36,9 +37,9 @@ export function bookingStateText(booking: Pick<LiveBooking, "status" | "confirma
 }
 
 const scopes: { scope: BookingScope; label: [string, string]; empty: [string, string] }[] = [
-  { scope: "mine", label: ["My bookings", "حجوزاتي"], empty: ["Bookings you create appear here.", "تظهر هنا الحجوزات التي تنشئها."] },
+  { scope: "mine", label: ["My Bookings", "حجوزاتي"], empty: ["Bookings you create appear here.", "تظهر هنا الحجوزات التي تنشئها."] },
   { scope: "incomplete", label: ["Incomplete", "غير المكتملة"], empty: ["You have no drafts or bookings waiting to be completed.", "لا توجد لديك مسودات أو حجوزات بانتظار الإكمال."] },
-  { scope: "company", label: ["Company bookings", "حجوزات الشركة"], empty: ["Your company's bookings appear here.", "تظهر هنا حجوزات شركتك."] },
+  { scope: "company", label: ["Company Bookings", "حجوزات الشركة"], empty: ["Your company's bookings appear here.", "تظهر هنا حجوزات شركتك."] },
 ];
 const isScope = (value: string | null): value is BookingScope => value === "mine" || value === "incomplete" || value === "company";
 
@@ -109,7 +110,8 @@ export function LiveBookingsPage() {
                           [date(booking.check_in, lang), date(booking.check_out, lang)].filter(Boolean).join(" – ") || null,
                           money(booking)].filter(Boolean).join(" · ")}
                       </small>
-                      {booking.status === "draft" && booking.can_resume_draft === true && !booking.confirmation_state && <small className={styles.badge} data-resumable>{t("Draft: continue to confirm", "مسودة: تابع للتأكيد")}</small>}
+                      {/* Says only what the backend reports: a draft isn't confirmed; confirming needs the draft's price check (see details). */}
+                      {booking.status === "draft" && booking.can_resume_draft === true && !booking.confirmation_state && <small className={styles.badge} data-resumable>{t("Draft · not confirmed yet", "مسودة · لم تُؤكد بعد")}</small>}
                       {booking.status === "draft" && booking.can_resume_draft === false && !booking.confirmation_state && <small className={styles.muted} data-resumable="false">{t("This draft can't be continued. Search again to book.", "لا يمكن متابعة هذه المسودة. ابحث مرة أخرى للحجز.")}</small>}
                     </span>
                     <Icon name="arrowRight" aria-hidden="true" />
@@ -139,7 +141,7 @@ export function LiveBookingDetailPage() {
   const lang = locale === "ar" ? "ar" : "en";
 
   return (
-    <Workspace title={t("Booking details", "تفاصيل الحجز")} trail={[{ to: "/bookings", label: t("My bookings", "حجوزاتي") }]}>
+    <Workspace title={t("Booking details", "تفاصيل الحجز")} trail={[{ to: "/bookings", label: t("My Bookings", "حجوزاتي") }]}>
       <div className={styles.page} data-live-booking>
         <BackLink to="/bookings">{t("Back to my bookings", "العودة إلى حجوزاتي")}</BackLink>
         {state.status === "loading" && <p className={styles.muted} role="status">{t("Loading booking…", "جارٍ تحميل الحجز…")}</p>}

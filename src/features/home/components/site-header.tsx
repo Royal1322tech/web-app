@@ -83,16 +83,21 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
         </div>
         <div className={styles.icons}>
           <Link to="/notifications" onClick={close} aria-label={t("Notifications", "الإشعارات")} title={t("Notifications", "الإشعارات")}><Icon name="bell" /></Link>
-          <Link to="/booking/summary" onClick={close} aria-label={t("Booking summary", "ملخص الحجز")} title={t("Booking summary", "ملخص الحجز")}><Icon name="cart" /></Link>
+          {/* The example checkout isn't the real booking flow (rooms → draft → confirm), so real sign-in has no cart. */}
+          {!apiAuthEnabled && <Link to="/booking/summary" onClick={close} aria-label={t("Booking summary", "ملخص الحجز")} title={t("Booking summary", "ملخص الحجز")}><Icon name="cart" /></Link>}
           {demoSessionActive ? <Popover key={navigationKey} triggerClassName={styles.profileTrigger} panelClassName={styles.accountPanel} label={t("Account menu", "قائمة الحساب")} trigger={<Icon name="personFilled" />}>
           {identity && <p className={styles.accountIdentity}><strong>{identity.user.name}</strong><span>{identity.company.name}</span></p>}
-          {[
-            ["/profile", t("My Profile", "ملفي الشخصي")],
-            ["/bookings", t("My Bookings", "حجوزاتي")], ["/car-rental/bookings", t("My Rentals", "تأجيراتي")], ["/tickets", t("My Tickets", "تذاكري")], ...(apiAuthEnabled ? [["/customers", t("Customers", "العملاء")], ["/price-requests", t("Price Requests", "طلبات الأسعار")]] : []),
-            ["/invoices", t("Invoices", "الفواتير")], ["/accounting-review", t("Accounting Review", "مراجعة الحسابات")],
-            ["/wallet", t("Wallet", "المحفظة")], ["/transactions", t("Transactions", "المعاملات")],
-            ["/account/settings", t("Account Settings", "إعدادات الحساب")],
-          ].map(([href, label]) => <Link key={href} to={href} onClick={close}>{label}</Link>)}
+          {/* Grouped the same way as the workspace sidebar: bookings, finance, then the account. */}
+          {([
+            [t("Bookings", "الحجوزات"), [["/bookings", t("My Bookings", "حجوزاتي")], ["/car-rental/bookings", t("My Rentals", "تأجيراتي")], ["/tickets", t("My Tickets", "تذاكري")], ...(apiAuthEnabled ? [["/customers", t("Customers", "العملاء")], ["/price-requests", t("Price Requests", "طلبات الأسعار")]] : [])]],
+            [t("Finance", "المالية"), [["/wallet", t("Wallet", "المحفظة")], ["/transactions", t("Transactions", "المعاملات")], ["/invoices", t("Invoices", "الفواتير")], ["/accounting-review", t("Accounting Review", "مراجعة الحسابات")]]],
+            [t("Account", "الحساب"), [["/profile", t("My Profile", "ملفي الشخصي")], ["/account/settings", t("Account Settings", "إعدادات الحساب")]]],
+          ] as [string, string[][]][]).map(([group, links]) => (
+            <div key={group} className={styles.accountGroup} role="group" aria-label={group}>
+              <p className={styles.accountGroupLabel} aria-hidden="true">{group}</p>
+              {links.map(([href, label]) => <Link key={href} to={href} onClick={close}>{label}</Link>)}
+            </div>
+          ))}
           <button type="button" onClick={endSession}>{t("Sign Out", "تسجيل الخروج")}</button>
         </Popover> : <Link to="/welcome" onClick={close} aria-label={t("Agency account", "حساب الوكالة")}><Icon name="personFilled" /></Link>}
         </div>

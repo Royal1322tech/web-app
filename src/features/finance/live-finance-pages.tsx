@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useEffect } from "react";
 import { FINANCE_CHANGED_EVENT } from "@/features/bookings/live/b2b-booking-confirm";
 import { SystemState } from "@/components/ui/system-state";
@@ -50,9 +51,17 @@ function FinanceState({ state, retry }: ReturnType<typeof useFinance>) {
   return null;
 }
 
-function EntriesList({ entries, currency }: { entries: FinanceEntry[]; currency: string }) {
+function EntriesList({ entries, currency, walletLink = false }: { entries: FinanceEntry[]; currency: string; walletLink?: boolean }) {
   const { t, locale } = useLocale();
-  if (!entries.length) return <p className={styles.muted} data-finance-state="no-entries">{t("No wallet or credit activity yet.", "لا يوجد نشاط في المحفظة أو الائتمان بعد.")}</p>;
+  if (!entries.length) {
+    return walletLink ? (
+      <div data-finance-state="no-entries">
+        <SystemState title={t("No transactions yet", "لا توجد معاملات بعد")} description={t("Wallet top-ups, credit changes and settlements will appear here.", "ستظهر هنا عمليات شحن المحفظة وتغييرات الائتمان والتسويات.")}>
+          <Link className="button button--outline" to="/wallet">{t("View wallet", "عرض المحفظة")}</Link>
+        </SystemState>
+      </div>
+    ) : <p className={styles.muted} data-finance-state="no-entries">{t("No wallet or credit activity yet.", "لا يوجد نشاط في المحفظة أو الائتمان بعد.")}</p>;
+  }
   return (
     <ul className={styles.list} aria-label={t("Wallet and credit activity", "نشاط المحفظة والائتمان")} data-finance-entries>
       {entries.map((entry) => (
@@ -76,7 +85,6 @@ export function LiveWalletPage() {
   return (
     <Workspace title={t("Wallet", "المحفظة")} accountNavigation={false}>
       <div className={styles.page} data-live-wallet>
-        <LoyaltySummaryCard />
         <FinanceState {...finance} />
         {state.status === "done" && (() => {
           const { account } = state.data;
@@ -105,6 +113,8 @@ export function LiveWalletPage() {
             </>
           );
         })()}
+        {/* Balances and credit first; loyalty points after them (shown even if finance can't load). */}
+        <LoyaltySummaryCard />
       </div>
     </Workspace>
   );
@@ -118,7 +128,7 @@ export function LiveTransactionsPage() {
     <Workspace title={t("Transactions", "المعاملات")} accountNavigation={false} trail={[{ to: "/wallet", label: t("Wallet", "المحفظة") }]}>
       <div className={styles.page} data-live-transactions>
         <FinanceState {...finance} />
-        {finance.state.status === "done" && <EntriesList entries={finance.state.data.entries} currency={finance.state.data.account.currency} />}
+        {finance.state.status === "done" && <EntriesList entries={finance.state.data.entries} currency={finance.state.data.account.currency} walletLink />}
       </div>
     </Workspace>
   );

@@ -11,6 +11,9 @@
 .slide article:not([data-live-hotel]) h3 { font-size:16px; line-height:1.4; min-height:45px; }
 .slide article:not([data-live-hotel]) a { min-width:44px; min-height:44px; }
 .position { font-size:12px; color:var(--muted); margin-top:4px; }
+/* The hint matches the device: swipe on touch screens, arrows or drag with a mouse. */
+.touchHint { display:none; }
+@media (pointer: coarse) { .touchHint { display:inline; } .pointerHint { display:none; } }
 @media(max-width:1199px) { .slide { flex-basis:33.333%; } .heading { flex-wrap:wrap; } }
 @media(max-width:799px) { .slide { flex-basis:50%; } }
 @media(max-width:599px) { .section { padding-inline:18px; } .slide { flex-basis:88%; max-width:310px; } .heading { gap:14px; } }

@@ -58,7 +58,7 @@ export function LiveHotelCard({ hotel, result, variant = "full", eager = false, 
             <span className={styles.starText} aria-hidden="true">{t(`${stars}-star`, `${stars} نجوم`)}</span>
           </p>
         )}
-        <h3 id={titleId} className={styles.name} data-missing={hotel.name ? undefined : true}><bdi>{name}</bdi></h3>
+        <h3 id={titleId} className={styles.name} data-missing={hotel.name ? undefined : true} title={name}><bdi>{name}</bdi></h3>
         {hotel.address && (
           <p className={styles.address}><Icon name="pin" /><span><bdi>{hotel.address}</bdi></span></p>
         )}

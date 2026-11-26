@@ -54,14 +54,15 @@
 .rateFacts li { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: var(--rounded-pill); background: #f1f5fa; color: #34485f; font-size: var(--font-size-xs); font-weight: var(--weight-semibold); }
 .rateFacts li[data-tone="positive"] { background: #e8f5ef; color: var(--success); }
 .rateFacts svg { width: 13px; height: 13px; }
-.rateAction { display: grid; justify-items: end; gap: 4px; }
+.rateAction { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: stretch; gap: 6px; }
 .rateAction :global(.button) { min-height: 44px; white-space: nowrap; }
 /* Disabled selection looks clearly unavailable, not just faded. */
 .rateAction :global(.button:disabled) { border-color: var(--border); background: #eef2f7; color: #6c7c8f; box-shadow: none; opacity: 1; cursor: not-allowed; }
-.reducePrice { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 6px 12px; border: 1px solid color-mix(in srgb, #b7731e 45%, var(--border)); border-radius: 10px; background: #fffaf2; color: #8a5a12; font-size: var(--font-size-sm); font-weight: var(--weight-semibold); text-decoration: none; white-space: nowrap; transition: background-color 150ms ease, border-color 150ms ease; }
+/* Same size, radius and type as Select room, but an outline style so it stays secondary. */
+.reducePrice { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: 44px; padding: 10px 24px; border: 1px solid color-mix(in srgb, #b7731e 55%, var(--border)); border-radius: var(--rounded-lg); background: #fff; color: #7a4f10; font-size: var(--font-size-base); line-height: var(--line-height-snug); font-weight: var(--weight-semibold); text-decoration: none; white-space: nowrap; transition: background-color 150ms ease, border-color 150ms ease; }
 .reducePrice:hover { border-color: #b7731e; background: #fbefdc; }
 .reducePrice:focus-visible { outline: 3px solid color-mix(in srgb, #b7731e 40%, transparent); outline-offset: 2px; }
-.reducePrice svg { width: 16px; height: 16px; flex: none; }
+.reducePrice svg { width: 18px; height: 18px; flex: none; }
 @media (prefers-reduced-motion: reduce) { .reducePrice { transition: none; } }
 .reason { display: inline-flex; align-items: flex-start; justify-content: flex-end; gap: 5px; margin: 0; color: var(--muted); font-size: var(--font-size-xs); text-align: end; }
 .reason svg { flex: none; width: 13px; height: 13px; margin-block-start: 1px; }
@@ -75,7 +76,10 @@
 .price strong { font-size: var(--font-size-lg); font-weight: var(--weight-heavy); }
 .price[data-emphasis] strong { font-size: 24px; }
 .priceMissing { color: var(--rv-navy); font-size: var(--font-size-md) !important; font-weight: var(--weight-bold) !important; }
-.agencyPrice { margin-block-start: 2px; }
+/* The agency (purchase) price sits under the customer price in its own quiet band. */
+.agencyPrice { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 6px; margin-block-start: 4px; padding: 3px 8px; border-radius: 8px; background: #f1f5fb; }
+.agencyPrice small { color: #4f5d6b; font-size: var(--font-size-xs); font-weight: var(--weight-semibold); }
+.agencyPrice b { color: var(--navy); font-size: var(--font-size-sm); font-weight: var(--weight-bold); }
 .money { font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 /* Panels */
@@ -160,6 +164,12 @@
   .rateAction { grid-column: 1 / -1; justify-items: stretch; }
   .rateAction :global(.button), .rateAction .reducePrice { width: 100%; }
   .reason { text-align: start; }
+}
+/* Phones: name and details, then price, then actions, each in its own band. */
+@media (max-width: 599px) {
+  .rate { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); padding: var(--space-4); }
+  .rate > :nth-child(2) { padding-block-start: var(--space-3); border-block-start: 1px solid var(--border); justify-items: start; text-align: start; }
+  .rateAction { padding-block-start: var(--space-3); border-block-start: 1px solid var(--border); }
   .panel, .notice { padding: var(--space-4); }
   .price[data-emphasis] { justify-items: start; text-align: start; }
 }

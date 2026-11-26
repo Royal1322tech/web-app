@@ -1,3 +1,4 @@
+import { LanguageSelector } from "@/features/localization/language-selector";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { apiAuthEnabled } from "@/features/auth/auth-config";
@@ -16,7 +17,7 @@ export function RecoveryShell({
   backLabel: string;
   children: ReactNode;
 }) {
-  const { text, locale, setLocale } = useRecoveryText();
+  const { text, locale } = useRecoveryText();
   return (
     <AuthShell
       variant="login"
@@ -27,28 +28,19 @@ export function RecoveryShell({
       <div className={`login-content ${styles.content}`}>
         <div className={styles.brandRow}>
           <BrandLogo />
-          <label>
-            <span className="sr-only">
-              {locale === "en" ? "Language" : "اللغة"}
-            </span>
-            <select
-              value={locale}
-              onChange={(e) => setLocale(e.target.value === "ar" ? "ar" : "en")}
-            >
-              <option value="en">EN</option>
-              <option value="ar">AR</option>
-            </select>
-          </label>
+          {/* The same language switcher as sign-in and registration. */}
+          <LanguageSelector />
         </div>
         <h1>{text(title)}</h1>
-        {/* Real sign-in builds: there is no password recovery API yet, so the original screens are a preview. */}
-        {apiAuthEnabled && (
-          <div className={`availability-notice ${styles.preview}`} role="note">
+        {/* Real sign-in builds: there is no password recovery API yet, so the forms are hidden (not
+            shown as if they worked) and the support route is offered instead. The routes stay. */}
+        {apiAuthEnabled ? (
+          <div className={`availability-notice ${styles.preview}`} role="note" data-recovery-unavailable>
             <p>{text("Online password reset isn't available yet. Contact Royal Vacation to reset your password.")}</p>
             <Link to="/contact">{text("Contact Royal Vacation to reset your password")}</Link>
+            <Link to="/login">{text("Back to sign in")}</Link>
           </div>
-        )}
-        {children}
+        ) : children}
       </div>
     </AuthShell>
   );

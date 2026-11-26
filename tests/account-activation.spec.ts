@@ -337,7 +337,8 @@ test.describe("account activation (API mode)", () => {
     await page.goto("/login/verify-otp");
     await expect(page.getByRole("heading", { name: "Activate your account" })).toHaveCount(0);
     await page.goto("/verify-otp");
-    await expect(page.locator("main input")).toHaveCount(4);
+    await expect(page.locator("[data-recovery-unavailable]")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Activate your account" })).toHaveCount(0);
     expect(api.calls).toEqual([]);
   });
 });

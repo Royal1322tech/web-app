@@ -166,6 +166,8 @@ function SearchRun({ base, destinationName, roomsQuery }: { base: B2BHotelSearch
           {t(`${first.total} ${first.total === 1 ? "hotel" : "hotels"} in ${destinationName}`, `${first.total} فندق في ${destinationName}`)}
         </h2>
         {pageCount > 1 && <p className={styles.pageOf} aria-live="polite">{t(`Page ${page} of ${pageCount}`, `الصفحة ${page} من ${pageCount}`)}</p>}
+        {/* The currency the API priced the results in (never relabelled or converted here). */}
+        {first.currency && <p className={styles.pageOf} data-results-currency={first.currency}>{t("Prices in", "الأسعار بعملة")} <bdi dir="ltr">{first.currency}</bdi></p>}
       </div>
     </div>
   );

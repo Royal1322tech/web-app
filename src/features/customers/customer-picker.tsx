@@ -68,7 +68,7 @@ export function CustomerPicker({ value, onChange, errors, disabled = false }: { 
 
   const field = (name: "first_name" | "last_name" | "email" | "phone", label: string, type = "text", error?: string) => value.mode === "new" && (
     <label className={styles.field}>
-      <span>{label}</span>
+      <span>{label}{(name === "first_name" || name === "last_name") && <span className={styles.required} aria-hidden="true"> *</span>}</span>
       <input
         id={`${id}-${name}`}
         className="input"
@@ -77,6 +77,7 @@ export function CustomerPicker({ value, onChange, errors, disabled = false }: { 
         dir={name === "email" || name === "phone" ? "ltr" : undefined}
         maxLength={name === "email" ? 254 : name === "phone" ? 35 : 100}
         value={value[name]}
+        aria-required={name === "first_name" || name === "last_name" || undefined}
         aria-invalid={!!error}
         aria-describedby={error ? `${id}-${name}-error` : undefined}
         onChange={(event) => onChange({ ...value, [name]: event.target.value })}
@@ -128,6 +129,7 @@ export function CustomerPicker({ value, onChange, errors, disabled = false }: { 
         </div>
       ) : (
         <div className={styles.grid}>
+          <p className={`${styles.muted} ${styles.span}`} data-required-note>{t("* Required. Also enter an email or a phone number (at least one).", "* مطلوب. أدخل أيضًا بريدًا إلكترونيًا أو رقم هاتف (واحدًا على الأقل).")}</p>
           {field("first_name", t("First name", "الاسم الأول"), "text", errors.first_name)}
           {field("last_name", t("Last name", "اسم العائلة"), "text", errors.last_name)}
           {field("email", t("Email", "البريد الإلكتروني"), "email")}

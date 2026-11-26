@@ -94,7 +94,7 @@ export function BookingDetailPage() {
             "ربما أُعيد تحميل الجلسة. عد إلى حجوزاتك أو ابدأ حجزًا جديدًا.",
           )}
         >
-          <Link to="/bookings">{t("My bookings", "حجوزاتي")}</Link>
+          <Link to="/bookings">{t("My Bookings", "حجوزاتي")}</Link>
         </SystemState>
       ) : (
         <>

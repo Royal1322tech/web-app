@@ -1,6 +1,7 @@
+import { isCalendarDay, useLocalToday } from "@/lib/stay-dates";
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import type { UseFormReturn } from "react-hook-form";
+import { useWatch, type UseFormReturn } from "react-hook-form";
 import { FormField } from "@/components/ui/form-field";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { useLocale } from "@/features/localization/locale-provider";
@@ -25,7 +26,11 @@ export function GroupQuotationWizard({ form, preview, onPreviewChange, onSave }:
   onSave: () => void;
 }) {
   const { t, locale } = useLocale();
-  const { register, trigger, getValues, setValue, handleSubmit, formState: { errors, isSubmitting } } = form;
+  const { register, trigger, getValues, setValue, handleSubmit, control, formState: { errors, isSubmitting } } = form;
+  // Date pickers follow the existing rules: departure today or later, end on or after departure.
+  const today = useLocalToday();
+  const startValue = useWatch({ control, name: "start" }) ?? "";
+  const dateMin: Partial<Record<string, string>> = { start: today, end: isCalendarDay(startValue) && startValue >= today ? startValue : today };
   const serviceLabel = useServiceLabel();
   const [step, setStep] = useState<Step>(0);
   const wizard = useRef<HTMLDivElement>(null);
@@ -64,6 +69,7 @@ export function GroupQuotationWizard({ form, preview, onPreviewChange, onSave }:
           required={options.required}
           autoComplete={options.autoComplete}
           placeholder={options.placeholder}
+          min={options.type === "date" ? dateMin[key] : undefined}
           dir={options.type === "email" ? "ltr" : undefined}
           aria-invalid={!!errors[key]}
           aria-describedby={errors[key] ? `enquiry-${key}-error` : undefined}

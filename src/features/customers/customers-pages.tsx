@@ -125,8 +125,8 @@ function NewCustomerForm({ onCancel, onCreated }: { onCancel: () => void; onCrea
 
   const input = (name: keyof typeof values, label: string, type: string, error?: string, ref?: typeof first) => (
     <label className={styles.field}>
-      <span>{label}</span>
-      <input ref={ref} className="input" type={type} autoComplete="off" dir={name === "email" || name === "phone" ? "ltr" : undefined}
+      <span>{label}{(name === "first_name" || name === "last_name") && <span className={styles.required} aria-hidden="true"> *</span>}</span>
+      <input ref={ref} className="input" type={type} autoComplete="off" dir={name === "email" || name === "phone" ? "ltr" : undefined} aria-required={name === "first_name" || name === "last_name" || undefined}
         maxLength={name === "email" ? 254 : name === "phone" ? 35 : 100} value={values[name]} aria-invalid={!!error}
         onChange={(event) => setValues({ ...values, [name]: event.target.value })} />
       {error && <span className="field-error" role="alert">{error}</span>}
@@ -136,6 +136,7 @@ function NewCustomerForm({ onCancel, onCreated }: { onCancel: () => void; onCrea
   return (
     <form className={styles.card} noValidate onSubmit={submit} aria-busy={busy} aria-labelledby="new-customer-title" data-new-customer>
       <h2 id="new-customer-title">{t("New customer", "عميل جديد")}</h2>
+      <p className={styles.muted} data-required-note>{t("* Required. Also enter an email or a phone number (at least one).", "* مطلوب. أدخل أيضًا بريدًا إلكترونيًا أو رقم هاتف (واحدًا على الأقل).")}</p>
       <div className={styles.grid}>
         {input("first_name", t("First name", "الاسم الأول"), "text", errors.first_name, first)}
         {input("last_name", t("Last name", "اسم العائلة"), "text", errors.last_name)}

@@ -55,7 +55,8 @@ export function RoomSelector() {
           const anchor = event.currentTarget.getBoundingClientRect();
           dialog.style.setProperty(
             "--room-top",
-            `${Math.max(16, Math.min(anchor.bottom + 8, window.innerHeight - 320))}px`,
+            // Below the field when there's room for most of the panel; otherwise higher up so it stays usable.
+            `${Math.max(16, Math.min(anchor.bottom + 8, window.innerHeight - 460))}px`,
           );
           dialog.style.setProperty(
             "--room-right",
@@ -129,8 +130,8 @@ export function RoomSelector() {
           </div>
           <p className={styles.provisional}>
             {t(
-              `Preview limits: ${searchLimits.maxRooms} rooms, ${searchLimits.maxAdultsPerRoom} adults and ${searchLimits.maxChildrenPerRoom} children per room. These limits are provisional.`,
-              `حدود تجريبية: ${searchLimits.maxRooms} غرف، ${searchLimits.maxAdultsPerRoom} بالغين و${searchLimits.maxChildrenPerRoom} أطفال لكل غرفة. هذه الحدود مؤقتة.`,
+              `Up to ${searchLimits.maxRooms} rooms, with up to ${searchLimits.maxAdultsPerRoom} adults and ${searchLimits.maxChildrenPerRoom} children in each room.`,
+              `حتى ${searchLimits.maxRooms} غرف، وحتى ${searchLimits.maxAdultsPerRoom} بالغين و${searchLimits.maxChildrenPerRoom} أطفال في كل غرفة.`,
             )}
           </p>
         </div>

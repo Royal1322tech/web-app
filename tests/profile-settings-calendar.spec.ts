@@ -181,7 +181,7 @@ test.describe("breadcrumbs and hidden features (mocked API)", () => {
     const crumb = page.locator("[data-breadcrumb]");
     await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toHaveCount(1);
     await expect(crumb.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/");
-    await expect(crumb.getByRole("link", { name: "My bookings" })).toHaveAttribute("href", "/bookings");
+    await expect(crumb.getByRole("link", { name: "My Bookings" })).toHaveAttribute("href", "/bookings");
     await expect(crumb.locator("[aria-current=page]")).toHaveText("Booking details");
     await expect(crumb.locator("li")).toHaveCount(3);
     await page.goto(`${APP}/contact`);

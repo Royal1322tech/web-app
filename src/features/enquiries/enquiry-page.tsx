@@ -1,8 +1,10 @@
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { flagEmoji } from "@/lib/flag-emoji";
 import { ChauffeurEnquiryPage, chauffeurSubjects } from "@/features/car-rental/chauffeur-enquiry";
 import { useAppSessionActive } from "@/features/auth/app-session";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { CatalogShell } from "@/features/hotels/components/catalog-shell";
@@ -12,7 +14,6 @@ import styles from "./enquiry.module.css";
 import contact from "./contact-page.module.css";
 import { Icon } from "@/components/ui/icon";
 import { PageHero } from "@/components/ui/page-hero";
-import {  } from "react";
 import { SiteFooter } from "@/features/home/components/site-footer";
 import { getCountryCallingCode } from "libphonenumber-js/max";
 import { contactPhone, phoneCountries, validPhoneCountry } from "@/features/agency-registration/lib/phone";
@@ -92,8 +93,16 @@ function GeneralEnquiryPage({ group, publicVisitor, saveGroupRequest }: { group:
     resolver: zodResolver(schema),
     defaultValues: { name:"", email:"", phone:"", phoneCountry:"EG", agency:"", subject:group ? t("Group quotation request", "طلب عرض سعر للمجموعات") : subjects[params.get("subject") ?? ""] ?? "", message:"", destination:"", start:"", end:"", passengers:"", rooms:"", service:"both" },
   });
-  const { register, handleSubmit, getValues, formState: { errors, isSubmitting } } = form;
-  const countryNames = new Intl.DisplayNames([locale], { type: "region" });
+  const { register, handleSubmit, getValues, setValue, control, formState: { errors, isSubmitting } } = form;
+  const phoneCountry = useWatch({ control, name: "phoneCountry" }) ?? "";
+  // Calling codes: the region's usual countries first, then every other country by name; type to search.
+  const phoneCountryOptions = useMemo(() => {
+    const names = new Intl.DisplayNames([locale], { type: "region" });
+    const other = new Intl.DisplayNames([locale === "ar" ? "en" : "ar"], { type: "region" });
+    const common = (["EG", "SA", "AE", "KW", "QA", "BH", "OM", "JO"] as const).flatMap((code) => phoneCountries.filter((country) => country === code));
+    const rest = phoneCountries.filter((code) => !common.includes(code)).sort((a, b) => (names.of(a) ?? a).localeCompare(names.of(b) ?? b, locale));
+    return [...common, ...rest].map((code) => ({ value: code, label: `${flagEmoji(code)} ${names.of(code) ?? code} (+${getCountryCallingCode(code)})`, keywords: `${other.of(code) ?? ""} ${code} +${getCountryCallingCode(code)}` }));
+  }, [locale]);
   const title = group ? t("Group quotation", "عرض سعر للمجموعات") : t("Contact Us", "تواصل معنا");
   const fields: { key: keyof Values; label: string; type?: string; required?: boolean; autoComplete?: string }[] = [
     { key:"name", label:t("Full Name", "الاسم الكامل"), required:true, autoComplete:"name" }, { key:"email", label:t("Email Address", "البريد الإلكتروني"), type:"email", required:true, autoComplete:"email" },
@@ -151,7 +160,7 @@ function GeneralEnquiryPage({ group, publicVisitor, saveGroupRequest }: { group:
           <h2>{t("Contact Information", "معلومات التواصل")}</h2>
           <p>{t("Connect with Royal Vacation for your agency’s next journey.", "تواصل مع رويال فاكيشن من أجل رحلة وكالتك القادمة.")}</p>
           <ul className={contact.actions}>
-            <li><a href={whatsappUrl} target="_blank" rel="noopener noreferrer"><span className={contact.icon}><Icon name="whatsapp" /></span><span className={contact.actionText}><strong>{t("WhatsApp", "واتساب")}</strong><bdi>+20 01070724143</bdi></span><Icon name="arrowRight" /></a></li>
+            <li><a href={whatsappUrl} target="_blank" rel="noopener noreferrer"><span className={contact.icon}><Icon name="whatsapp" /></span><span className={contact.actionText}><strong>{t("WhatsApp", "واتساب")}</strong><bdi>+20 107 072 4143</bdi></span><Icon name="arrowRight" /></a></li>
             <li><a href={`mailto:${contactEmail}`}><span className={contact.icon}><Icon name="mail" /></span><span className={contact.actionText}><strong>{t("Email Address", "البريد الإلكتروني")}</strong><bdi>{contactEmail}</bdi></span><Icon name="arrowRight" /></a></li>
           </ul>
           {!publicVisitor && <div className={contact.links}>
@@ -171,9 +180,18 @@ function GeneralEnquiryPage({ group, publicVisitor, saveGroupRequest }: { group:
           </FormField>)}</div>
           <FormField id="enquiry-phone" label={t("Phone Number", "رقم الهاتف")} required error={errors.phone?.message}>
             <div className={contact.phoneEntry} dir="ltr">
-              <select id="enquiry-phone-country" className="input" aria-label={t("Country dialing code", "رمز اتصال الدولة")} aria-invalid={!!errors.phoneCountry} {...register("phoneCountry")}>
-                {phoneCountries.map(country => <option key={country} value={country}>{countryNames.of(country)} (+{getCountryCallingCode(country)})</option>)}
-              </select>
+              <input type="hidden" {...register("phoneCountry")} />
+              <SearchableSelect
+                id="enquiry-phone-country"
+                label={t("Country dialing code", "رمز اتصال الدولة")}
+                value={phoneCountry}
+                options={phoneCountryOptions}
+                placeholder={t("Search country or code", "ابحث عن الدولة أو الرمز")}
+                emptyMessage={t("No countries match your search.", "لا توجد دول مطابقة للبحث.")}
+                resultsMessage={(count) => t(`${count} countries`, `${count} دولة`)}
+                invalid={!!errors.phoneCountry}
+                onChange={(next) => { if (next) setValue("phoneCountry", next, { shouldValidate: !!errors.phoneCountry, shouldDirty: true }); }}
+              />
               <input id="enquiry-phone" className="input" type="tel" autoComplete="tel-national" required placeholder={t("Phone number", "رقم الهاتف")} aria-invalid={!!errors.phone} aria-describedby={errors.phone ? "enquiry-phone-error" : undefined} {...register("phone")} />
             </div>
           </FormField>

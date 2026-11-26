@@ -172,7 +172,7 @@ test.describe("API mode", () => {
   test("direct login returns a token, verifies company and starts a scoped session without OTP", async ({ page }) => {
     const api = await mockApi(page, { "POST /b2b/auth/login": ok.login, "GET /b2b/me": ok.me });
     await page.goto("/login");
-    await expect(page.getByText("Sign in securely using your email and password.")).toBeVisible();
+    await expect(page.getByText(/Sign in with your email, password and company ID/)).toBeVisible();
     await fillCredentials(page);
     await expect(page).toHaveURL(/4174\/$/);
     const [login] = api.called("POST /b2b/auth/login");
@@ -461,29 +461,30 @@ test.describe("API mode", () => {
     });
   }
 
-  for (const [path, inputs] of [["/forgot-password", 2], ["/verify-otp", 4], ["/reset-password", 2]] as const) {
-    test(`password recovery at ${path} shows the original screen as a preview and never calls the API`, async ({ page }) => {
+  for (const path of ["/forgot-password", "/verify-otp", "/reset-password"] as const) {
+    test(`password recovery at ${path} offers support instead of a form that can't work, and never calls the API`, async ({ page }) => {
       const api = await mockApi(page, {});
       await page.goto(path);
       const note = page.getByRole("note");
       await expect(note).toContainText("Online password reset isn't available yet. Contact Royal Vacation to reset your password.");
       await expect(note.getByRole("link", { name: "Contact Royal Vacation to reset your password" })).toHaveAttribute("href", "/contact");
-      // The original recovery form is restored, not replaced.
-      await expect(page.locator("main input")).toHaveCount(inputs);
-      await page.locator("main form button[type=submit]").click();
+      await expect(note.getByRole("link", { name: "Back to sign in" })).toHaveAttribute("href", "/login");
+      // No recovery API exists yet: the form is hidden (the route stays) rather than shown as if it worked.
+      await expect(page.locator("main form")).toHaveCount(0);
+      await expect(page.locator("main input")).toHaveCount(0);
       expect(api.calls).toEqual([]);
       expect(api.unexpected).toEqual([]);
     });
   }
 
-  test("the restored 4-digit recovery code screen is a preview in Arabic too", async ({ page }) => {
+  test("the recovery support message is in Arabic too, with the shared language switcher", async ({ page }) => {
     const api = await mockApi(page, {});
     await page.goto("/verify-otp");
-    await page.locator("main select").first().selectOption("ar");
+    await page.getByRole("button", { name: "Language" }).click();
+    await page.getByRole("button", { name: "العربية" }).click();
+    await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     await expect(page.getByRole("note")).toContainText("إعادة تعيين كلمة المرور عبر الإنترنت غير متاحة حاليًا");
-    for (const [index, digit] of ["1", "2", "3", "4"].entries()) await page.getByLabel(`الرقم ${index + 1} من ٤`).fill(digit);
-    await page.getByRole("button", { name: "تأكيد" }).click();
-    await expect(page.locator("main [role=status]").last()).toHaveText("التحقق عبر الإنترنت غير متاح حاليًا. لم يُرسل أي رمز ولم يُتحقق منه.");
+    await expect(page.locator("main form")).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
     expect(api.calls).toEqual([]);
   });
@@ -706,7 +707,8 @@ test.describe("API mode: direct token login", () => {
     const api = await mockApi(page, {});
     await page.goto("/verify-otp");
     await expect(page.getByRole("heading", { name: "Enter the 4-digit verification code" })).toBeVisible();
-    await expect(page.locator("main input")).toHaveCount(4);
+    // Its own route, which offers support (no recovery API yet) and never sends a sign-in code.
+    await expect(page.locator("[data-recovery-unavailable]")).toBeVisible();
     expect(api.calls).toEqual([]);
   });
 });

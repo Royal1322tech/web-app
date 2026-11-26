@@ -1,3 +1,4 @@
+import { formatMoney } from "@/lib/money";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { b2bSession } from "@/features/auth/b2b-session";
@@ -140,7 +141,7 @@ export function BookingConfirmPanel({ bookingId, agencyPurchasePrice, customerTo
     }
   }
 
-  const money = (amount: string | null) => (amount ? `${currency ?? "USD"} ${amount}` : null);
+  const money = (amount: string | null) => (amount ? formatMoney(amount, currency ?? "USD") : null);
   const copy = viewText[view];
   const canConfirm = view === "draft" && usd && !!agencyPurchasePrice && !expired;
   return (
@@ -155,7 +156,7 @@ export function BookingConfirmPanel({ bookingId, agencyPurchasePrice, customerTo
             {money(customerTotal) && <div data-price="customer"><dt>{t("Customer selling price", "سعر البيع للعميل")}</dt><dd><bdi dir="ltr">{money(customerTotal)}</bdi></dd></div>}
           </dl>
           {!usd && <p className={styles.note} data-confirm-blocked="currency">{t("Confirmation is available for USD bookings only.", "التأكيد متاح لحجوزات الدولار الأمريكي فقط.")}</p>}
-          {usd && !agencyPurchasePrice && <p className={styles.note} data-confirm-blocked="price">{t("The agency purchase price isn't available for this draft, so it can't be confirmed here.", "سعر شراء الوكالة غير متاح لهذه المسودة، لذلك لا يمكن تأكيدها هنا.")}</p>}
+          {usd && !agencyPurchasePrice && <p className={styles.note} data-confirm-blocked="price">{t("This draft can't be confirmed from this page. To book, choose the room again from the hotel's rates and confirm right after creating the draft, or contact Royal Vacation.", "لا يمكن تأكيد هذه المسودة من هذه الصفحة. للحجز، اختر الغرفة مرة أخرى من أسعار الفندق وأكّد مباشرة بعد إنشاء المسودة، أو تواصل مع رويال فاكيشن.")}</p>}
           {expired && (
             <p className={styles.warning} role="alert" data-confirm-blocked="expired">
               {t("The price check for this draft has expired. Refresh the rates and create a new draft.", "انتهت صلاحية التحقق من سعر هذه المسودة. حدّث الأسعار وأنشئ مسودة جديدة.")}

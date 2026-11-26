@@ -83,9 +83,9 @@ test.describe("bookings (mocked API)", () => {
     });
     await page.goto(`${APP}/bookings`);
     const list = page.locator("[data-bookings-state=list]");
-    await expect(page.getByRole("heading", { name: "My bookings" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "My Bookings" })).toBeVisible();
     await expect(list.locator("li")).toHaveCount(2);
-    await expect(list.locator("li").first().locator("[data-resumable]")).toContainText("Draft: continue to confirm");
+    await expect(list.locator("li").first().locator("[data-resumable]")).toContainText("Draft · not confirmed yet");
     await page.getByRole("button", { name: "Next" }).click();
     await expect(list.locator("li")).toHaveCount(1);
     expect(calls).toContain("GET /api/v1/b2b/bookings/my-bookings?page=2");
@@ -102,7 +102,7 @@ test.describe("bookings (mocked API)", () => {
     await expect(list.locator("li").first().locator("[data-resumable=false]")).toContainText("can't be continued");
     await expect(list.locator("li").nth(1)).toContainText("Outcome uncertain");
 
-    await page.getByRole("link", { name: "Company bookings" }).click();
+    await page.getByRole("link", { name: "Company Bookings" }).click();
     await expect(list.locator("li").first()).toContainText("HTL-TEST0000000006");
     await expect(list.locator("li")).toHaveCount(1);
     await expect.poll(() => calls).toContain("GET /api/v1/b2b/bookings?page=1");

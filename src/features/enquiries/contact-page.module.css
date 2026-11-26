@@ -35,6 +35,8 @@
 .page form textarea { min-height:120px; }
 .phoneEntry { display:grid; grid-template-columns:minmax(118px,.82fr) minmax(0,1.18fr); gap:9px; }
 .phoneEntry select { text-overflow:ellipsis; }
+/* The calling-code list is wider than its narrow field so names and codes fit on one line. */
+.phoneEntry :global(.searchable-select__popup) { inset-inline-end:auto; width:min(320px, calc(100vw - 32px)); }
 .page .send { width:100%; display:flex; align-items:center; justify-content:center; gap:12px; min-height:50px; background:var(--primary); color:var(--on-primary); font-weight:800; }
 .page .send:hover { background:var(--primary-hover); }
 .sendActions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-block-start:14px; }

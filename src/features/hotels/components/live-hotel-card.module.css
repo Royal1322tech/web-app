@@ -123,3 +123,9 @@
   .body { padding-inline: var(--space-4); }
   .footer { padding-inline: var(--space-4); }
 }
+/* Phones: a shorter photo and tighter spacing so more results fit on screen; nothing is removed. */
+@container (max-width: 519px) {
+  .card[data-variant="row"] .media { aspect-ratio: 2 / 1; }
+  .card[data-variant="row"] .body { gap: 6px; padding: var(--space-3) var(--space-4) var(--space-2); }
+  .card[data-variant="row"] .footer { padding: var(--space-2) var(--space-4) var(--space-3); }
+}

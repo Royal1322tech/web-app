@@ -40,7 +40,9 @@ for (const width of [375, 768, 1440]) {
   }
 }
 
-test("partner video pauses, resumes and respects reduced motion", async ({ page }) => {
+test("partner visual is the owner's photograph (no watermarked stock clip) and motion respects reduced motion", async ({ page }) => {
+  const media: string[] = [];
+  page.on("request", (request) => { if (/\.(mp4|webm)(\?|$)/.test(request.url())) media.push(request.url()); });
   await visit(page, "/");
   const section = page.locator('section[aria-labelledby="benefits-title"]');
   await section.scrollIntoViewIfNeeded();
@@ -52,22 +54,15 @@ test("partner video pauses, resumes and respects reduced motion", async ({ page 
   const cards = section.locator("article");
   await cards.first().hover();
   await expect(cards.first()).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, -3)");
-  const video = section.locator("video");
-  await video.scrollIntoViewIfNeeded();
-  await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.readyState)).toBeGreaterThanOrEqual(2);
-  await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.paused)).toBe(false);
-  // No play/pause control: the decorative video is muted, inline and stops when scrolled away.
-  await expect(section.locator("[data-partner-video] button")).toHaveCount(0);
-  await expect(video).toHaveJSProperty("muted", true);
-  await expect(video).toHaveAttribute("playsinline", "");
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.paused)).toBe(true);
-  await video.scrollIntoViewIfNeeded();
-  await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.paused)).toBe(false);
+  const visual = section.locator("[data-partner-video]");
+  await visual.scrollIntoViewIfNeeded();
+  await expect(visual.locator("video")).toHaveCount(0);
+  await expect(visual.getByRole("img", { name: "Coastal travel scene" })).toBeVisible();
+  await expect.poll(() => visual.getByRole("img").evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
+  expect(media.filter((url) => url.includes("partner-travel"))).toEqual([]);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(drawing).toHaveCSS("animation-name", "none");
   await expect(cards.first()).toHaveCSS("animation-name", "none");
-  await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.paused)).toBe(true);
   await section.screenshot({ path: "test-results/partners-reduced-motion.png" });
 });
 

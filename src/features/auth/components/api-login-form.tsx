@@ -1,3 +1,4 @@
+import { safeDemoReturnTo } from "@/features/auth/demo-auth";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -108,7 +109,8 @@ export function ApiLoginForm() {
         }
         throw new Error("Unable to establish authenticated session");
       }
-      navigate("/", { replace: true });
+      // Back to the page that asked for sign-in (a safe in-app path only), else home.
+      navigate(safeDemoReturnTo(location.state), { replace: true });
     } catch (error) {
       const result = describe(error);
       setErrors(result.errors ?? {});
@@ -170,7 +172,7 @@ export function ApiLoginForm() {
         <span>{t("Don't have an account?", "ليس لديك حساب؟")}</span>
         <Link to="/register/agency" className="text-button">{t("Register with us", "سجل معنا")}</Link>
       </div>
-      <p className="fine-print">{t("Sign in securely using your email and password.", "سجّل الدخول باستخدام بريدك الإلكتروني وكلمة المرور.")}</p>
+      <p className="fine-print">{t("Sign in with your email, password and company ID. The first time after approval, you'll also confirm a one-time code sent to your email.", "سجّل الدخول ببريدك الإلكتروني وكلمة المرور ومعرّف الشركة. في أول مرة بعد الاعتماد، ستؤكد أيضًا رمزًا لمرة واحدة يُرسل إلى بريدك الإلكتروني.")}</p>
       <div role="status" aria-live="polite">
         {(notice || statusNotice) && <p className="availability-notice">{notice || statusNotice}</p>}
         {coolingDown && (

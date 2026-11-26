@@ -200,7 +200,10 @@ function DemoEditAgencyPage() {
 }
 export function NotificationsPage() {
   const { t } = useLocale();
-  const { notifications, readNotification } = useDemo();
+  const demo = useDemo();
+  const { readNotification } = demo;
+  // With real sign-in there is no notifications API yet: example notifications are never shown.
+  const notifications = apiAuthEnabled ? [] : demo.notifications;
   const [filter, setFilter] = useState("all");
   const list = notifications.filter((n) => filter === "all" || !n.read);
   return (

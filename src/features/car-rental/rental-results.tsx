@@ -23,7 +23,7 @@ export function TripPanel({ criteria }: { criteria: RentalCriteria }) {
     </section>
     <section className="rental-assistance"><Icon name="whatsapp" /><h3>{t("Need help planning?", "تحتاج مساعدة في التخطيط؟")}</h3>
       <p>{t("Discuss your agency’s requirements with Royal Vacation.", "ناقش متطلبات وكالتك مع رويال فاكيشن.")}</p>
-      <a href="https://wa.me/201070724143" target="_blank" rel="noopener noreferrer"><bdi>+20 01070724143</bdi><Icon name="arrowRight" /></a>
+      <a href="https://wa.me/201070724143" target="_blank" rel="noopener noreferrer"><bdi>+20 107 072 4143</bdi><Icon name="arrowRight" /></a>
       <Link to="/contact?subject=private-chauffeur">{t("Chauffeur enquiry", "استفسار سائق خاص")}</Link>
     </section>
   </aside>;

@@ -1,3 +1,4 @@
+import { apiAuthEnabled } from "@/features/auth/auth-config";
 import { Link, useParams } from "react-router-dom";
 import { Icon } from "@/components/ui/icon";
 import { SystemState } from "@/components/ui/system-state";
@@ -33,15 +34,17 @@ function Settlement({ status }: { status?: PaymentSettlementStatus }) {
 
 export function InvoiceHistoryPage() {
   const { t, locale } = useLocale();
-  const { records } = useDemo();
+  const demo = useDemo();
+  // With real sign-in there is no invoice API yet: example bookings are never shown as the company's.
+  const records = apiAuthEnabled ? [] : demo.records;
   const [query, setQuery] = useState("");
   const invoices = records.flatMap((booking) => {
     const view = buildInvoiceView(booking);
     return view ? [{ booking, view }] : [];
   }).filter(({ booking, view }) => `${booking.id} ${booking.agencyReference} ${view.reference}`.toLowerCase().includes(query.toLowerCase()));
   return <Workspace title={t("Invoice History", "سجل الفواتير")}>
-    <p className="workspace-intro">{t("Invoices for confirmed and cancelled bookings. Examples are built from example bookings and aren't issued documents.", "فواتير الحجوزات المؤكدة والملغاة. الأمثلة مبنية على حجوزات مثال وليست مستندات صادرة.")}</p>
-    <label className="invoice-search">{t("Search invoices", "البحث في الفواتير")}<input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("Invoice or booking reference", "مرجع الفاتورة أو الحجز")} /></label>
+    {!apiAuthEnabled && <p className="workspace-intro">{t("Invoices for confirmed and cancelled bookings. Examples are built from example bookings and aren't issued documents.", "فواتير الحجوزات المؤكدة والملغاة. الأمثلة مبنية على حجوزات مثال وليست مستندات صادرة.")}</p>}
+    {!apiAuthEnabled && <label className="invoice-search">{t("Search invoices", "البحث في الفواتير")}<input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("Invoice or booking reference", "مرجع الفاتورة أو الحجز")} /></label>}
     {invoices.length ? <div className="invoice-list">{invoices.map(({ booking, view }) => {
       const hotel = hotels.find((item) => item.id === booking.hotelId);
       return <article className="workspace-card invoice-list-card" key={booking.id}>
@@ -49,25 +52,30 @@ export function InvoiceHistoryPage() {
         <div className="invoice-list-status"><StatusBadge status={booking.status} /><Lifecycle view={view} /><Settlement status={view.settlement} /></div>
         <Link className="button button--outline" to={`/bookings/${booking.id}/invoice`}>{t("View invoice", "عرض الفاتورة")}</Link>
       </article>;
-    })}</div> : <SystemState title={query ? t("No invoices match", "لا توجد فواتير مطابقة") : t("No invoice records", "لا توجد فواتير")} description={t("No invoice document data is available in this workspace yet.", "لا تتوفر بيانات مستندات فواتير في مساحة العمل حاليًا.")} />}
+    })}</div> : <SystemState title={query ? t("No invoices match", "لا توجد فواتير مطابقة") : t("No invoices yet", "لا توجد فواتير بعد")} description={apiAuthEnabled ? t("Invoices for your confirmed bookings will appear here. For a copy of an invoice now, contact Royal Vacation.", "ستظهر هنا فواتير حجوزاتك المؤكدة. للحصول على نسخة من فاتورة الآن، تواصل مع رويال فاكيشن.") : t("No invoice document data is available in this workspace yet.", "لا تتوفر بيانات مستندات فواتير في مساحة العمل حاليًا.")}>{apiAuthEnabled && <Link className="button button--outline" to="/contact">{t("Contact Royal Vacation", "تواصل مع رويال فاكيشن")}</Link>}</SystemState>}
   </Workspace>;
 }
 
 export function InvoiceDetailPage() {
   const { id } = useParams();
   const { t } = useLocale();
-  const { records, profile } = useDemo();
+  const demo = useDemo();
+  const { profile } = demo;
+  const records = apiAuthEnabled ? [] : demo.records;
   const booking = records.find((record) => record.id === id);
   const view = booking && buildInvoiceView(booking);
   const hotel = hotels.find((item) => item.id === booking?.hotelId);
-  if (!booking || !view || !hotel) return <Workspace title={t("Invoice", "الفاتورة")}>
+  // An invoice sits under Invoices (not under the booking list) for its breadcrumb and back link.
+  const trail = [{ to: "/invoices", label: t("Invoice History", "سجل الفواتير") }];
+  if (!booking || !view || !hotel) return <Workspace title={t("Invoice", "الفاتورة")} trail={trail}>
     <SystemState title={t("Invoice not available", "الفاتورة غير متاحة")} description={t("An invoice is available for confirmed and cancelled bookings only. No invoice number or financial values have been generated.", "تتوفر الفاتورة للحجوزات المؤكدة والملغاة فقط. لم يتم إنشاء رقم فاتورة أو قيم مالية.")}>
-      <Link to={booking ? `/bookings/${booking.id}` : "/bookings"}>{t("Return to booking", "العودة إلى الحجز")}</Link>
+      <Link to="/invoices">{t("Back to invoices", "العودة إلى الفواتير")}</Link>
     </SystemState>
   </Workspace>;
-  return <Workspace title={t("Invoice", "الفاتورة")}>
+  return <Workspace title={t("Invoice", "الفاتورة")} trail={trail}>
     <div className="invoice-toolbar no-print">
-      <Link className="button button--outline invoice-toolbar__back" to={`/bookings/${booking.id}`}><Icon name="back" aria-hidden="true" />{t("Back to booking", "العودة إلى الحجز")}</Link>
+      <Link className="button button--outline invoice-toolbar__back" to="/invoices"><Icon name="back" aria-hidden="true" />{t("Back to invoices", "العودة إلى الفواتير")}</Link>
+      <Link className="button button--outline" to={`/bookings/${booking.id}`}>{t("View booking", "عرض الحجز")}</Link>
       <button type="button" className="button button--primary" onClick={() => window.print()}><Icon name="printer" aria-hidden="true" />{t("Print / Save as PDF", "طباعة / حفظ PDF")}</button>
     </div>
     <InvoiceDocument booking={booking} hotel={hotel} profile={profile} view={view} />
@@ -87,7 +95,8 @@ function reviewStatusLabel(status: AccountingReviewStatus, t: (en: string, ar?: 
 
 export function AccountingReviewPage() {
   const { locale, t } = useLocale();
-  const { records } = useDemo();
+  const demo = useDemo();
+  const records = apiAuthEnabled ? [] : demo.records;
   const items = records.filter((booking) => booking.paymentReview);
   return <Workspace title={t("Accounting Review", "مراجعة الحسابات")}>
     <p className="accounting-local-note">{t("No payment approval, reconciliation or settlement happens on this page.", "لا تتم الموافقة على الدفع أو المطابقة أو التسوية في هذه الصفحة.")}</p>

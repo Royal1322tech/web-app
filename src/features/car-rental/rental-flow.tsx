@@ -1,10 +1,11 @@
+import { isCalendarDay, minCheckOut, useLocalToday } from "@/lib/stay-dates";
 import { rentalBookingContext } from "@/features/tickets/ticket-access";
 import { BookingSupportSection, ReportIssueAction } from "@/features/tickets/ticket-ui";
 import { vehicleName } from "./rental-presentation";
 import { RentalShell, RentalSummary, MissingSelection } from "./rental-layout";
 import { useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocale } from "@/features/localization/locale-provider";
 import { useDemo } from "@/features/demo/demo-provider";
@@ -36,11 +37,16 @@ export function RentalCriteriaForm({
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<RentalCriteria>({
     resolver: zodResolver(rentalSchema),
     defaultValues: initial,
   });
+  // Date pickers follow the existing rules: pickup today or later, return after pickup.
+  const today = useLocalToday();
+  const pickupDate = useWatch({ control, name: "start" }) ?? "";
+  const dateMin = { start: today, end: minCheckOut(isCalendarDay(pickupDate) && pickupDate >= today ? pickupDate : today) };
   return (
     <form
       id="rental-search-form"
@@ -74,6 +80,7 @@ export function RentalCriteriaForm({
             {t(en, ar)}
             <input
               type="date"
+              min={dateMin[name]}
               {...register(name)}
               aria-label={t(en, ar)}
               aria-invalid={!!errors[name]}

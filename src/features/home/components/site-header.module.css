@@ -74,3 +74,8 @@
 .accountIdentity strong { color:var(--navy); font-size:14px; }
 .accountIdentity span { color:var(--muted); font-size:13px; }
 .navigation a[aria-current]:hover::after { background:var(--gold); }
+
+/* Account menu groups (Bookings, Finance, Account). */
+.accountGroup { display: grid; padding-block: 4px; }
+.accountGroup + .accountGroup { border-block-start: 1px solid var(--border); }
+.accountGroupLabel { margin: 6px 10px 2px; color: #5b6470; font-size: 11.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }

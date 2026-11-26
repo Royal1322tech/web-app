@@ -1398,3 +1398,17 @@ input[type="date"]:focus-within {
 .loyalty-summary__values dt { color: var(--muted); font-size: 13px; font-weight: 600; }
 .loyalty-summary__values dd { margin: 0; color: var(--navy); font-size: 22px; font-weight: 800; }
 .loyalty-summary > a { justify-self: start; display: inline-flex; align-items: center; min-height: 44px; color: var(--primary); font-weight: 700; }
+
+/* Phones and tablets: 16px form text so iOS doesn't zoom into a field on focus. */
+@media (max-width: 767px) {
+  /* Except the 36-character company ID, sized on purpose so the whole ID stays visible. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not(#company-id),
+  select,
+  textarea {
+    font-size: max(16px, 1em) !important;
+  }
+}
+/* Touch screens: every button reaches the 44px touch target. */
+@media (pointer: coarse) {
+  .button { min-height: 44px; }
+}

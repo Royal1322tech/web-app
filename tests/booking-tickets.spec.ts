@@ -301,16 +301,15 @@ for (const locale of ["en", "ar"] as const) {
   });
 }
 
-test("partner video has no controls and stays on its poster with reduced motion", async ({ page }) => {
+test("partner visual is a still photograph with no controls and fits on phones", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await visit(page, "/");
   const section = page.locator("[data-partner-video]");
   await section.scrollIntoViewIfNeeded();
-  const video = section.locator("video");
-  await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.paused)).toBe(true);
+  await expect(section.locator("video")).toHaveCount(0);
   await expect(section.getByRole("button")).toHaveCount(0);
-  await expect(video).toHaveAttribute("poster", /\.(webp|png)$/);
+  await expect(section.getByRole("img", { name: "Coastal travel scene" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
 });
 

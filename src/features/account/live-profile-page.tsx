@@ -183,7 +183,7 @@ export function LiveProfilePage() {
               {fact(t("Email", "البريد الإلكتروني"), user.email, true)}
               {fact(t("Role", "الدور"), roleLabel(membership.role, t))}
             </dl>
-            <p className={styles.muted}>{t("Your email is your sign-in and can't be changed online.", "بريدك الإلكتروني هو بيانات دخولك ولا يمكن تغييره عبر الإنترنت.")} <Link to="/forgot-password">{t("Reset your password", "إعادة تعيين كلمة المرور")}</Link></p>
+            <p className={styles.muted}>{t("Your email is your sign-in and can't be changed online.", "بريدك الإلكتروني هو بيانات دخولك ولا يمكن تغييره عبر الإنترنت.")} <Link to="/contact">{t("Password help", "المساعدة في كلمة المرور")}</Link></p>
           </section>
         </div>
 

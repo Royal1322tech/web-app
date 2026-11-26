@@ -113,6 +113,11 @@
   .filters .check { min-height: 40px; }
 }
 
+/* Touch screens: every filter option is a full 44px target, whatever the layout. */
+@media (pointer: coarse) {
+  .filters .check { min-height: 44px; }
+}
+
 .pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-3); padding-block: var(--space-2); }
 .pager span { min-width: 120px; color: var(--navy); font-size: var(--font-size-md); font-weight: var(--weight-bold); text-align: center; }
 .pager button { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; padding: 0 var(--space-5); border: 1px solid var(--primary); border-radius: var(--rounded-pill); background: var(--surface); color: var(--primary); font: inherit; font-weight: var(--weight-bold); cursor: pointer; }

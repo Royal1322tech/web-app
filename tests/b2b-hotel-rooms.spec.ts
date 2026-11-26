@@ -112,7 +112,8 @@ test.describe("from search results to rooms", () => {
     const cell = page.locator("[data-rate-index='0'] [data-price=confirmed]");
     await expect(cell).toContainText("USD 118.55");
     await expect(cell.locator("[data-property-taxes]")).toHaveText("Plus taxes paid at the property: AED 23.00");
-    await expect(page.getByText("Agency price: USD 111.00")).toBeVisible();
+    await expect(cell.locator("[data-agency-price]")).toContainText("Agency price");
+    await expect(cell.locator("[data-agency-price]")).toContainText("USD 111.00");
   });
 
   test("a hotel with a real hid opens its rooms; one without offers no rooms request", async ({ page }) => {
@@ -154,7 +155,8 @@ test.describe("rooms → price check → review (mocked API)", () => {
     await expect(state(page)).toHaveAttribute("data-rooms-state", "review");
     await expect(page.getByRole("heading", { name: "Review your room" })).toBeFocused();
     await expect(page.locator("[data-rooms-state=review] [data-price=confirmed]")).toContainText("USD 108.15");
-    await expect(page.getByText("Agency price: USD 103.00")).toBeVisible();
+    await expect(page.locator("[data-rooms-state=review] [data-agency-price]")).toContainText("Agency price");
+    await expect(page.locator("[data-rooms-state=review] [data-agency-price]")).toContainText("USD 103.00");
     await expect(page.getByText("This is a price check, not a reservation.", { exact: false })).toBeVisible();
     expect(api.calls.select[0].postDataJSON()).toEqual({ rooms_token: "rooms-token-A", rate_index: 0 });
     expect(api.calls.prebook[0].postDataJSON()).toEqual({ selection_token: "selection-token-B" });
@@ -169,7 +171,7 @@ test.describe("rooms → price check → review (mocked API)", () => {
     await expect(page.locator("body")).not.toContainText(/rooms-token|selection-token|review-token/);
     await expectNoTokensStored(page);
     // The steps show where the user is.
-    await expect(page.locator("ol[aria-label=Progress] [aria-current=step]")).toContainText("Review");
+    await expect(page.locator("ol[aria-label=Progress] [aria-current=step]")).toContainText("Review & confirm");
     // This page is connected to the account, so no "sample data" banner.
     await expect(page.locator(".api-data-notice")).toHaveCount(0);
   });

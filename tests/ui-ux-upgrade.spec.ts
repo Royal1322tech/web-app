@@ -120,7 +120,7 @@ test.describe("contact", () => {
     await visit(page, "/contact");
     await expect(page.getByRole("button", { name: "Prepare enquiry" })).toHaveCSS("background-color", "rgb(14, 77, 146)");
     const card = page.getByRole("complementary");
-    await expect(card.locator('a[href="https://wa.me/201070724143"]')).toContainText("+20 01070724143");
+    await expect(card.locator('a[href="https://wa.me/201070724143"]')).toContainText("+20 107 072 4143");
     await expect(card.locator('a[href="mailto:royal.travel@royalvacation.online"]')).toContainText("royal.travel@royalvacation.online");
     await expect(page.locator("#enquiry-name")).toHaveAttribute("autocomplete", "name");
     await expect(page.locator("#enquiry-email")).toHaveAttribute("autocomplete", "email");

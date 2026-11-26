@@ -217,7 +217,10 @@ test.describe("invoices", () => {
     await expect(invoice.locator(".rv-invoice__header")).toBeVisible();
     await expect(invoice.locator(".rv-invoice__notice")).toBeVisible();
     await page.emulateMedia({ media: "screen" });
-    await page.getByRole("link", { name: "Back to booking" }).click();
+    // The invoice belongs under Invoices: breadcrumb and back link lead there; the booking stays one click away.
+    await expect(page.locator("[data-breadcrumb]").getByRole("link", { name: "Invoice History" })).toHaveAttribute("href", "/invoices");
+    await expect(page.getByRole("link", { name: "Back to invoices" })).toHaveAttribute("href", "/invoices");
+    await page.getByRole("link", { name: "View booking" }).click();
     await expect(page).toHaveURL(/\/bookings\/DEMO-1001$/);
   });
 

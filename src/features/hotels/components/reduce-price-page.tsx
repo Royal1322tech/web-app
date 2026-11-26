@@ -1,3 +1,4 @@
+import { formatMoney } from "@/lib/money";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useId, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { z } from "zod";
@@ -53,6 +54,17 @@ const readRoomName = (state: unknown): string | null => {
   return typeof room === "string" && room.trim() ? room.trim() : null;
 };
 
+/** The rate's current verified price carried from the rooms page; null when it was on request. */
+type CurrentPrice = { amount: string; currency: string } | null | undefined;
+const readCurrentPrice = (state: unknown): CurrentPrice => {
+  if (!state || typeof state !== "object" || !("currentPrice" in state)) return undefined;
+  const value = (state as { currentPrice: unknown }).currentPrice;
+  if (value === null) return null;
+  if (!value || typeof value !== "object") return undefined;
+  const { amount, currency } = value as { amount?: unknown; currency?: unknown };
+  return typeof amount === "string" && /^\d+(\.\d+)?$/.test(amount) && typeof currency === "string" && /^[A-Z]{3}$/.test(currency) ? { amount, currency } : undefined;
+};
+
 /**
  * Reduce Price request for one hotel and stay. It reuses the stay from the URL and the hotel details
  * carried from the search; nothing is invented when they're missing. There is no approved endpoint,
@@ -70,6 +82,7 @@ export function ReducePricePage() {
   const request = criteria ? toRoomsRequest(criteria, { language: locale === "ar" ? "ar" : "en", currency }) : null;
   const summary = isHotelHid(hid) ? readHotelSummary(location.state, hid) : null;
   const roomName = readRoomName(location.state);
+  const currentPrice = readCurrentPrice(location.state);
   const roomNames = readRoomNames(location.state);
   const roomsHref = criteria && isHotelHid(hid) ? roomsPath(hid, stayQuery(criteria)) : "/search";
   const searchHref = criteria ? `/search?${stayQuery(criteria)}` : "/search";
@@ -81,7 +94,7 @@ export function ReducePricePage() {
   return (
     <CatalogShell
       title={t("Request a Lower Price", "طلب سعر أقل")}
-      trail={valid ? [{ to: searchHref, label: t("Search results", "نتائج البحث") }, { to: roomsHref, label: t("Rooms", "الغرف") }] : []}
+      trail={valid ? [{ to: searchHref, label: t("Search Results", "نتائج البحث") }, { to: roomsHref, label: t("Rooms", "الغرف") }] : []}
     >
       <div className={styles.page} data-reduce-price-page>
         <BackLink to={roomsHref} state={backState}>{t("Back to rooms", "العودة إلى الغرف")}</BackLink>
@@ -100,7 +113,7 @@ export function ReducePricePage() {
           </section>
         ) : (
           <div className={styles.card}>
-            <BookingDetails summary={summary} criteria={criteria} residency={request.residency} currency={request.currency} roomName={roomName} />
+            <BookingDetails summary={summary} criteria={criteria} residency={request.residency} currency={request.currency} roomName={roomName} currentPrice={currentPrice} />
             <RequestForm hid={hid} summary={summary} criteria={criteria} currency={request.currency} roomName={roomName} roomNames={roomNames} roomsHref={roomsHref} backState={backState} />
           </div>
         )}
@@ -109,7 +122,7 @@ export function ReducePricePage() {
   );
 }
 
-function BookingDetails({ summary, criteria, residency, currency, roomName }: { summary: RoomsHotelSummary | null; criteria: Stay; residency: string; currency: string; roomName: string | null }) {
+function BookingDetails({ summary, criteria, residency, currency, roomName, currentPrice }: { summary: RoomsHotelSummary | null; criteria: Stay; residency: string; currency: string; roomName: string | null; currentPrice?: CurrentPrice }) {
   const { t, locale } = useLocale();
   const id = useId();
   const date = (value: string) => new Date(`${value}T00:00:00Z`).toLocaleDateString(locale, { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
@@ -126,6 +139,10 @@ function BookingDetails({ summary, criteria, residency, currency, roomName }: { 
     ["people", t("Guests", "النزلاء"), t(`${adults} ${adults === 1 ? "adult" : "adults"}${children ? `, ${children} ${children === 1 ? "child" : "children"}` : ""}`, `${adults} بالغين${children ? `، ${children} أطفال` : ""}`)],
     ["building", t("Rooms", "الغرف"), t(`${criteria.rooms.length} ${criteria.rooms.length === 1 ? "room" : "rooms"}`, `${criteria.rooms.length} غرف`)],
     ...(roomName ? [["bed", t("Room", "الغرفة"), <bdi key="room">{roomName}</bdi>] as [IconName, string, ReactNode]] : []),
+    // Only what the rooms page showed: a verified price, or "on request". Nothing is derived.
+    ...(currentPrice !== undefined ? [["priceDown", t("Current room price", "سعر الغرفة الحالي"), currentPrice
+      ? <bdi key="price" dir="ltr" data-current-price>{formatMoney(currentPrice.amount, currentPrice.currency)}</bdi>
+      : <span key="price" data-current-price="on-request">{t("Price on request", "السعر عند الطلب")}</span>] as [IconName, string, ReactNode]] : []),
     ["globe", t("Nationality", "الجنسية"), country],
     ["tag", t("Currency", "العملة"), currency],
   ];
@@ -350,7 +367,7 @@ function RequestForm({ hid, summary, criteria, currency, roomName, roomNames, ro
           {file ? (
             <div className={styles.fileCard} data-invalid={!!fileError || undefined}>
               <span className={styles.fileIcon} aria-hidden="true"><Icon name="document" /></span>
-              <span className={styles.fileMeta}><bdi className={styles.fileName}>{file.name}</bdi><small><bdi dir="ltr">{formatSize(file.size, locale)}</bdi></small></span>
+              <span className={styles.fileMeta}><bdi className={styles.fileName}>{file.name}</bdi>{" "}<small><bdi dir="ltr">{formatSize(file.size, locale)}</bdi></small></span>{" "}
               <label htmlFor={`${id}-document`} className={styles.fileAction}>{t("Replace", "استبدال")}</label>
               <button type="button" className={styles.fileRemove} aria-label={t("Remove the file", "إزالة الملف")} onClick={clearFile}><Icon name="close" /></button>
             </div>
@@ -364,7 +381,7 @@ function RequestForm({ hid, summary, criteria, currency, roomName, roomNames, ro
               onDrop={onDrop}
             >
               <span className={styles.dropIcon} aria-hidden="true"><Icon name="upload" /></span>
-              <span><b>{t("Choose a file", "اختر ملفًا")}</b> {t("or drag it here", "أو اسحبه إلى هنا")}</span>
+              <span className={styles.dropTitle}><b>{t("Choose a file", "اختر ملفًا")}</b>{" "}{t("or drag it here", "أو اسحبه إلى هنا")}</span>{" "}
               <small id={`${id}-document-help`}>{t("A competitor quote or screenshot. JPG, PNG or PDF, up to 5 MB.", "عرض سعر منافس أو لقطة شاشة. JPG أو PNG أو PDF، حتى 5 ميغابايت.")}</small>
             </label>
           )}

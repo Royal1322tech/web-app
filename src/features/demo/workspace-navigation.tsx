@@ -1,6 +1,7 @@
+import { apiAuthEnabled } from "@/features/auth/auth-config";
 import { agencyProfileVisible } from "@/app/hidden-features";
 import { useEffect, useId, useRef, useState } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Icon } from "@/components/ui/icon";
 import { useLocale } from "@/features/localization/locale-provider";
 import { useDemo } from "./demo-provider";
@@ -9,6 +10,7 @@ import "./workspace.css";
 export function WorkspaceNavigation() {
   const { t, locale } = useLocale();
   const { pathname } = useLocation();
+  const invoicePage = /^\/bookings\/[^/]+\/invoice\/?$/.test(pathname);
   const { demoSessionActive, signOut } = useDemo();
   const navigate = useNavigate();
   const nav = useRef<HTMLDivElement>(null);
@@ -57,16 +59,20 @@ export function WorkspaceNavigation() {
         {/* Complete account map in three labelled groups. */}
         <div className="workspace-nav__group" role="group" aria-labelledby={`${id}-bookings`}>
           <p className="workspace-nav__label" id={`${id}-bookings`}>{t("Bookings", "الحجوزات")}</p>
-          <NavLink to="/bookings">{t("My Bookings", "حجوزاتي")}</NavLink>
+          {/* An invoice page belongs to Invoices, so My Bookings isn't marked current there. */}
+          {invoicePage ? <Link to="/bookings">{t("My Bookings", "حجوزاتي")}</Link> : <NavLink to="/bookings">{t("My Bookings", "حجوزاتي")}</NavLink>}
           <NavLink to="/car-rental/bookings">{t("My Rentals", "تأجيراتي")}</NavLink>
           <NavLink to="/tickets">{t("My Tickets", "تذاكري")}</NavLink>
+          {/* Real sign-in: the company's customers and the price requests already on the API. */}
+          {apiAuthEnabled && <NavLink to="/customers">{t("Customers", "العملاء")}</NavLink>}
+          {apiAuthEnabled && <NavLink to="/price-requests">{t("Price Requests", "طلبات الأسعار")}</NavLink>}
           <NavLink to="/group-requests">{t("My Group Requests", "طلبات مجموعاتي")}</NavLink>
         </div>
         <div className="workspace-nav__group" role="group" aria-labelledby={`${id}-finance`}>
           <p className="workspace-nav__label" id={`${id}-finance`}>{t("Finance", "المالية")}</p>
           <NavLink to="/wallet">{t("Wallet", "المحفظة")}</NavLink>
           <NavLink to="/transactions">{t("Transactions", "المعاملات")}</NavLink>
-          <NavLink to="/invoices">{t("Invoices", "الفواتير")}</NavLink>
+          {invoicePage ? <Link to="/invoices" aria-current="page" className="active">{t("Invoices", "الفواتير")}</Link> : <NavLink to="/invoices">{t("Invoices", "الفواتير")}</NavLink>}
           <NavLink to="/accounting-review">{t("Accounting Review", "مراجعة الحسابات")}</NavLink>
           <NavLink to="/points">{t("Points", "النقاط")}</NavLink>
         </div>

@@ -1,3 +1,4 @@
+import { flagEmoji } from "@/lib/flag-emoji";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Icon } from "@/components/ui/icon";
@@ -9,8 +10,7 @@ import { useLocale } from "@/features/localization/locale-provider";
 import { preferenceCurrencies, useTravelPreferences, type NationalityCode, type PreferenceCurrency } from "@/features/preferences/travel-preferences";
 import styles from "./account.module.css";
 
-/** A country's emoji flag from its ISO code (regional indicator letters). */
-export const flagEmoji = (code: string) => (/^[A-Z]{2}$/i.test(code) ? String.fromCodePoint(...[...code.toUpperCase()].map((letter) => 0x1f1a5 + letter.charCodeAt(0))) : "");
+export { flagEmoji };
 const currencyRegion: Record<PreferenceCurrency, string> = { AED: "AE", EGP: "EG", EUR: "EU", KWD: "KW", SAR: "SA", USD: "US" };
 
 function currencySymbol(code: string, locale: string) {
@@ -108,9 +108,9 @@ export function AccountSettingsPage() {
 
         <section className={`workspace-card ${styles.card}`} aria-labelledby="settings-security-title">
           <h2 id="settings-security-title" className={styles.cardTitle}><Icon name="lock" aria-hidden="true" />{t("Sign-in and security", "تسجيل الدخول والأمان")}</h2>
-          <p className={styles.cardIntro}>{t("Forgot your password or want a new one? Reset it with a code sent to your email.", "نسيت كلمة المرور أو تريد كلمة جديدة؟ أعد تعيينها برمز يُرسل إلى بريدك الإلكتروني.")}</p>
+          <p className={styles.cardIntro}>{t("Online password reset isn't available yet. Royal Vacation support can reset your password for you.", "إعادة تعيين كلمة المرور عبر الإنترنت غير متاحة بعد. يمكن لدعم رويال فاكيشن إعادة تعيينها لك.")}</p>
           <div className={styles.securityLinks}>
-            <Link className="button button--outline" to="/forgot-password">{t("Reset password", "إعادة تعيين كلمة المرور")}</Link>
+            <Link className="button button--outline" to="/contact">{t("Contact Royal Vacation", "تواصل مع رويال فاكيشن")}</Link>
             <Link className="button button--outline" to="/profile">{t("My Profile", "ملفي الشخصي")}</Link>
           </div>
         </section>

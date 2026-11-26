@@ -1,3 +1,4 @@
+import { formatMoney } from "@/lib/money";
 import { useEffect, useId, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useParams, useSearchParams } from "react-router-dom";
 import { BackLink } from "@/components/ui/back-link";
@@ -60,7 +61,7 @@ export function HotelRoomsPage() {
 
   const title = summary?.name ?? t("Hotel rooms", "غرف الفندق");
   return (
-    <CatalogShell title={t("Rooms", "الغرف")} trail={[{ to: backToResults, label: t("Search results", "نتائج البحث") }]}>
+    <CatalogShell title={t("Rooms", "الغرف")} trail={[{ to: backToResults, label: t("Search Results", "نتائج البحث") }]}>
       <div className={styles.page} data-rooms-page>
         <BackLink to={backToResults}>{t("Back to search results", "العودة إلى نتائج البحث")}</BackLink>
         {!isHotelHid(hid) || !criteria || !request ? (
@@ -83,7 +84,11 @@ export function HotelRoomsPage() {
               searchHref={backToResults}
               onRoomNames={setRoomNames}
               // Reduce Price sits on each rate: the existing request form, with this hotel, stay and room.
-              reducePrice={(rate) => ({ to: `/hotels/rooms/${hid}/reduce-price?${stayQuery(criteria)}`, state: { ...(summary ? { hotel: summary } : {}), ...(rate.room_name ? { room: rate.room_name } : {}), rooms: roomNames } })}
+              reducePrice={(rate) => {
+                // The rate's current price, only when verified (otherwise it's on request); never derived.
+                const current = confirmedPrice(rate.price);
+                return { to: `/hotels/rooms/${hid}/reduce-price?${stayQuery(criteria)}`, state: { ...(summary ? { hotel: summary } : {}), ...(rate.room_name ? { room: rate.room_name } : {}), rooms: roomNames, currentPrice: current ? { amount: current.amount, currency: current.currency } : null } };
+              }}
             />
           </>
         )}
@@ -341,7 +346,8 @@ function RoomsFlow({ hid, request: initialRequest, searchHref, onRoomNames, redu
 
 function Steps({ current }: { current: 1 | 2 | 3 }) {
   const { t } = useLocale();
-  const steps: Text[] = [["Choose a room", "اختر غرفة"], ["Price check", "التحقق من السعر"], ["Review", "المراجعة"]];
+  // The real flow: choose a rate, the supplier's price check, then review with guest details, the draft and confirmation.
+  const steps: Text[] = [["Choose a room", "اختر غرفة"], ["Price check", "التحقق من السعر"], ["Review & confirm", "المراجعة والتأكيد"]];
   return (
     <ol className={styles.steps} aria-label={t("Progress", "التقدم")}>
       {steps.map((label, index) => {
@@ -487,7 +493,10 @@ function PriceBlock({ price, provisional = false, emphasis = false }: { price: R
       <small>{provisional ? t("Customer price (provisional)", "سعر العميل (مبدئي)") : t("Customer price", "سعر العميل")}</small>
       <strong><Money amount={confirmed.amount} currency={confirmed.currency} /></strong>
       {confirmed.agencyAmount && (
-        <small className={styles.agencyPrice}>{t("Agency price", "سعر الوكالة")}: <Money amount={confirmed.agencyAmount} currency={confirmed.currency} /></small>
+        <span className={styles.agencyPrice} data-agency-price>
+          <small>{t("Agency price", "سعر الوكالة")}</small>
+          <b><Money amount={confirmed.agencyAmount} currency={confirmed.currency} /></b>
+        </span>
       )}
       {confirmed.propertyTaxes.length > 0 && (
         <small className={styles.propertyTaxes} data-property-taxes>
@@ -499,9 +508,9 @@ function PriceBlock({ price, provisional = false, emphasis = false }: { price: R
   );
 }
 
-/** The amount exactly as the backend sent it, with its own currency. */
+/** The backend's amount with its own currency, shown to two decimals (the value itself is unchanged). */
 function Money({ amount, currency }: { amount: string; currency: string }) {
-  return <bdi dir="ltr" className={styles.money}>{currency} {amount}</bdi>;
+  return <bdi dir="ltr" className={styles.money}>{formatMoney(amount, currency)}</bdi>;
 }
 
 function Countdown({ seconds }: { seconds: number }) {

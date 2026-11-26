@@ -126,7 +126,7 @@ export function ComplaintContactPage({ publicVisitor }: { publicVisitor: boolean
               <p className={styles.supportIntro}>{t("Our team is here to assist you.", "فريقنا موجود لمساعدتك.")}</p>
               <a className={styles.contactMethod} href="https://wa.me/201070724143" target="_blank" rel="noopener noreferrer">
                 <span><Icon name="whatsapp" /></span>
-                <span><small>{t("WhatsApp", "واتساب")}</small><bdi>+20 01070724143</bdi></span>
+                <span><small>{t("WhatsApp", "واتساب")}</small><bdi>+20 107 072 4143</bdi></span>
                 <Icon name="arrowRight" />
               </a>
               <a className={styles.contactMethod} href="mailto:royal.travel@royalvacation.online">

@@ -74,7 +74,7 @@ export function HotelCarousel({ note, slides, label, footer, busy = false }: {
           {slides.map((slide, index) => <div key={slide.key} className={carousel.slide} role="group" aria-roledescription={t("slide", "شريحة")} aria-label={`${index + 1} / ${slides.length}`} inert={!inView.includes(index)}>{slide.node}</div>)}
         </div>
       </div>
-      {slides.length > 0 && <p className={carousel.position} aria-live={paused ? "polite" : "off"}>{selected + 1} / {slides.length} · {t("Swipe to explore", "اسحب للاستكشاف")}</p>}
+      {slides.length > 0 && <p className={carousel.position} aria-live={paused ? "polite" : "off"}>{selected + 1} / {slides.length} · <span className={carousel.touchHint}>{t("Swipe to explore", "اسحب للاستكشاف")}</span><span className={carousel.pointerHint}>{t("Use the arrows or drag to explore", "استخدم الأسهم أو اسحب للاستكشاف")}</span></p>}
       {footer}
     </section>
   );

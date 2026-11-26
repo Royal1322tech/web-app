@@ -54,8 +54,9 @@ export function SiteFooter() {
           <h3>{t("Explore", "استكشف")}</h3>
           {links.map(({ route, icon, en, ar }) => {
             const to = signedIn || route === "/login" ? route : "/login";
+            // Guests sign in first, then continue to the page they chose.
             return (
-              <Link key={route} to={to}>
+              <Link key={route} to={to} state={!signedIn && route !== "/login" ? { from: route } : undefined}>
                 <Icon name={icon} />
                 <span><Text en={en} ar={ar} /></span>
                 <Icon name="arrowRight" />
@@ -66,7 +67,7 @@ export function SiteFooter() {
 
         <section className={styles.footerContacts}>
           <h3>{t("Get in touch", "تواصل معنا")}</h3>
-          <a href="https://wa.me/201070724143" target="_blank" rel="noopener noreferrer" aria-label={t("WhatsApp: +20 01070724143", "واتساب: +20 01070724143")}><Icon name="whatsapp" /><bdi>+20 01070724143</bdi></a>
+          <a href="https://wa.me/201070724143" target="_blank" rel="noopener noreferrer" aria-label={t("WhatsApp: +20 107 072 4143", "واتساب: +20 107 072 4143")}><Icon name="whatsapp" /><bdi>+20 107 072 4143</bdi></a>
           <a href="mailto:royal.travel@royalvacation.online" aria-label={t("Email Royal Vacation", "راسل رويال فاكيشن")}><Icon name="mail" /><bdi>royal.travel@royalvacation.online</bdi></a>
         </section>
 
