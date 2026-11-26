@@ -1,3 +1,4 @@
+import { pickDate } from "./helpers/date-picker";
 import { selectLanguage } from "./helpers/header";
 import { visit } from "./helpers/demo-login";
 import { openHeaderTools } from "./helpers/header";
@@ -113,8 +114,8 @@ test("booking modification updates dates, total and timeline", async ({
     .getByRole("button", { name: "Modify booking", exact: true })
     .click();
   const dialog = page.getByRole("dialog");
-  await dialog.locator("#check-in").fill("2027-01-10");
-  await dialog.locator("#check-out").fill("2027-01-14");
+  await pickDate(dialog, "check-in", "2027-01-10");
+  await pickDate(dialog, "check-out", "2027-01-14");
   await dialog.getByRole("button", { name: "Search", exact: true }).click();
   await expect(dialog).toContainText("$740.00");
   await dialog.getByRole("button", { name: "Save simulated changes" }).click();
@@ -316,15 +317,15 @@ test("stay dates and multiple-room totals survive search, details and room chang
     rooms: JSON.stringify(criteria.rooms),
   });
   await visit(page, `/search?${query}`);
-  await page.locator("#check-out").fill("2027-02-15");
+  await pickDate(page, "check-out", "2027-02-15");
   await page.getByRole("button", { name: "Search", exact: true }).click();
   await expect(page).toHaveURL(/checkOut=2027-02-15/);
   await page.reload();
-  await expect(page.locator("#check-out")).toHaveValue("2027-02-15");
+  await expect(page.locator("#check-out")).toHaveAttribute("data-value", "2027-02-15");
   await page
     .getByRole("link", { name: "Eastern Al Montazah Hotel", exact: true })
     .click();
-  await expect(page.locator("#check-in")).toHaveValue("2027-02-10");
+  await expect(page.locator("#check-in")).toHaveAttribute("data-value", "2027-02-10");
   await page
     .getByRole("button", { name: "Expand All Rooms", exact: true })
     .click();
@@ -335,9 +336,9 @@ test("stay dates and multiple-room totals survive search, details and room chang
   await expect(page.locator(".selection-summary")).toContainText("$1,850.00");
   await expect(page.locator(".selection-summary")).toContainText("2 / 5");
   await page.getByRole("link", { name: "Change room", exact: true }).click();
-  await expect(page.locator("#check-out")).toHaveValue("2027-02-15");
+  await expect(page.locator("#check-out")).toHaveAttribute("data-value", "2027-02-15");
   await page.locator('a[href^="/hotels/garden-stay-demo?"]').first().click();
-  await expect(page.locator("#check-in")).toHaveValue("2027-02-10");
+  await expect(page.locator("#check-in")).toHaveAttribute("data-value", "2027-02-10");
   await expect(page.locator('input[name="destination"]')).toHaveValue(
     "Hurghada",
   );

@@ -197,7 +197,7 @@ test.describe("mobile hotel search", () => {
     const close = page.getByRole("button", { name: "Close search" });
     await expect(close).toHaveAttribute("aria-expanded", "true");
     await expect(page.locator("#destination")).toHaveValue("Alexandria");
-    await expect(page.locator("#check-in")).toHaveValue("2030-11-20");
+    await expect(page.locator("#check-in")).toHaveAttribute("data-value", "2030-11-20");
     await page.keyboard.press("Tab");
     await expect(page.locator("#destination")).toBeFocused();
 
@@ -270,7 +270,11 @@ test.describe("states and bugs from the audit", () => {
 
   test("date fields show a visible focus ring", async ({ page }) => {
     await visit(page, "/search");
+    // Reached with the keyboard, as a keyboard user would (the calendar field is a button).
     await page.locator("#check-in").focus();
+    await page.keyboard.press("Shift+Tab");
+    await page.keyboard.press("Tab");
+    await expect(page.locator("#check-in")).toBeFocused();
     await expect(page.locator("#check-in")).toHaveCSS("outline-style", "solid");
     expect(parseFloat(await page.locator("#check-in").evaluate((input) => getComputedStyle(input).outlineWidth))).toBeGreaterThanOrEqual(2);
   });

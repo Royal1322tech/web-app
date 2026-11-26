@@ -127,8 +127,8 @@ test("changing room returns to Rooms & Boards and replaces the selected offer wi
   await expect(page).toHaveURL(/changeRoom=1.*#rooms$/);
   await expect(page.locator("#rooms")).toBeFocused();
   await expect(page.locator("#search-nationality")).toHaveValue("SA");
-  await expect(page.locator("#check-in")).toHaveValue("2030-11-20");
-  await expect(page.locator("#check-out")).toHaveValue("2030-11-23");
+  await expect(page.locator("#check-in")).toHaveAttribute("data-value", "2030-11-20");
+  await expect(page.locator("#check-out")).toHaveAttribute("data-value", "2030-11-23");
   await page.locator("#rooms details summary").first().click();
   await page.locator('select[aria-label="Board preference"]').selectOption("half-board");
   await page.getByRole("button", { name: "Expand All Rooms" }).click();

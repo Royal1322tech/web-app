@@ -1,3 +1,4 @@
+import { pickDate } from "./helpers/date-picker";
 import { selectLanguage } from "./helpers/header";
 import { test, expect } from "@playwright/test";
 import { visit } from "./helpers/demo-login";
@@ -38,8 +39,8 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
       expect(storedPreferences.nationality).toBe("SA");
       expect(storedPreferences.currency).toBe(previousPreferences.currency);
       await page.locator("#destination").selectOption("Alexandria");
-      await page.locator("#check-in").fill("2030-11-20");
-      await page.locator("#check-out").fill("2030-11-22");
+      await pickDate(page, "check-in", "2030-11-20");
+      await pickDate(page, "check-out", "2030-11-22");
       await page.locator("#hotel-search button[type=submit]").click();
       await expect(page).toHaveURL(/nationality=SA/);
       await expect(page.locator("#search-nationality")).toHaveValue("SA");

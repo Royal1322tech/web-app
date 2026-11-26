@@ -18,7 +18,8 @@ import { searchDestinations } from "@/features/hotels/data/destinations";
 import { apiHotelSearchEnabled } from "@/features/hotels/hotel-search-config";
 import { DestinationAutocomplete } from "@/features/hotels/components/destination-autocomplete";
 import { RoomSelector } from "./room-selector";
-import { adjustedCheckOut, isCalendarDay, minCheckOut, nightsBetween, useLocalToday } from "@/lib/stay-dates";
+import { adjustedCheckOut, isCalendarDay, minCheckOut, nightsBetween, stayDateIssue, useLocalToday } from "@/lib/stay-dates";
+import { DatePicker } from "@/components/ui/date-picker";
 import styles from "../home.module.css";
 
 export function HotelSearchForm({
@@ -181,24 +182,29 @@ export function HotelSearchForm({
             )}
 
             <div className={styles.searchField}>
-              <label htmlFor="check-in">
+              <label htmlFor="check-in" id="check-in-label">
                 <Icon name="calendar" />
                 {t("Check In", "تسجيل الوصول")}{" "}
               </label>
-              <input
+              {/* A calendar, not the native date input: iOS lets any date be picked there whatever `min`
+                  says. Past days are disabled buttons here; the form validation stays as a second check. */}
+              <input type="hidden" {...checkInField} />
+              <DatePicker
                 id="check-in"
-                type="date"
+                labelledBy="check-in-label"
+                value={checkInValue}
                 min={today}
-                aria-invalid={!!errors.checkIn}
-                aria-describedby={errors.checkIn ? "check-in-error" : undefined}
-                {...checkInField}
-                onChange={(event) => {
-                  void checkInField.onChange(event);
-                  const next = event.target.value;
+                locale={locale === "ar" ? "ar" : "en"}
+                placeholder={t("Select date", "اختر التاريخ")}
+                invalid={!!errors.checkIn}
+                describedBy={errors.checkIn ? "check-in-error" : undefined}
+                onChange={(next) => {
+                  setValue("checkIn", next, { shouldValidate: !!errors.checkIn, shouldDirty: true });
                   // A check-out that's no longer after check-in moves to the next valid day; a valid one stays.
-                  if (isCalendarDay(next) && checkOutValue !== adjustedCheckOut(next, checkOutValue)) {
+                  if (checkOutValue !== adjustedCheckOut(next, checkOutValue)) {
                     setValue("checkOut", adjustedCheckOut(next, checkOutValue), { shouldValidate: !!errors.checkOut, shouldDirty: true });
                   }
+                  onEdit?.();
                 }}
               />
               {errors.checkIn && (
@@ -208,26 +214,30 @@ export function HotelSearchForm({
               )}
             </div>
             <div className={styles.searchField}>
-              <label htmlFor="check-out">
+              <label htmlFor="check-out" id="check-out-label">
                 <Icon name="calendar" />
                 {t("Check Out", "تسجيل المغادرة")}{" "}
               </label>
-              <input
+              <input type="hidden" {...register("checkOut")} />
+              <DatePicker
                 id="check-out"
-                type="date"
+                labelledBy="check-out-label"
+                align="end"
+                value={checkOutValue}
                 min={checkOutMin}
-                aria-invalid={!!errors.checkOut}
-                aria-describedby={
-                  errors.checkOut ? "check-out-error" : undefined
-                }
-                {...register("checkOut")}
+                locale={locale === "ar" ? "ar" : "en"}
+                placeholder={t("Select date", "اختر التاريخ")}
+                invalid={!!errors.checkOut}
+                describedBy={errors.checkOut ? "check-out-error" : undefined}
+                onChange={(next) => { setValue("checkOut", next, { shouldValidate: !!errors.checkOut, shouldDirty: true }); onEdit?.(); }}
               />
               {errors.checkOut && (
                 <p id="check-out-error" className={styles.error} role="alert">
                   {t(errors.checkOut.message || "Check this field.")}
                 </p>
               )}
-              {!errors.checkOut && nights > 0 && (
+              {/* Nights only for a valid stay (check-in today or later, check-out after it). */}
+              {!errors.checkOut && nights > 0 && !stayDateIssue(checkInValue, checkOutValue, today) && (
                 <p className={styles.nights} data-nights={nights}>{t(`${nights} ${nights === 1 ? "night" : "nights"}`, nights === 1 ? "ليلة واحدة" : nights === 2 ? "ليلتان" : `${nights} ليالٍ`)}</p>
               )}
             </div>

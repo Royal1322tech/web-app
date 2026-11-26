@@ -1,3 +1,4 @@
+import { pickDate } from "./helpers/date-picker";
 import { expect, test, type Page, type Request } from "@playwright/test";
 
 /*
@@ -221,8 +222,8 @@ test.describe("journey: sign in, browse hotels, sign out (mocked API)", () => {
     await signIn(page);
     await expect(page.locator("[data-live-home=featured]")).toHaveAttribute("data-search-state", "results");
     await chooseDestination(page, "Dubai");
-    await page.locator("#check-in").fill("2030-12-06");
-    await page.locator("#check-out").fill("2030-12-15");
+    await pickDate(page, "check-in", "2030-12-06");
+    await pickDate(page, "check-out", "2030-12-15");
     await page.locator("#search-nationality").selectOption("AL");
     await page.locator("#hotel-search button[type=submit]").click();
     await expect(page).toHaveURL(/\/search\?destination=dubai.*nationality=AL/);

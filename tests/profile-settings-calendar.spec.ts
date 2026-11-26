@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Request } from "@playwright/test";
+import { pickDate } from "./helpers/date-picker";
 import { addDays, adjustedCheckOut, isCalendarDay, minCheckOut, nightsBetween, stayDateIssue, toLocalDay } from "../src/lib/stay-dates";
 
 /*
@@ -65,42 +66,88 @@ test.describe("stay dates (no browser)", () => {
 test.describe("hotel search dates (mocked API)", () => {
   test.use({ timezoneId: "UTC" });
 
-  test("past check-in is blocked, today allowed, check-out follows check-in, and nights are shown", async ({ page }) => {
+  test("past days can't be chosen, today can, check-out follows check-in, and nights are shown", async ({ page }) => {
     await page.clock.install({ time: new Date("2030-11-25T10:00:00Z") });
     const { searches } = await signedIn(page);
     await page.goto(`${APP}/search?destination=dubai&nationality=EG&checkIn=2030-12-06&checkOut=2030-12-09&rooms=${encodeURIComponent('[{"adults":2,"childAges":[]}]')}`);
     const checkIn = page.locator("#check-in"), checkOut = page.locator("#check-out");
-    await expect(checkIn).toHaveAttribute("min", "2030-11-25");
-    await expect(checkOut).toHaveAttribute("min", "2030-12-07");
-    const before = searches.length;
+    await expect(checkIn).toHaveAttribute("data-value", "2030-12-06");
+    await expect(page.locator("input[type=date]")).toHaveCount(0); // no native picker (iOS ignores min there)
 
-    // Typing a past date (manual input) is refused before anything is sent.
-    await checkIn.fill("2030-11-24");
-    await page.locator("#hotel-search button[type=submit]").click();
-    await expect(page.getByText("Check-in cannot be in the past.")).toBeVisible();
-    expect(searches.length).toBe(before);
+    // Check-in calendar: every day before today is a disabled, greyed-out button; today is choosable.
+    await checkIn.click();
+    const panel = page.locator('[data-date-picker="check-in"] [data-date-panel]');
+    await panel.getByLabel("Month", { exact: true }).selectOption("10"); // November
+    await expect(panel.locator('[data-date="2030-11-24"]')).toBeDisabled();
+    await expect(panel.locator('[data-date="2030-11-01"]')).toBeDisabled();
+    await expect(panel.locator('[data-date="2030-11-25"]')).toBeEnabled();
+    await expect(panel.getByRole("button", { name: "Previous month" })).toBeDisabled();
+    await panel.locator('[data-date="2030-11-24"]').click({ force: true }); // even a forced tap does nothing
+    await expect(panel).toBeVisible();
+    await expect(checkIn).toHaveAttribute("data-value", "2030-12-06");
+    // Keyboard: the arrows can't move into the past either.
+    await panel.locator('[data-date="2030-11-25"]').focus();
+    await page.keyboard.press("ArrowLeft");
+    await expect(panel.locator('[data-date="2030-11-25"]')).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(checkIn).toHaveAttribute("data-value", "2030-11-25");
+    await expect(checkOut).toHaveAttribute("data-value", "2030-12-09"); // still valid: kept
 
-    // Today is allowed; a check-out that's no longer after check-in moves to the next day.
-    await checkIn.fill("2030-11-25");
-    await expect(checkOut).toHaveValue("2030-12-09"); // still valid: kept
-    await checkIn.fill("2030-12-10");
-    await expect(checkOut).toHaveValue("2030-12-11");
-    await expect(checkOut).toHaveAttribute("min", "2030-12-11");
+    // A later check-in moves an invalid check-out to the next day; days up to check-in are disabled.
+    await pickDate(page, "check-in", "2030-12-10");
+    await expect(checkOut).toHaveAttribute("data-value", "2030-12-11");
     await expect(page.locator("[data-nights]")).toHaveText("1 night");
-    await checkOut.fill("2030-12-10");
-    await page.locator("#hotel-search button[type=submit]").click();
-    await expect(page.getByText("Check-out must be after check-in.")).toBeVisible();
-    await checkOut.fill("2030-12-13");
+    await checkOut.click();
+    const outPanel = page.locator('[data-date-picker="check-out"] [data-date-panel]');
+    await expect(outPanel.locator('[data-date="2030-12-10"]')).toBeDisabled();
+    await expect(outPanel.locator('[data-date="2030-12-11"]')).toBeEnabled();
+    await page.keyboard.press("Escape");
+    await expect(outPanel).toHaveCount(0);
+    await expect(checkOut).toBeFocused();
+    await pickDate(page, "check-out", "2030-12-13");
     await expect(page.locator("[data-nights]")).toHaveText("3 nights");
+    // Only valid stays are searched.
+    await page.locator("#hotel-search button[type=submit]").click();
+    await expect.poll(() => searches.filter((r) => r.postDataJSON().checkin === "2030-12-10").length).toBe(1);
+    expect(searches.every((r) => r.postDataJSON().checkin >= "2030-11-25")).toBe(true);
   });
 
-  test("the minimum check-in moves at local midnight", async ({ page }) => {
+  test("the earliest check-in moves at local midnight", async ({ page }) => {
     await page.clock.install({ time: new Date("2030-02-28T23:59:30Z") });
     await signedIn(page);
     await page.goto(`${APP}/`);
-    await expect(page.locator("#check-in")).toHaveAttribute("min", "2030-02-28");
+    await page.locator("#check-in").click();
+    await expect(page.locator('[data-date="2030-02-28"]')).toBeEnabled();
+    await page.keyboard.press("Escape");
     await page.clock.runFor(60_000);
-    await expect(page.locator("#check-in")).toHaveAttribute("min", "2030-03-01");
+    await page.locator("#check-in").click();
+    await expect(page.locator('[data-date="2030-03-01"]')).toBeEnabled();
+    // February is now entirely in the past: its month can't be opened at all.
+    const panel = page.locator('[data-date-picker="check-in"] [data-date-panel]');
+    await expect(panel.getByRole("button", { name: "Previous month" })).toBeDisabled();
+    await expect(panel.getByLabel("Month", { exact: true }).locator('option[value="1"]')).toBeDisabled();
+  });
+
+  test("Arabic: the calendar reads right to left, starts on Saturday, and arrows follow the direction", async ({ page }) => {
+    await page.clock.install({ time: new Date("2030-11-25T10:00:00Z") });
+    await page.setViewportSize({ width: 375, height: 800 });
+    await signedIn(page, "ar");
+    await page.goto(`${APP}/`);
+    await page.locator("#check-in").click();
+    const panel = page.locator('[data-date-picker="check-in"] [data-date-panel]');
+    await expect(panel).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+    await expect(panel.locator(".rv-date-picker__weekdays span").first()).toHaveText("س");
+    await expect(panel.locator('[data-date="2030-11-25"]')).toBeFocused();
+    await page.keyboard.press("ArrowLeft"); // in RTL, left is the next day
+    await expect(panel.locator('[data-date="2030-11-26"]')).toBeFocused();
+    // On phones the calendar is a bottom sheet that fits the screen.
+    const box = (await panel.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(375);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+    await panel.locator('[data-date="2030-11-26"]').click();
+    await expect(page.locator("#check-in")).toHaveAttribute("data-value", "2030-11-26");
   });
 
   test("past dates restored from a link never reach the API", async ({ page }) => {
@@ -117,11 +164,13 @@ test.describe("hotel search dates (mocked API)", () => {
 test.describe("local calendar day, not UTC", () => {
   test.use({ timezoneId: "Pacific/Kiritimati" }); // UTC+14: already the next day locally
 
-  test("today's minimum uses the local date", async ({ page }) => {
+  test("today's earliest day uses the local date", async ({ page }) => {
     await page.clock.install({ time: new Date("2030-11-25T12:00:00Z") });
     await signedIn(page);
     await page.goto(`${APP}/`);
-    await expect(page.locator("#check-in")).toHaveAttribute("min", "2030-11-26");
+    await page.locator("#check-in").click();
+    await expect(page.locator('[data-date="2030-11-25"]')).toBeDisabled();
+    await expect(page.locator('[data-date="2030-11-26"]')).toBeEnabled();
   });
 });
 

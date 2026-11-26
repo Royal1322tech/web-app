@@ -1,3 +1,4 @@
+import { pickDate } from "./helpers/date-picker";
 import { expect, test, type Page, type Request } from "@playwright/test";
 import { classifyB2BSearchError, parseB2BHotelSearch, toB2BHotelSearchRequest } from "../src/features/hotels/api/b2b-hotel-search";
 import { findDestination, searchDestinations } from "../src/features/hotels/data/destinations";
@@ -189,8 +190,8 @@ test.describe("B2B hotel search: the search page (mocked API)", () => {
     expect(api.lookups[0].headers()["authorization"]).toBe(`Bearer ${TOKEN}`);
     await page.locator("[data-destination-autocomplete]").getByRole("option", { name: /^Dubai United Arab Emirates/ }).click();
     await expect(input).toHaveValue("Dubai, United Arab Emirates");
-    await page.locator("#check-in").fill("2030-12-06");
-    await page.locator("#check-out").fill("2030-12-09");
+    await pickDate(page, "check-in", "2030-12-06");
+    await pickDate(page, "check-out", "2030-12-09");
     await page.locator("#hotel-search button[type=submit]").click();
     await expect(page).toHaveURL(/\/search\?destination=dubai/);
     await expect(page.locator("#api-hotel-results [aria-busy=true]")).toBeVisible();
@@ -215,8 +216,8 @@ test.describe("B2B hotel search: the search page (mocked API)", () => {
     await page.goto(APP + "/");
     await page.locator("#destination").pressSequentially("Dubai M", { delay: 20 });
     await page.locator("[data-destination-autocomplete]").getByRole("option", { name: /Dubai Marina/ }).click();
-    await page.locator("#check-in").fill("2030-12-06");
-    await page.locator("#check-out").fill("2030-12-09");
+    await pickDate(page, "check-in", "2030-12-06");
+    await pickDate(page, "check-out", "2030-12-09");
     await page.locator("#hotel-search button[type=submit]").click();
     await expect(page).toHaveURL(/destination=region%3A6053839/);
     await expect(page.getByRole("heading", { name: /2 hotels in Dubai Marina/ })).toBeVisible();

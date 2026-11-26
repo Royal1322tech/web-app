@@ -190,8 +190,8 @@ test('comparison shows fixture facts and Choose Hotel preserves the entire searc
   await expect(page).toHaveURL(new URL(href!, page.url()).href);
   expect(new URLSearchParams(new URL(page.url()).search).toString()).toBe(query.toString());
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(hotels.find(h => href!.includes(h.id))!.name.en);
-  await expect(page.locator('#check-in')).toHaveValue(query.get('checkIn')!);
-  await expect(page.locator('#check-out')).toHaveValue(query.get('checkOut')!);
+  await expect(page.locator("#check-in")).toHaveAttribute("data-value", query.get('checkIn')!);
+  await expect(page.locator("#check-out")).toHaveAttribute("data-value", query.get('checkOut')!);
   await expect(page.locator('#search-nationality')).toHaveValue('SA');
   await expect(page.locator('#guest-summary')).toHaveText('4 Guests in 2 Rooms');
   await expect(page.getByRole('button', { name: 'Nationality and currency', exact: true })).toContainText('EGP');

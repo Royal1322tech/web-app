@@ -1,3 +1,4 @@
+import { pickDate } from "./helpers/date-picker";
 import { selectLanguage } from "./helpers/header";
 import { visit } from "./helpers/demo-login";
 import { attachIdDocument, fillCompanyStep } from "./helpers/registration";
@@ -100,8 +101,8 @@ test("search validation, rooms, child ages, query navigation and browser history
   date.setDate(date.getDate() + 7);
   const checkIn = date.toISOString().slice(0, 10);
   date.setDate(date.getDate() + 3);
-  await page.locator("#check-in").fill(checkIn);
-  await page.locator("#check-out").fill(date.toISOString().slice(0, 10));
+  await pickDate(page, "check-in", checkIn);
+  await pickDate(page, "check-out", date.toISOString().slice(0, 10));
   await page.locator('[aria-controls="room-selector"]').click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();

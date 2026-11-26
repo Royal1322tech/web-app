@@ -1,3 +1,4 @@
+import { pickDate } from "./helpers/date-picker";
 import { expect, test } from "@playwright/test";
 import { countries } from "../src/features/agency-registration/data/countries";
 import { visit } from "./helpers/demo-login";
@@ -118,8 +119,8 @@ test("nationality stays synchronized through the navbar, hotel search, and hotel
   await preferences.getByLabel("Select nationality").selectOption("JP");
   await expect(page.locator("#search-nationality")).toHaveValue("JP");
   await page.locator("#destination").selectOption("Alexandria");
-  await page.locator("#check-in").fill("2030-11-20");
-  await page.locator("#check-out").fill("2030-11-22");
+  await pickDate(page, "check-in", "2030-11-20");
+  await pickDate(page, "check-out", "2030-11-22");
   await page.locator("#hotel-search button[type=submit]").click();
   await expect(page).toHaveURL(/nationality=JP/);
   await page.locator('a[href^="/hotels/eastern-al-montazah?"]').first().click();

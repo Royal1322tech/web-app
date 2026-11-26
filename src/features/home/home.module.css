@@ -953,9 +953,10 @@
   border: 1px solid #e1e5e7;
   border-radius: 12px;
 }
-/* In the compact (catalog) search, the guest trigger matches the catalog's native fields. */
+/* In the compact (catalog) search, the guest trigger and the date fields match the catalog's native fields. */
 .compactSearch .searchField select,
-.compactSearch .guestTrigger {
+.compactSearch .guestTrigger,
+.compactSearch .searchField :global(.rv-date-picker__trigger) {
   min-height: 42px;
   padding: 8px 10px;
   border-color: #dfe3e7;
@@ -1754,7 +1755,7 @@
 }
 .searchSection .searchField label svg,
 .searchSection .fieldLabel svg { width: 16px; height: 16px; color: var(--royal); }
-.searchSection :is(.searchField input, .searchField select, .guestTrigger) {
+.searchSection :is(.searchField input, .searchField select, .guestTrigger, .searchField :global(.rv-date-picker__trigger)) {
   height: 52px;
   min-height: 52px;
   padding: 0 14px;
@@ -1776,11 +1777,11 @@
 }
 :global([dir="rtl"]) .searchSection .searchField select { background-position: left 14px center; }
 .searchSection .guestTrigger { cursor: pointer; }
-.searchSection :is(.searchField input, .searchField select, .guestTrigger):hover {
+.searchSection :is(.searchField input, .searchField select, .guestTrigger, .searchField :global(.rv-date-picker__trigger)):hover {
   border-color: #9fb3c8;
   background-color: #fff;
 }
-.searchSection :is(.searchField input, .searchField select, .guestTrigger):focus-visible,
+.searchSection :is(.searchField input, .searchField select, .guestTrigger, .searchField :global(.rv-date-picker__trigger)):focus-visible,
 .searchSection :is(.searchField input, .searchField select):focus {
   outline: none;
   border-color: var(--royal);
@@ -1833,6 +1834,6 @@
   .searchSection .tabs :is(span, a) { min-height: 46px; padding: 10px 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .searchSection :is(.searchField input, .searchField select, .guestTrigger) { transition: none; }
+  .searchSection :is(.searchField input, .searchField select, .guestTrigger, .searchField :global(.rv-date-picker__trigger)) { transition: none; }
   .searchSection .searchForm > .primaryButton:hover { transform: none; }
 }
