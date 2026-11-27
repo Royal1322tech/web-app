@@ -142,7 +142,9 @@ export function DatePicker({ id, value, min, onChange, locale, placeholder, inva
           </div>
           {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- arrow keys move between the day buttons inside. */}
           <div ref={grid} className="rv-date-picker__grid" onKeyDown={onKey}>
-            {cells.map((day, index) => day === null ? <span key={`blank-${index}`} aria-hidden="true" /> : (
+            {/* Unavailable days (before `min`) aren't shown at all: an empty cell keeps the weekday columns
+                aligned, and there is nothing to tap, focus or reach with the keyboard. */}
+            {cells.map((day, index) => day === null || day < min ? <span key={day ?? `blank-${index}`} className="rv-date-picker__empty" aria-hidden="true" data-unavailable={day ?? undefined} /> : (
               <button
                 key={day}
                 type="button"
@@ -151,7 +153,6 @@ export function DatePicker({ id, value, min, onChange, locale, placeholder, inva
                 data-today={day === today || undefined}
                 aria-pressed={day === selected}
                 aria-label={fullDate.format(asDate(day))}
-                disabled={day < min}
                 tabIndex={day === focusDay ? 0 : -1}
                 onClick={() => choose(day)}
               >
@@ -160,7 +161,7 @@ export function DatePicker({ id, value, min, onChange, locale, placeholder, inva
             ))}
           </div>
           <div className="rv-date-picker__footer">
-            <span>{t("Unavailable dates are greyed out.", "التواريخ غير المتاحة باللون الرمادي.")}</span>
+            <span>{t("Only available dates are shown.", "تظهر التواريخ المتاحة فقط.")}</span>
             <button type="button" className="rv-date-picker__close" onClick={() => close()}>{t("Close", "إغلاق")}</button>
           </div>
         </div>

@@ -74,15 +74,22 @@ test.describe("hotel search dates (mocked API)", () => {
     await expect(checkIn).toHaveAttribute("data-value", "2030-12-06");
     await expect(page.locator("input[type=date]")).toHaveCount(0); // no native picker (iOS ignores min there)
 
-    // Check-in calendar: every day before today is a disabled, greyed-out button; today is choosable.
+    // Check-in calendar: days before today aren't shown at all (an empty, inert cell keeps the
+    // weekday columns aligned); today and later are choosable.
     await checkIn.click();
     const panel = page.locator('[data-date-picker="check-in"] [data-date-panel]');
     await panel.getByLabel("Month", { exact: true }).selectOption("10"); // November
-    await expect(panel.locator('[data-date="2030-11-24"]')).toBeDisabled();
-    await expect(panel.locator('[data-date="2030-11-01"]')).toBeDisabled();
+    await expect(panel.locator('[data-date="2030-11-24"]')).toHaveCount(0);
+    await expect(panel.locator('[data-date="2030-11-01"]')).toHaveCount(0);
+    await expect(panel.locator('[data-unavailable="2030-11-24"]')).toHaveAttribute("aria-hidden", "true");
+    await expect(panel.locator('[data-unavailable="2030-11-24"]')).toHaveText("");
+    await expect(panel.locator(".rv-date-picker__day")).toHaveCount(6); // Nov 25–30
     await expect(panel.locator('[data-date="2030-11-25"]')).toBeEnabled();
+    // Nov 25, 2030 is a Monday: still in the Monday column (Sunday-first week in English).
+    const cells = panel.locator(".rv-date-picker__grid > *");
+    expect(await cells.evaluateAll((all) => all.findIndex((cell) => cell.getAttribute("data-date") === "2030-11-25") % 7)).toBe(1);
     await expect(panel.getByRole("button", { name: "Previous month" })).toBeDisabled();
-    await panel.locator('[data-date="2030-11-24"]').click({ force: true }); // even a forced tap does nothing
+    await panel.locator('[data-unavailable="2030-11-24"]').click({ force: true }); // a tap on the empty cell does nothing
     await expect(panel).toBeVisible();
     await expect(checkIn).toHaveAttribute("data-value", "2030-12-06");
     // Keyboard: the arrows can't move into the past either.
@@ -99,7 +106,8 @@ test.describe("hotel search dates (mocked API)", () => {
     await expect(page.locator("[data-nights]")).toHaveText("1 night");
     await checkOut.click();
     const outPanel = page.locator('[data-date-picker="check-out"] [data-date-panel]');
-    await expect(outPanel.locator('[data-date="2030-12-10"]')).toBeDisabled();
+    await expect(outPanel.locator('[data-date="2030-12-10"]')).toHaveCount(0); // check-in day itself isn't offered
+    await expect(outPanel.locator('[data-date="2030-12-09"]')).toHaveCount(0);
     await expect(outPanel.locator('[data-date="2030-12-11"]')).toBeEnabled();
     await page.keyboard.press("Escape");
     await expect(outPanel).toHaveCount(0);
@@ -169,7 +177,7 @@ test.describe("local calendar day, not UTC", () => {
     await signedIn(page);
     await page.goto(`${APP}/`);
     await page.locator("#check-in").click();
-    await expect(page.locator('[data-date="2030-11-25"]')).toBeDisabled();
+    await expect(page.locator('[data-date="2030-11-25"]')).toHaveCount(0);
     await expect(page.locator('[data-date="2030-11-26"]')).toBeEnabled();
   });
 });
