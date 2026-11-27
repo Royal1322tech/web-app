@@ -30,6 +30,10 @@ for (const width of [375, 768, 1440, 1920]) {
     await page.locator("section[aria-label='Royal Vacation agency platform'] header a").first().focus();
     await page.keyboard.press("Tab"); // keyboard focus (focus-visible) inside the hero
     await expect(background).toHaveCSS("animation-play-state", "paused");
+    // A pause is applied on the next frame: wait until the browser reports it settled (not pending)
+    // before measuring, so a slow machine doesn't record the last frame of motion.
+    await background.evaluate((img) => Promise.all(img.getAnimations().map((a) => a.ready)));
+    await expect.poll(() => background.evaluate((img) => img.getAnimations().every((a) => a.playState === "paused" && !a.pending))).toBe(true);
     const box = await background.boundingBox();
     await page.waitForTimeout(600);
     expect(await background.boundingBox()).toEqual(box);
