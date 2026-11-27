@@ -79,3 +79,35 @@
 .accountGroup { display: grid; padding-block: 4px; }
 .accountGroup + .accountGroup { border-block-start: 1px solid var(--border); }
 .accountGroupLabel { margin: 6px 10px 2px; color: #5b6470; font-size: 11.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+
+/* Phone/tablet menu refinements. Desktop (1200px+) is unchanged: these icons and labels are hidden there. */
+.navIcon, .iconLabel { display: none; }
+@media (max-width: 1199px) {
+  .expanded .menuPanel { gap: 4px; }
+  .expanded .navigation { gap: 2px; padding: 0 0 6px; }
+  .navigation a { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 12px; font-size: 15px; }
+  .navIcon { display: block; flex: none; width: 20px; height: 20px; color: #5b6b7e; }
+  .navigation a[aria-current] .navIcon { color: var(--royal); }
+  /* No sticky "hover" after a tap on touch screens; hover only where a mouse can hover. */
+  .navigation a:hover { background: transparent; }
+  @media (hover: hover) { .navigation a:hover { background: var(--subtle); } }
+  .navigation a:focus-visible { outline: 2px solid var(--royal); outline-offset: -2px; }
+  .expanded .tools { gap: 8px; padding-top: 10px; }
+  .preferences :global(.rv-popover-trigger) { min-height: 44px; }
+  /* Notifications and My account: two clearly labelled controls side by side. */
+  .icons { display: grid; grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr); gap: 8px; padding: 0; background: transparent; border: 0; }
+  .icons > a, .icons .profileTrigger { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 44px; height: auto; padding: 0 8px; border: 1px solid var(--border); border-radius: 12px; background: #fff; color: var(--navy); font-size: 14px; font-weight: 700; white-space: nowrap; text-decoration: none; }
+  .icons > a svg, .icons .profileTrigger svg { flex: none; width: 20px; height: 20px; }
+  .iconLabel { display: inline; }
+  .icons > :global(.rv-popover) { display: grid; min-width: 0; } /* the account control is as tall as its neighbours */
+  .icons .profileTrigger::after { content: "My account"; }
+  :global(html[lang="ar"]) .icons .profileTrigger::after { content: "حسابي"; }
+  .icons :global(.rv-popover:has(> [aria-expanded="true"])) { grid-column: 1 / -1; }
+  .icons .profileTrigger:hover { background: #fff; color: var(--navy); }
+  @media (hover: hover) { .icons > a:hover, .icons .profileTrigger:hover { background: #eef3fa; } }
+  /* Narrow phones: preferences one per row under 380px; account labels sit under their icons. */
+  @media (max-width: 379px) { .preferences { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 429px) {
+    .icons > a, .icons .profileTrigger { flex-direction: column; gap: 2px; min-height: 52px; padding: 4px; font-size: 12px; }
+  }
+}

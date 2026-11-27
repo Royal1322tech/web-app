@@ -1,0 +1,109 @@
+/* Passenger & Trip Enquiry (airport transfers, chauffeur). Scoped to this page only. */
+
+/* Hero steps: readable on the dark photo; active, done and upcoming are clearly different. */
+.chauffeur-enquiry .rental-reference-shell .rental-progress {
+  inset: auto clamp(14px, 2.5vw, 28px) 14px;
+  gap: clamp(6px, 1.4vw, 14px);
+}
+.chauffeur-enquiry .rental-reference-shell .rental-progress li {
+  min-width: 0;
+  padding: 6px 10px 6px 6px;
+  border-radius: 999px;
+  background: rgb(2 20 60 / 0.55);
+  color: #e8eef6;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+}
+[dir="rtl"] .chauffeur-enquiry .rental-reference-shell .rental-progress li { padding: 6px 6px 6px 10px; }
+.chauffeur-enquiry .rental-reference-shell .rental-progress li[aria-current] {
+  background: #fff;
+  color: #02143c;
+  font-weight: 800;
+  box-shadow: 0 6px 18px rgb(2 20 60 / 0.3);
+}
+.chauffeur-enquiry .rental-reference-shell .rental-progress li[aria-current] span { background: #b7731e; border-color: #b7731e; color: #fff; }
+.chauffeur-enquiry .rental-reference-shell .rental-progress li:has(~ li[aria-current]) span { background: #fff; color: #02143c; }
+
+/* Form: one rhythm for sections, labels, fields and buttons. */
+.chauffeur-enquiry .rental-form-section { padding: clamp(16px, 2.2vw, 22px); }
+.chauffeur-enquiry .rental-numbered-heading { align-items: center; margin-bottom: 14px; }
+.chauffeur-enquiry .rental-numbered-heading h2 { font-size: 17px; }
+.chauffeur-enquiry .rental-numbered-heading p { font-size: 13px; }
+.chauffeur-enquiry .rental-form-fields { gap: 14px 16px; }
+.chauffeur-field { display: grid; gap: 6px; min-width: 0; align-content: start; }
+.chauffeur-field--wide { grid-column: 1 / -1; }
+.chauffeur-field__label { color: #02143c; font-size: 13.5px; font-weight: 700; }
+.chauffeur-required { color: #a3341f; }
+.chauffeur-enquiry .rental-reference-shell :is(input:not([type=checkbox]):not([type=hidden]), textarea) {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid #d3dce6;
+  border-radius: 10px;
+  background: #fbfcfe;
+  color: #02143c;
+  font: inherit;
+  font-size: 15px;
+}
+.chauffeur-enquiry .rental-reference-shell textarea { min-height: 112px; line-height: 1.55; resize: vertical; }
+.chauffeur-enquiry .rental-reference-shell :is(input, textarea)::placeholder { color: #6a7785; }
+.chauffeur-enquiry .rental-reference-shell :is(input, textarea):focus-visible { border-color: #02143c; outline: 3px solid rgb(2 20 60 / 0.18); outline-offset: 0; }
+.chauffeur-enquiry .rental-reference-shell input[type="time"] { appearance: none; min-width: 0; }
+/* The date field uses the shared calendar; its trigger matches the other fields here. */
+.chauffeur-enquiry .rv-date-picker__trigger { min-height: 46px; border-color: #d3dce6; border-radius: 10px; background: #fbfcfe; font-size: 15px; }
+
+/* Passengers / bags: − value + in one control. */
+.chauffeur-counter { display: grid; grid-template-columns: 46px minmax(0, 1fr) 46px; gap: 6px; }
+.chauffeur-counter button { display: grid; place-items: center; min-height: 46px; border: 1px solid #d3dce6; border-radius: 10px; background: #f1f5fb; color: #02143c; cursor: pointer; }
+.chauffeur-counter button:hover:not(:disabled) { background: #e5edf7; }
+.chauffeur-counter button:disabled { opacity: 0.45; cursor: not-allowed; }
+.chauffeur-counter button svg { width: 18px; height: 18px; }
+.chauffeur-enquiry .chauffeur-counter input { text-align: center; font-weight: 700; -moz-appearance: textfield; }
+.chauffeur-counter input::-webkit-outer-spin-button, .chauffeur-counter input::-webkit-inner-spin-button { margin: 0; -webkit-appearance: none; }
+
+/* Actions: the same button system, same height. */
+.chauffeur-enquiry .rental-form-actions > :is(.button, button) { min-height: 46px; padding-inline: 22px; }
+.chauffeur-primary { display: inline-flex; align-items: center; gap: 8px; }
+.chauffeur-primary svg { width: 18px; height: 18px; }
+[dir="rtl"] .chauffeur-primary svg { rotate: 180deg; }
+.chauffeur-ready { background: #f3f8f2; }
+
+/* Sidebar: summary and official contact. */
+.chauffeur-enquiry .rental-enquiry-summary h2 { margin: 6px 0 4px; font-size: 20px; }
+.chauffeur-enquiry .rental-enquiry-summary h3 { margin: 14px 0 4px; font-size: 15px; }
+.chauffeur-enquiry .rental-enquiry-summary p { color: #4f5d6b; font-size: 13.5px; line-height: 1.55; }
+.chauffeur-contact h3 { margin: 0 0 4px; color: #02143c; font-size: 16px; font-weight: 800; }
+.chauffeur-contact p { margin: 0; }
+.chauffeur-enquiry .chauffeur-contact a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  border: 1px solid #e2d3b6;
+  border-radius: 10px;
+  background: #fff;
+  color: #02143c;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.chauffeur-enquiry .chauffeur-contact a svg { width: 20px; height: 20px; margin: 0; color: #128c4b; }
+.chauffeur-enquiry .chauffeur-contact a bdi { margin-inline-start: auto; color: #4f5d6b; font-weight: 600; }
+[dir="rtl"] .chauffeur-enquiry .chauffeur-contact a svg { rotate: none; }
+
+/* Narrow screens: steps become a compact two-row grid; fields stack. */
+@media (max-width: 767px) {
+  .chauffeur-enquiry .rental-reference-shell .rental-progress { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .chauffeur-enquiry .rental-reference-shell .rental-progress li { font-size: 12px; }
+}
+@media (max-width: 599px) {
+  .chauffeur-enquiry .rental-form-fields { grid-template-columns: minmax(0, 1fr); }
+  .chauffeur-enquiry .rental-form-actions { flex-direction: column-reverse; align-items: stretch; }
+  .chauffeur-enquiry .rental-form-actions > :is(.button, button) { justify-content: center; width: 100%; }
+}
+@media (max-width: 767px) {
+  .chauffeur-enquiry .rental-reference-shell :is(input:not([type=checkbox]):not([type=hidden]), textarea),
+  .chauffeur-enquiry .rv-date-picker__trigger { font-size: 16px; }
+}

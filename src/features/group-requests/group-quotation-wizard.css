@@ -91,3 +91,27 @@
   .wizard-step:not([hidden]), .wizard-preview { animation: none; }
   .wizard-progress__marker { transition: none; }
 }
+
+/* Refinements (UI only): notice, spacing, calendar fields, services and the help card. */
+.wizard-notice { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border: 1px solid #ecdcc1; border-inline-start: 4px solid var(--gold); border-radius: 12px; background: #fffaf2; color: #4a3a1e; line-height: 1.55; }
+.wizard-notice > svg { flex: none; width: 20px; height: 20px; margin-top: 1px; color: #b7731e; }
+.wizard-notice p { margin: 0; font-size: 14px; }
+.wizard-notice strong { color: var(--navy); }
+.wizard-card { gap: var(--space-4); }
+.wizard-step:not([hidden]) { gap: var(--space-4); }
+.wizard-step__heading p { margin: 0; }
+.wizard-fields { gap: var(--space-4); }
+/* The shared calendar trigger matches the wizard's fields. */
+.group-wizard .rv-date-picker__trigger { min-height: 48px; border: 1px solid var(--border); border-radius: 10px; }
+.wizard-count input { font-weight: var(--weight-bold); -moz-appearance: textfield; }
+.wizard-count input::-webkit-outer-spin-button, .wizard-count input::-webkit-inner-spin-button { margin: 0; -webkit-appearance: none; }
+.wizard-count button:hover { background: #e5edf7; }
+.wizard-services label { min-height: 56px; border-radius: 12px; }
+.wizard-services label:has(input:checked) { background: #eef3fa; font-weight: var(--weight-heavy); }
+.wizard-help { align-items: flex-start; border-radius: 16px; background: var(--surface); }
+.wizard-help h2 { color: var(--navy); }
+@media (max-width: 599px) {
+  .wizard-actions { flex-direction: column-reverse; }
+  .wizard-actions .button { width: 100%; justify-content: center; }
+  .wizard-actions .button--outline { margin-inline-end: 0; }
+}

@@ -160,6 +160,27 @@ test.describe("API mode", () => {
     }
   });
 
+  test("the login card: full-width background, clear company ID guidance and a centred password toggle", async ({ page }) => {
+    await mockApi(page, {});
+    for (const width of [320, 390, 768, 1024, 1920]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/login");
+      // The hero background spans the whole viewport, with no horizontal scroll.
+      const hero = (await page.locator("#login").locator("xpath=..").boundingBox())!;
+      expect(Math.round(hero.width), `${width}px`).toBe(width);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth), `${width}px`).toBeLessThanOrEqual(width);
+      // The format is unchanged; only the guidance is clearer.
+      await expect(page.locator("#company-id")).toHaveAttribute("placeholder", /^e\.g\. [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+      await expect(page.locator("#company-id-help")).toHaveText("The 36-character company ID from your registration confirmation email.");
+      const input = (await page.locator("#password").boundingBox())!;
+      const toggle = (await page.locator(".password-toggle").boundingBox())!;
+      expect(Math.abs(input.y + input.height / 2 - (toggle.y + toggle.height / 2)), `${width}px`).toBeLessThanOrEqual(1);
+      if (width < 768) for (const id of ["#username", "#password"]) await expect(page.locator(id)).toHaveCSS("font-size", "16px");
+    }
+    await expect(page.getByRole("link", { name: "Register with us" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Forgot My Password/ })).toBeVisible();
+  });
+
   test("a reachable API shows no service notice", async ({ page }) => {
     const api = await mockApi(page, {});
     await page.goto("/login");

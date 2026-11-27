@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { visit } from "./helpers/demo-login";
+import { pickDate } from "./helpers/date-picker";
 import { selectLanguage, closeHeaderMenu } from "./helpers/header";
 
 for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
@@ -21,7 +22,7 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
       await page.getByLabel(/^(Full Name|الاسم الكامل)$/).fill("Fictional Passenger");
       await page.getByLabel(/^(Email Address|البريد الإلكتروني)$/).fill("enquiry@example.test");
       await page.getByLabel(/^(Pickup location|مكان الاستلام)$/).fill("Cairo Airport");
-      await page.getByLabel(/^(Travel date|تاريخ الرحلة)$/).fill("2030-11-20");
+      await pickDate(page, "chauffeur-date", "2030-11-20");
       await page.getByLabel(/^(Pickup time|وقت الاستلام)$/).fill("12:30");
       await page.getByLabel(/^(Destination|الوجهة)$/).fill("Cairo hotel");
       await page.getByLabel(/^(Passengers|المسافرون)$/).fill("3");

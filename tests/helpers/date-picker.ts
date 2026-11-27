@@ -1,10 +1,10 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 /**
- * Chooses a day in the hotel search calendar (`#check-in` / `#check-out`), as a user would: open it,
+ * Chooses a day in a shared calendar picker (e.g. `#check-in`, `#enquiry-start`, `#chauffeur-date`), as a user would: open it,
  * jump to the month and year, then press the day. Fails if the day is disabled (e.g. in the past).
  */
-export async function pickDate(scope: Page | Locator, id: "check-in" | "check-out", day: string) {
+export async function pickDate(scope: Page | Locator, id: string, day: string) {
   const [year, month] = day.split("-").map(Number);
   await scope.locator(`#${id}`).click();
   const panel = scope.locator(`[data-date-picker="${id}"] [data-date-panel]`);

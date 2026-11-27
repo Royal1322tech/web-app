@@ -61,7 +61,8 @@ test.describe("group quotation wizard", () => {
     await next(page).click();
     await expect(page.locator("#enquiry-name")).toHaveValue(groupContact.name);
     await page.locator(".wizard-progress button").first().click();
-    await expect(page.locator("#enquiry-start")).toHaveValue(groupTrip.start);
+    await expect(page.locator("#enquiry-start")).toHaveAttribute("data-value", groupTrip.start);
+    await expect(page.locator("#enquiry-end")).toHaveAttribute("data-value", groupTrip.end);
   });
 
   test("Enter in a field neither submits nor changes step, and steppers change the counts", async ({ page }) => {

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { visit } from "./helpers/demo-login";
+import { pickDate } from "./helpers/date-picker";
 import { formatAmount, formatMoney } from "../src/lib/money";
 
 /*
@@ -155,8 +156,16 @@ test.describe("demo build pages", () => {
     const pickup = page.locator('form#rental-search-form input[type=date]').first();
     await expect(pickup).toHaveAttribute("min", today);
     await visit(page, "/group-quotation");
-    await expect(page.locator("#enquiry-start")).toHaveAttribute("min", today);
-    await page.locator("#enquiry-start").fill("2031-03-10");
-    await expect(page.locator("#enquiry-end")).toHaveAttribute("min", "2031-03-10"); // end may equal departure
+    // Departure: today onwards (earlier days aren't offered). End: on or after departure (same day allowed).
+    await page.locator("#enquiry-start").click();
+    const startPanel = page.locator('[data-date-picker="enquiry-start"] [data-date-panel]');
+    await expect(startPanel.locator(`[data-date="${today}"]`)).toBeEnabled();
+    await expect(startPanel.locator("button[data-date]").first()).toHaveAttribute("data-date", today);
+    await page.keyboard.press("Escape");
+    await pickDate(page, "enquiry-start", "2031-03-10");
+    await page.locator("#enquiry-end").click();
+    const endPanel = page.locator('[data-date-picker="enquiry-end"] [data-date-panel]');
+    await expect(endPanel.locator("button[data-date]").first()).toHaveAttribute("data-date", "2031-03-10");
+    await expect(endPanel.locator('[data-date="2031-03-09"]')).toHaveCount(0);
   });
 });

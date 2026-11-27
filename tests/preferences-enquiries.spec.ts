@@ -2,6 +2,7 @@ import { selectLanguage } from "./helpers/header";
 import { visit } from "./helpers/demo-login";
 import { expect, test } from '@playwright/test';
 import { openHeaderTools } from './helpers/header';
+import { pickDate } from './helpers/date-picker';
 
 for (const width of [320,375,390,430,768,1024,1440]) {
   test(`travel preferences remain independent and fit ${width}px`, async ({page}) => {
@@ -75,11 +76,13 @@ test('contact and group quotation validate locally without sending requests', as
       await expect(page.getByText('Enter a destination or route.',{exact:true})).toBeVisible();
       await page.locator('#enquiry-destination').fill('Cairo');
       await page.locator('#enquiry-passengers').fill('12');
-      await page.locator('#enquiry-start').fill('2030-11-20');
-      await page.locator('#enquiry-end').fill('2030-11-19');
-      await page.getByRole('button',{name:'Next step',exact:true}).click();
-      await expect(page.getByText('Choose an end date on or after departure.',{exact:true})).toBeVisible();
-      await page.locator('#enquiry-end').fill('2030-11-22');
+      await pickDate(page,'enquiry-start','2030-11-20');
+      // An end date before departure can't be chosen: the calendar doesn't offer it.
+      await page.locator('#enquiry-end').click();
+      await page.locator('[data-date-picker="enquiry-end"] [data-date-panel]').getByLabel('Month',{exact:true}).selectOption('10');
+      await expect(page.locator('[data-date-picker="enquiry-end"] [data-date="2030-11-19"]')).toHaveCount(0);
+      await page.keyboard.press('Escape');
+      await pickDate(page,'enquiry-end','2030-11-22');
       await page.getByRole('button',{name:'Next step',exact:true}).click();
       await page.getByRole('button',{name:'Next step',exact:true}).click();
       await expect(page.getByText('Enter your name.',{exact:true})).toBeVisible();

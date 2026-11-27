@@ -7,7 +7,7 @@ import { useDemo } from "@/features/demo/demo-provider";
 import { TravelPreferences } from "@/features/preferences/travel-preferences";
 import { Popover } from "@/components/ui/popover";
 import { LanguageSelector } from "@/features/localization/language-selector";
-import { Icon } from "@/components/ui/icon";
+import { Icon, type IconName } from "@/components/ui/icon";
 import { useB2BSession } from "@/features/auth/b2b-session";
 import { apiAuthEnabled } from "@/features/auth/auth-config";
 import styles from "./site-header.module.css";
@@ -69,12 +69,13 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
       {/* One panel on phones and tablets (floating under the bar); layout-neutral on desktop. */}
       <div className={styles.menuPanel}>
       <nav id="home-navigation" aria-label={t("Main navigation", "التنقل الرئيسي")} className={styles.navigation}>
-        {[
-          ["/", t("Home", "الرئيسية")], ["/search", t("Search", "بحث")],
-          ["/car-rental", t("Car Rental", "تأجير السيارات")], ["/bookings", t("My Bookings", "حجوزاتي")],
-          ["/group-quotation", t("Group Quotation", "عرض سعر للمجموعات")],
-          ["/wallet", t("Wallet", "المحفظة")], ...(favouritesVisible ? [["/favourites", t("Favourites", "المفضلة")]] : []), ["/contact", t("Contact Us", "تواصل معنا")],
-        ].map(([href, label]) => <Link key={href} to={href} aria-current={active(href) ? "page" : undefined} onClick={close}>{label}</Link>)}
+        {/* The icons show only in the phone/tablet menu; the desktop bar stays text-only. */}
+        {([
+          ["/", t("Home", "الرئيسية"), "home"], ["/search", t("Search", "بحث"), "search"],
+          ["/car-rental", t("Car Rental", "تأجير السيارات"), "car"], ["/bookings", t("My Bookings", "حجوزاتي"), "calendar"],
+          ["/group-quotation", t("Group Quotation", "عرض سعر للمجموعات"), "users"],
+          ["/wallet", t("Wallet", "المحفظة"), "tag"], ...(favouritesVisible ? [["/favourites", t("Favourites", "المفضلة"), "heart"]] : []), ["/contact", t("Contact Us", "تواصل معنا"), "headset"],
+        ] as [string, string, IconName][]).map(([href, label, icon]) => <Link key={href} to={href} aria-current={active(href) ? "page" : undefined} onClick={close}><Icon name={icon} className={styles.navIcon} aria-hidden="true" />{label}</Link>)}
       </nav>
       <div id="header-tools" className={styles.tools}>
         <div className={styles.preferences} role="group" aria-label={t("Language and preferences", "اللغة والتفضيلات")}>
@@ -82,7 +83,7 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
           <TravelPreferences />
         </div>
         <div className={styles.icons}>
-          <Link to="/notifications" onClick={close} aria-label={t("Notifications", "الإشعارات")} title={t("Notifications", "الإشعارات")}><Icon name="bell" /></Link>
+          <Link to="/notifications" onClick={close} aria-label={t("Notifications", "الإشعارات")} title={t("Notifications", "الإشعارات")}><Icon name="bell" /><span className={styles.iconLabel} aria-hidden="true">{t("Notifications", "الإشعارات")}</span></Link>
           {/* The example checkout isn't the real booking flow (rooms → draft → confirm), so real sign-in has no cart. */}
           {!apiAuthEnabled && <Link to="/booking/summary" onClick={close} aria-label={t("Booking summary", "ملخص الحجز")} title={t("Booking summary", "ملخص الحجز")}><Icon name="cart" /></Link>}
           {demoSessionActive ? <Popover key={navigationKey} triggerClassName={styles.profileTrigger} panelClassName={styles.accountPanel} label={t("Account menu", "قائمة الحساب")} trigger={<Icon name="personFilled" />}>

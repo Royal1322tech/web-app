@@ -1,5 +1,5 @@
 .page,.header { --header-offset:12px; --header-height:72px; }
-.page { --header-space:calc(var(--header-offset) + var(--header-height)); max-width:1440px; margin:0 auto; color:#172333; background:#fff; }
+.page { --header-space:calc(var(--header-offset) + var(--header-height)); max-width:none; margin:0 auto; color:#172333; background:#fff; }
 .skip { position:absolute; z-index:100; inset-block-start:8px; inset-inline-start:8px; transform:translateY(-180%); padding:12px 16px; background:#fff; border:2px solid var(--brand); border-radius:8px; }
 .skip:focus { transform:none; }
 .header { position:sticky; z-index:30; inset-block-start:0; display:flex; align-items:center; justify-content:space-between; gap:24px; box-sizing:border-box; width:var(--page-width); block-size:var(--header-height); margin:var(--header-offset) auto 0; padding:0 18px; border:1px solid #dbe4ec; border-radius:16px; background:#fffffff2; box-shadow:0 8px 26px #102c4214; backdrop-filter:blur(16px); }
@@ -119,4 +119,19 @@
 /* A full company ID (36 characters) fits the field on small phones. */
 @media (max-width: 420px) {
   .loginCard :global(#company-id) { font-size: 12.5px; letter-spacing: 0; }
+}
+
+/* Login card refinements (both sign-in builds). */
+.loginCard h1 { letter-spacing:-0.01em; }
+.loginCard :global(.login-form label) { color:#102d52; font-weight:700; }
+.loginCard :global(.login-form .input-wrap .input) { border-radius:12px; }
+.loginCard :global(.login-form .password-toggle) { inset-block-start:50%; transform:translateY(-50%); color:#4f5d6b; border-radius:10px; }
+.loginCard :global(.login-form__field-help) { margin:6px 0 0; color:#5b6470; font-size:12.5px; line-height:1.5; }
+/* Registration: a clear secondary action under the sign-in button. */
+.loginCard :global(.login-form__registration .text-button) { display:inline-flex; align-items:center; min-height:32px; padding:0 14px; border:1px solid #c9d6e3; border-radius:999px; color:#102d52; font-weight:800; text-decoration:none; }
+.loginCard :global(.login-form__registration .text-button:hover) { border-color:#102d52; background:#f1f5fb; }
+@media (max-width:599px) {
+  .loginCard { padding:22px 18px; border-radius:18px; }
+  .loginCard :global(.login-form__registration) { flex-direction:column; }
+  .loginCard :global(.login-form__registration .text-button) { min-height:44px; padding-inline:20px; } /* touch target */
 }

@@ -153,8 +153,8 @@ export function ApiLoginForm() {
       </FormField>
       {authConfig.companyIdEntry && (
         <FormField id="company-id" label={t("Company ID", "معرّف الشركة")} error={errors.companyId}>
-          <Input id="company-id" name="companyId" ref={companyRef} autoComplete="off" spellCheck={false} dir="ltr" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" required aria-invalid={!!errors.companyId} aria-describedby={["company-id-help", errors.companyId ? "company-id-error" : ""].filter(Boolean).join(" ")} />
-          <p id="company-id-help" className="fine-print login-form__field-help">{t("The company ID from your registration confirmation.", "معرّف الشركة الوارد في تأكيد تسجيلك.")}</p>
+          <Input id="company-id" name="companyId" ref={companyRef} autoComplete="off" spellCheck={false} dir="ltr" placeholder="e.g. 8f14e45f-ceea-467a-9575-3c4b1f0b5c1a" required aria-invalid={!!errors.companyId} aria-describedby={["company-id-help", errors.companyId ? "company-id-error" : ""].filter(Boolean).join(" ")} />
+          <p id="company-id-help" className="fine-print login-form__field-help">{t("The 36-character company ID from your registration confirmation email.", "معرّف الشركة المكوّن من 36 حرفًا في بريد تأكيد تسجيلك.")}</p>
         </FormField>
       )}
       <Link to="/forgot-password" className="text-button login-form__forgot">
@@ -172,7 +172,7 @@ export function ApiLoginForm() {
         <span>{t("Don't have an account?", "ليس لديك حساب؟")}</span>
         <Link to="/register/agency" className="text-button">{t("Register with us", "سجل معنا")}</Link>
       </div>
-      <p className="fine-print">{t("Sign in with your email, password and company ID. The first time after approval, you'll also confirm a one-time code sent to your email.", "سجّل الدخول ببريدك الإلكتروني وكلمة المرور ومعرّف الشركة. في أول مرة بعد الاعتماد، ستؤكد أيضًا رمزًا لمرة واحدة يُرسل إلى بريدك الإلكتروني.")}</p>
+      <p className="fine-print">{t("Sign in with your email, password and company ID. First sign-in after approval: enter the one-time code we email you.", "سجّل الدخول ببريدك الإلكتروني وكلمة المرور ومعرّف الشركة. أول دخول بعد الاعتماد: أدخل الرمز لمرة واحدة الذي نرسله إلى بريدك.")}</p>
       <div role="status" aria-live="polite">
         {(notice || statusNotice) && <p className="availability-notice">{notice || statusNotice}</p>}
         {coolingDown && (

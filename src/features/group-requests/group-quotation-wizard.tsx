@@ -1,4 +1,5 @@
 import { isCalendarDay, useLocalToday } from "@/lib/stay-dates";
+import { DatePicker } from "@/components/ui/date-picker";
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useWatch, type UseFormReturn } from "react-hook-form";
@@ -30,6 +31,7 @@ export function GroupQuotationWizard({ form, preview, onPreviewChange, onSave }:
   // Date pickers follow the existing rules: departure today or later, end on or after departure.
   const today = useLocalToday();
   const startValue = useWatch({ control, name: "start" }) ?? "";
+  const endValue = useWatch({ control, name: "end" }) ?? "";
   const dateMin: Partial<Record<string, string>> = { start: today, end: isCalendarDay(startValue) && startValue >= today ? startValue : today };
   const serviceLabel = useServiceLabel();
   const [step, setStep] = useState<Step>(0);
@@ -69,7 +71,6 @@ export function GroupQuotationWizard({ form, preview, onPreviewChange, onSave }:
           required={options.required}
           autoComplete={options.autoComplete}
           placeholder={options.placeholder}
-          min={options.type === "date" ? dateMin[key] : undefined}
           dir={options.type === "email" ? "ltr" : undefined}
           aria-invalid={!!errors[key]}
           aria-describedby={errors[key] ? `enquiry-${key}-error` : undefined}
@@ -78,17 +79,36 @@ export function GroupQuotationWizard({ form, preview, onPreviewChange, onSave }:
       </div>
     </FormField>
   );
+  const dateField = (key: "start" | "end", label: string) => (
+    <FormField id={`enquiry-${key}`} label={label} required error={errors[key]?.message}>
+      <input type="hidden" {...register(key)} />
+      {/* The shared calendar: days before the earliest allowed date aren't shown; same value and validation. */}
+      <DatePicker
+        id={`enquiry-${key}`}
+        align={key === "end" ? "end" : "start"}
+        value={key === "start" ? startValue : endValue}
+        min={dateMin[key] ?? today}
+        locale={locale === "ar" ? "ar" : "en"}
+        placeholder={t("Select date", "اختر التاريخ")}
+        invalid={!!errors[key]}
+        describedBy={errors[key] ? `enquiry-${key}-error` : undefined}
+        onChange={(next) => { setValue(key, next, { shouldDirty: true, shouldValidate: !!errors[key] }); onPreviewChange(false); }}
+      />
+    </FormField>
+  );
+  // The existing limits: passengers 1–5000, rooms 1–1000 (rooms optional).
+  const countMax = { passengers: 5000, rooms: 1000 } as const;
   const count = (key: "passengers" | "rooms", label: string, required: boolean) => {
     const change = (by: number) => {
       const current = Number(getValues(key));
-      const value = Number.isInteger(current) && current > 0 ? Math.max(1, current + by) : 1;
+      const value = Number.isInteger(current) && current > 0 ? Math.min(countMax[key], Math.max(1, current + by)) : 1;
       setValue(key, String(value), { shouldDirty: true, shouldValidate: !!errors[key] });
     };
     return (
       <FormField id={`enquiry-${key}`} label={label} required={required} error={errors[key]?.message}>
         <div className="wizard-count">
           <button type="button" aria-label={t(`Decrease ${label}`, `تقليل ${label}`)} onClick={() => change(-1)}><Icon name="minus" /></button>
-          <input id={`enquiry-${key}`} className="input" type="number" min={1} step={1} required={required} aria-invalid={!!errors[key]} aria-describedby={errors[key] ? `enquiry-${key}-error` : undefined} {...register(key)} />
+          <input id={`enquiry-${key}`} className="input" type="number" inputMode="numeric" min={1} max={countMax[key]} step={1} required={required} placeholder={required ? undefined : t("Optional", "اختياري")} aria-invalid={!!errors[key]} aria-describedby={errors[key] ? `enquiry-${key}-error` : undefined} {...register(key)} />
           <button type="button" aria-label={t(`Increase ${label}`, `زيادة ${label}`)} onClick={() => change(1)}><Icon name="plus" /></button>
         </div>
       </FormField>
@@ -138,14 +158,17 @@ export function GroupQuotationWizard({ form, preview, onPreviewChange, onSave }:
         onChange={() => onPreviewChange(false)}
         onSubmit={handleSubmit(async () => { await Promise.resolve(); onPreviewChange(true); }, () => onPreviewChange(false))}
       >
-        <p className="wizard-notice">{t("Online sending isn't available yet. Review your details here, then send them to us on WhatsApp or by email.", "الإرسال عبر الإنترنت غير متاح حاليًا. راجع بياناتك هنا ثم أرسلها إلينا عبر واتساب أو البريد الإلكتروني.")}</p>
+        <div className="wizard-notice" role="note">
+          <Icon name="info" aria-hidden="true" />
+          <p><strong>{t("How it works", "كيف يعمل")}</strong>{" "}{t("Fill in your group's details and review them. Then send them to us on WhatsApp or by email, and our team will reply with a quotation. Online sending isn't available yet.", "أدخل بيانات مجموعتك وراجعها، ثم أرسلها إلينا عبر واتساب أو البريد الإلكتروني وسيرد فريقنا بعرض سعر. الإرسال عبر الإنترنت غير متاح بعد.")}</p>
+        </div>
 
         <div className="wizard-step" hidden={step !== 0}>
           {heading(0, t("Where is your group going, and when?", "إلى أين ستسافر مجموعتك ومتى؟"))}
           <div className="wizard-fields">
-            <div className="wizard-span">{text("destination", t("Destination / route", "الوجهة / المسار"), { icon: "pin", required: true })}</div>
-            {text("start", t("Departure date", "تاريخ المغادرة"), { type: "date", required: true })}
-            {text("end", t("End date", "تاريخ النهاية"), { type: "date", required: true })}
+            <div className="wizard-span">{text("destination", t("Destination / route", "الوجهة / المسار"), { icon: "pin", required: true, placeholder: t("e.g. Cairo → Luxor → Aswan", "مثال: القاهرة ← الأقصر ← أسوان") })}</div>
+            {dateField("start", t("Departure date", "تاريخ المغادرة"))}
+            {dateField("end", t("End date", "تاريخ النهاية"))}
             {count("passengers", t("Passengers", "المسافرون"), true)}
             {count("rooms", t("Rooms needed (optional)", "الغرف المطلوبة (اختياري)"), false)}
             <fieldset className="wizard-span wizard-services">
