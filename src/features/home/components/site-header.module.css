@@ -79,6 +79,8 @@
 .accountGroup { display: grid; padding-block: 4px; }
 .accountGroup + .accountGroup { border-block-start: 1px solid var(--border); }
 .accountGroupLabel { margin: 6px 10px 2px; color: #5b6470; font-size: 11.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+/* With Points the account menu is one link longer: it fits a 900px-tall screen whole (see maxHeight in site-header.tsx); shorter screens still scroll inside it. */
+:global(.rv-popover-panel).accountPanel { max-height: min(620px, calc(100dvh - 120px)); }
 
 /* Phone/tablet menu refinements. Desktop (1200px+) is unchanged: these icons and labels are hidden there. */
 .navIcon, .iconLabel { display: none; }

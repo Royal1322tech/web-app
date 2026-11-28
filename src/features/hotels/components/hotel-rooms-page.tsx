@@ -1,5 +1,5 @@
 import { formatMoney } from "@/lib/money";
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useParams, useSearchParams } from "react-router-dom";
 import { BackLink } from "@/components/ui/back-link";
 import { Icon } from "@/components/ui/icon";
@@ -31,7 +31,8 @@ import { destinationName } from "../lib/destination-name";
 import { hotelImageUrl, mealLabel } from "../lib/live-hotels";
 import { readHotelSummary, type RoomsHotelSummary } from "../lib/rooms-route";
 import { readStayQuery, stayQuery } from "../lib/stay-query";
-import { BookingDraftForm } from "./booking-draft-form";
+import { BookingDraftForm, type BookingStage } from "./booking-draft-form";
+import type { ConfirmationView } from "@/features/bookings/live/b2b-booking-confirm";
 import { CatalogShell } from "./catalog-shell";
 import styles from "./hotel-rooms-page.module.css";
 
@@ -40,7 +41,8 @@ type Text = [en: string, ar: string];
 /**
  * Rooms → select → prebook (price recheck) → review, for one hotel. Every token stays in this
  * component's memory: nothing is written to storage or the URL, and leaving or reloading the page
- * starts the flow again. Final booking is not available, so the last step is review only.
+ * starts the flow again. After the price check, booking follows five steps on this page: Summary,
+ * Guest details, Cancellation policy, Payment details and Result (see Review).
  */
 export function HotelRoomsPage() {
   const { t, locale } = useLocale();
@@ -285,7 +287,8 @@ function RoomsFlow({ hid, request: initialRequest, searchHref, onRoomNames, redu
 
   return (
     <div className={styles.flow}>
-      <Steps current={currentStep} />
+      {/* After the price check the five booking steps take over (see Review). */}
+      {flow.step !== "review" && <Steps current={currentStep} />}
 
       {flow.step === "rooms" && rooms.status === "loading" && <RatesSkeleton />}
 
@@ -336,8 +339,7 @@ function RoomsFlow({ hid, request: initialRequest, searchHref, onRoomNames, redu
           onChooseAnother={chooseAnother}
           onRefresh={refreshRooms}
           searchHref={searchHref}
-          occupancy={request.guests}
-          residency={request.residency}
+          request={request}
         />
       )}
     </div>
@@ -534,9 +536,30 @@ function RateSummary({ rate, label, price, provisional = false }: { rate: RoomRa
   );
 }
 
-function Review({ headingRef, step, now, onAccept, onChooseAnother, onRefresh, searchHref, occupancy, residency }: {
-  occupancy: RoomsRequest["guests"];
-  residency: string;
+const BOOKING_STEPS: Text[] = [["Summary", "الملخص"], ["Guest details", "بيانات الضيوف"], ["Cancellation Policy", "سياسة الإلغاء"], ["Payment Details", "بيانات الدفع"], ["Result", "النتيجة"]];
+
+/** The five booking steps. Steps already reached can be revisited until the draft is created. */
+function BookingProgress({ current, reached, locked, onGo }: { current: BookingStage; reached: BookingStage; locked: boolean; onGo: (stage: BookingStage) => void }) {
+  const { t } = useLocale();
+  return (
+    <ol className={styles.bookingSteps} aria-label={t("Booking progress", "مراحل الحجز")}>
+      {BOOKING_STEPS.map((label, index) => {
+        const position = (index + 1) as BookingStage;
+        const state = position === current ? "current" : position < current ? "done" : "next";
+        const content = <><span className={styles.bookingStepMark} aria-hidden="true">{state === "done" ? <Icon name="check" /> : position}</span><span>{t(...label)}</span></>;
+        const canGo = !locked && position !== current && position <= reached && position <= 4;
+        return (
+          <li key={label[0]} data-state={state} aria-current={state === "current" ? "step" : undefined}>
+            {canGo ? <button type="button" onClick={() => onGo(position)}>{content}</button> : <span className={styles.bookingStepStatic}>{content}</span>}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function Review({ headingRef, step, now, onAccept, onChooseAnother, onRefresh, searchHref, request }: {
+  request: RoomsRequest;
   headingRef: React.RefObject<HTMLHeadingElement | null>;
   step: Extract<Step, { step: "review" }>;
   now: number;
@@ -555,6 +578,23 @@ function Review({ headingRef, step, now, onAccept, onChooseAnother, onRefresh, s
   const expired = remaining === 0;
   const changed = review.price_changed;
   const roomName = review.room_name ?? step.selection.value.room_name ?? step.rate.room_name;
+  const [stage, setStage] = useState<BookingStage>(1);
+  const [reached, setReached] = useState<BookingStage>(1);
+  const [draftCreated, setDraftCreated] = useState(false);
+  const [confirmView, setConfirmView] = useState<ConfirmationView>("draft");
+  const stageHeading = useRef<HTMLHeadingElement>(null);
+  // The Result step opens only when the backend reports something other than a draft.
+  const shown: BookingStage = draftCreated && confirmView !== "draft" ? 5 : draftCreated ? 4 : stage;
+  const go = useCallback((next: BookingStage) => { setStage(next); setReached((current) => (next > current ? next : current)); }, []);
+  const onCreated = useCallback(() => { setDraftCreated(true); setReached(4); }, []);
+  // Moving between steps puts focus on the new step's heading (the first view keeps it on the page heading).
+  const firstStage = useRef(true);
+  useEffect(() => {
+    if (firstStage.current) { firstStage.current = false; return; }
+    if (shown === 1 || shown === 3) stageHeading.current?.focus();
+    if (shown === 2) document.querySelector<HTMLElement>("[data-booking-step=guests] [data-step-heading]")?.focus();
+  }, [shown]);
+  const canContinue = !expired && (!changed || step.accepted);
 
   if (!latest) {
     // The recheck came back without a confirmed price: nothing can go forward.
@@ -570,65 +610,126 @@ function Review({ headingRef, step, now, onAccept, onChooseAnother, onRefresh, s
     );
   }
 
+  const nights = Math.round((Date.parse(request.checkout) - Date.parse(request.checkin)) / 86_400_000);
+  const date = (value: string) => new Date(`${value}T00:00:00Z`).toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  const adults = request.guests.reduce((sum, room) => sum + room.adults, 0);
+  const children = request.guests.reduce((sum, room) => sum + room.children.length, 0);
+  const stateName = expired && !draftCreated ? "review-expired" : changed && !step.accepted ? "review-price-changed" : "review";
   return (
-    <section className={styles.panel} aria-labelledby="review-title" data-rooms-state={expired ? "review-expired" : changed && !step.accepted ? "review-price-changed" : "review"}>
+    <section className={styles.panel} aria-labelledby="review-title" data-rooms-state={stateName} data-booking-stage={shown}>
       <h2 id="review-title" ref={headingRef} tabIndex={-1} className={styles.reviewTitle}>
         {changed && !step.accepted ? t("The price has changed", "تغيّر السعر") : t("Review your room", "راجع غرفتك")}
       </h2>
+      <BookingProgress current={shown} reached={reached} locked={draftCreated} onGo={go} />
 
-      {changed && (
-        <div className={styles.changed} role="alert">
-          <p className={styles.changedLead}><Icon name="info" />{t("The supplier returned a new price for this room.", "أعاد المورد سعرًا جديدًا لهذه الغرفة.")}</p>
-          <dl className={styles.compare}>
-            {before && <div><dt>{t("Previous price", "السعر السابق")}</dt><dd><s><Money amount={before.amount} currency={before.currency} /></s></dd></div>}
-            <div data-new><dt>{t("New price", "السعر الجديد")}</dt><dd><Money amount={latest.amount} currency={latest.currency} /></dd></div>
-          </dl>
-          {!step.accepted && !expired && (
-            <form className={styles.ack} onSubmit={(event) => { event.preventDefault(); if (ticked) onAccept(); }}>
-              <label htmlFor={ackId}>
-                <input id={ackId} type="checkbox" checked={ticked} onChange={(event) => setTicked(event.target.checked)} />
-                <span>{t("I accept the new price of", "أوافق على السعر الجديد")} <Money amount={latest.amount} currency={latest.currency} /></span>
-              </label>
-              <button type="submit" className="button button--primary" disabled={!ticked}>{t("Accept new price", "قبول السعر الجديد")}</button>
-            </form>
-          )}
-          {step.accepted && <p className={styles.accepted} role="status"><Icon name="check" />{t("New price accepted.", "تم قبول السعر الجديد.")}</p>}
-        </div>
-      )}
-
-      <div className={styles.reviewBody} data-locale={locale}>
-        <dl className={styles.reviewList}>
-          <div><dt>{t("Room", "الغرفة")}</dt><dd><bdi>{roomName ?? t("Room type not provided", "لم يُذكر نوع الغرفة")}</bdi></dd></div>
-          {step.rate.meal_name && <div><dt>{t("Meals", "الوجبات")}</dt><dd><bdi>{mealLabel(step.rate.meal_name, locale === "ar" ? "ar" : "en")}</bdi></dd></div>}
-          {step.rate.bedding_type && <div><dt>{t("Bedding", "الأسرّة")}</dt><dd><bdi>{step.rate.bedding_type}</bdi></dd></div>}
-          <div><dt>{t("Price check", "التحقق من السعر")}</dt><dd>{changed ? t("Price changed", "تغيّر السعر") : t("Price confirmed", "تم تأكيد السعر")}</dd></div>
-        </dl>
-        <PriceBlock price={review.price} emphasis />
-      </div>
-
-      {expired ? (
+      {expired && !draftCreated ? (
         <p className={styles.expiredBar} role="alert">
           {t("This price check has expired. Refresh the rates and choose the room again.", "انتهت صلاحية التحقق من السعر. حدّث الأسعار واختر الغرفة مرة أخرى.")}
           <button type="button" className="button button--primary" onClick={onRefresh}>{t("Refresh rates", "تحديث الأسعار")}</button>
         </p>
-      ) : (
+      ) : !draftCreated && (
         // The review_token expires; this isn't a price hold or a reservation.
         <p className={styles.timer}><Icon name="clock" />{t("This price check is valid for", "التحقق من السعر صالح لمدة")} <strong><Countdown seconds={remaining} /></strong></p>
       )}
 
-      {/* Kept mounted after expiry so a draft that was already created stays visible. */}
-      {(!changed || step.accepted) && (
-        <BookingDraftForm reviewToken={review.review_token} occupancy={occupancy} nationality={residency} expiresAt={step.review.expiresAt} expired={expired} onRefresh={onRefresh} />
-      )}
+      <div className={styles.bookingGrid}>
+        <div className={styles.bookingMain}>
+          {shown === 1 && (
+            <section className={styles.stepCard} data-booking-step="summary" aria-labelledby={`${ackId}-summary`}>
+              <p className={styles.stepEyebrow}>{t("01 · BOOKING SUMMARY", "٠١ · ملخص الحجز")}</p>
+              <h3 id={`${ackId}-summary`} ref={stageHeading} tabIndex={-1}>{t("Check the room and price", "تحقق من الغرفة والسعر")}</h3>
+              {changed && (
+                <div className={styles.changed} role="alert">
+                  <p className={styles.changedLead}><Icon name="info" />{t("The supplier returned a new price for this room.", "أعاد المورد سعرًا جديدًا لهذه الغرفة.")}</p>
+                  <dl className={styles.compare}>
+                    {before && <div><dt>{t("Previous price", "السعر السابق")}</dt><dd><s><Money amount={before.amount} currency={before.currency} /></s></dd></div>}
+                    <div data-new><dt>{t("New price", "السعر الجديد")}</dt><dd><Money amount={latest.amount} currency={latest.currency} /></dd></div>
+                  </dl>
+                  {!step.accepted && !expired && (
+                    <form className={styles.ack} onSubmit={(event) => { event.preventDefault(); if (ticked) onAccept(); }}>
+                      <label htmlFor={ackId}>
+                        <input id={ackId} type="checkbox" checked={ticked} onChange={(event) => setTicked(event.target.checked)} />
+                        <span>{t("I accept the new price of", "أوافق على السعر الجديد")} <Money amount={latest.amount} currency={latest.currency} /></span>
+                      </label>
+                      <button type="submit" className="button button--primary" disabled={!ticked}>{t("Accept new price", "قبول السعر الجديد")}</button>
+                    </form>
+                  )}
+                  {step.accepted && <p className={styles.accepted} role="status"><Icon name="check" />{t("New price accepted.", "تم قبول السعر الجديد.")}</p>}
+                </div>
+              )}
+              <div className={styles.reviewBody} data-locale={locale}>
+                <dl className={styles.reviewList}>
+                  <div><dt>{t("Room", "الغرفة")}</dt><dd><bdi>{roomName ?? t("Room type not provided", "لم يُذكر نوع الغرفة")}</bdi></dd></div>
+                  {step.rate.meal_name && <div><dt>{t("Meals", "الوجبات")}</dt><dd><bdi>{mealLabel(step.rate.meal_name, locale === "ar" ? "ar" : "en")}</bdi></dd></div>}
+                  {step.rate.bedding_type && <div><dt>{t("Bedding", "الأسرّة")}</dt><dd><bdi>{step.rate.bedding_type}</bdi></dd></div>}
+                  <div><dt>{t("Price check", "التحقق من السعر")}</dt><dd>{changed ? t("Price changed", "تغيّر السعر") : t("Price confirmed", "تم تأكيد السعر")}</dd></div>
+                </dl>
+                <PriceBlock price={review.price} emphasis />
+              </div>
+              <p className={styles.bookingNotice} role="note">
+                <Icon name="info" />
+                <span>{t("This is a price check, not a reservation. Continuing only moves to the next step; nothing is sent or charged.", "هذا تحقق من السعر وليس حجزًا. المتابعة تنقلك إلى الخطوة التالية فقط، ولا يُرسل أو يُخصم أي شيء.")}</span>
+              </p>
+              <div className={styles.stepActions}>
+                <button type="button" className="button button--outline" onClick={onChooseAnother}>{t("Choose another room", "اختيار غرفة أخرى")}</button>
+                <Link className="button button--ghost" to={searchHref}>{t("Back to search results", "العودة إلى نتائج البحث")}</Link>
+                <button type="button" className="button button--primary" disabled={!canContinue} onClick={() => go(2)}>{t("Continue to guest details", "المتابعة إلى بيانات الضيوف")}</button>
+              </div>
+            </section>
+          )}
 
-      <p className={styles.bookingNotice} role="note">
-        <Icon name="info" />
-        <span>{t("This is a price check, not a reservation. You can save it as a booking draft.", "هذا تحقق من السعر وليس حجزًا. يمكنك حفظه كمسودة حجز.")}</span>
-      </p>
+          {shown === 3 && (
+            <section className={styles.stepCard} data-booking-step="policy" aria-labelledby={`${ackId}-policy`}>
+              <p className={styles.stepEyebrow}>{t("03 · CANCELLATION POLICY", "٠٣ · سياسة الإلغاء")}</p>
+              <h3 id={`${ackId}-policy`} ref={stageHeading} tabIndex={-1}>{t("Cancellation Policy", "سياسة الإلغاء")}</h3>
+              {/* The price check doesn't include cancellation terms yet. When the API sends them, they belong here. */}
+              <div className={styles.policyUnavailable} data-policy="not-provided">
+                <h4>{t("Not provided for this rate", "غير متوفرة لهذا السعر")}</h4>
+                <p>{t("The supplier's cancellation terms aren't included in this price check, so no deadline or fee is shown. Ask Royal Vacation for the terms before you confirm.", "لا تتضمن نتيجة التحقق من السعر شروط الإلغاء لدى المورد، لذلك لا يُعرض موعد نهائي أو رسوم. اطلب الشروط من رويال فاكيشن قبل التأكيد.")}</p>
+                <Link to="/contact">{t("Contact Royal Vacation", "تواصل مع رويال فاكيشن")}</Link>
+              </div>
+              <div className={styles.stepActions}>
+                <button type="button" className="button button--outline" onClick={() => go(2)}>{t("Back to guest details", "العودة إلى بيانات الضيوف")}</button>
+                <button type="button" className="button button--primary" disabled={expired} onClick={() => go(4)}>{t("Continue to Payment Details", "المتابعة إلى بيانات الدفع")}</button>
+              </div>
+            </section>
+          )}
 
-      <div className={styles.actions}>
-        <button type="button" className="button button--outline" onClick={onChooseAnother}>{t("Choose another room", "اختيار غرفة أخرى")}</button>
-        <Link className="button button--ghost" to={searchHref}>{t("Back to search results", "العودة إلى نتائج البحث")}</Link>
+          {/* Mounted for every step once the price is accepted, so guest details are kept; it shows steps 2, 4 and 5. */}
+          {(!changed || step.accepted) && (
+            <BookingDraftForm
+              reviewToken={review.review_token}
+              occupancy={request.guests}
+              nationality={request.residency}
+              expiresAt={step.review.expiresAt}
+              expired={expired}
+              onRefresh={onRefresh}
+              stage={shown}
+              onStage={go}
+              onCreated={onCreated}
+              onConfirmView={setConfirmView}
+              prices={{ customer: latest.amount, agency: latest.agencyAmount ?? null, currency: latest.currency }}
+            />
+          )}
+        </div>
+
+        <aside className={styles.bookingSidebar} aria-label={t("Your booking", "حجزك")}>
+          <p className={styles.stepEyebrow}>{t("YOUR SELECTED STAY", "إقامتك المختارة")}</p>
+          <p className={styles.sidebarRoom}><bdi>{roomName ?? t("Room type not provided", "لم يُذكر نوع الغرفة")}</bdi></p>
+          {step.rate.meal_name && <p className={styles.summaryMeta}><bdi>{mealLabel(step.rate.meal_name, locale === "ar" ? "ar" : "en")}</bdi></p>}
+          <dl className={styles.sidebarFacts}>
+            <div><dt>{t("Check-in", "الوصول")}</dt><dd><bdi>{date(request.checkin)}</bdi></dd></div>
+            <div><dt>{t("Check-out", "المغادرة")}</dt><dd><bdi>{date(request.checkout)}</bdi></dd></div>
+            <div><dt>{t("Rooms / nights", "الغرف / الليالي")}</dt><dd><bdi dir="ltr">{request.guests.length} / {nights}</bdi></dd></div>
+            <div><dt>{t("Adults / children", "البالغون / الأطفال")}</dt><dd><bdi dir="ltr">{adults} / {children}</bdi></dd></div>
+          </dl>
+          {/* The checked price, exactly as sent (the step's own price block carries the details). */}
+          <dl className={styles.sidebarFacts} data-sidebar-price>
+            <div className={styles.sidebarTotal}><dt>{t("Customer price", "سعر العميل")}</dt><dd><Money amount={latest.amount} currency={latest.currency} /></dd></div>
+            {latest.agencyAmount && <div><dt>{t("Agency price", "سعر الوكالة")}</dt><dd><Money amount={latest.agencyAmount} currency={latest.currency} /></dd></div>}
+          </dl>
+          <div className={styles.sidebarPolicy}><strong>{t("Cancellation terms", "شروط الإلغاء")}</strong><span>{t("Not provided", "غير متوفرة")}</span></div>
+        </aside>
       </div>
     </section>
   );

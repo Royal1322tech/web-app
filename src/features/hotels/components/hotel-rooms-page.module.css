@@ -140,6 +140,7 @@
 .draftError { margin: 0; padding: var(--space-3) var(--space-4); border-radius: var(--rounded-md); background: #fff4f5; color: var(--error); font-weight: var(--weight-semibold); }
 .draftDone { display: grid; gap: var(--space-2); padding: var(--space-4) var(--space-5); border: 1px solid color-mix(in srgb, var(--success) 35%, var(--border)); border-radius: var(--rounded-lg); background: #f2faf6; }
 .draftDone h3 { display: inline-flex; align-items: center; gap: 8px; color: var(--success); outline: none; }
+.draftDone[hidden] { display: none; }
 .draftDone h3 svg { width: 20px; height: 20px; }
 .draftDone p { margin: 0; color: #34485f; }
 @media (max-width: 1023px) and (min-width: 721px) {
@@ -211,3 +212,78 @@
 .propertyTaxes { display: block; margin-block-start: 4px; color: #8a5a14; font-size: 12px; font-weight: 600; line-height: 1.45; }
 
 .draftReference { margin: 0; color: var(--navy); font-weight: 700; }
+
+/* ---------- Five booking steps (after the price check) ---------- */
+/* The original booking flow's look: numbered steps with a top rule, cards and a stay summary beside them. */
+.bookingSteps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.bookingSteps li { min-width: 0; border-block-start: 3px solid var(--border); color: var(--muted); font-size: 13px; }
+.bookingSteps li[data-state="done"] { border-color: color-mix(in srgb, var(--success) 55%, var(--border)); }
+.bookingSteps li[data-state="current"] { border-color: var(--primary); color: var(--primary); font-weight: var(--weight-bold); }
+.bookingSteps li > button, .bookingStepStatic { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 8px 0 0; border: 0; background: none; color: inherit; font: inherit; text-align: start; }
+.bookingSteps li > button { cursor: pointer; color: var(--rv-navy); }
+.bookingSteps li > button:hover span:last-child { text-decoration: underline; text-underline-offset: 3px; }
+.bookingSteps li > button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 6px; }
+.bookingSteps li span:last-child { min-width: 0; overflow-wrap: anywhere; line-height: 1.35; }
+.bookingStepMark { display: inline-grid; flex: none; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--subtle, #eef3f7); font-size: 12px; font-weight: var(--weight-bold); }
+.bookingSteps li[data-state="current"] .bookingStepMark { background: var(--primary); color: #fff; }
+.bookingSteps li[data-state="done"] .bookingStepMark { background: var(--success); color: #fff; }
+.bookingStepMark svg { width: 14px; height: 14px; }
+
+.bookingGrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 340px); gap: var(--space-5); align-items: start; }
+.bookingMain { display: grid; gap: var(--space-4); min-width: 0; }
+.stepCard, .bookingMain > .draftForm { display: grid; gap: var(--space-4); min-width: 0; padding: clamp(16px, 2.4vw, 24px); border: 1px solid var(--border); border-radius: var(--rounded-lg); background: var(--surface); }
+.bookingMain > .draftForm[hidden] { display: none; }
+.stepCard h3, .bookingMain > .draftForm h3 { margin: 0; color: var(--rv-navy); font-size: var(--font-size-lg); font-weight: var(--weight-bold); outline: none; }
+.stepCard h3:focus-visible, .bookingMain > .draftForm h3:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; border-radius: 4px; }
+.stepEyebrow { margin: 0 0 -8px; color: var(--muted); font-size: 11.5px; font-weight: var(--weight-bold); letter-spacing: .08em; }
+.stepActions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding-block-start: var(--space-2); }
+.stepActions > :last-child { margin-inline-start: auto; }
+.stepActions :global(.button) { min-height: 44px; }
+
+.policyUnavailable { display: grid; gap: 6px; padding: 14px 16px; border: 1px solid #dce6ee; border-inline-start: 3px solid var(--gold, #b7731e); border-radius: 10px; background: #f7f9fb; }
+.policyUnavailable h4 { margin: 0; color: var(--rv-navy); font-size: 15px; font-weight: var(--weight-bold); }
+.policyUnavailable p { margin: 0; color: #34485f; line-height: 1.55; }
+.policyUnavailable a { justify-self: start; display: inline-flex; align-items: center; min-height: 44px; font-weight: var(--weight-bold); }
+
+.paymentMethod { display: grid; grid-template-columns: 24px minmax(0, 1fr) 20px; align-items: center; gap: 12px; padding: 16px; border: 1px solid var(--teal, #0f6f74); border-radius: 12px; background: color-mix(in srgb, var(--teal, #0f6f74) 7%, white); box-shadow: 0 0 0 1px var(--teal, #0f6f74); }
+.paymentMethod > svg { width: 24px; height: 24px; color: var(--royal, #0b4a8b); }
+.paymentMethod span { display: grid; gap: 4px; min-width: 0; }
+.paymentMethod strong { color: var(--rv-navy); }
+.paymentMethod small { color: var(--muted); line-height: 1.45; }
+.paymentMethod .paymentCheck { width: 20px; height: 20px; color: var(--teal, #0f6f74); }
+.paymentPrices { display: grid; gap: 8px; margin: 0; }
+.paymentPrices > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding-block-end: 8px; border-block-end: 1px solid var(--border); }
+.paymentPrices dt { color: var(--muted); }
+.paymentPrices dd { margin: 0; font-weight: var(--weight-bold); }
+.paymentSteps { display: grid; gap: 6px; margin: 0; padding-inline-start: 22px; list-style: decimal; color: #34485f; font-size: var(--font-size-sm); line-height: 1.5; }
+
+.bookingSidebar { position: sticky; inset-block-start: 20px; display: grid; gap: var(--space-3); min-width: 0; padding: clamp(16px, 2vw, 22px); border: 1px solid var(--border); border-block-start: 3px solid #b68a40; border-radius: var(--rounded-lg); background: var(--surface); }
+.bookingSidebar .stepEyebrow { margin: 0; }
+.bookingSidebar .summaryMeta { margin: -8px 0 0; }
+.sidebarRoom { margin: 0; color: var(--rv-navy); font-size: 17px; font-weight: var(--weight-bold); overflow-wrap: anywhere; }
+.sidebarFacts { display: grid; margin: 0; }
+.sidebarFacts > div { display: flex; justify-content: space-between; gap: 12px; padding-block: 8px; border-block-end: 1px solid #e6edf2; }
+.sidebarFacts dt { color: var(--muted); }
+.sidebarFacts dd { margin: 0; font-weight: var(--weight-semibold); text-align: end; }
+.sidebarTotal dt { color: var(--rv-navy) !important; font-weight: var(--weight-semibold); }
+.sidebarTotal dd { font-size: 20px; font-weight: var(--weight-heavy) !important; }
+.sidebarPolicy { display: grid; gap: 4px; padding: 12px 14px; border: 1px solid #dce6ee; border-radius: 10px; background: #f4f8fa; font-size: var(--font-size-sm); }
+.sidebarPolicy span { color: var(--muted); }
+.draftDoneGroup .stepEyebrow { margin: 0; }
+
+/* Tablets: the summary moves under the steps. */
+@media (max-width: 1023px) {
+  .bookingGrid { grid-template-columns: minmax(0, 1fr); }
+  .bookingSidebar { position: static; }
+}
+/* Phones: steps wrap into a compact grid; actions stack full width. */
+@media (max-width: 767px) {
+  .bookingSteps { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 4px; }
+  .bookingSteps li { font-size: 12.5px; }
+}
+@media (max-width: 479px) {
+  .bookingSteps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stepActions { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .stepActions > :last-child { order: -1; margin-inline-start: 0; }
+  .stepActions :global(.button) { width: 100%; justify-content: center; }
+}

@@ -71,10 +71,10 @@ export function WorkspaceNavigation() {
         <div className="workspace-nav__group" role="group" aria-labelledby={`${id}-finance`}>
           <p className="workspace-nav__label" id={`${id}-finance`}>{t("Finance", "المالية")}</p>
           <NavLink to="/wallet">{t("Wallet", "المحفظة")}</NavLink>
+          <NavLink to="/points">{t("Points", "النقاط")}</NavLink>
           <NavLink to="/transactions">{t("Transactions", "المعاملات")}</NavLink>
           {invoicePage ? <Link to="/invoices" aria-current="page" className="active">{t("Invoices", "الفواتير")}</Link> : <NavLink to="/invoices">{t("Invoices", "الفواتير")}</NavLink>}
           <NavLink to="/accounting-review">{t("Accounting Review", "مراجعة الحسابات")}</NavLink>
-          <NavLink to="/points">{t("Points", "النقاط")}</NavLink>
         </div>
         <div className="workspace-nav__group" role="group" aria-labelledby={`${id}-account`}>
           <p className="workspace-nav__label" id={`${id}-account`}>{t("Account", "الحساب")}</p>

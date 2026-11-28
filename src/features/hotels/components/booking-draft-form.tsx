@@ -7,6 +7,8 @@ import { ApiError } from "@/lib/api/client";
 import { useLocale } from "@/features/localization/locale-provider";
 import { b2bSession, useB2BSession } from "@/features/auth/b2b-session";
 import { BookingConfirmPanel } from "@/features/bookings/live/booking-confirm-panel";
+import type { ConfirmationView } from "@/features/bookings/live/b2b-booking-confirm";
+import { formatMoney } from "@/lib/money";
 import {
   GUEST_NAME_MAX,
   classifyDraftError,
@@ -33,6 +35,8 @@ type Names = Record<string, { first: string; last: string; gender?: Gender }>;
 type FieldErrors = Record<string, { first?: string; last?: string }>;
 type ContactErrors = { email?: string; phone?: string };
 type Text = [string, string];
+/** The five booking steps: 1 Summary, 2 Guest details, 3 Cancellation policy, 4 Payment details, 5 Result. */
+export type BookingStage = 1 | 2 | 3 | 4 | 5;
 
 const MESSAGES: Record<Exclude<DraftFailure, "validation" | "signed_out">, Text> = {
   forbidden: ["Your account can't create booking drafts.", "لا يمكن لحسابك إنشاء مسودات حجز."],
@@ -47,11 +51,13 @@ const MESSAGES: Record<Exclude<DraftFailure, "validation" | "signed_out">, Text>
 };
 
 /**
- * Guest details and POST /b2b/bookings/draft for a confirmed price review. One lead adult is required.
- * The Idempotency-Key is reused only when the exact same submission is retried, and replaced as soon as
- * anything in it changes. A draft is never presented as a reservation or payment.
+ * Guest details (step 2) and POST /b2b/bookings/draft (step 4) for a confirmed price review. One lead
+ * adult is required. Stays mounted across the steps, so what was entered is kept; moving between steps
+ * never sends anything: the draft is created only by "Create booking draft". The Idempotency-Key is
+ * reused only when the exact same submission is retried, and replaced as soon as anything in it
+ * changes. A draft is never presented as a reservation or payment.
  */
-export function BookingDraftForm({ reviewToken, occupancy, nationality, expiresAt, expired, onRefresh }: {
+export function BookingDraftForm({ reviewToken, occupancy, nationality, expiresAt, expired, onRefresh, stage, onStage, onCreated, onConfirmView, prices }: {
   reviewToken: string;
   occupancy: RoomsRequest["guests"];
   /** The stay's nationality (search residency), sent as each guest's nationality_code. */
@@ -60,6 +66,13 @@ export function BookingDraftForm({ reviewToken, occupancy, nationality, expiresA
   expiresAt: number;
   expired: boolean;
   onRefresh: () => void;
+  /** The booking step on screen; this renders guest details (2), payment details (4) and the outcome (4–5). */
+  stage: BookingStage;
+  onStage: (stage: BookingStage) => void;
+  onCreated: () => void;
+  onConfirmView: (view: ConfirmationView) => void;
+  /** The confirmed prices from the price check, exactly as sent (null when not provided). */
+  prices: { customer: string; agency: string | null; currency: string };
 }) {
   const { t, locale } = useLocale();
   const b2b = useB2BSession();
@@ -82,6 +95,9 @@ export function BookingDraftForm({ reviewToken, occupancy, nationality, expiresA
   const submitted = useRef<{ payload: string; key: string } | null>(null);
   const formId = useId();
   const successRef = useRef<HTMLHeadingElement>(null);
+  const paymentRef = useRef<HTMLHeadingElement>(null);
+  // A field to focus once the guest details are back on screen (after a check from the payment step).
+  const pendingFocus = useRef<(() => HTMLElement | null) | null>(null);
 
   const waitUntil = failure?.kind === "rate_limited" && failure.retryAfter ? failure.retryAfter : 0;
   const wait = Math.max(0, Math.ceil((waitUntil - now) / 1000));
@@ -91,17 +107,24 @@ export function BookingDraftForm({ reviewToken, occupancy, nationality, expiresA
     return () => clearInterval(timer);
   }, [wait]);
   useEffect(() => { if (created) successRef.current?.focus(); }, [created]);
+  useEffect(() => {
+    if (stage === 2 && pendingFocus.current) { pendingFocus.current()?.focus(); pendingFocus.current = null; }
+    if (stage === 4 && !created) paymentRef.current?.focus();
+  }, [stage, created]);
 
   if (created) {
+    const reference = <p className={styles.draftReference}>{t("Booking number", "رقم الحجز")}: <bdi dir="ltr">{created.booking_no}</bdi>{created.order_no && <> · {t("Order", "الطلب")}: <bdi dir="ltr">{created.order_no}</bdi></>}</p>;
+    const viewBooking = <Link className="button button--outline" to={`/bookings/${encodeURIComponent(created.booking_id)}`}>{t("View booking", "عرض الحجز")}</Link>;
+    const result = stage === 5;
     return (
-      <div className={styles.draftDoneGroup}>
-        <section className={styles.draftDone} data-draft-state="created" aria-labelledby={`${formId}-done`}>
+      <div className={styles.draftDoneGroup} data-booking-step={result ? "result" : "payment"}>
+        <p className={styles.stepEyebrow}>{result ? t("05 · RESULT", "٠٥ · النتيجة") : t("04 · PAYMENT DETAILS", "٠٤ · بيانات الدفع")}</p>
+        {/* Result: the backend's status (below) is the outcome; the draft notice would contradict it. */}
+        <section className={styles.draftDone} data-draft-state="created" aria-labelledby={`${formId}-done`} hidden={result}>
           <h3 id={`${formId}-done`} ref={successRef} tabIndex={-1}><Icon name="check" />{t("Booking Draft Created", "تم إنشاء مسودة الحجز")}</h3>
           <p>{t("The guest details and this price check were saved as a booking draft. A draft is not a confirmed reservation, and no payment has been taken.", "تم حفظ بيانات الضيوف وهذا التحقق من السعر كمسودة حجز. المسودة ليست حجزًا مؤكدًا، ولم يتم أي دفع.")}</p>
-          <p className={styles.draftReference}>{t("Booking number", "رقم الحجز")}: <bdi dir="ltr">{created.booking_no}</bdi>{created.order_no && <> · {t("Order", "الطلب")}: <bdi dir="ltr">{created.order_no}</bdi></>}</p>
-          <div className={styles.actions}>
-            <Link className="button button--outline" to={`/bookings/${encodeURIComponent(created.booking_id)}`}>{t("View booking", "عرض الحجز")}</Link>
-          </div>
+          {reference}
+          <div className={styles.actions}>{viewBooking}</div>
         </section>
         {created.next_step === "confirm" && (
           <BookingConfirmPanel
@@ -112,7 +135,14 @@ export function BookingDraftForm({ reviewToken, occupancy, nationality, expiresA
             initial={null}
             expiresAt={expiresAt}
             onRefreshRates={onRefresh}
+            onViewChange={onConfirmView}
           />
+        )}
+        {result && (
+          <section className={styles.stepCard} data-booking-reference>
+            {reference}
+            <div className={styles.actions}>{viewBooking}</div>
+          </section>
         )}
       </div>
     );
@@ -130,9 +160,8 @@ export function BookingDraftForm({ reviewToken, occupancy, nationality, expiresA
   const setGender = (key: string, gender: Gender | "") => setNames((current) => ({ ...current, [key]: { first: current[key]?.first ?? "", last: current[key]?.last ?? "", gender: gender || undefined } }));
   const nationalityCode = /^[a-z]{2}$/i.test(nationality) ? nationality.toUpperCase() : undefined;
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (pending.current || wait > 0) return;
+  /** Checks every field locally (nothing is sent). Returns the draft body, or null after showing the errors. */
+  function validate(focus: (target: () => HTMLElement | null) => void) {
     const found: FieldErrors = {};
     const guests: DraftGuest[] = slots.map((slot) => {
       const first = (names[slot.key]?.first ?? "").trim();
@@ -167,24 +196,41 @@ export function BookingDraftForm({ reviewToken, occupancy, nationality, expiresA
     setCustomerErrors(foundCustomer);
     setFailure(null);
     if (Object.keys(foundCustomer).length) {
-      document.querySelector<HTMLElement>("[data-customer-picker] input")?.focus();
-      return;
+      focus(() => document.querySelector<HTMLElement>("[data-customer-picker] input"));
+      return null;
     }
     if (foundContact.email || foundContact.phone) {
-      document.getElementById(`${formId}-contact-${foundContact.email ? "email" : "phone"}`)?.focus();
-      return;
+      focus(() => document.getElementById(`${formId}-contact-${foundContact.email ? "email" : "phone"}`));
+      return null;
     }
     if (Object.keys(found).length) {
-      document.getElementById(`${formId}-${Object.keys(found)[0]}-${found[Object.keys(found)[0]].first ? "first" : "last"}`)?.focus();
-      return;
+      focus(() => document.getElementById(`${formId}-${Object.keys(found)[0]}-${found[Object.keys(found)[0]].first ? "first" : "last"}`));
+      return null;
     }
-    const token = b2bSession.token();
-    if (!token) return;
-    // Same submission (unchanged after a failure that's safe to retry): same key. Anything else: new key.
     const draftCustomer: DraftCustomer = customer.mode === "existing"
       ? { customer_id: customer.customer!.id }
       : { customer: newCustomerBody(customer) };
-    const draftContact = { contact_email: email, contact_phone: phone };
+    return { guests, draftCustomer, draftContact: { contact_email: email, contact_phone: phone } };
+  }
+
+  /** Step 2: "Continue" checks the details locally and moves on; nothing is sent. */
+  function next(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (validate((target) => target()?.focus())) onStage(3);
+  }
+
+  /** From another step, a field to fix: show the guest details, then focus it. */
+  const backToGuests = (target: () => HTMLElement | null) => { pendingFocus.current = target; onStage(2); };
+
+  /** Step 4: "Create booking draft", the only action here that sends anything (a draft; nothing is charged). */
+  async function createDraft() {
+    if (pending.current || wait > 0) return;
+    const body = validate(backToGuests);
+    if (!body) return;
+    const { guests, draftCustomer, draftContact } = body;
+    const token = b2bSession.token();
+    if (!token) return;
+    // Same submission (unchanged after a failure that's safe to retry): same key. Anything else: new key.
     const payload = JSON.stringify([reviewToken, guests, draftCustomer, draftContact]);
     const key = submitted.current?.payload === payload ? submitted.current.key : newIdempotencyKey();
     submitted.current = { payload, key };
@@ -192,6 +238,7 @@ export function BookingDraftForm({ reviewToken, occupancy, nationality, expiresA
     setBusy(true);
     try {
       setCreated(await createBookingDraft(reviewToken, guests, draftCustomer, draftContact, key, { token, locale: locale === "ar" ? "ar" : "en" }));
+      onCreated();
     } catch (error) {
       const kind = classifyDraftError(error);
       // A failure that can't succeed on retry: the next attempt, even unchanged, gets a new key.
@@ -218,6 +265,8 @@ export function BookingDraftForm({ reviewToken, occupancy, nationality, expiresA
         setCustomerErrors(customerFields);
         setErrors(mapped);
         setFailure({ kind, text: t("Check the details: contact email and phone, a first and last name for every guest as on the passport, and exactly one lead guest.", "تحقق من البيانات: بريد وهاتف التواصل، واسم أول واسم عائلة لكل ضيف كما في جواز السفر، وضيف رئيسي واحد فقط.") });
+        // The fields to fix are in the guest details.
+        backToGuests(() => document.querySelector<HTMLElement>(`[data-draft-state=form] [aria-invalid=true]`) ?? document.getElementById(`${formId}-title`));
       } else if (kind !== "signed_out") {
         const retryAfter = kind === "rate_limited" && error instanceof ApiError && error.retryAfterSeconds ? clock() + error.retryAfterSeconds * 1000 : undefined;
         setNow(clock());
@@ -230,10 +279,25 @@ export function BookingDraftForm({ reviewToken, occupancy, nationality, expiresA
   }
 
   const rooms = [...new Set(slots.map((slot) => slot.room))];
+  const failureNote = (
+    <div role="alert">
+      {failure && (
+        <p className={styles.draftError} data-draft-failure={failure.kind}>
+          {failure.text}
+          {wait > 0 && <> {t("You can try again in", "يمكنك المحاولة مرة أخرى بعد")} <bdi dir="ltr">{Math.floor(wait / 60)}:{String(wait % 60).padStart(2, "0")}</bdi></>}
+        </p>
+      )}
+    </div>
+  );
+  const refreshInstead = failure?.kind === "expired" || failure?.kind === "conflict";
+  const money = (amount: string) => <bdi dir="ltr">{formatMoney(amount, prices.currency)}</bdi>;
   return (
-    <form className={styles.draftForm} noValidate onSubmit={submit} aria-busy={busy} aria-labelledby={`${formId}-title`} data-draft-state="form">
-      <h3 id={`${formId}-title`}>{t("Guest details", "بيانات الضيوف")}</h3>
-      <p className={styles.note}>{t("Enter every guest's name as on their passport, and choose the lead guest. This saves a booking draft only: it isn't a reservation and takes no payment.", "أدخل اسم كل ضيف كما في جواز سفره، واختر الضيف الرئيسي. هذا يحفظ مسودة حجز فقط: ليس حجزًا ولا يتضمن أي دفع.")}</p>
+    <>
+    {/* Kept mounted (hidden) on the other steps, so the details and the customer list stay as entered. */}
+    <form className={styles.draftForm} noValidate onSubmit={next} aria-busy={busy} aria-labelledby={`${formId}-title`} data-draft-state="form" data-booking-step="guests" hidden={stage !== 2}>
+      <p className={styles.stepEyebrow}>{t("02 · GUEST DETAILS", "٠٢ · بيانات الضيوف")}</p>
+      <h3 id={`${formId}-title`} tabIndex={-1} data-step-heading={stage === 2 || undefined}>{t("Guest details", "بيانات الضيوف")}</h3>
+      <p className={styles.note}>{t("Enter every guest's name as on their passport, and choose the lead guest. Nothing is sent until you create the booking draft in Payment Details.", "أدخل اسم كل ضيف كما في جواز سفره، واختر الضيف الرئيسي. لا يُرسل أي شيء حتى تنشئ مسودة الحجز في بيانات الدفع.")}</p>
       <CustomerPicker value={customer} onChange={(next) => { setCustomer(next); setCustomerErrors({}); }} errors={customerErrors} disabled={busy} />
       <fieldset className={styles.draftRoom} disabled={busy} data-draft-contact>
         <legend>{t("Agency contact", "تواصل الوكالة")}</legend>
@@ -293,19 +357,45 @@ export function BookingDraftForm({ reviewToken, occupancy, nationality, expiresA
           ))}
         </fieldset>
       ))}
-      <div role="alert">
-        {failure && (
-          <p className={styles.draftError} data-draft-failure={failure.kind}>
-            {failure.text}
-            {wait > 0 && <> {t("You can try again in", "يمكنك المحاولة مرة أخرى بعد")} <bdi dir="ltr">{Math.floor(wait / 60)}:{String(wait % 60).padStart(2, "0")}</bdi></>}
-          </p>
-        )}
-      </div>
-      <div className={styles.actions}>
-        {failure?.kind === "expired" || failure?.kind === "conflict"
-          ? <button type="button" className="button button--primary" onClick={onRefresh}>{t("Refresh rates", "تحديث الأسعار")}</button>
-          : <button type="submit" className="button button--primary" disabled={busy || wait > 0}>{busy ? t("Creating draft…", "جارٍ إنشاء المسودة…") : t("Create booking draft", "إنشاء مسودة حجز")}</button>}
+      {/* One live message at a time: here on the guest details, otherwise on the payment step. */}
+      {stage === 2 && failureNote}
+      <div className={styles.stepActions}>
+        <button type="button" className="button button--outline" onClick={() => onStage(1)}>{t("Back to summary", "العودة إلى الملخص")}</button>
+        <button type="submit" className="button button--primary" disabled={busy}>{t("Continue to cancellation policy", "المتابعة إلى سياسة الإلغاء")}</button>
       </div>
     </form>
+    {stage === 4 && (
+      <section className={styles.stepCard} data-booking-step="payment" aria-labelledby={`${formId}-payment`} aria-busy={busy}>
+        <p className={styles.stepEyebrow}>{t("04 · PAYMENT DETAILS", "٠٤ · بيانات الدفع")}</p>
+        <h3 id={`${formId}-payment`} ref={paymentRef} tabIndex={-1} data-step-heading>{t("Payment method", "طريقة الدفع")}</h3>
+        {/* The only payment the API supports: the company wallet, charged at confirmation (USD). */}
+        <div className={styles.paymentMethod} data-payment-method="wallet">
+          <Icon name="buildingFilled" aria-hidden="true" />
+          <span>
+            <strong>{t("Company wallet", "محفظة الشركة")}</strong>
+            <small>{t("The agency purchase price is charged to your company wallet only when you confirm the booking.", "يُخصم سعر شراء الوكالة من محفظة شركتك عند تأكيد الحجز فقط.")}</small>
+          </span>
+          <Icon name="check" aria-hidden="true" className={styles.paymentCheck} />
+        </div>
+        <p className={styles.note} data-payment-unavailable>{t("Card, bank transfer and other payment methods aren't available for online bookings.", "البطاقات والتحويل البنكي وطرق الدفع الأخرى غير متاحة للحجز عبر الإنترنت.")}</p>
+        <dl className={styles.paymentPrices}>
+          {prices.agency && <div data-price="agency-preview"><dt>{t("Agency purchase price", "سعر شراء الوكالة")}</dt><dd>{money(prices.agency)}</dd></div>}
+          <div data-price="customer-preview"><dt>{t("Customer selling price", "سعر البيع للعميل")}</dt><dd>{money(prices.customer)}</dd></div>
+        </dl>
+        {prices.currency !== "USD" && <p className={styles.note} data-confirm-blocked="currency">{t("Confirmation is available for USD bookings only.", "التأكيد متاح لحجوزات الدولار الأمريكي فقط.")}</p>}
+        <ol className={styles.paymentSteps}>
+          <li>{t("Create the booking draft: nothing is charged and nothing is reserved.", "أنشئ مسودة الحجز: لا يتم أي خصم ولا يُحجز أي شيء.")}</li>
+          <li>{t("Accept the agency purchase price and confirm. Your wallet is charged only then.", "وافق على سعر شراء الوكالة وأكّد. لا تُخصم محفظتك إلا عندها.")}</li>
+        </ol>
+        {failureNote}
+        <div className={styles.stepActions}>
+          <button type="button" className="button button--outline" disabled={busy} onClick={() => onStage(3)}>{t("Back", "رجوع")}</button>
+          {refreshInstead
+            ? <button type="button" className="button button--primary" onClick={onRefresh}>{t("Refresh rates", "تحديث الأسعار")}</button>
+            : <button type="button" className="button button--primary" disabled={busy || wait > 0} onClick={() => void createDraft()}>{busy ? t("Creating draft…", "جارٍ إنشاء المسودة…") : t("Create booking draft", "إنشاء مسودة حجز")}</button>}
+        </div>
+      </section>
+    )}
+    </>
   );
 }

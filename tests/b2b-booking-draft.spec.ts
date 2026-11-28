@@ -65,10 +65,19 @@ async function mockFlow(page: Page, draft: Handler, options: { prebook?: Record<
 const created: Reply = { status: 201, json: { customer_id: CUSTOMER, order_id: "o-1", order_no: "ORD-TEST0000000001", booking_id: "b6f0c1d2-0000-4000-8000-000000000001", booking_no: "HTL-TEST0000000001", status: "draft", currency: "USD", customer_total: "108.15", agency_purchase_price: "103.00", next_step: "confirm", payment_collected: false, supplier_booking_created: false } };
 const BOOKING = "b6f0c1d2-0000-4000-8000-000000000001";
 const state = (status: string, confirmation_state: string | null, confirmed_at: string | null = null): Reply => ({ json: { booking_id: BOOKING, status, confirmation_state, confirmed_at } });
+/** Rooms → price check → step 1 (Summary) → step 2 (Guest details). Nothing is drafted on the way. */
 async function toReview(page: Page, rooms = ROOMS) {
   await page.goto(roomsUrl(rooms));
   await page.getByRole("button", { name: "Select room" }).click();
+  await page.getByRole("button", { name: "Continue to guest details" }).click();
   await expect(page.locator("[data-draft-state=form]")).toBeVisible();
+}
+const continueFromGuests = (page: Page) => page.getByRole("button", { name: /^(Continue to cancellation policy|المتابعة إلى سياسة الإلغاء)$/ }).click();
+/** Step 2 → step 3 (Cancellation policy) → step 4 (Payment details), where the draft is created. */
+async function toPayment(page: Page) {
+  await continueFromGuests(page);
+  await page.getByRole("button", { name: /^(Continue to Payment Details|المتابعة إلى بيانات الدفع)$/ }).click();
+  await expect(page.locator("[data-booking-step=payment]")).toBeVisible();
 }
 async function chooseCustomer(page: Page) {
   await page.locator("[data-customer-picker]").getByRole("radio", { name: "Nour Adel" }).check();
@@ -108,6 +117,7 @@ test.describe("booking draft (mocked API)", () => {
     expect(calls.rooms[0].postDataJSON().guests).toEqual([{ adults: 2, children: [] }, { adults: 1, children: [7] }]);
     await expect(page.locator("[data-guest]")).toHaveCount(4);
     await fillNames(page, FOUR);
+    await toPayment(page);
     await page.getByRole("button", { name: "Create booking draft" }).click();
     await expect(page.getByRole("heading", { name: "Booking Draft Created" })).toBeFocused();
     await expect(page.getByText("A draft is not a confirmed reservation, and no payment has been taken.")).toBeVisible();
@@ -144,6 +154,7 @@ test.describe("booking draft (mocked API)", () => {
     await toReview(page);
     await fillNames(page, FOUR);
     await page.locator("[data-guest]").nth(2).getByLabel("Lead guest").check();
+    await toPayment(page);
     await page.getByRole("button", { name: "Create booking draft" }).click();
     await expect(page.getByRole("heading", { name: "Booking Draft Created" })).toBeVisible();
     expect(calls.draft[0].postDataJSON().guests.map((guest: { is_lead: boolean }) => guest.is_lead)).toEqual([false, false, true, false]);
@@ -156,7 +167,8 @@ test.describe("booking draft (mocked API)", () => {
     const rows = page.locator("[data-guest]");
     for (let i = 0; i < 4; i++) { await rows.nth(i).getByLabel("First name").fill(FOUR[i][0]); await rows.nth(i).getByLabel("Last name").fill(FOUR[i][1]); }
     await fillContact(page);
-    await page.getByRole("button", { name: "Create booking draft" }).click();
+    // Checked locally when leaving the guest details: nothing is sent.
+    await continueFromGuests(page);
     await expect(page.getByText("Choose a customer.")).toBeVisible();
     expect(calls.draft).toHaveLength(0);
 
@@ -164,9 +176,10 @@ test.describe("booking draft (mocked API)", () => {
     await picker.getByRole("radio", { name: "New customer" }).check();
     await picker.getByLabel("First name").fill("Hana");
     await picker.getByLabel("Last name").fill("Fouad");
-    await page.getByRole("button", { name: "Create booking draft" }).click();
+    await continueFromGuests(page);
     await expect(page.getByText("Enter an email or a phone number.")).toBeVisible();
     await picker.getByLabel("Phone").fill("+201001234567");
+    await toPayment(page);
     await page.getByRole("button", { name: "Create booking draft" }).click();
     await expect(page.getByRole("heading", { name: "Booking Draft Created" })).toBeVisible();
     const body = calls.draft[0].postDataJSON();
@@ -178,7 +191,8 @@ test.describe("booking draft (mocked API)", () => {
     const calls = await mockFlow(page, () => created);
     await toReview(page);
     await fillNames(page, [["Laila", ""]]);
-    await page.getByRole("button", { name: "Create booking draft" }).click();
+    await continueFromGuests(page);
+    await expect(page.locator("[data-booking-step=guests]")).toBeVisible();
     await expect(page.getByText("Enter the last name.").first()).toBeVisible();
     await expect(page.getByText("Enter the first name.").first()).toBeVisible();
     expect(calls.draft).toHaveLength(0);
@@ -190,6 +204,7 @@ test.describe("booking draft (mocked API)", () => {
     const calls = await mockFlow(page, () => ({ ...created, delay: held }));
     await toReview(page);
     await fillNames(page, FOUR);
+    await toPayment(page);
     await page.getByRole("button", { name: "Create booking draft" }).dblclick();
     await expect(page.getByRole("button", { name: "Creating draft…" })).toBeDisabled();
     release();
@@ -201,6 +216,7 @@ test.describe("booking draft (mocked API)", () => {
     const calls = await mockFlow(page, (_, call) => (call <= 2 ? { abort: true } : call === 3 ? { status: 503, json: { message: "x" } } : created));
     await toReview(page);
     await fillNames(page, FOUR);
+    await toPayment(page);
     const button = page.getByRole("button", { name: "Create booking draft" });
     await button.click();
     await expect(page.locator("[data-draft-failure=network]")).toBeVisible();
@@ -210,7 +226,9 @@ test.describe("booking draft (mocked API)", () => {
     const key = (n: number) => calls.draft[n].headers()["idempotency-key"];
     expect(key(1)).toBe(key(0));
     // A changed submission is a new request with a new key.
+    await page.getByRole("list", { name: "Booking progress" }).getByRole("button", { name: /Guest details/ }).click();
     await page.locator("[data-guest]").nth(1).getByLabel("First name").fill("Omar Ali");
+    await toPayment(page);
     await button.click();
     await expect(page.locator("[data-draft-failure=unavailable]")).toBeVisible();
     expect(key(2)).not.toBe(key(1));
@@ -224,10 +242,11 @@ test.describe("booking draft (mocked API)", () => {
     const calls = await mockFlow(page, () => ({ status: 410, json: { message: "Review expired. Please prebook again." } }));
     await toReview(page);
     await fillNames(page, FOUR);
+    await toPayment(page);
     await page.getByRole("button", { name: "Create booking draft" }).click();
     await expect(page.locator("[data-draft-failure=expired]")).toHaveText("This price check has expired. Refresh the rates and choose the room again.");
     await expect(page.getByText("Review expired. Please prebook again.")).toHaveCount(0);
-    await page.locator("[data-draft-state=form]").getByRole("button", { name: "Refresh rates" }).click();
+    await page.locator("[data-booking-step=payment]").getByRole("button", { name: "Refresh rates" }).click();
     await expect.poll(() => calls.rooms.length).toBe(2);
     await expect(page.locator("body")).not.toContainText(confirmedWords);
   });
@@ -241,6 +260,7 @@ test.describe("booking draft (mocked API)", () => {
       await mockFlow(page, () => ({ status, json: { message: "SERVER WORDING" } }));
       await toReview(page);
       await fillNames(page, FOUR);
+      await toPayment(page);
       await page.getByRole("button", { name: "Create booking draft" }).click();
       await expect(page.locator(`[data-draft-failure=${kind}]`)).toHaveText(text);
       await expect(page.getByText("SERVER WORDING")).toHaveCount(0);
@@ -251,6 +271,7 @@ test.describe("booking draft (mocked API)", () => {
     await mockFlow(page, () => ({ status: 422, json: { message: "x", errors: { "guests.1.first_name": ["bad"], "guests.3.last_name": ["bad"] } } }));
     await toReview(page);
     await fillNames(page, FOUR);
+    await toPayment(page);
     await page.getByRole("button", { name: "Create booking draft" }).click();
     await expect(page.locator("[data-draft-failure=validation]")).toBeVisible();
     await expect(page.locator("[data-guest=r0-a1]").getByText("Check this name.")).toBeVisible();
@@ -262,6 +283,7 @@ test.describe("booking draft (mocked API)", () => {
     const calls = await mockFlow(page, (_, call) => ({ status: 429, json: { message: "Too Many Attempts." }, headers: (call === 1 ? { "Retry-After": "45" } : { "Access-Control-Expose-Headers": "" }) as Record<string, string> }));
     await toReview(page);
     await fillNames(page, FOUR);
+    await toPayment(page);
     await page.getByRole("button", { name: "Create booking draft" }).click();
     await expect(page.locator("[data-draft-failure=rate_limited]")).toContainText(/You can try again in 0:4[45]/);
     await expect(page.getByRole("button", { name: "Create booking draft" })).toBeDisabled();
@@ -272,6 +294,7 @@ test.describe("booking draft (mocked API)", () => {
     await mockFlow(page, () => ({ status: 401, json: { message: "Unauthenticated." } }));
     await toReview(page);
     await fillNames(page, FOUR);
+    await toPayment(page);
     await page.getByRole("button", { name: "Create booking draft" }).click();
     await expect(page).toHaveURL(/\/login/);
     expect(await page.evaluate(() => sessionStorage.getItem("royal-travel.b2b-session.v1"))).toBeNull();
@@ -283,8 +306,10 @@ test.describe("booking draft (mocked API)", () => {
     await page.getByRole("button", { name: "Select room" }).click();
     await expect(page.getByRole("heading", { name: "The price has changed" })).toBeVisible();
     await expect(page.locator("[data-draft-state=form]")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Continue to guest details" })).toBeDisabled();
     await page.getByLabel(/I accept the new price/).check();
     await page.getByRole("button", { name: "Accept new price" }).click();
+    await page.getByRole("button", { name: "Continue to guest details" }).click();
     await expect(page.locator("[data-draft-state=form]")).toBeVisible();
   });
 
@@ -293,6 +318,7 @@ test.describe("booking draft (mocked API)", () => {
     await mockFlow(page, () => created, { locale: "ar" });
     await page.goto(roomsUrl([{ adults: 1, childAges: [] }]));
     await page.getByRole("button", { name: "اختيار الغرفة" }).click();
+    await page.getByRole("button", { name: "المتابعة إلى بيانات الضيوف" }).click();
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     await page.locator("[data-customer-picker]").getByRole("radio", { name: "Nour Adel" }).check();
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
@@ -300,6 +326,7 @@ test.describe("booking draft (mocked API)", () => {
     const row = page.locator("[data-guest]").first();
     await row.getByLabel("الاسم الأول").fill("ليلى");
     await row.getByLabel("اسم العائلة").fill("حسن");
+    await toPayment(page);
     await page.getByRole("button", { name: "إنشاء مسودة حجز" }).click();
     await expect(page.getByRole("heading", { name: "تم إنشاء مسودة الحجز" })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
@@ -310,6 +337,7 @@ test.describe("booking confirmation (mocked API)", () => {
   async function toDraft(page: Page) {
     await toReview(page);
     await fillNames(page, FOUR);
+    await toPayment(page);
     await page.getByRole("button", { name: "Create booking draft" }).click();
     await expect(page.locator("[data-confirm-view=draft]")).toBeVisible();
   }
@@ -393,6 +421,7 @@ test.describe("booking confirmation (mocked API)", () => {
     await mockFlow(page, () => ({ status: 201, json: { ...(created.json as object), currency: "EGP" } }));
     await toReview(page);
     await fillNames(page, FOUR);
+    await toPayment(page);
     await page.getByRole("button", { name: "Create booking draft" }).click();
     await expect(page.locator("[data-confirm-blocked=currency]")).toBeVisible();
     await expect(page.getByRole("button", { name: "Confirm booking" })).toHaveCount(0);
@@ -403,11 +432,13 @@ test.describe("booking confirmation (mocked API)", () => {
     await mockFlow(page, () => created, { locale: "ar", confirm: () => state("draft", "finish_unknown") });
     await page.goto(roomsUrl([{ adults: 1, childAges: [] }]));
     await page.getByRole("button", { name: "اختيار الغرفة" }).click();
+    await page.getByRole("button", { name: "المتابعة إلى بيانات الضيوف" }).click();
     await page.locator("[data-customer-picker]").getByRole("radio", { name: "Nour Adel" }).check();
     await page.getByLabel("هاتف التواصل").fill("+201000000001");
     const row = page.locator("[data-guest]").first();
     await row.getByLabel("الاسم الأول").fill("Laila");
     await row.getByLabel("اسم العائلة").fill("Hassan");
+    await toPayment(page);
     await page.getByRole("button", { name: "إنشاء مسودة حجز" }).click();
     await expect(page.locator("[data-price=agency]")).toContainText("سعر شراء الوكالة");
     await page.getByLabel(/أوافق على سعر شراء الوكالة/).check();

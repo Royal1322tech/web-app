@@ -2,7 +2,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } f
 import "./popover.css";
 
 /** Native buttons/links retain Tab and radio Arrow-key behavior; Escape restores focus. */
-export function Popover({ label, trigger, children, panelClassName = "", triggerClassName = "" }: { label: string; trigger: ReactNode; children: ReactNode | ((close: () => void) => ReactNode); panelClassName?: string; triggerClassName?: string }) {
+export function Popover({ label, trigger, children, panelClassName = "", triggerClassName = "", maxHeight = 540 }: { label: string; trigger: ReactNode; children: ReactNode | ((close: () => void) => ReactNode); panelClassName?: string; triggerClassName?: string; /** The tallest the panel may be before it scrolls (always within the viewport). */ maxHeight?: number }) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
@@ -39,7 +39,7 @@ export function Popover({ label, trigger, children, panelClassName = "", trigger
       if (flip !== (element.getAttribute("data-placement") === "top")) {
         if (flip) element.setAttribute("data-placement", "top"); else element.removeAttribute("data-placement");
       }
-      set("maxHeight", `${Math.round(Math.max(160, Math.min(540, flip ? above : below)))}px`);
+      set("maxHeight", `${Math.round(Math.max(160, Math.min(maxHeight, flip ? above : below)))}px`);
       // The shift is measured from the unshifted position, so the current one is taken off first.
       const current = Number.parseFloat(element.style.translate) || 0;
       const bounds = element.getBoundingClientRect();
@@ -63,7 +63,7 @@ export function Popover({ label, trigger, children, panelClassName = "", trigger
       window.removeEventListener("scroll", reposition, { capture: true });
       observer.disconnect();
     };
-  }, [open, label]);
+  }, [open, label, maxHeight]);
 
   return <div className="rv-popover" ref={root} onBlur={event => { // A label temporarily blurs to no target before activating its radio.
     // Close only for an actual focus move outside; outside pointer events are handled above.

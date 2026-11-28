@@ -53,7 +53,7 @@ const failureText: Record<ConfirmFailure, Text> = {
  * the backend says confirmed. An unknown outcome is never retried automatically: the status is read
  * instead, and "Check with supplier" reconciles the same attempt on request.
  */
-export function BookingConfirmPanel({ bookingId, agencyPurchasePrice, customerTotal, currency, initial, expiresAt, onRefreshRates }: {
+export function BookingConfirmPanel({ bookingId, agencyPurchasePrice, customerTotal, currency, initial, expiresAt, onRefreshRates, onViewChange }: {
   bookingId: string;
   /** The company wallet charge, from the draft. Without it the draft can't be confirmed here. */
   agencyPurchasePrice: string | null;
@@ -63,6 +63,8 @@ export function BookingConfirmPanel({ bookingId, agencyPurchasePrice, customerTo
   /** When the draft's prebook expires (10 minutes), if known. */
   expiresAt?: number;
   onRefreshRates?: () => void;
+  /** Told the backend's current state ("draft" until the confirmation is accepted), e.g. to show a Result step. */
+  onViewChange?: (view: ConfirmationView) => void;
 }) {
   const { t, locale } = useLocale();
   const id = useId();
@@ -79,6 +81,7 @@ export function BookingConfirmPanel({ bookingId, agencyPurchasePrice, customerTo
   useEffect(() => () => { alive.current = false; }, []);
 
   const view = state ? confirmationView(state.status, state.confirmation_state, state.confirmed_at) : "draft";
+  useEffect(() => { onViewChange?.(view); }, [view, onViewChange]);
   const usd = (currency ?? "").toUpperCase() === "USD";
   const expired = expiresAt !== undefined && now >= expiresAt && view === "draft";
   const waitSeconds = failure?.retryAt ? Math.max(0, Math.ceil((failure.retryAt - now) / 1000)) : 0;

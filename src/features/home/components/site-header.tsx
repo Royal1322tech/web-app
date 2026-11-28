@@ -86,12 +86,12 @@ export function SiteHeader({ standalone = false }: { standalone?: boolean }) {
           <Link to="/notifications" onClick={close} aria-label={t("Notifications", "الإشعارات")} title={t("Notifications", "الإشعارات")}><Icon name="bell" /><span className={styles.iconLabel} aria-hidden="true">{t("Notifications", "الإشعارات")}</span></Link>
           {/* The example checkout isn't the real booking flow (rooms → draft → confirm), so real sign-in has no cart. */}
           {!apiAuthEnabled && <Link to="/booking/summary" onClick={close} aria-label={t("Booking summary", "ملخص الحجز")} title={t("Booking summary", "ملخص الحجز")}><Icon name="cart" /></Link>}
-          {demoSessionActive ? <Popover key={navigationKey} triggerClassName={styles.profileTrigger} panelClassName={styles.accountPanel} label={t("Account menu", "قائمة الحساب")} trigger={<Icon name="personFilled" />}>
+          {demoSessionActive ? <Popover key={navigationKey} triggerClassName={styles.profileTrigger} panelClassName={styles.accountPanel} maxHeight={620} label={t("Account menu", "قائمة الحساب")} trigger={<Icon name="personFilled" />}>
           {identity && <p className={styles.accountIdentity}><strong>{identity.user.name}</strong><span>{identity.company.name}</span></p>}
           {/* Grouped the same way as the workspace sidebar: bookings, finance, then the account. */}
           {([
             [t("Bookings", "الحجوزات"), [["/bookings", t("My Bookings", "حجوزاتي")], ["/car-rental/bookings", t("My Rentals", "تأجيراتي")], ["/tickets", t("My Tickets", "تذاكري")], ...(apiAuthEnabled ? [["/customers", t("Customers", "العملاء")], ["/price-requests", t("Price Requests", "طلبات الأسعار")]] : [])]],
-            [t("Finance", "المالية"), [["/wallet", t("Wallet", "المحفظة")], ["/transactions", t("Transactions", "المعاملات")], ["/invoices", t("Invoices", "الفواتير")], ["/accounting-review", t("Accounting Review", "مراجعة الحسابات")]]],
+            [t("Finance", "المالية"), [["/wallet", t("Wallet", "المحفظة")], ["/points", t("Points", "النقاط")], ["/transactions", t("Transactions", "المعاملات")], ["/invoices", t("Invoices", "الفواتير")], ["/accounting-review", t("Accounting Review", "مراجعة الحسابات")]]],
             [t("Account", "الحساب"), [["/profile", t("My Profile", "ملفي الشخصي")], ["/account/settings", t("Account Settings", "إعدادات الحساب")]]],
           ] as [string, string[][]][]).map(([group, links]) => (
             <div key={group} className={styles.accountGroup} role="group" aria-label={group}>

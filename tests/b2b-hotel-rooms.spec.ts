@@ -166,12 +166,15 @@ test.describe("rooms → price check → review (mocked API)", () => {
     }
     // Only a booking DRAFT can be created here: no booking, payment or reservation action.
     await expect(page.getByRole("button", { name: /^(book|pay|reserve)|book now|confirm booking/i })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Create booking draft" })).toBeVisible();
+    // Step 1 of the five booking steps: moving on sends nothing; the draft is created in step 4.
+    await expect(page.getByRole("button", { name: "Continue to guest details" })).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Create booking draft" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: /book now|pay/i })).toHaveCount(0);
     await expect(page.locator("body")).not.toContainText(/rooms-token|selection-token|review-token/);
     await expectNoTokensStored(page);
     // The steps show where the user is.
-    await expect(page.locator("ol[aria-label=Progress] [aria-current=step]")).toContainText("Review & confirm");
+    await expect(page.locator("ol[aria-label='Booking progress'] [aria-current=step]")).toContainText("Summary");
+    await expect(page.locator("ol[aria-label='Booking progress'] li")).toHaveCount(5);
     // This page is connected to the account, so no "sample data" banner.
     await expect(page.locator(".api-data-notice")).toHaveCount(0);
   });

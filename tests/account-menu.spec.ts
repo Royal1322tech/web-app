@@ -20,7 +20,9 @@ for (const width of [320, 375, 768, 1440]) {
       await trigger.click();
       await expect(panel).toBeVisible();
       const menuLinks = panel.getByRole("link");
-      await expect(menuLinks).toHaveCount(9);
+      // 10 with Points (Finance, after Wallet).
+      await expect(menuLinks).toHaveCount(10);
+      await expect(panel.locator('a[href="/points"]')).toHaveCount(1);
       await expect(panel.getByRole("link").first()).toBeVisible();
       await expect(panel.locator('a[href="/agency"]')).toHaveCount(0);
       await expect(trigger).toHaveCSS("background-color", "rgb(217, 242, 238)");
@@ -33,7 +35,7 @@ for (const width of [320, 375, 768, 1440]) {
       await page.keyboard.press("Enter");
       await page.keyboard.press("Tab");
       await expect(panel.getByRole("link").first()).toBeFocused();
-      for (let index = 1; index < 9; index++) {
+      for (let index = 1; index < 10; index++) {
         await page.keyboard.press("Tab");
         await expect(panel.getByRole("link").nth(index)).toBeFocused();
       }
